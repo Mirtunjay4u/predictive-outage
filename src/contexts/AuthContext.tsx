@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface User {
   email: string;
@@ -9,7 +10,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
   loginDemo: () => void;
   logout: () => void;
 }
@@ -23,24 +24,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const navigate = useNavigate();
 
-  const login = useCallback(async (email: string, _password: string) => {
-    // Demo auth - accept any credentials
-    const newUser = { email, isDemo: false };
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    // Demo auth - accept any non-empty credentials
+    if (!email.trim() || !password.trim()) {
+      toast.error('Please enter email and password');
+      return false;
+    }
+    const newUser = { email, isDemo: true };
     setUser(newUser);
     localStorage.setItem('demo_user', JSON.stringify(newUser));
+    toast.success('Signed in (Demo)');
     navigate('/scenarios');
+    return true;
   }, [navigate]);
 
   const loginDemo = useCallback(() => {
     const newUser = { email: 'demo@operator.io', isDemo: true };
     setUser(newUser);
     localStorage.setItem('demo_user', JSON.stringify(newUser));
+    toast.success('Signed in (Demo)');
     navigate('/scenarios');
   }, [navigate]);
 
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('demo_user');
+    toast.success('Signed out');
     navigate('/login');
   }, [navigate]);
 
