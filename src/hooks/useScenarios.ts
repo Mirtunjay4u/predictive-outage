@@ -23,9 +23,10 @@ export function useCreateScenario() {
   
   return useMutation({
     mutationFn: (scenario: ScenarioInsert) => scenarioService.create(scenario),
-    onSuccess: () => {
+    onSuccess: (newScenario) => {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
       toast.success('Scenario created successfully');
+      return newScenario;
     },
     onError: (error) => {
       toast.error('Failed to create scenario');
@@ -40,10 +41,11 @@ export function useUpdateScenario() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ScenarioUpdate }) => 
       scenarioService.update(id, data),
-    onSuccess: (_, { id }) => {
+    onSuccess: (updatedScenario, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
       queryClient.invalidateQueries({ queryKey: ['scenario', id] });
       toast.success('Scenario updated successfully');
+      return updatedScenario;
     },
     onError: (error) => {
       toast.error('Failed to update scenario');

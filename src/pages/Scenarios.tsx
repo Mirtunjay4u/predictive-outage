@@ -25,7 +25,8 @@ export default function Scenarios() {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [stageFilter, setStageFilter] = useState('all');
   const [lifecycleFilter, setLifecycleFilter] = useState('all');
-  const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
+  const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
+  const [copilotScenario, setCopilotScenario] = useState<Scenario | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -49,24 +50,36 @@ export default function Scenarios() {
   }, [scenarios, stageFilter, lifecycleFilter]);
 
   const handleCreate = () => {
-    setSelectedScenario(null);
+    setEditingScenario(null);
     setIsDrawerOpen(true);
   };
 
   const handleEdit = (scenario: Scenario) => {
-    setSelectedScenario(scenario);
+    setEditingScenario(scenario);
+    setCopilotScenario(scenario);
     setIsDrawerOpen(true);
   };
 
   const handleSave = (data: ScenarioInsert) => {
-    if (selectedScenario) {
+    if (editingScenario) {
       updateMutation.mutate(
-        { id: selectedScenario.id, data },
-        { onSuccess: () => setIsDrawerOpen(false) }
+        { id: editingScenario.id, data },
+        { 
+          onSuccess: (updatedScenario) => {
+            setIsDrawerOpen(false);
+            // Update copilot scenario if it was the one being edited
+            if (copilotScenario?.id === editingScenario.id) {
+              setCopilotScenario(updatedScenario);
+            }
+          }
+        }
       );
     } else {
       createMutation.mutate(data, {
-        onSuccess: () => setIsDrawerOpen(false),
+        onSuccess: (newScenario) => {
+          setIsDrawerOpen(false);
+          setCopilotScenario(newScenario);
+        },
       });
     }
   };
@@ -76,8 +89,8 @@ export default function Scenarios() {
       deleteMutation.mutate(deleteId, {
         onSuccess: () => {
           setDeleteId(null);
-          if (selectedScenario?.id === deleteId) {
-            setSelectedScenario(null);
+          if (copilotScenario?.id === deleteId) {
+            setCopilotScenario(null);
           }
         },
       });
@@ -176,7 +189,7 @@ export default function Scenarios() {
 
       {/* Copilot Panel */}
       <CopilotPanel
-        scenario={selectedScenario}
+        scenario={copilotScenario}
         isOpen={isCopilotOpen}
         onToggle={() => setIsCopilotOpen(!isCopilotOpen)}
       />
@@ -185,7 +198,7 @@ export default function Scenarios() {
       <ScenarioDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        scenario={selectedScenario}
+        scenario={editingScenario}
         onSave={handleSave}
         isLoading={createMutation.isPending || updateMutation.isPending}
       />
