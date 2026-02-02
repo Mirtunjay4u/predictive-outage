@@ -1,4 +1,4 @@
-import { Search, Bell, User, LogOut } from 'lucide-react';
+import { Search, Bell, User, LogOut, FlaskConical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,17 +26,23 @@ export function TopBar({ onSearch }: TopBarProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search scenarios..."
-          className="pl-10 bg-background/50"
+          className="pl-10 bg-background/50 transition-shadow focus:shadow-md"
           onChange={(e) => onSearch?.(e.target.value)}
         />
       </div>
 
       {/* Right section */}
       <div className="flex items-center gap-4">
+        {/* Demo Mode Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/15 border border-warning/30">
+          <FlaskConical className="w-3.5 h-3.5 text-warning" />
+          <span className="text-xs font-medium text-warning">Demo Mode</span>
+        </div>
+
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors">
           <Bell className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center animate-pulse">
             3
           </span>
         </Button>

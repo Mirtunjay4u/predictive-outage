@@ -29,11 +29,11 @@ export function ScenarioCard({ scenario, onClick, onDelete }: ScenarioCardProps)
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.15 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.2 }}
     >
       <Card 
-        className="cursor-pointer group hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/30"
+        className="cursor-pointer group hover:shadow-elevated transition-all duration-300 border-border/40 hover:border-primary/40 bg-gradient-to-br from-card to-card/80"
         onClick={onClick}
       >
         <CardHeader className="pb-3">
