@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { 
@@ -11,13 +11,19 @@ import {
   LogOut,
   X,
   ArrowLeft,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Bot,
+  Sparkles,
+  CheckCircle,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -143,6 +149,239 @@ function StatusPill({ status }: { status: 'Activated' | 'Inactive' }) {
   );
 }
 
+interface CopilotResponse {
+  type: 'explain' | 'validate' | 'improve';
+  summary: string;
+  items: { icon: 'check' | 'warning' | 'info'; text: string }[];
+}
+
+function generateCopilotResponse(scenario: DemoScenario, type: 'explain' | 'validate' | 'improve'): CopilotResponse {
+  const now = new Date();
+  const scenarioTime = new Date(scenario.time.replace(' ', 'T'));
+  const isPast = scenarioTime < now;
+
+  if (type === 'explain') {
+    const stageStatus = scenario.stage 
+      ? '✅ **Activated readiness** - This scenario is staged and ready for execution.'
+      : '⚠️ **Inactive risk** - This scenario is not staged, which may delay response time.';
+    
+    const lifecycleInfo = {
+      'Pre-Event': 'Currently in preparation phase. Focus on planning and resource allocation.',
+      'Event': 'Active execution phase. Monitor closely and be ready to adapt.',
+      'Post-Event': 'Review and analysis phase. Document lessons learned.',
+    };
+
+    return {
+      type: 'explain',
+      summary: `**${scenario.name}**\n\n${stageStatus}\n\n**Lifecycle:** ${scenario.lifecycleStage}\n${lifecycleInfo[scenario.lifecycleStage]}`,
+      items: [
+        { icon: scenario.stage ? 'check' : 'warning', text: scenario.stage ? 'Scenario is activated and staged' : 'Scenario is not staged - consider activating' },
+        { icon: 'info', text: `Current phase: ${scenario.lifecycleStage}` },
+        { icon: isPast ? 'warning' : 'check', text: isPast ? `Scheduled time has passed (${scenario.time})` : `Scheduled for ${scenario.time}` },
+      ],
+    };
+  }
+
+  if (type === 'validate') {
+    const checks: { icon: 'check' | 'warning'; text: string }[] = [];
+    
+    // Check 1: Stage validation
+    if (scenario.stage) {
+      checks.push({ icon: 'check', text: 'Stage is activated - ready for deployment' });
+    } else {
+      checks.push({ icon: 'warning', text: 'Stage is inactive - scenario may not execute properly' });
+    }
+
+    // Check 2: Time validation
+    if (isPast) {
+      checks.push({ icon: 'warning', text: `Scheduled time (${scenario.time}) is in the past - update required` });
+    } else {
+      checks.push({ icon: 'check', text: 'Scheduled time is valid and in the future' });
+    }
+
+    // Check 3: Lifecycle consistency
+    if (scenario.lifecycleStage === 'Post-Event' && scenario.stage) {
+      checks.push({ icon: 'warning', text: 'Post-Event scenarios typically should not be staged' });
+    } else {
+      checks.push({ icon: 'check', text: 'Lifecycle stage is consistent with current status' });
+    }
+
+    // Check 4: Status alignment
+    if (scenario.status === 'Activated' && !scenario.stage) {
+      checks.push({ icon: 'warning', text: 'Status is Activated but Stage is No - misalignment detected' });
+    } else {
+      checks.push({ icon: 'check', text: 'Status and Stage are properly aligned' });
+    }
+
+    const passedChecks = checks.filter(c => c.icon === 'check').length;
+    
+    return {
+      type: 'validate',
+      summary: `**Validation Results**\n\n${passedChecks}/${checks.length} checks passed for "${scenario.name}"`,
+      items: checks,
+    };
+  }
+
+  // Improvements
+  const improvements: { icon: 'info'; text: string }[] = [];
+  
+  if (!scenario.stage) {
+    improvements.push({ icon: 'info', text: '**Activate the stage** to ensure the scenario is ready for immediate execution when needed.' });
+  }
+  
+  if (scenario.lifecycleStage === 'Pre-Event') {
+    improvements.push({ icon: 'info', text: '**Add contingency plans** - Pre-event scenarios benefit from documented fallback procedures.' });
+  }
+  
+  if (isPast) {
+    improvements.push({ icon: 'info', text: '**Update the scheduled time** to a future date to maintain scenario relevance.' });
+  }
+  
+  improvements.push({ icon: 'info', text: '**Document operator responsibilities** to ensure clear accountability during execution.' });
+  improvements.push({ icon: 'info', text: '**Set up monitoring alerts** to track scenario progress and detect anomalies early.' });
+  improvements.push({ icon: 'info', text: '**Create a communication plan** to keep stakeholders informed during all lifecycle phases.' });
+
+  return {
+    type: 'improve',
+    summary: `**Suggested Improvements for "${scenario.name}"**\n\nHere are actionable recommendations to enhance this scenario:`,
+    items: improvements.slice(0, 3),
+  };
+}
+
+interface CopilotPanelProps {
+  scenario: DemoScenario;
+  onRefresh?: () => void;
+}
+
+function CopilotPanel({ scenario }: CopilotPanelProps) {
+  const [response, setResponse] = useState<CopilotResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeAction, setActiveAction] = useState<'explain' | 'validate' | 'improve'>('explain');
+
+  useEffect(() => {
+    // Auto-generate explanation when scenario loads
+    handleAction('explain');
+  }, [scenario.id]);
+
+  const handleAction = async (type: 'explain' | 'validate' | 'improve') => {
+    setIsLoading(true);
+    setActiveAction(type);
+    
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const newResponse = generateCopilotResponse(scenario, type);
+    setResponse(newResponse);
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="w-80 border-l border-border bg-muted/30 flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <Bot className="w-4 h-4 text-primary-foreground" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">Operator Copilot</h3>
+            <p className="text-xs text-muted-foreground">AI-powered insights</p>
+          </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={activeAction === 'explain' ? 'default' : 'outline'}
+            className="flex-1 text-xs"
+            onClick={() => handleAction('explain')}
+            disabled={isLoading}
+          >
+            <Lightbulb className="w-3 h-3 mr-1" />
+            Explain
+          </Button>
+          <Button
+            size="sm"
+            variant={activeAction === 'validate' ? 'default' : 'outline'}
+            className="flex-1 text-xs"
+            onClick={() => handleAction('validate')}
+            disabled={isLoading}
+          >
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Validate
+          </Button>
+          <Button
+            size="sm"
+            variant={activeAction === 'improve' ? 'default' : 'outline'}
+            className="flex-1 text-xs"
+            onClick={() => handleAction('improve')}
+            disabled={isLoading}
+          >
+            <Sparkles className="w-3 h-3 mr-1" />
+            Improve
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <ScrollArea className="flex-1 p-4">
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center py-8"
+            >
+              <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Analyzing...</span>
+            </motion.div>
+          ) : response ? (
+            <motion.div
+              key={response.type}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              {/* Summary */}
+              <div className="bg-card rounded-lg p-3 border border-border">
+                <p className="text-sm whitespace-pre-wrap">{response.summary}</p>
+              </div>
+
+              {/* Items */}
+              <div className="space-y-2">
+                {response.items.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-start gap-2 p-2 rounded-lg bg-card border border-border"
+                  >
+                    {item.icon === 'check' && (
+                      <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    )}
+                    {item.icon === 'warning' && (
+                      <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                    )}
+                    {item.icon === 'info' && (
+                      <Lightbulb className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    )}
+                    <span className="text-xs leading-relaxed">{item.text}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </ScrollArea>
+    </div>
+  );
+}
+
 interface ScenarioDrawerProps {
   scenario: DemoScenario | null;
   isOpen: boolean;
@@ -154,39 +393,24 @@ function ScenarioDrawer({ scenario, isOpen, onClose, onSave }: ScenarioDrawerPro
   const [formData, setFormData] = useState<DemoScenario | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  // Update form when scenario changes
-  useState(() => {
+  // Reset form when scenario changes
+  useEffect(() => {
     if (scenario) {
       setFormData({ ...scenario });
-      // Parse the time string to a Date
       const timeParts = scenario.time.split(' ');
       if (timeParts.length === 2) {
-        const [datePart, timePart] = timeParts;
-        const dateObj = new Date(`${datePart}T${timePart}`);
+        const dateObj = new Date(`${timeParts[0]}T${timeParts[1]}`);
         if (!isNaN(dateObj.getTime())) {
           setSelectedDate(dateObj);
         }
       }
     }
-  });
-
-  // Reset form when scenario changes
-  if (scenario && formData?.id !== scenario.id) {
-    setFormData({ ...scenario });
-    const timeParts = scenario.time.split(' ');
-    if (timeParts.length === 2) {
-      const dateObj = new Date(`${timeParts[0]}T${timeParts[1]}`);
-      if (!isNaN(dateObj.getTime())) {
-        setSelectedDate(dateObj);
-      }
-    }
-  }
+  }, [scenario?.id]);
 
   const handleSave = () => {
     if (formData) {
       onSave(formData);
       toast.success('Scenario saved');
-      onClose();
     }
   };
 
@@ -219,132 +443,138 @@ function ScenarioDrawer({ scenario, isOpen, onClose, onSave }: ScenarioDrawerPro
             onClick={onClose}
           />
 
-          {/* Drawer */}
+          {/* Drawer with Copilot */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 h-full w-[480px] bg-card border-l border-border shadow-xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-[800px] bg-card border-l border-border shadow-xl z-50 flex"
           >
-            {/* Header */}
-            <div className="h-16 px-6 flex items-center justify-between border-b border-border">
-              <div className="flex items-center gap-3">
+            {/* Form Section */}
+            <div className="flex-1 flex flex-col">
+              {/* Header */}
+              <div className="h-16 px-6 flex items-center justify-between border-b border-border">
+                <div className="flex items-center gap-3">
+                  <Button variant="ghost" size="icon" onClick={onClose}>
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                  <h2 className="text-lg font-semibold">Scenario Details</h2>
+                </div>
                 <Button variant="ghost" size="icon" onClick={onClose}>
-                  <ArrowLeft className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </Button>
-                <h2 className="text-lg font-semibold">Scenario Details</h2>
               </div>
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-auto p-6">
-              <div className="space-y-6">
-                {/* Scenario Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">Scenario Name</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => updateField('name', e.target.value)}
-                    placeholder="Enter scenario name"
-                  />
-                </div>
+              {/* Content */}
+              <div className="flex-1 overflow-auto p-6">
+                <div className="space-y-6">
+                  {/* Scenario Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Scenario Name</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => updateField('name', e.target.value)}
+                      placeholder="Enter scenario name"
+                    />
+                  </div>
 
-                {/* Scenario Stage */}
-                <div className="space-y-2">
-                  <Label>Scenario Stage</Label>
-                  <Select
-                    value={formData.stage ? 'yes' : 'no'}
-                    onValueChange={(value) => updateField('stage', value === 'yes')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Scenario Stage */}
+                  <div className="space-y-2">
+                    <Label>Scenario Stage</Label>
+                    <Select
+                      value={formData.stage ? 'yes' : 'no'}
+                      onValueChange={(value) => updateField('stage', value === 'yes')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Scenario Time */}
-                <div className="space-y-2">
-                  <Label>Scenario Time</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !selectedDate && 'text-muted-foreground'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, 'PPP p') : 'Pick a date & time'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateSelect}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  {/* Scenario Time */}
+                  <div className="space-y-2">
+                    <Label>Scenario Time</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full justify-start text-left font-normal',
+                            !selectedDate && 'text-muted-foreground'
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedDate ? format(selectedDate, 'PPP p') : 'Pick a date & time'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={handleDateSelect}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {/* Lifecycle Stage */}
-                <div className="space-y-2">
-                  <Label>Lifecycle Stage</Label>
-                  <Select
-                    value={formData.lifecycleStage}
-                    onValueChange={(value) => updateField('lifecycleStage', value as LifecycleStage)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pre-Event">Pre-event</SelectItem>
-                      <SelectItem value="Event">During-event</SelectItem>
-                      <SelectItem value="Post-Event">Post-event</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Lifecycle Stage */}
+                  <div className="space-y-2">
+                    <Label>Lifecycle Stage</Label>
+                    <Select
+                      value={formData.lifecycleStage}
+                      onValueChange={(value) => updateField('lifecycleStage', value as LifecycleStage)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Pre-Event">Pre-event</SelectItem>
+                        <SelectItem value="Event">During-event</SelectItem>
+                        <SelectItem value="Post-Event">Post-event</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Status */}
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => updateField('status', value as 'Activated' | 'Inactive')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Activated">Activated</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) => updateField('status', value as 'Activated' | 'Inactive')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Activated">Activated</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-border flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={onClose}>
+                  Back
+                </Button>
+                <Button className="flex-1" onClick={handleSave}>
+                  Save
+                </Button>
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-border flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={onClose}>
-                Back
-              </Button>
-              <Button className="flex-1" onClick={handleSave}>
-                Save
-              </Button>
-            </div>
+            {/* Copilot Panel */}
+            <CopilotPanel scenario={formData} />
           </motion.div>
         </>
       )}
