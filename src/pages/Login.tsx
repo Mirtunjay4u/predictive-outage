@@ -15,6 +15,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
     setIsLoading(true);
     await login(email, password);
     setIsLoading(false);
