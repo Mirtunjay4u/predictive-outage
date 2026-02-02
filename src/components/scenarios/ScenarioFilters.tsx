@@ -1,0 +1,82 @@
+import { LayoutGrid, List, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+
+interface ScenarioFiltersProps {
+  viewMode: 'table' | 'cards';
+  onViewModeChange: (mode: 'table' | 'cards') => void;
+  stageFilter: string;
+  onStageFilterChange: (value: string) => void;
+  lifecycleFilter: string;
+  onLifecycleFilterChange: (value: string) => void;
+  onCreateClick: () => void;
+}
+
+export function ScenarioFilters({
+  viewMode,
+  onViewModeChange,
+  stageFilter,
+  onStageFilterChange,
+  lifecycleFilter,
+  onLifecycleFilterChange,
+  onCreateClick,
+}: ScenarioFiltersProps) {
+  return (
+    <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-3">
+        {/* View Toggle */}
+        <ToggleGroup 
+          type="single" 
+          value={viewMode} 
+          onValueChange={(v) => v && onViewModeChange(v as 'table' | 'cards')}
+          className="bg-muted p-1 rounded-lg"
+        >
+          <ToggleGroupItem value="table" aria-label="Table view" className="data-[state=on]:bg-background">
+            <List className="w-4 h-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="cards" aria-label="Card view" className="data-[state=on]:bg-background">
+            <LayoutGrid className="w-4 h-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        {/* Stage Filter */}
+        <Select value={stageFilter} onValueChange={onStageFilterChange}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="All Stages" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stages</SelectItem>
+            <SelectItem value="active">Activated</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Lifecycle Filter */}
+        <Select value={lifecycleFilter} onValueChange={onLifecycleFilterChange}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Lifecycles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Lifecycles</SelectItem>
+            <SelectItem value="Pre-Event">Pre-Event</SelectItem>
+            <SelectItem value="Event">Event</SelectItem>
+            <SelectItem value="Post-Event">Post-Event</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Create Button */}
+      <Button onClick={onCreateClick} className="gap-2">
+        <Plus className="w-4 h-4" />
+        New Scenario
+      </Button>
+    </div>
+  );
+}
