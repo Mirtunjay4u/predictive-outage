@@ -26,16 +26,16 @@ interface ScenarioTableProps {
 
 export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTableProps) {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-border/50 bg-card shadow-card overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[250px]">Name</TableHead>
-            <TableHead>Stage</TableHead>
-            <TableHead>Lifecycle</TableHead>
-            <TableHead>Operator</TableHead>
-            <TableHead>Scheduled</TableHead>
-            <TableHead>Updated</TableHead>
+          <TableRow className="hover:bg-transparent bg-muted/30">
+            <TableHead className="w-[250px] font-semibold">Name</TableHead>
+            <TableHead className="font-semibold">Stage</TableHead>
+            <TableHead className="font-semibold">Lifecycle</TableHead>
+            <TableHead className="font-semibold">Operator</TableHead>
+            <TableHead className="font-semibold">Scheduled</TableHead>
+            <TableHead className="font-semibold">Updated</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -50,7 +50,7 @@ export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTable
             return (
               <TableRow 
                 key={scenario.id}
-                className="cursor-pointer group"
+                className="cursor-pointer group transition-colors hover:bg-primary/5 border-b border-border/30"
                 onClick={() => onRowClick(scenario)}
               >
                 <TableCell className="font-medium">

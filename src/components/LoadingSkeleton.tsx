@@ -2,8 +2,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ScenarioTableSkeleton() {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      <div className="p-4 border-b border-border">
+    <div className="rounded-xl border border-border/50 bg-card shadow-card overflow-hidden animate-fade-in">
+      <div className="p-4 border-b border-border/30 bg-muted/30">
         <div className="flex gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-4 w-24" />
@@ -11,7 +11,7 @@ export function ScenarioTableSkeleton() {
         </div>
       </div>
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="p-4 border-b border-border last:border-0">
+        <div key={i} className="p-4 border-b border-border/30 last:border-0">
           <div className="flex items-center gap-4">
             <Skeleton className="h-5 w-48" />
             <Skeleton className="h-6 w-20 rounded-full" />
@@ -28,9 +28,9 @@ export function ScenarioTableSkeleton() {
 
 export function ScenarioCardsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-lg border border-border bg-card p-4">
+        <div key={i} className="rounded-xl border border-border/40 bg-gradient-to-br from-card to-card/80 p-4 shadow-card">
           <div className="flex justify-between mb-4">
             <div className="space-y-2">
               <Skeleton className="h-5 w-40" />

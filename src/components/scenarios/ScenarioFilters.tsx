@@ -36,12 +36,20 @@ export function ScenarioFilters({
           type="single" 
           value={viewMode} 
           onValueChange={(v) => v && onViewModeChange(v as 'table' | 'cards')}
-          className="bg-muted p-1 rounded-lg"
+          className="bg-muted/60 p-1 rounded-lg border border-border/50 shadow-sm"
         >
-          <ToggleGroupItem value="table" aria-label="Table view" className="data-[state=on]:bg-background">
+          <ToggleGroupItem 
+            value="table" 
+            aria-label="Table view" 
+            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all"
+          >
             <List className="w-4 h-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="cards" aria-label="Card view" className="data-[state=on]:bg-background">
+          <ToggleGroupItem 
+            value="cards" 
+            aria-label="Card view" 
+            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all"
+          >
             <LayoutGrid className="w-4 h-4" />
           </ToggleGroupItem>
         </ToggleGroup>
@@ -73,7 +81,10 @@ export function ScenarioFilters({
       </div>
 
       {/* Create Button */}
-      <Button onClick={onCreateClick} className="gap-2">
+      <Button 
+        onClick={onCreateClick} 
+        className="gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+      >
         <Plus className="w-4 h-4" />
         New Scenario
       </Button>
