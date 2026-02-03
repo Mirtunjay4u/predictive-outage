@@ -116,7 +116,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader className="mb-6">
-          <SheetTitle>{scenario ? 'Edit Scenario' : 'Create Scenario'}</SheetTitle>
+          <SheetTitle>{scenario ? 'Edit Event' : 'Create Event'}</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
@@ -126,9 +126,9 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Scenario Name *</FormLabel>
+                  <FormLabel>Event Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter scenario name" {...field} />
+                    <Input placeholder="Enter event name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,7 +143,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Describe the scenario..." 
+                      placeholder="Describe the event..." 
                       className="resize-none"
                       rows={3}
                       {...field} 
@@ -322,7 +322,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
                 Cancel
               </Button>
               <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading ? 'Saving...' : 'Save Scenario'}
+                {isLoading ? 'Saving...' : 'Save Event'}
               </Button>
             </div>
           </form>
