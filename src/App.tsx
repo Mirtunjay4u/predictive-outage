@@ -9,7 +9,7 @@ import { DemoScriptModal } from "./components/DemoScriptModal";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Scenarios from "./pages/Scenarios";
+import Events from "./pages/Events";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AppPage from "./pages/AppPage";
@@ -48,7 +48,7 @@ function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/scenarios" element={<Scenarios />} />
+        <Route path="/scenarios" element={<Events />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

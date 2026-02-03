@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, AlertTriangle } from 'lucide-react';
 import { useScenarios, useCreateScenario, useUpdateScenario, useDeleteScenario } from '@/hooks/useScenarios';
-import { ScenarioFilters } from '@/components/scenarios/ScenarioFilters';
-import { ScenarioTable } from '@/components/scenarios/ScenarioTable';
-import { ScenarioCard } from '@/components/scenarios/ScenarioCard';
-import { ScenarioDrawer } from '@/components/scenarios/ScenarioDrawer';
+import { EventFilters } from '@/components/scenarios/EventFilters';
+import { EventTable } from '@/components/scenarios/EventTable';
+import { EventCard } from '@/components/scenarios/EventCard';
+import { EventDrawer } from '@/components/scenarios/EventDrawer';
 import { CopilotPanel } from '@/components/copilot/CopilotPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { ScenarioTableSkeleton, ScenarioCardsSkeleton } from '@/components/LoadingSkeleton';
@@ -133,7 +133,7 @@ export default function Scenarios() {
             transition={{ delay: 0.1 }}
             className="mb-6"
           >
-            <ScenarioFilters
+            <EventFilters
               viewMode={viewMode}
               onViewModeChange={setViewMode}
               stageFilter={stageFilter}
@@ -173,7 +173,7 @@ export default function Scenarios() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <ScenarioTable
+              <EventTable
                 scenarios={filteredScenarios}
                 onRowClick={handleEdit}
                 onDelete={setDeleteId}
@@ -187,7 +187,7 @@ export default function Scenarios() {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {filteredScenarios.map((scenario) => (
-                <ScenarioCard
+                <EventCard
                   key={scenario.id}
                   scenario={scenario}
                   onClick={() => handleEdit(scenario)}
@@ -207,7 +207,7 @@ export default function Scenarios() {
       />
 
       {/* Drawer */}
-      <ScenarioDrawer
+      <EventDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         scenario={editingScenario}

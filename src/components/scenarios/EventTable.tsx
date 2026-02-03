@@ -19,13 +19,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Scenario } from '@/types/scenario';
 
-interface ScenarioTableProps {
+interface EventTableProps {
   scenarios: Scenario[];
   onRowClick: (scenario: Scenario) => void;
   onDelete: (id: string) => void;
 }
 
-export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTableProps) {
+export function EventTable({ scenarios, onRowClick, onDelete }: EventTableProps) {
   return (
     <div className="rounded-xl border border-border/50 bg-card shadow-card overflow-hidden">
       <Table>
