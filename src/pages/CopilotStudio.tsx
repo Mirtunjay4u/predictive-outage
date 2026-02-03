@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles, AlertTriangle, Lightbulb, Info } from 'lucide-react';
+import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -176,7 +176,10 @@ export default function CopilotStudio() {
                     className="text-center py-12 text-muted-foreground"
                   >
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                    <p>Send a message to see the Copilot response</p>
+                    <p className="mb-2">Send a message to see the Copilot response.</p>
+                    <p className="text-xs">
+                      You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
+                    </p>
                   </motion.div>
                 )}
 
@@ -211,50 +214,70 @@ export default function CopilotStudio() {
                   >
                     {/* Mode Banner */}
                     <div className="flex items-center justify-start">
-                      <Badge className="bg-primary/90 text-primary-foreground text-sm font-bold px-4 py-1.5">
+                      <Badge className="bg-primary/90 text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full">
                         {response.mode_banner}
                       </Badge>
                     </div>
 
-                    {/* Framing Line */}
-                    <div className="text-sm text-muted-foreground italic border-l-2 border-muted pl-3">
-                      {response.framing_line}
-                    </div>
+                    {/* Framing Line (only if present) */}
+                    {response.framing_line && (
+                      <p className="text-sm font-semibold text-foreground border-l-2 border-primary pl-3">
+                        {response.framing_line}
+                      </p>
+                    )}
 
                     {/* Insights */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <Lightbulb className="w-4 h-4 text-warning" />
-                        Insights
-                      </h4>
-                      <ul className="space-y-2">
-                        {response.insights.map((insight, i) => (
-                          <motion.li
-                            key={i}
+                    <div className="space-y-4">
+                      {response.insights && response.insights.length > 0 ? (
+                        response.insights.map((insight, index) => (
+                          <motion.div
+                            key={index}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            className="text-sm text-muted-foreground pl-4 border-l-2 border-primary/30 flex items-start gap-2"
+                            transition={{ delay: index * 0.1 }}
+                            className="space-y-2"
                           >
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 flex-shrink-0" />
-                            <span>{insight}</span>
-                          </motion.li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Why It Helps */}
-                    <div className="p-3 rounded-lg bg-success/10 border border-success/30">
-                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
-                        <Info className="w-4 h-4 text-success" />
-                        Why This Helps
-                      </h4>
-                      <p className="text-sm text-muted-foreground">{response.why_it_helps}</p>
+                            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
+                                {index + 1}
+                              </span>
+                              {insight.title}
+                            </h4>
+                            <ul className="space-y-1.5 pl-7">
+                              {insight.bullets.map((bullet, bulletIndex) => (
+                                <li
+                                  key={bulletIndex}
+                                  className="text-sm text-muted-foreground flex items-start gap-2"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-1.5 flex-shrink-0" />
+                                  <span>{bullet}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+                          No insights returned. You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
+                        </div>
+                      )}
                     </div>
 
                     {/* Disclaimer */}
-                    <div className="pt-3 border-t border-border">
-                      <p className="text-xs text-muted-foreground italic">{response.disclaimer}</p>
+                    <div className="pt-4 border-t border-border">
+                      <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                        <div className="flex items-start gap-2">
+                          <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                              Disclaimer
+                            </p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {response.disclaimer}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
