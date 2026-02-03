@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle, FileText, Lightbulb, Copy } from 'lucide-react';
+import { Bot, Send, Sparkles, ChevronRight, AlertCircle, Copy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
@@ -288,45 +287,38 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
               {/* Structured Response */}
               {response && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-4"
-                >
+                <div className="space-y-6">
 
                   {/* Framing Line */}
                   {response.framing_line && (
-                    <p className="text-sm font-semibold text-foreground border-l-2 border-primary pl-3">
+                    <p className="text-sm font-medium text-foreground leading-relaxed border-l-2 border-muted-foreground/30 pl-4 max-w-prose">
                       {response.framing_line}
                     </p>
                   )}
 
                   {/* Insights */}
                   {response.insights && response.insights.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {response.insights.map((insight, index) => (
-                        <motion.div
+                        <div
                           key={index}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
                           className="space-y-2"
                         >
-                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
+                          <h4 className="text-sm font-semibold text-foreground flex items-start gap-2.5">
+                            <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center font-medium flex-shrink-0 mt-0.5">
                               {index + 1}
                             </span>
-                            {insight.title}
+                            <span className="leading-snug">{insight.title}</span>
                           </h4>
-                          <ul className="space-y-1 ml-7">
+                          <ul className="space-y-1.5 ml-7 max-w-prose">
                             {insight.bullets.map((bullet, bulletIndex) => (
-                              <li key={bulletIndex} className="text-sm text-muted-foreground flex items-start gap-2">
-                                <span className="text-primary mt-1.5">•</span>
+                              <li key={bulletIndex} className="text-sm text-muted-foreground flex items-start gap-2 leading-relaxed">
+                                <span className="text-muted-foreground/60 mt-1">•</span>
                                 <span>{bullet}</span>
                               </li>
                             ))}
                           </ul>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -337,16 +329,13 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
                   {/* Assumptions Block */}
                   {response.assumptions && response.assumptions.length > 0 && (
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
-                          Assumptions
-                        </span>
-                      </div>
-                      <ul className="space-y-1">
+                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                        Assumptions
+                      </p>
+                      <ul className="space-y-1.5 max-w-prose">
                         {response.assumptions.map((assumption, index) => (
-                          <li key={index} className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                          <li key={index} className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
                             <span className="mt-0.5">•</span>
                             <span>{assumption}</span>
                           </li>
@@ -357,16 +346,13 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
                   {/* Source Notes Block */}
                   {response.source_notes && response.source_notes.length > 0 && (
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-                          Source Notes
-                        </span>
-                      </div>
-                      <ul className="space-y-1">
+                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                        Source Notes
+                      </p>
+                      <ul className="space-y-1.5 max-w-prose">
                         {response.source_notes.map((note, index) => (
-                          <li key={index} className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                          <li key={index} className="text-xs text-muted-foreground flex items-start gap-2 leading-relaxed">
                             <span className="mt-0.5">•</span>
                             <span>{note}</span>
                           </li>
@@ -376,16 +362,11 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   )}
 
                   {/* Disclaimer */}
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                    <div className="flex items-start gap-2">
-                      <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Disclaimer</p>
-                        <p className="text-xs text-muted-foreground italic">
-                          {response.disclaimer}
-                        </p>
-                      </div>
-                    </div>
+                  <div className="p-3 rounded border border-border/60 bg-muted/20">
+                    <p className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-prose">
+                      <span className="font-medium uppercase tracking-wide">Disclaimer:</span>{' '}
+                      {response.disclaimer}
+                    </p>
                   </div>
 
                   {/* Reset Button */}
@@ -397,7 +378,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   >
                     Ask another question
                   </Button>
-                </motion.div>
+                </div>
               )}
 
               {/* Loading State */}
