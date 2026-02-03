@@ -14,7 +14,7 @@ export interface CopilotContextPacket {
 }
 
 export interface CopilotRequest {
-  mode: CopilotMode;
+  mode?: CopilotMode;
   user_message: string;
   context_packet: CopilotContextPacket;
   retrieved_knowledge: string[];
@@ -23,9 +23,8 @@ export interface CopilotRequest {
 
 export interface CopilotResponse {
   mode_banner: string;
-  framing_line?: string;
+  framing_line: string;
   insights: string[];
-  tradeoffs?: string[];
-  source_notes?: string[];
+  why_it_helps: string;
   disclaimer: string;
 }
