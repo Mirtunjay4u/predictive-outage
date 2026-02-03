@@ -13,6 +13,7 @@ import Scenarios from "./pages/Scenarios";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AppPage from "./pages/AppPage";
+import CopilotStudio from "./pages/CopilotStudio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/copilot-studio" element={<CopilotStudio />} />
       <Route
         path="/app"
         element={
