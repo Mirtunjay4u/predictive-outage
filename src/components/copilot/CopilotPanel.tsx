@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Sparkles, ChevronRight, Settings2 } from 'lucide-react';
+import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Scenario, CopilotMessage } from '@/types/scenario';
+import { supabase } from '@/integrations/supabase/client';
+import type { Scenario } from '@/types/scenario';
+import type { CopilotResponse, CopilotMode, CopilotRequest } from '@/types/copilot';
 
 interface CopilotPanelProps {
   scenario: Scenario | null;
@@ -15,115 +18,24 @@ interface CopilotPanelProps {
 }
 
 const suggestedPrompts = [
-  { label: 'Summarize scenario', icon: Sparkles },
-  { label: 'Find risks', icon: Sparkles },
-  { label: 'Generate operator checklist', icon: Sparkles },
-  { label: 'Recommend next steps', icon: Sparkles },
+  { label: 'Continue in Demo Mode', mode: 'DEMO' as CopilotMode, icon: Sparkles },
+  { label: 'Analyze Active Event', mode: 'ACTIVE_EVENT' as CopilotMode, icon: Sparkles },
+  { label: 'Planning & Training', mode: 'PLANNING' as CopilotMode, icon: Sparkles },
+  { label: 'Post-Event Review', mode: 'POST_EVENT_REVIEW' as CopilotMode, icon: Sparkles },
 ];
 
-function generateMockResponse(prompt: string, scenario: Scenario | null): string {
-  if (!scenario) return "Please select a scenario to get AI assistance.";
-
-  const lowerPrompt = prompt.toLowerCase();
-
-  if (lowerPrompt.includes('summarize') || lowerPrompt.includes('summary')) {
-    return `**Scenario Summary: ${scenario.name}**
-
-This ${scenario.stage ? 'activated' : 'inactive'} scenario is in the **${scenario.lifecycle_stage}** phase.
-
-${scenario.description ? `**Overview:** ${scenario.description}` : ''}
-
-${scenario.operator_role ? `**Assigned Operator:** ${scenario.operator_role}` : 'No operator currently assigned.'}
-
-${scenario.scenario_time ? `**Scheduled:** ${new Date(scenario.scenario_time).toLocaleString()}` : 'No specific time scheduled.'}
-
-${scenario.notes ? `**Notes:** ${scenario.notes}` : ''}`;
-  }
-
-  if (lowerPrompt.includes('risk')) {
-    return `**Risk Analysis for: ${scenario.name}**
-
-Based on the scenario parameters, here are potential risks:
-
-1. ${scenario.stage ? '✅ Scenario is activated - monitoring in place' : '⚠️ **Inactive Status** - Scenario not yet activated, may miss critical timing'}
-
-2. ${scenario.operator_role ? `✅ ${scenario.operator_role} assigned` : '⚠️ **No Operator Assigned** - Critical roles unfilled'}
-
-3. ${scenario.lifecycle_stage === 'Pre-Event' ? '⚠️ **Pre-Event Phase** - Ensure all preparations are verified' : scenario.lifecycle_stage === 'Event' ? '⚠️ **Active Event** - Monitor closely for deviations' : '✅ **Post-Event** - Focus on documentation and lessons learned'}
-
-4. ${!scenario.scenario_time ? '⚠️ **No Timeline** - Missing scheduled time could affect coordination' : '✅ Timeline established'}
-
-**Recommendation:** ${!scenario.stage ? 'Consider activating this scenario before the scheduled time.' : 'Continue monitoring and ensure all stakeholders are informed.'}`;
-  }
-
-  if (lowerPrompt.includes('checklist')) {
-    return `**Operator Checklist for: ${scenario.name}**
-
-${scenario.operator_role ? `*For: ${scenario.operator_role}*` : ''}
-
-**Pre-Execution:**
-- [ ] Verify scenario parameters are correct
-- [ ] Confirm all stakeholders are notified
-- [ ] Review emergency contacts and escalation paths
-- [ ] Check equipment and systems readiness
-
-**During ${scenario.lifecycle_stage}:**
-- [ ] Monitor key performance indicators
-- [ ] Document any deviations from plan
-- [ ] Maintain communication with command center
-- [ ] Log all significant events with timestamps
-
-**Post-Execution:**
-- [ ] Complete incident/event report
-- [ ] Gather feedback from team members
-- [ ] Update scenario documentation
-- [ ] Schedule debrief meeting`;
-  }
-
-  if (lowerPrompt.includes('next') || lowerPrompt.includes('recommend')) {
-    const recommendations = [];
-    
-    if (!scenario.stage) {
-      recommendations.push('**Activate the scenario** to enable monitoring and tracking');
-    }
-    if (!scenario.operator_role) {
-      recommendations.push('**Assign an operator** to ensure accountability');
-    }
-    if (scenario.lifecycle_stage === 'Pre-Event') {
-      recommendations.push('**Complete pre-event verification** checklist');
-      recommendations.push('**Schedule stakeholder briefing** before event time');
-    }
-    if (scenario.lifecycle_stage === 'Event') {
-      recommendations.push('**Increase monitoring frequency** during active phase');
-      recommendations.push('**Prepare contingency resources** for rapid response');
-    }
-    if (scenario.lifecycle_stage === 'Post-Event') {
-      recommendations.push('**Conduct lessons learned** session within 48 hours');
-      recommendations.push('**Archive documentation** for future reference');
-    }
-
-    return `**Recommended Next Steps for: ${scenario.name}**
-
-${recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n\n')}
-
-**Priority Action:** ${recommendations[0] || 'Continue current operations'}`;
-  }
-
-  return `I understand you're asking about "${prompt}" for the scenario "${scenario.name}".
-
-This is a ${scenario.stage ? 'currently active' : 'inactive'} ${scenario.lifecycle_stage.toLowerCase()} scenario${scenario.operator_role ? ` managed by ${scenario.operator_role}` : ''}.
-
-How can I help you further? Try asking me to:
-- Summarize the scenario
-- Identify risks
-- Generate a checklist
-- Recommend next steps`;
+function getModeBannerVariant(banner: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+  if (banner.includes('DEMO')) return 'secondary';
+  if (banner.includes('ACTIVE')) return 'destructive';
+  if (banner.includes('PLANNING')) return 'outline';
+  return 'default';
 }
 
 export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) {
-  const [messages, setMessages] = useState<CopilotMessage[]>([]);
+  const [response, setResponse] = useState<CopilotResponse | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [useMockAI, setUseMockAI] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -131,38 +43,50 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [response]);
 
   useEffect(() => {
-    setMessages([]);
+    setResponse(null);
+    setError(null);
   }, [scenario?.id]);
 
-  const handleSend = async (prompt: string = input) => {
-    if (!prompt.trim()) return;
+  const handleSend = async (prompt: string = input, mode?: CopilotMode) => {
+    if (!prompt.trim() && !mode) return;
 
-    const userMessage: CopilotMessage = {
-      role: 'user',
-      content: prompt,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setError(null);
     setIsLoading(true);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
+    try {
+      const requestBody: CopilotRequest = {
+        mode: mode,
+        user_message: prompt || `Analyze scenario in ${mode} mode`,
+        context_packet: scenario ? {
+          scenario_id: scenario.id,
+          scenario_name: scenario.name,
+          lifecycle_stage: scenario.lifecycle_stage,
+          stage: scenario.stage,
+          operator_role: scenario.operator_role,
+          scenario_time: scenario.scenario_time,
+          notes: scenario.notes,
+        } : {},
+        retrieved_knowledge: [],
+        constraints: [],
+      };
 
-    const response = generateMockResponse(prompt, scenario);
-    
-    const assistantMessage: CopilotMessage = {
-      role: 'assistant',
-      content: response,
-      timestamp: new Date(),
-    };
+      const { data, error: fnError } = await supabase.functions.invoke('copilot', {
+        body: requestBody,
+      });
 
-    setMessages(prev => [...prev, assistantMessage]);
-    setIsLoading(false);
+      if (fnError) throw fnError;
+
+      setResponse(data as CopilotResponse);
+      setInput('');
+    } catch (err) {
+      console.error('Copilot error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to get response from Copilot');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -220,10 +144,11 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
       {isOpen && (
         <>
-          {/* Messages */}
+          {/* Content */}
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             <AnimatePresence mode="popLayout">
-              {messages.length === 0 && (
+              {/* Empty State */}
+              {!response && !isLoading && !error && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -231,11 +156,14 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   className="text-center py-8"
                 >
                   <Bot className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <p className="text-sm text-muted-foreground mb-6">
+                  <p className="text-sm text-muted-foreground mb-2">
                     {scenario 
-                      ? 'Ask me anything about this scenario' 
+                      ? 'Select a mode to begin analysis' 
                       : 'Select a scenario to get started'
                     }
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-6">
+                    You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
                   </p>
                   
                   {scenario && (
@@ -246,7 +174,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                           variant="outline"
                           size="sm"
                           className="w-full justify-start gap-2 text-left"
-                          onClick={() => handleSend(prompt.label)}
+                          onClick={() => handleSend(prompt.label, prompt.mode)}
                         >
                           <prompt.icon className="w-4 h-4 text-primary" />
                           {prompt.label}
@@ -257,42 +185,115 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                 </motion.div>
               )}
 
-              {messages.map((message, index) => (
+              {/* Error State */}
+              {error && (
                 <motion.div
-                  key={index}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Error</span>
+                  </div>
+                  <p className="text-sm">{error}</p>
+                </motion.div>
+              )}
+
+              {/* Structured Response */}
+              {response && (
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    'mb-4',
-                    message.role === 'user' ? 'text-right' : 'text-left'
-                  )}
+                  className="space-y-4"
                 >
-                  <div
-                    className={cn(
-                      'inline-block max-w-[90%] rounded-lg px-4 py-3 text-sm',
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    )}
+                  {/* Mode Banner */}
+                  <Badge 
+                    variant={getModeBannerVariant(response.mode_banner)}
+                    className="text-xs font-bold tracking-wide"
                   >
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  </div>
-                </motion.div>
-              ))}
+                    {response.mode_banner}
+                  </Badge>
 
+                  {/* Framing Line */}
+                  {response.framing_line && (
+                    <p className="text-sm font-semibold text-foreground">
+                      {response.framing_line}
+                    </p>
+                  )}
+
+                  {/* Insights */}
+                  {response.insights && response.insights.length > 0 ? (
+                    <div className="space-y-4">
+                      {response.insights.map((insight, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="space-y-2"
+                        >
+                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
+                              {index + 1}
+                            </span>
+                            {insight.title}
+                          </h4>
+                          <ul className="space-y-1 ml-7">
+                            {insight.bullets.map((bullet, bulletIndex) => (
+                              <li key={bulletIndex} className="text-sm text-muted-foreground flex items-start gap-2">
+                                <span className="text-primary mt-1.5">•</span>
+                                <span>{bullet}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                      No insights returned. You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
+                    </div>
+                  )}
+
+                  {/* Disclaimer */}
+                  <div className="mt-6 p-3 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-start gap-2">
+                      <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Disclaimer</p>
+                        <p className="text-xs text-muted-foreground italic">
+                          {response.disclaimer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reset Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={() => setResponse(null)}
+                  >
+                    Ask another question
+                  </Button>
+                </motion.div>
+              )}
+
+              {/* Loading State */}
               {isLoading && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-2 text-muted-foreground"
+                  className="flex items-center gap-2 text-muted-foreground py-8 justify-center"
                 >
                   <div className="flex gap-1">
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-sm">Thinking...</span>
+                  <span className="text-sm">Analyzing...</span>
                 </motion.div>
               )}
             </AnimatePresence>
