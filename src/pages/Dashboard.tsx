@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
+import { format } from 'date-fns';
 
 type OutageType = Scenario['outage_type'];
 
@@ -82,7 +84,7 @@ function BreakdownList({ breakdown, lifecycleFilter, onTypeClick }: BreakdownLis
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: scenarios = [] } = useScenarios();
+  const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios();
 
   const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter(s => s.lifecycle_stage === 'Event');
@@ -146,11 +148,29 @@ export default function Dashboard() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <p className="text-sm text-muted-foreground mb-1">Welcome back</p>
-        <h1 className="text-2xl font-bold mb-2">Operations Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          {getOperationalSummary()} • {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Welcome back</p>
+            <h1 className="text-2xl font-bold mb-2">Operations Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              {getOperationalSummary()} • {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {dataUpdatedAt > 0 && (
+              <span>Updated {format(new Date(dataUpdatedAt), 'h:mm a')}</span>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7" 
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* KPI Tiles */}
