@@ -105,13 +105,13 @@ export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTable
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRowClick(scenario); }}>
-                        Edit
+                        Edit Event
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={(e) => { e.stopPropagation(); onDelete(scenario.id); }}
                         className="text-destructive"
                       >
-                        Delete
+                        Delete Event
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
