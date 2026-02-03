@@ -69,9 +69,9 @@ export default function Dashboard() {
 
   const handleTileClick = (filter: string | null) => {
     if (filter) {
-      navigate(`/scenarios?lifecycle=${encodeURIComponent(filter)}`);
+      navigate(`/events?lifecycle=${encodeURIComponent(filter)}`);
     } else {
-      navigate('/scenarios');
+      navigate('/events');
     }
   };
 
