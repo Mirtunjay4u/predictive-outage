@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,9 +31,10 @@ export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTable
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent bg-muted/30">
-            <TableHead className="w-[250px] font-semibold">Name</TableHead>
+            <TableHead className="w-[200px] font-semibold">Name</TableHead>
             <TableHead className="font-semibold">Stage</TableHead>
             <TableHead className="font-semibold">Lifecycle</TableHead>
+            <TableHead className="font-semibold">Outage Type</TableHead>
             <TableHead className="font-semibold">Operator</TableHead>
             <TableHead className="font-semibold">Scheduled</TableHead>
             <TableHead className="font-semibold">Updated</TableHead>
@@ -74,6 +76,11 @@ export function ScenarioTable({ scenarios, onRowClick, onDelete }: ScenarioTable
                   <StatusBadge variant={lifecycleVariant}>
                     {scenario.lifecycle_stage}
                   </StatusBadge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="text-xs font-medium">
+                    {scenario.outage_type || 'Unknown'}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {scenario.operator_role || '—'}

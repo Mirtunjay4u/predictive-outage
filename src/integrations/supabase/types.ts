@@ -23,6 +23,7 @@ export type Database = {
           name: string
           notes: string | null
           operator_role: string | null
+          outage_type: Database["public"]["Enums"]["outage_type"] | null
           priority: string | null
           scenario_time: string | null
           stage: boolean
@@ -36,6 +37,7 @@ export type Database = {
           name: string
           notes?: string | null
           operator_role?: string | null
+          outage_type?: Database["public"]["Enums"]["outage_type"] | null
           priority?: string | null
           scenario_time?: string | null
           stage?: boolean
@@ -49,6 +51,7 @@ export type Database = {
           name?: string
           notes?: string | null
           operator_role?: string | null
+          outage_type?: Database["public"]["Enums"]["outage_type"] | null
           priority?: string | null
           scenario_time?: string | null
           stage?: boolean
@@ -65,6 +68,18 @@ export type Database = {
     }
     Enums: {
       lifecycle_stage: "Pre-Event" | "Event" | "Post-Event"
+      outage_type:
+        | "Storm"
+        | "Flood"
+        | "Heavy Rain"
+        | "Heatwave"
+        | "Wildfire"
+        | "Lightning"
+        | "Ice/Snow"
+        | "High Wind"
+        | "Equipment Failure"
+        | "Vegetation"
+        | "Unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -193,6 +208,19 @@ export const Constants = {
   public: {
     Enums: {
       lifecycle_stage: ["Pre-Event", "Event", "Post-Event"],
+      outage_type: [
+        "Storm",
+        "Flood",
+        "Heavy Rain",
+        "Heatwave",
+        "Wildfire",
+        "Lightning",
+        "Ice/Snow",
+        "High Wind",
+        "Equipment Failure",
+        "Vegetation",
+        "Unknown",
+      ],
     },
   },
 } as const

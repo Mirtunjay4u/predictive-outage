@@ -68,6 +68,8 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
           operator_role: scenario.operator_role,
           scenario_time: scenario.scenario_time,
           notes: scenario.notes,
+          description: scenario.description,
+          outage_type: scenario.outage_type,
         } : {},
         retrieved_knowledge: [],
         constraints: [],

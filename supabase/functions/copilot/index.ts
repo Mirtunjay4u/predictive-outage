@@ -5,14 +5,42 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Server-side Context Packet - Permanent grounding knowledge
+const CONTEXT_PACKET = `
+CONTEXT PACKET (PERMANENT GROUNDING)
+
+SAFETY & COMPLIANCE REMINDER:
+- This is a decision-support tool only; it does not control systems or authorize actions.
+- All switching, restoration, and crew dispatch decisions require human approval.
+- Never imply access to live SCADA, OMS, ADMS, or weather feeds.
+
+DEFINITIONS:
+- Feeder: A distribution circuit originating from a substation that delivers power to customers.
+- Substation: A facility that transforms voltage and distributes power to feeders.
+- Critical Load: High-priority customers (hospitals, emergency services, water treatment) requiring expedited restoration.
+- Restoration Priority: A ranked order for re-energizing circuits based on customer count, critical loads, and safety.
+
+TYPICAL OPERATOR CONSIDERATIONS:
+- Crew availability: Number, location, and estimated travel time of field personnel.
+- Access constraints: Road closures, flooding, downed trees affecting equipment access.
+- Sectionalizing: Isolating faulted sections to restore power to unaffected customers.
+- Weather uncertainty: Evolving conditions may change restoration priorities and crew safety.
+- Customer impact: Number of customers affected; time without power.
+
+OUTPUT EXPECTATION:
+Always respond with structured JSON containing: mode_banner, framing_line (optional), insights (array of {title, bullets[]}), disclaimer.
+`;
+
 interface ScenarioContext {
   name?: string;
   stage?: boolean;
   lifecycle?: string;
+  lifecycle_stage?: string;
   description?: string;
   operator_role?: string;
   scenario_time?: string;
   notes?: string;
+  outage_type?: string;
 }
 
 interface CopilotRequest {
@@ -99,6 +127,12 @@ SOURCE OF TRUTH & KNOWLEDGE ENFORCEMENT
 
 • Never imply access to live SCADA, OMS, ADMS, weather feeds, or field systems.
 
+OUTAGE TYPE HANDLING
+
+• If an outage_type is provided in the scenario context, the FIRST insight section must explicitly reference it.
+• Title format: "Outage Driver: [OutageType] — Key Considerations"
+• Include outage-specific implications (e.g., flood = access issues, heatwave = transformer stress).
+
 OUTPUT REQUIREMENTS
 
 • Always display the active mode at the top of the response.
@@ -132,7 +166,8 @@ You MUST respond with valid JSON in exactly this format (no markdown, no code bl
   "disclaimer": "Decision support only. This system does not execute, authorize, or recommend operational actions. All decisions require explicit human approval. No live utility feeds were accessed."
 }
 
-The insights array should contain 2-4 sections, each with 2-5 bullet points.`;
+The insights array should contain 2-4 sections, each with 2-5 bullet points.
+If outage_type is present, the first insight MUST be about that outage type.`;
 
 function inferMode(userMessage: string): "DEMO" | "ACTIVE_EVENT" {
   const demoKeywords = ["demo", "walkthrough", "showcase", "executive overview", "presentation"];
@@ -149,25 +184,34 @@ function inferMode(userMessage: string): "DEMO" | "ACTIVE_EVENT" {
 function buildUserPrompt(request: CopilotRequest): string {
   const userMessage = request.user_message || request.message || "";
   const scenario = request.scenario;
+  const contextPacket = request.context_packet;
   
   let prompt = "";
   
-  if (scenario) {
-    prompt += "SCENARIO CONTEXT:\n";
-    if (scenario.name) prompt += `- Name: ${scenario.name}\n`;
-    if (scenario.lifecycle) prompt += `- Lifecycle Stage: ${scenario.lifecycle}\n`;
-    if (scenario.stage !== undefined) prompt += `- Staged: ${scenario.stage ? "Yes" : "No"}\n`;
-    if (scenario.description) prompt += `- Description: ${scenario.description}\n`;
-    if (scenario.operator_role) prompt += `- Operator Role: ${scenario.operator_role}\n`;
-    if (scenario.scenario_time) prompt += `- Scenario Time: ${scenario.scenario_time}\n`;
-    if (scenario.notes) prompt += `- Notes: ${scenario.notes}\n`;
-    prompt += "\n";
-  }
+  // Always include the permanent Context Packet
+  prompt += CONTEXT_PACKET + "\n\n";
   
-  if (request.context_packet && Object.keys(request.context_packet).length > 0) {
-    prompt += "ADDITIONAL CONTEXT:\n";
-    prompt += JSON.stringify(request.context_packet, null, 2);
-    prompt += "\n\n";
+  // Build scenario context from either scenario object or context_packet
+  const scenarioName = scenario?.name || (contextPacket?.scenario_name as string);
+  const lifecycle = scenario?.lifecycle || scenario?.lifecycle_stage || (contextPacket?.lifecycle_stage as string);
+  const stage = scenario?.stage ?? contextPacket?.stage;
+  const description = scenario?.description || (contextPacket?.description as string);
+  const operatorRole = scenario?.operator_role || (contextPacket?.operator_role as string);
+  const scenarioTime = scenario?.scenario_time || (contextPacket?.scenario_time as string);
+  const notes = scenario?.notes || (contextPacket?.notes as string);
+  const outageType = scenario?.outage_type || (contextPacket?.outage_type as string);
+  
+  if (scenarioName || lifecycle || description || outageType) {
+    prompt += "SCENARIO CONTEXT:\n";
+    if (scenarioName) prompt += `- Name: ${scenarioName}\n`;
+    if (outageType) prompt += `- Outage Type: ${outageType}\n`;
+    if (lifecycle) prompt += `- Lifecycle Stage: ${lifecycle}\n`;
+    if (stage !== undefined) prompt += `- Staged: ${stage ? "Yes" : "No"}\n`;
+    if (description) prompt += `- Description: ${description}\n`;
+    if (operatorRole) prompt += `- Operator Role: ${operatorRole}\n`;
+    if (scenarioTime) prompt += `- Scenario Time: ${scenarioTime}\n`;
+    if (notes) prompt += `- Notes: ${notes}\n`;
+    prompt += "\n";
   }
   
   prompt += `USER REQUEST: ${userMessage}`;
@@ -297,7 +341,7 @@ serve(async (req) => {
       );
     }
 
-    // Build the user prompt with scenario context
+    // Build the user prompt with scenario context and CONTEXT_PACKET
     const userPrompt = buildUserPrompt(body);
 
     // Call Lovable AI Gateway
