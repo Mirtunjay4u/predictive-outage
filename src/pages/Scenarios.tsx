@@ -158,13 +158,13 @@ export default function Scenarios() {
           ) : filteredScenarios.length === 0 ? (
             <EmptyState
               icon={FileText}
-              title="No scenarios found"
+              title="No events found"
               description={
                 scenarios.length === 0
-                  ? "Get started by creating your first scenario"
-                  : "No scenarios match your current filters"
+                  ? "Get started by creating your first event"
+                  : "No events match your current filters"
               }
-              actionLabel={scenarios.length === 0 ? "Create Scenario" : undefined}
+              actionLabel={scenarios.length === 0 ? "Create Event" : undefined}
               onAction={scenarios.length === 0 ? handleCreate : undefined}
             />
           ) : viewMode === 'table' ? (
