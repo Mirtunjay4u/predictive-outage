@@ -176,16 +176,11 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
             animate={{ opacity: 1 }}
             className="flex items-center justify-between flex-1 min-w-0"
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-sm font-semibold">Copilot</h3>
-                <p className="text-xs text-muted-foreground truncate">
-                  {scenario ? scenario.name : 'No scenario selected'}
-                </p>
-              </div>
+            <div className="flex flex-col min-w-0">
+              <h3 className="text-base font-semibold text-foreground">Operator Copilot</h3>
+              <p className="text-xs text-muted-foreground">
+                Predictive Outage Management — Decision Support Only
+              </p>
             </div>
             {response && (
               <Button
