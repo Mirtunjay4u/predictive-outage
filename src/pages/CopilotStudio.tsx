@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert, Lightbulb, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,8 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { supabase } from '@/integrations/supabase/client';
 import type { CopilotMode, CopilotRequest, CopilotResponse } from '@/types/copilot';
+import type { OutageType } from '@/types/scenario';
+import { OUTAGE_TYPES } from '@/types/scenario';
 
 const modeOptions: { value: CopilotMode; label: string; icon: string }[] = [
   { value: 'DEMO', label: 'Demo Mode', icon: '🎯' },
@@ -24,6 +27,8 @@ const modeOptions: { value: CopilotMode; label: string; icon: string }[] = [
 
 export default function CopilotStudio() {
   const [mode, setMode] = useState<CopilotMode>('DEMO');
+  const [outageType, setOutageType] = useState<OutageType>('Storm');
+  const [scenarioName, setScenarioName] = useState('Test Scenario');
   const [userMessage, setUserMessage] = useState('');
   const [response, setResponse] = useState<CopilotResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +43,12 @@ export default function CopilotStudio() {
     const request: CopilotRequest = {
       mode,
       user_message: userMessage,
-      context_packet: {},
+      scenario: {
+        scenario_name: scenarioName,
+        outage_type: outageType,
+        lifecycle_stage: 'Event',
+        stage: false,
+      },
       retrieved_knowledge: [],
       constraints: [],
     };
@@ -72,7 +82,7 @@ export default function CopilotStudio() {
               <p className="text-sm text-muted-foreground">Scenario Studio</p>
             </div>
             <Badge variant="outline" className="ml-auto bg-warning/10 text-warning border-warning/30">
-              Phase 1 — I/O Contract
+              Phase 1 — Deterministic Mock
             </Badge>
           </div>
         </div>
@@ -103,6 +113,23 @@ export default function CopilotStudio() {
                           <span>{opt.icon}</span>
                           <span>{opt.label}</span>
                         </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Outage Type Selector */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Outage Type</label>
+                <Select value={outageType} onValueChange={(v) => setOutageType(v as OutageType)}>
+                  <SelectTrigger className="w-full bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OUTAGE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -178,7 +205,7 @@ export default function CopilotStudio() {
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
                     <p className="mb-2">Send a message to see the Copilot response.</p>
                     <p className="text-xs">
-                      You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
+                      Responses are deterministically generated from mode + outage_type + scenario fields.
                     </p>
                   </motion.div>
                 )}
@@ -200,7 +227,7 @@ export default function CopilotStudio() {
                         <Sparkles className="w-8 h-8 text-primary" />
                       </motion.div>
                     </div>
-                    <p className="text-center text-muted-foreground">Analyzing your request...</p>
+                    <p className="text-center text-muted-foreground">Generating response...</p>
                   </motion.div>
                 )}
 
@@ -212,6 +239,12 @@ export default function CopilotStudio() {
                     exit={{ opacity: 0 }}
                     className="space-y-5"
                   >
+                    {/* Outage Type Header */}
+                    <div className="flex items-center gap-2 pb-2 border-b border-border">
+                      <span className="text-xs text-muted-foreground">Outage Type:</span>
+                      <OutageTypeBadge type={outageType} />
+                    </div>
+
                     {/* Mode Banner */}
                     <div className="flex items-center justify-start">
                       <Badge className="bg-primary/90 text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full">
@@ -258,10 +291,50 @@ export default function CopilotStudio() {
                         ))
                       ) : (
                         <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
-                          No insights returned. You can ask for: summary, risks, trade-offs, restoration prioritization, post-event outcomes.
+                          No insights returned.
                         </div>
                       )}
                     </div>
+
+                    {/* Assumptions Block */}
+                    {response.assumptions && response.assumptions.length > 0 && (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                            Assumptions
+                          </span>
+                        </div>
+                        <ul className="space-y-1">
+                          {response.assumptions.map((assumption, index) => (
+                            <li key={index} className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                              <span className="mt-0.5">•</span>
+                              <span>{assumption}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Source Notes Block */}
+                    {response.source_notes && response.source_notes.length > 0 && (
+                      <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                            Source Notes
+                          </span>
+                        </div>
+                        <ul className="space-y-1">
+                          {response.source_notes.map((note, index) => (
+                            <li key={index} className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                              <span className="mt-0.5">•</span>
+                              <span>{note}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     {/* Disclaimer */}
                     <div className="pt-4 border-t border-border">

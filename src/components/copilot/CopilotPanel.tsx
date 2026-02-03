@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle } from 'lucide-react';
+import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle, FileText, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import type { Scenario } from '@/types/scenario';
 import type { CopilotResponse, CopilotMode, CopilotRequest } from '@/types/copilot';
 
@@ -36,7 +36,6 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useMockAI, setUseMockAI] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,8 +59,8 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
       const requestBody: CopilotRequest = {
         mode: mode,
         user_message: prompt || `Analyze scenario in ${mode} mode`,
-        context_packet: scenario ? {
-          scenario_id: scenario.id,
+        scenario_id: scenario?.id,
+        scenario: scenario ? {
           scenario_name: scenario.name,
           lifecycle_stage: scenario.lifecycle_stage,
           stage: scenario.stage,
@@ -94,7 +93,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
   return (
     <motion.div
       initial={false}
-      animate={{ width: isOpen ? 400 : 48 }}
+      animate={{ width: isOpen ? 420 : 48 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="h-full border-l border-border bg-card flex flex-col"
     >
@@ -118,27 +117,18 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-between flex-1"
+            className="flex items-center justify-between flex-1 min-w-0"
           >
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center flex-shrink-0">
                 <Bot className="w-4 h-4 text-primary-foreground" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm font-semibold">Copilot</h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground truncate">
                   {scenario ? scenario.name : 'No scenario selected'}
                 </p>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Mock</span>
-              <Switch
-                checked={useMockAI}
-                onCheckedChange={setUseMockAI}
-                className="scale-75"
-              />
             </div>
           </motion.div>
         )}
@@ -146,6 +136,16 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
       {isOpen && (
         <>
+          {/* Outage Type Header */}
+          {scenario && (
+            <div className="px-4 py-2 border-b border-border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Outage Type:</span>
+                <OutageTypeBadge type={scenario.outage_type} />
+              </div>
+            </div>
+          )}
+
           {/* Content */}
           <ScrollArea className="flex-1 p-4" ref={scrollRef}>
             <AnimatePresence mode="popLayout">
@@ -219,7 +219,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
                   {/* Framing Line */}
                   {response.framing_line && (
-                    <p className="text-sm font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-foreground border-l-2 border-primary pl-3">
                       {response.framing_line}
                     </p>
                   )}
@@ -258,8 +258,48 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                     </div>
                   )}
 
+                  {/* Assumptions Block */}
+                  {response.assumptions && response.assumptions.length > 0 && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                          Assumptions
+                        </span>
+                      </div>
+                      <ul className="space-y-1">
+                        {response.assumptions.map((assumption, index) => (
+                          <li key={index} className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                            <span className="mt-0.5">•</span>
+                            <span>{assumption}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Source Notes Block */}
+                  {response.source_notes && response.source_notes.length > 0 && (
+                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+                          Source Notes
+                        </span>
+                      </div>
+                      <ul className="space-y-1">
+                        {response.source_notes.map((note, index) => (
+                          <li key={index} className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                            <span className="mt-0.5">•</span>
+                            <span>{note}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Disclaimer */}
-                  <div className="mt-6 p-3 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border">
                     <div className="flex items-start gap-2">
                       <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                       <div>
