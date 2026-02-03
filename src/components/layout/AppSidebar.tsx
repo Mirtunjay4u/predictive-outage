@@ -33,6 +33,8 @@ export function AppSidebar() {
       animate={{ width: collapsed ? 72 : 240 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="relative flex flex-col h-screen bg-sidebar border-r border-sidebar-border"
+      role="complementary"
+      aria-label="Application sidebar"
     >
       {/* Logo */}
       <div className="flex items-center min-h-16 px-4 py-3 border-b border-sidebar-border">
@@ -55,7 +57,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-1" role="navigation" aria-label="Main navigation">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || 
             (item.path === '/scenarios' && location.pathname.startsWith('/scenarios'));
