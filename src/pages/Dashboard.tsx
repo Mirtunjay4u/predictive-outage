@@ -1,10 +1,33 @@
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
 
 type OutageType = Scenario['outage_type'];
+
+const KPI_TOOLTIPS: Record<string, string> = {
+  'Total Events': 'All tracked outage and risk events across their lifecycle.',
+  'Pre-Event': 'Events under monitoring or preparedness before outages occur.',
+  'Active Events': 'Ongoing outage or incident events requiring operational attention.',
+  'High Priority': 'Critical active events impacting safety, hospitals, or large customer counts.',
+  'Post-Event': 'Completed events under review or analysis.',
+};
+
+const OUTAGE_TYPE_TOOLTIPS: Record<string, string> = {
+  'Storm': 'Weather-driven events influenced by wind, rain, or lightning.',
+  'Flood': 'Events where access, safety, or restoration is constrained by flooding.',
+  'Heavy Rain': 'Events caused by excessive rainfall affecting infrastructure.',
+  'Heatwave': 'Events triggered by extreme heat affecting equipment or demand.',
+  'Wildfire': 'Events related to fire risk or active wildfire conditions.',
+  'Lightning': 'Events caused by lightning strikes or electrical surges.',
+  'Ice/Snow': 'Events involving ice accumulation or snow-related damage.',
+  'High Wind': 'Events caused by sustained high winds or gusts.',
+  'Equipment Failure': 'Events caused by mechanical or electrical equipment issues.',
+  'Vegetation': 'Events caused by tree or vegetation contact with infrastructure.',
+  'Unknown': 'Events with undetermined or unclassified cause.',
+};
 
 function getOutageBreakdown(scenarios: Scenario[]): Record<string, number> {
   const breakdown: Record<string, number> = {};
@@ -26,9 +49,19 @@ function BreakdownList({ breakdown }: { breakdown: Record<string, number> }) {
     <div className="mt-3 pt-3 border-t border-border/40">
       <div className="max-h-24 overflow-y-auto space-y-1">
         {entries.map(([type, count]) => (
-          <p key={type} className="text-xs text-muted-foreground/70">
-            • {type}: {count}
-          </p>
+          <Tooltip key={type} delayDuration={300}>
+            <TooltipTrigger asChild>
+              <p className="text-xs text-muted-foreground/70 cursor-default">
+                • {type}: {count}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className="max-w-[200px] text-xs bg-popover/95 text-popover-foreground border-border/50"
+            >
+              {OUTAGE_TYPE_TOOLTIPS[type] || `Events categorized as ${type}.`}
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
     </div>
@@ -85,24 +118,33 @@ export default function Dashboard() {
       {/* KPI Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat) => (
-          <Card 
-            key={stat.label} 
-            className="border-border/50 cursor-pointer transition-all hover:border-primary/40 hover:shadow-md"
-            onClick={() => handleTileClick(stat.filter)}
-          >
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-                  <stat.icon className="w-5 h-5" />
-                </div>
-              </div>
-              {stat.breakdown && <BreakdownList breakdown={stat.breakdown} />}
-            </CardContent>
-          </Card>
+          <Tooltip key={stat.label} delayDuration={400}>
+            <TooltipTrigger asChild>
+              <Card 
+                className="border-border/50 cursor-pointer transition-all hover:border-primary/40 hover:shadow-md"
+                onClick={() => handleTileClick(stat.filter)}
+              >
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                      <p className="text-3xl font-bold mt-1">{stat.value}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                      <stat.icon className="w-5 h-5" />
+                    </div>
+                  </div>
+                  {stat.breakdown && <BreakdownList breakdown={stat.breakdown} />}
+                </CardContent>
+              </Card>
+            </TooltipTrigger>
+            <TooltipContent 
+              side="bottom" 
+              className="max-w-[220px] text-xs bg-popover/95 text-popover-foreground border-border/50"
+            >
+              {KPI_TOOLTIPS[stat.label]}
+            </TooltipContent>
+          </Tooltip>
         ))}
       </div>
     </div>
