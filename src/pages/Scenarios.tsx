@@ -120,9 +120,9 @@ export default function Scenarios() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <h1 className="text-2xl font-bold mb-1">Scenarios</h1>
+            <h1 className="text-2xl font-bold mb-1">Events</h1>
             <p className="text-muted-foreground">
-              Manage and monitor operational scenarios
+              Manage and monitor operational events
             </p>
           </motion.div>
 
