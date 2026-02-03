@@ -25,11 +25,20 @@ const suggestedPrompts = [
   { label: 'Post-Event Review', mode: 'POST_EVENT_REVIEW' as CopilotMode, icon: Sparkles },
 ];
 
-function getModeBannerVariant(banner: string): 'default' | 'secondary' | 'destructive' | 'outline' {
-  if (banner.includes('DEMO')) return 'secondary';
-  if (banner.includes('ACTIVE')) return 'destructive';
-  if (banner.includes('PLANNING')) return 'outline';
-  return 'default';
+function getModeBannerStyles(banner: string): string {
+  if (banner.includes('DEMO')) {
+    return 'bg-slate-100 text-slate-700 border-slate-200';
+  }
+  if (banner.includes('ACTIVE')) {
+    return 'bg-amber-50 text-amber-800 border-amber-200';
+  }
+  if (banner.includes('PLANNING') || banner.includes('TRAINING')) {
+    return 'bg-sky-50 text-sky-700 border-sky-200';
+  }
+  if (banner.includes('POST-EVENT') || banner.includes('REVIEW')) {
+    return 'bg-violet-50 text-violet-700 border-violet-200';
+  }
+  return 'bg-muted text-muted-foreground border-border';
 }
 
 export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) {
@@ -199,6 +208,18 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
       {isOpen && (
         <>
+          {/* Sticky Mode Banner - Always visible when response exists */}
+          {response && (
+            <div className="px-4 py-2 border-b border-border bg-card">
+              <span className={cn(
+                "inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border",
+                getModeBannerStyles(response.mode_banner)
+              )}>
+                {response.mode_banner}
+              </span>
+            </div>
+          )}
+
           {/* Outage Type Header */}
           {scenario && (
             <div className="px-4 py-2 border-b border-border bg-muted/30">
@@ -272,13 +293,6 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4"
                 >
-                  {/* Mode Banner */}
-                  <Badge 
-                    variant={getModeBannerVariant(response.mode_banner)}
-                    className="text-xs font-bold tracking-wide"
-                  >
-                    {response.mode_banner}
-                  </Badge>
 
                   {/* Framing Line */}
                   {response.framing_line && (
