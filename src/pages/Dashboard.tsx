@@ -1,24 +1,66 @@
 import { FileText, Clock, Activity, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useScenarios } from '@/hooks/useScenarios';
+import type { Scenario } from '@/types/scenario';
+
+type OutageType = Scenario['outage_type'];
+
+function getOutageBreakdown(scenarios: Scenario[]): Record<string, number> {
+  const breakdown: Record<string, number> = {};
+  scenarios.forEach(s => {
+    const type = s.outage_type || 'Unknown';
+    breakdown[type] = (breakdown[type] || 0) + 1;
+  });
+  return breakdown;
+}
+
+function BreakdownList({ breakdown }: { breakdown: Record<string, number> }) {
+  const entries = Object.entries(breakdown)
+    .filter(([_, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/40 space-y-1">
+      {entries.map(([type, count]) => (
+        <p key={type} className="text-xs text-muted-foreground/70">
+          • {type}: {count}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data: scenarios = [] } = useScenarios();
 
+  const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
+  const activeScenarios = scenarios.filter(s => s.lifecycle_stage === 'Event');
+  const highPriorityScenarios = scenarios.filter(s => s.lifecycle_stage === 'Event' && s.priority === 'high');
+  const postEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Post-Event');
+
   const stats = {
     total: scenarios.length,
-    preEvent: scenarios.filter(s => s.lifecycle_stage === 'Pre-Event').length,
-    active: scenarios.filter(s => s.lifecycle_stage === 'Event').length,
-    highPriority: scenarios.filter(s => s.lifecycle_stage === 'Event' && s.priority === 'high').length,
-    postEvent: scenarios.filter(s => s.lifecycle_stage === 'Post-Event').length,
+    preEvent: preEventScenarios.length,
+    active: activeScenarios.length,
+    highPriority: highPriorityScenarios.length,
+    postEvent: postEventScenarios.length,
+  };
+
+  const breakdowns = {
+    preEvent: getOutageBreakdown(preEventScenarios),
+    active: getOutageBreakdown(activeScenarios),
+    highPriority: getOutageBreakdown(highPriorityScenarios),
+    postEvent: getOutageBreakdown(postEventScenarios),
   };
 
   const statCards = [
-    { label: 'Total Events', value: stats.total, icon: FileText },
-    { label: 'Pre-Event', value: stats.preEvent, icon: Clock },
-    { label: 'Active Events', value: stats.active, icon: Activity },
-    { label: 'High Priority', value: stats.highPriority, icon: AlertTriangle },
-    { label: 'Post-Event', value: stats.postEvent, icon: CheckCircle },
+    { label: 'Total Events', value: stats.total, icon: FileText, breakdown: null },
+    { label: 'Pre-Event', value: stats.preEvent, icon: Clock, breakdown: breakdowns.preEvent },
+    { label: 'Active Events', value: stats.active, icon: Activity, breakdown: breakdowns.active },
+    { label: 'High Priority', value: stats.highPriority, icon: AlertTriangle, breakdown: breakdowns.highPriority },
+    { label: 'Post-Event', value: stats.postEvent, icon: CheckCircle, breakdown: breakdowns.postEvent },
   ];
 
   return (
@@ -42,6 +84,7 @@ export default function Dashboard() {
                   <stat.icon className="w-5 h-5" />
                 </div>
               </div>
+              {stat.breakdown && <BreakdownList breakdown={stat.breakdown} />}
             </CardContent>
           </Card>
         ))}
