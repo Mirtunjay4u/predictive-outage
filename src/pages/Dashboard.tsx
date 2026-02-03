@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, AlertCircle } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -87,6 +88,7 @@ const HIGH_PRIORITY_THRESHOLD = 3;
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [alertDismissed, setAlertDismissed] = useState(false);
   const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({ 
     refetchInterval: 30000 // Auto-refresh every 30 seconds
   });
@@ -189,22 +191,38 @@ export default function Dashboard() {
       </div>
 
       {/* High Priority Alert Banner */}
-      {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && (
+      {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && !alertDismissed && (
         <Alert 
           variant="destructive" 
-          className="mb-6 border-destructive/30 bg-destructive/5 cursor-pointer transition-colors hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2"
-          onClick={() => navigate('/events?lifecycle=Event&priority=high')}
-          onKeyDown={(e) => e.key === 'Enter' && navigate('/events?lifecycle=Event&priority=high')}
-          tabIndex={0}
-          role="button"
-          aria-label={`View ${stats.highPriority} high priority events`}
+          className="mb-6 border-destructive/30 bg-destructive/5 transition-colors hover:bg-destructive/10 focus-within:ring-2 focus-within:ring-destructive/50 focus-within:ring-offset-2"
         >
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="ml-2">
-            <span className="font-medium">{stats.highPriority} high priority events</span>
-            <span className="text-muted-foreground"> require immediate attention</span>
-            <span className="ml-2 text-xs underline">View all →</span>
-          </AlertDescription>
+          <div 
+            className="flex items-center flex-1 cursor-pointer"
+            onClick={() => navigate('/events?lifecycle=Event&priority=high')}
+            onKeyDown={(e) => e.key === 'Enter' && navigate('/events?lifecycle=Event&priority=high')}
+            tabIndex={0}
+            role="button"
+            aria-label={`View ${stats.highPriority} high priority events`}
+          >
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="ml-2">
+              <span className="font-medium">{stats.highPriority} high priority events</span>
+              <span className="text-muted-foreground"> require immediate attention</span>
+              <span className="ml-2 text-xs underline">View all →</span>
+            </AlertDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 ml-auto shrink-0 hover:bg-destructive/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAlertDismissed(true);
+            }}
+            aria-label="Dismiss alert"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
         </Alert>
       )}
 
