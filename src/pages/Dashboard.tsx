@@ -129,11 +129,28 @@ export default function Dashboard() {
     navigate(`/events?${params.toString()}`);
   };
 
+  // Generate operational summary
+  const getOperationalSummary = () => {
+    if (stats.highPriority > 0) {
+      return `${stats.highPriority} high priority event${stats.highPriority > 1 ? 's' : ''} requiring attention`;
+    }
+    if (stats.active > 0) {
+      return `${stats.active} active event${stats.active > 1 ? 's' : ''} in progress`;
+    }
+    if (stats.preEvent > 0) {
+      return `${stats.preEvent} event${stats.preEvent > 1 ? 's' : ''} under monitoring`;
+    }
+    return 'No active events at this time';
+  };
+
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your event operations</p>
+        <p className="text-sm text-muted-foreground mb-1">Welcome back</p>
+        <h1 className="text-2xl font-bold mb-2">Operations Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          {getOperationalSummary()} • {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
+        </p>
       </div>
 
       {/* KPI Tiles */}
