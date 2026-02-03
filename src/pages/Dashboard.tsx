@@ -22,12 +22,14 @@ function BreakdownList({ breakdown }: { breakdown: Record<string, number> }) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="mt-3 pt-3 border-t border-border/40 space-y-1">
-      {entries.map(([type, count]) => (
-        <p key={type} className="text-xs text-muted-foreground/70">
-          • {type}: {count}
-        </p>
-      ))}
+    <div className="mt-3 pt-3 border-t border-border/40">
+      <div className="max-h-24 overflow-y-auto space-y-1">
+        {entries.map(([type, count]) => (
+          <p key={type} className="text-xs text-muted-foreground/70">
+            • {type}: {count}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
