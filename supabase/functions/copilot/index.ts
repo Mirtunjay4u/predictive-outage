@@ -22,85 +22,130 @@ interface CopilotResponse {
   disclaimer: string;
 }
 
+function inferMode(userMessage: string): CopilotRequest["mode"] {
+  const demoKeywords = ["demo", "walkthrough", "showcase", "executive overview", "presentation"];
+  const lowerMessage = userMessage.toLowerCase();
+  
+  for (const keyword of demoKeywords) {
+    if (lowerMessage.includes(keyword)) {
+      return "DEMO";
+    }
+  }
+  return "ACTIVE_EVENT";
+}
+
 function generateMockResponse(request: CopilotRequest): CopilotResponse {
-  const { mode, user_message, context_packet } = request;
+  const { user_message, context_packet } = request;
+  
+  // Use provided mode or infer from message
+  const mode = request.mode || inferMode(user_message);
 
+  // Mode banners per spec
   const modeBanners: Record<string, string> = {
-    DEMO: "🎯 Demo Mode — Showcasing Copilot Capabilities",
-    ACTIVE_EVENT: "🔴 Active Event — Real-time Operational Support",
-    PLANNING: "📋 Planning Mode — Strategic Scenario Development",
-    POST_EVENT_REVIEW: "📊 Post-Event Review — Analysis & Lessons Learned",
+    DEMO: "MODE: DEMO MODE",
+    ACTIVE_EVENT: "MODE: ACTIVE EVENT MODE",
+    PLANNING: "MODE: PLANNING / TRAINING MODE",
+    POST_EVENT_REVIEW: "MODE: POST-EVENT REVIEW MODE",
   };
 
-  const modeFramingLines: Record<string, string> = {
-    DEMO: "This is a demonstration of the Operator Copilot's analytical capabilities.",
-    ACTIVE_EVENT: "Monitoring live scenario conditions and providing real-time guidance.",
-    PLANNING: "Helping you prepare and optimize your scenario execution plan.",
-    POST_EVENT_REVIEW: "Analyzing completed scenario data to extract actionable insights.",
-  };
+  const scenarioContext = context_packet?.scenario_name 
+    ? ` for scenario "${context_packet.scenario_name}"`
+    : "";
 
-  const baseInsights = [
-    `Analyzing your request: "${user_message.slice(0, 50)}${user_message.length > 50 ? '...' : ''}"`,
-  ];
+  // DEMO MODE response
+  if (mode === "DEMO") {
+    return {
+      mode_banner: modeBanners.DEMO,
+      framing_line: `This demonstration illustrates how the Operator Copilot surfaces actionable intelligence${scenarioContext}.`,
+      insights: [
+        `The model highlights key operational factors derived from the user query: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
+        "This helps surface contextual awareness by synthesizing scenario parameters and historical patterns.",
+        "The Copilot identifies decision-relevant trade-offs an operator would typically evaluate.",
+        "An operator would then weigh these factors against current constraints and priorities.",
+        "The model presents options ranked by operational impact and implementation complexity.",
+        "This approach reduces cognitive load during high-tempo decision windows.",
+        "Why this helps operators: Rapid synthesis of complex inputs enables faster, more confident decisions.",
+      ],
+      tradeoffs: [
+        "Speed vs. thoroughness: Demo responses prioritize breadth over depth.",
+        "Generic vs. specific: Without live data, insights remain illustrative.",
+      ],
+      source_notes: [],
+      disclaimer: "This is a demonstration of Copilot capabilities. No live SCADA, OMS, ADMS, or weather systems were accessed. All insights are illustrative mock data.",
+    };
+  }
 
-  // Mode-specific insights
-  const modeInsights: Record<string, string[]> = {
-    DEMO: [
-      "The Copilot can process scenario context, operator roles, and lifecycle stages",
-      "Integration with knowledge bases enables context-aware recommendations",
-      "Real-time validation checks ensure operational readiness",
-    ],
-    ACTIVE_EVENT: [
-      "Current scenario status indicators are being monitored",
-      "Operator positioning and resource allocation tracked in real-time",
-      "Escalation pathways are primed for rapid response if needed",
-    ],
-    PLANNING: [
-      "Scenario timeline analysis suggests optimal preparation windows",
-      "Resource requirements have been mapped against available capacity",
-      "Risk factors identified for mitigation planning",
-    ],
-    POST_EVENT_REVIEW: [
-      "Timeline reconstruction shows key decision points",
-      "Performance metrics indicate areas for improvement",
-      "Lessons learned have been catalogued for future reference",
-    ],
-  };
+  // ACTIVE_EVENT MODE response
+  if (mode === "ACTIVE_EVENT") {
+    return {
+      mode_banner: modeBanners.ACTIVE_EVENT,
+      framing_line: `Real-time operational support active${scenarioContext}.`,
+      insights: [
+        `**Situation Summary:** Analyzing operational context for query: "${user_message.slice(0, 50)}${user_message.length > 50 ? '...' : ''}"`,
+        "Current scenario parameters indicate standard operational conditions with no critical alerts flagged.",
+        "**Key Uncertainties:** External factors (weather, demand fluctuations) remain unmeasured in this mock environment.",
+        "Resource availability and personnel positioning data would typically inform prioritization.",
+        "**Decision Considerations:** Evaluate response timing against operational tempo requirements.",
+        "Consider escalation pathways if conditions exceed defined thresholds.",
+        "Cross-functional coordination may be required depending on scenario scope.",
+      ],
+      tradeoffs: [
+        "Immediate action vs. information gathering: Balance speed with situational awareness.",
+        "Local optimization vs. system-wide impact: Consider downstream effects of decisions.",
+      ],
+      source_notes: [
+        "Source Notes: No external systems accessed; demo mock only.",
+      ],
+      disclaimer: "Decision support only. No control actions. Human approval required. No live SCADA, OMS, ADMS, or weather feeds were accessed.",
+    };
+  }
 
-  const modeTradeoffs: Record<string, string[]> = {
-    DEMO: [
-      "Demo mode provides simulated responses only",
-      "Full AI integration available in production deployment",
-    ],
-    ACTIVE_EVENT: [
-      "Speed vs. thoroughness: Prioritizing rapid response",
-      "Automation vs. human oversight: Maintaining operator control",
-    ],
-    PLANNING: [
-      "Comprehensive planning requires time investment upfront",
-      "Flexible plans may sacrifice optimization for adaptability",
-    ],
-    POST_EVENT_REVIEW: [
-      "Deep analysis takes time but yields better insights",
-      "Historical data quality affects recommendation accuracy",
-    ],
-  };
+  // PLANNING MODE response
+  if (mode === "PLANNING") {
+    return {
+      mode_banner: modeBanners.PLANNING,
+      framing_line: `Strategic planning and training analysis${scenarioContext}.`,
+      insights: [
+        `The model analyzes planning considerations for: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
+        "**Preparation Phase:** Optimal readiness windows identified based on scenario parameters.",
+        "Resource allocation models suggest load-balanced distribution across operational zones.",
+        "**Risk Assessment:** Potential bottlenecks flagged for proactive mitigation.",
+        "Training scenarios can be generated from historical pattern analysis.",
+        "**Optimization Opportunities:** Process improvements identified through comparative analysis.",
+        "Why this helps operators: Systematic preparation reduces response variance during live events.",
+      ],
+      tradeoffs: [
+        "Comprehensive planning vs. operational flexibility: Over-specification may limit adaptability.",
+        "Training fidelity vs. resource investment: Higher-fidelity exercises require more preparation.",
+      ],
+      source_notes: [
+        "Source Notes: No external systems accessed; demo mock only.",
+      ],
+      disclaimer: "Planning support only. No live SCADA, OMS, ADMS, or weather feeds were accessed. All insights are illustrative.",
+    };
+  }
 
-  const contextInsight = context_packet?.scenario_name
-    ? `Context loaded for scenario: "${context_packet.scenario_name}"`
-    : "No specific scenario context provided";
-
+  // POST_EVENT_REVIEW MODE response
   return {
-    mode_banner: modeBanners[mode] || modeBanners.DEMO,
-    framing_line: modeFramingLines[mode],
-    insights: [...baseInsights, contextInsight, ...modeInsights[mode]],
-    tradeoffs: modeTradeoffs[mode],
-    source_notes: [
-      "Mock response generated for demonstration purposes",
-      "Knowledge retrieval system: Simulated",
-      `Constraints applied: ${request.constraints.length || 0}`,
+    mode_banner: modeBanners.POST_EVENT_REVIEW,
+    framing_line: `Post-event analysis and lessons learned${scenarioContext}.`,
+    insights: [
+      `Reviewing event context: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
+      "**Timeline Reconstruction:** Key decision points identified for sequential analysis.",
+      "**Performance Metrics:** Response timing and resource utilization tracked against benchmarks.",
+      "Deviation analysis highlights variance from standard operating procedures.",
+      "**Lessons Learned:** Improvement opportunities catalogued for future reference.",
+      "Process refinements suggested based on observed patterns.",
+      "Why this helps operators: Structured retrospectives accelerate organizational learning.",
     ],
-    disclaimer: "This is a mocked response. In production, responses will be generated by the AI model with real-time data integration.",
+    tradeoffs: [
+      "Depth of analysis vs. time to actionable insights: Balance thoroughness with urgency.",
+      "Individual accountability vs. systemic improvement: Focus on process, not blame.",
+    ],
+    source_notes: [
+      "Source Notes: No external systems accessed; demo mock only.",
+    ],
+    disclaimer: "Review and analysis only. No live SCADA, OMS, ADMS, or weather feeds were accessed. Historical data is simulated.",
   };
 }
 

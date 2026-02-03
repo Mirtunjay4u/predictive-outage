@@ -211,11 +211,15 @@ export default function CopilotStudio() {
                   >
                     {/* Mode Banner */}
                     <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                      <p className="font-semibold text-foreground">{response.mode_banner}</p>
-                      {response.framing_line && (
-                        <p className="text-sm text-muted-foreground mt-1">{response.framing_line}</p>
-                      )}
+                      <p className="font-bold text-foreground tracking-wide">{response.mode_banner}</p>
                     </div>
+
+                    {/* Framing Line */}
+                    {response.framing_line && (
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                        <p className="text-sm text-foreground italic">{response.framing_line}</p>
+                      </div>
+                    )}
 
                     {/* Insights */}
                     <div className="space-y-2">
