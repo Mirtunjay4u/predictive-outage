@@ -182,8 +182,12 @@ export default function Dashboard() {
       {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && (
         <Alert 
           variant="destructive" 
-          className="mb-6 border-destructive/30 bg-destructive/5 cursor-pointer transition-colors hover:bg-destructive/10"
+          className="mb-6 border-destructive/30 bg-destructive/5 cursor-pointer transition-colors hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-destructive/50 focus:ring-offset-2"
           onClick={() => navigate('/events?lifecycle=Event&priority=high')}
+          onKeyDown={(e) => e.key === 'Enter' && navigate('/events?lifecycle=Event&priority=high')}
+          tabIndex={0}
+          role="button"
+          aria-label={`View ${stats.highPriority} high priority events`}
         >
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="ml-2">
