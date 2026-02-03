@@ -289,6 +289,13 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
               {response && (
                 <div className="space-y-6">
 
+                  {/* Context Confidence Line */}
+                  {scenario && (
+                    <p className="text-xs text-muted-foreground/70">
+                      Context: Scenario '{scenario.name}' • Outage Type: {scenario.outage_type || 'Unknown'}
+                    </p>
+                  )}
+
                   {/* Framing Line */}
                   {response.framing_line && (
                     <p className="text-sm font-medium text-foreground leading-relaxed border-l-2 border-muted-foreground/30 pl-4 max-w-prose">
