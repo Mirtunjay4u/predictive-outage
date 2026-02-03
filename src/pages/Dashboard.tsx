@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
 import { format } from 'date-fns';
@@ -81,6 +82,8 @@ function BreakdownList({ breakdown, lifecycleFilter, onTypeClick }: BreakdownLis
     </div>
   );
 }
+
+const HIGH_PRIORITY_THRESHOLD = 3;
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -174,6 +177,17 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* High Priority Alert Banner */}
+      {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && (
+        <Alert variant="destructive" className="mb-6 border-destructive/30 bg-destructive/5">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="ml-2">
+            <span className="font-medium">{stats.highPriority} high priority events</span>
+            <span className="text-muted-foreground"> require immediate attention</span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* KPI Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
