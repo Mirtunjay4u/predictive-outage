@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FileText, AlertTriangle } from 'lucide-react';
 import { useScenarios, useCreateScenario, useUpdateScenario, useDeleteScenario } from '@/hooks/useScenarios';
@@ -22,6 +23,7 @@ import {
 import type { Scenario, ScenarioInsert } from '@/types/scenario';
 
 export default function Scenarios() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [stageFilter, setStageFilter] = useState('all');
   const [lifecycleFilter, setLifecycleFilter] = useState('all');
@@ -30,6 +32,16 @@ export default function Scenarios() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Read lifecycle filter from URL params on mount
+  useEffect(() => {
+    const lifecycleParam = searchParams.get('lifecycle');
+    if (lifecycleParam) {
+      setLifecycleFilter(lifecycleParam);
+      // Clear the URL param after applying
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { data: scenarios = [], isLoading, error } = useScenarios();
   const createMutation = useCreateScenario();
