@@ -21,10 +21,14 @@ export interface CopilotRequest {
   constraints: string[];
 }
 
+export interface CopilotInsight {
+  title: string;
+  bullets: string[];
+}
+
 export interface CopilotResponse {
   mode_banner: string;
-  framing_line: string;
-  insights: string[];
-  why_it_helps: string;
+  framing_line?: string;
+  insights: CopilotInsight[];
   disclaimer: string;
 }
