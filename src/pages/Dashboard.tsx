@@ -204,8 +204,12 @@ export default function Dashboard() {
           <Tooltip key={stat.label} delayDuration={400}>
             <TooltipTrigger asChild>
               <Card 
-                className="border-border/50 cursor-pointer transition-all hover:border-primary/40 hover:shadow-md"
+                className="border-border/50 cursor-pointer transition-all hover:border-primary/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
                 onClick={() => handleTileClick(stat.filter)}
+                onKeyDown={(e) => e.key === 'Enter' && handleTileClick(stat.filter)}
+                tabIndex={0}
+                role="button"
+                aria-label={`${stat.label}: ${stat.value} events. Click to view details.`}
               >
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
