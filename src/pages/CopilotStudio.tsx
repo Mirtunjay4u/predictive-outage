@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -216,18 +217,91 @@ export default function CopilotStudio() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="space-y-4 py-8"
+                    className="space-y-5"
                   >
-                    <div className="flex justify-center">
-                      <motion.div
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
-                      >
-                        <Sparkles className="w-8 h-8 text-primary" />
-                      </motion.div>
+                    {/* Skeleton Outage Type Header */}
+                    <div className="flex items-center gap-2 pb-2 border-b border-border">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
                     </div>
-                    <p className="text-center text-muted-foreground">Generating response...</p>
+
+                    {/* Skeleton Mode Banner */}
+                    <Skeleton className="h-8 w-40 rounded-full" />
+
+                    {/* Skeleton Framing Line */}
+                    <div className="border-l-2 border-muted pl-3 space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+
+                    {/* Skeleton Insights */}
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: i * 0.15 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Skeleton className="w-5 h-5 rounded-full" />
+                            <Skeleton className="h-4 w-48" />
+                          </div>
+                          <div className="pl-7 space-y-1.5">
+                            <div className="flex items-start gap-2">
+                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
+                              <Skeleton className="h-3 w-full" />
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
+                              <Skeleton className="h-3 w-5/6" />
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
+                              <Skeleton className="h-3 w-4/5" />
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Skeleton Assumptions Block */}
+                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Skeleton className="w-4 h-4 rounded" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                      <div className="space-y-1">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-3/4" />
+                      </div>
+                    </div>
+
+                    {/* Skeleton Disclaimer */}
+                    <div className="pt-4 border-t border-border">
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                        <div className="flex items-start gap-2">
+                          <Skeleton className="w-4 h-4 rounded mt-0.5" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-3 w-full" />
+                            <Skeleton className="h-3 w-5/6" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Processing indicator */}
+                    <div className="flex items-center justify-center gap-2 pt-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Sparkles className="w-4 h-4 text-primary" />
+                      </motion.div>
+                      <span className="text-sm text-muted-foreground">Generating response...</span>
+                    </div>
                   </motion.div>
                 )}
 
