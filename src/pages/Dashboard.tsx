@@ -157,13 +157,23 @@ export default function Dashboard() {
           <div>
             <p className="text-sm text-muted-foreground mb-1">Welcome back</p>
             <h1 className="text-2xl font-bold mb-2">Operations Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
+            <p 
+              className="text-sm text-muted-foreground"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {getOperationalSummary()} • {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div 
+            className="flex items-center gap-2 text-xs text-muted-foreground"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {dataUpdatedAt > 0 && (
-              <span>Updated {format(new Date(dataUpdatedAt), 'h:mm a')}</span>
+              <span aria-label={`Data last updated at ${format(new Date(dataUpdatedAt), 'h:mm a')}`}>
+                Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
+              </span>
             )}
             <Button 
               variant="ghost" 
