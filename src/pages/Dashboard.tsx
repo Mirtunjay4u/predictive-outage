@@ -38,7 +38,13 @@ function getOutageBreakdown(scenarios: Scenario[]): Record<string, number> {
   return breakdown;
 }
 
-function BreakdownList({ breakdown }: { breakdown: Record<string, number> }) {
+interface BreakdownListProps {
+  breakdown: Record<string, number>;
+  lifecycleFilter: string | null;
+  onTypeClick: (lifecycle: string | null, outageType: string) => void;
+}
+
+function BreakdownList({ breakdown, lifecycleFilter, onTypeClick }: BreakdownListProps) {
   const entries = Object.entries(breakdown)
     .filter(([_, count]) => count > 0)
     .sort((a, b) => b[1] - a[1]);
@@ -51,7 +57,13 @@ function BreakdownList({ breakdown }: { breakdown: Record<string, number> }) {
         {entries.map(([type, count]) => (
           <Tooltip key={type} delayDuration={300}>
             <TooltipTrigger asChild>
-              <p className="text-xs text-muted-foreground/70 cursor-default">
+              <p 
+                className="text-xs text-muted-foreground/70 cursor-pointer hover:text-foreground hover:underline transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTypeClick(lifecycleFilter, type);
+                }}
+              >
                 • {type}: {count}
               </p>
             </TooltipTrigger>
@@ -108,6 +120,15 @@ export default function Dashboard() {
     }
   };
 
+  const handleTypeClick = (lifecycle: string | null, outageType: string) => {
+    const params = new URLSearchParams();
+    if (lifecycle) {
+      params.set('lifecycle', lifecycle);
+    }
+    params.set('outage_type', outageType);
+    navigate(`/events?${params.toString()}`);
+  };
+
   return (
     <div className="p-6">
       <div className="mb-8">
@@ -134,7 +155,13 @@ export default function Dashboard() {
                       <stat.icon className="w-5 h-5" />
                     </div>
                   </div>
-                  {stat.breakdown && <BreakdownList breakdown={stat.breakdown} />}
+                  {stat.breakdown && (
+                    <BreakdownList 
+                      breakdown={stat.breakdown} 
+                      lifecycleFilter={stat.filter} 
+                      onTypeClick={handleTypeClick}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </TooltipTrigger>
