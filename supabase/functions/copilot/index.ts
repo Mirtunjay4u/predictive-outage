@@ -31,6 +31,7 @@ interface CopilotRequest {
   context_packet?: ScenarioContext;
   retrieved_knowledge?: string[];
   constraints?: string[];
+  mock?: boolean;
 }
 
 interface CopilotInsight {
@@ -55,6 +56,41 @@ const MODE_BANNERS: Record<CopilotMode, string> = {
 };
 
 const DISCLAIMER = "Decision support only. This system does not access live SCADA, OMS, ADMS, or weather feeds. It does not execute, authorize, or recommend operational actions. All decisions require explicit human approval.";
+
+// System prompt for the AI model
+const SYSTEM_PROMPT = `You are the Operator Copilot for Predictive Outage Management, a decision-support assistant for utility operations personnel.
+
+## Your Role
+You provide analytical insights, risk assessments, and operational considerations for power grid outage scenarios. You help operators think through complex situations but NEVER make decisions for them.
+
+## Critical Constraints
+1. **No Live System Access**: You do NOT have access to live SCADA, OMS, ADMS, weather feeds, or any real-time operational systems. All your analysis is based solely on scenario data provided to you.
+2. **Decision Support Only**: You provide information and considerations. You do NOT authorize, execute, or recommend specific operational actions. All decisions require explicit human approval.
+3. **No Autonomous Actions**: You cannot dispatch crews, switch equipment, or take any operational action. You can only inform and support human decision-makers.
+
+## Response Format
+You MUST respond with a JSON object containing:
+- mode_banner: The current operational mode (provided to you)
+- framing_line: A brief contextual statement about the scenario (1-2 sentences)
+- insights: An array of 4-6 insight objects, each with:
+  - title: A clear section heading
+  - bullets: 2-4 bullet points with specific, actionable information
+- assumptions: Array of strings noting any missing data or assumptions made
+- source_notes: Array of data sources used (always include "Scenario record" and "User prompt")
+- disclaimer: The standard safety disclaimer (provided to you)
+
+## Modes of Operation
+- DEMO MODE: Third-person narrator voice explaining what an operator would consider. Educational tone.
+- ACTIVE EVENT MODE: Direct, actionable insights. Include situation summary, key uncertainties, risks, and decision considerations.
+- PLANNING / TRAINING MODE: Focus on learning objectives, discussion points, and procedure development.
+- POST-EVENT REVIEW MODE: Analytical review of what happened, lessons learned, and improvement recommendations.
+
+## Quality Standards
+- Be professional, neutral, and never express certainty about outcomes
+- Reference the specific outage_type when generating risks and considerations
+- Acknowledge limitations and missing data explicitly in assumptions
+- Keep bullets concise (1-2 sentences each) and specific to the scenario
+- Never fabricate specific numbers, customer counts, or technical details not provided`;
 
 // Outage-specific considerations for generating contextual insights
 const OUTAGE_CONSIDERATIONS: Record<string, { risks: string[]; priorities: string[]; crew_notes: string }> = {
@@ -129,6 +165,170 @@ function inferMode(userMessage: string): CopilotMode {
   return "ACTIVE_EVENT";
 }
 
+function buildUserPrompt(
+  mode: CopilotMode,
+  userMessage: string,
+  scenario: ScenarioContext
+): string {
+  const scenarioName = scenario.scenario_name || scenario.name || "Unnamed Scenario";
+  const outageType = scenario.outage_type || "Unknown";
+  const lifecycle = scenario.lifecycle || scenario.lifecycle_stage || "Pre-Event";
+  const stage = scenario.stage;
+  const description = scenario.description;
+  const notes = scenario.notes;
+  const scheduledAt = scenario.scheduled_at || scenario.scenario_time;
+
+  let prompt = `## Current Mode: ${MODE_BANNERS[mode]}
+
+## Scenario Context
+- Scenario Name: ${scenarioName}
+- Outage Type: ${outageType}
+- Lifecycle Stage: ${lifecycle}
+- Environment: ${stage !== undefined ? (stage ? "Staged/Training" : "Production") : "Not specified"}`;
+
+  if (scheduledAt) {
+    prompt += `\n- Scheduled Time: ${scheduledAt}`;
+  }
+  if (description) {
+    prompt += `\n- Description: ${description}`;
+  }
+  if (notes) {
+    prompt += `\n- Operator Notes: ${notes}`;
+  }
+
+  // Add outage-specific context
+  const outageInfo = OUTAGE_CONSIDERATIONS[outageType] || OUTAGE_CONSIDERATIONS["Unknown"];
+  prompt += `\n\n## Known ${outageType} Considerations (for reference)
+- Typical Risks: ${outageInfo.risks.join("; ")}
+- Typical Priorities: ${outageInfo.priorities.join("; ")}
+- Crew Safety: ${outageInfo.crew_notes}`;
+
+  prompt += `\n\n## User Request
+${userMessage}
+
+## Required Response
+Provide analysis following your role as Operator Copilot. Return a JSON object with:
+- mode_banner: "${MODE_BANNERS[mode]}"
+- framing_line: Brief contextual statement
+- insights: 4-6 sections with title and 2-4 bullets each
+- assumptions: Note any missing data or assumptions
+- source_notes: ["Scenario record (Supabase scenarios table)", "User prompt"]
+- disclaimer: "${DISCLAIMER}"`;
+
+  return prompt;
+}
+
+async function callAI(
+  mode: CopilotMode,
+  userMessage: string,
+  scenario: ScenarioContext
+): Promise<CopilotResponse> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  
+  if (!LOVABLE_API_KEY) {
+    throw new Error("LOVABLE_API_KEY is not configured");
+  }
+
+  const userPrompt = buildUserPrompt(mode, userMessage, scenario);
+
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "copilot_response",
+            description: "Generate a structured Copilot response with insights and analysis",
+            parameters: {
+              type: "object",
+              properties: {
+                mode_banner: {
+                  type: "string",
+                  description: "The current operational mode banner"
+                },
+                framing_line: {
+                  type: "string",
+                  description: "A brief contextual statement about the scenario (1-2 sentences)"
+                },
+                insights: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string", description: "Section heading" },
+                      bullets: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "2-4 bullet points with specific information"
+                      }
+                    },
+                    required: ["title", "bullets"],
+                    additionalProperties: false
+                  },
+                  description: "4-6 insight sections"
+                },
+                assumptions: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "List of assumptions made or missing data noted"
+                },
+                source_notes: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Data sources used for analysis"
+                },
+                disclaimer: {
+                  type: "string",
+                  description: "Safety disclaimer"
+                }
+              },
+              required: ["mode_banner", "insights", "assumptions", "source_notes", "disclaimer"],
+              additionalProperties: false
+            }
+          }
+        }
+      ],
+      tool_choice: { type: "function", function: { name: "copilot_response" } }
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("AI Gateway error:", response.status, errorText);
+    throw new Error(`AI Gateway error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  
+  // Extract the tool call response
+  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall || toolCall.function.name !== "copilot_response") {
+    throw new Error("Invalid AI response format");
+  }
+
+  const parsedResponse = JSON.parse(toolCall.function.arguments);
+  
+  // Ensure required fields have correct values
+  return {
+    mode_banner: parsedResponse.mode_banner || MODE_BANNERS[mode],
+    framing_line: parsedResponse.framing_line,
+    insights: parsedResponse.insights || [],
+    assumptions: parsedResponse.assumptions || [],
+    source_notes: parsedResponse.source_notes || ["Scenario record (Supabase scenarios table)", "User prompt"],
+    disclaimer: parsedResponse.disclaimer || DISCLAIMER,
+  };
+}
+
 function generateDeterministicResponse(
   mode: CopilotMode,
   userMessage: string,
@@ -181,7 +381,6 @@ function generateDeterministicResponse(
     case "DEMO":
       framingLine = `Demonstrating Copilot analysis for "${scenarioName}" — a ${outageType} scenario in ${lifecycle} phase.`;
       
-      // Insight 1: Outage driver
       insights.push({
         title: `Outage Driver: ${outageType} — Key Considerations`,
         bullets: [
@@ -191,7 +390,6 @@ function generateDeterministicResponse(
         ],
       });
 
-      // Insight 2: What the system highlights
       insights.push({
         title: "What Copilot Surfaces",
         bullets: [
@@ -202,7 +400,6 @@ function generateDeterministicResponse(
         ],
       });
 
-      // Insight 3: Operator considerations
       insights.push({
         title: "How an Operator Would Proceed",
         bullets: [
@@ -211,7 +408,6 @@ function generateDeterministicResponse(
         ],
       });
 
-      // Insight 4: Why this helps
       insights.push({
         title: "Why This Helps Operators",
         bullets: [
@@ -225,7 +421,6 @@ function generateDeterministicResponse(
     case "ACTIVE_EVENT":
       framingLine = `Active event analysis for "${scenarioName}" — ${outageType} event in ${lifecycle} phase. Immediate decision support follows.`;
       
-      // Insight 1: Situation summary
       insights.push({
         title: "Situation Summary",
         bullets: [
@@ -236,13 +431,11 @@ function generateDeterministicResponse(
         ],
       });
 
-      // Insight 2: Outage-specific risks
       insights.push({
         title: `${outageType} — Identified Risks`,
         bullets: outageInfo.risks,
       });
 
-      // Insight 3: Key uncertainties
       insights.push({
         title: "Key Uncertainties",
         bullets: [
@@ -253,13 +446,11 @@ function generateDeterministicResponse(
         ],
       });
 
-      // Insight 4: Decision considerations
       insights.push({
         title: "Decision Considerations",
         bullets: outageInfo.priorities,
       });
 
-      // Insight 5: Crew guidance
       insights.push({
         title: "Crew Guidance",
         bullets: [
@@ -362,6 +553,30 @@ function generateDeterministicResponse(
   };
 }
 
+function createErrorResponse(mode: CopilotMode, errorMessage: string): CopilotResponse {
+  return {
+    mode_banner: MODE_BANNERS[mode],
+    framing_line: "An error occurred while processing your request.",
+    insights: [
+      {
+        title: "Service Temporarily Unavailable",
+        bullets: [
+          "The AI analysis service encountered an issue and could not complete your request.",
+          "This is a temporary condition. Please try again in a few moments.",
+          "If the issue persists, the system will provide deterministic analysis based on scenario data.",
+          `Technical details: ${errorMessage}`,
+        ],
+      },
+    ],
+    assumptions: [
+      "AI service was unavailable; no dynamic analysis performed.",
+      "Error occurred before full request processing.",
+    ],
+    source_notes: ["System error log"],
+    disclaimer: DISCLAIMER,
+  };
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -405,8 +620,27 @@ serve(async (req) => {
       );
     }
 
-    // Generate deterministic response based on mode, outage_type, and scenario fields
-    const response = generateDeterministicResponse(mode, userMessage, scenario);
+    // Determine whether to use mock or real AI
+    const useMock = body.mock === true;
+    
+    let response: CopilotResponse;
+    
+    if (useMock) {
+      // Use deterministic response
+      response = generateDeterministicResponse(mode, userMessage, scenario);
+    } else {
+      // Try real AI, fall back to deterministic on error
+      try {
+        response = await callAI(mode, userMessage, scenario);
+      } catch (aiError) {
+        console.error('AI call failed, falling back to deterministic:', aiError);
+        // Return error response with clear messaging
+        response = createErrorResponse(
+          mode, 
+          aiError instanceof Error ? aiError.message : 'Unknown AI error'
+        );
+      }
+    }
 
     return new Response(
       JSON.stringify(response),
