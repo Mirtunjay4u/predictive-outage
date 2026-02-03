@@ -410,7 +410,23 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
           </ScrollArea>
 
           {/* Input */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border space-y-3">
+            {/* Quick Prompt Chips */}
+            {scenario && !isLoading && (
+              <div className="flex flex-wrap gap-2">
+                {['Executive summary', 'Risks & constraints', 'Trade-offs', 'After-action review'].map((prompt) => (
+                  <Button
+                    key={prompt}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => handleSend(prompt)}
+                  >
+                    {prompt}
+                  </Button>
+                ))}
+              </div>
+            )}
             <form 
               onSubmit={(e) => { e.preventDefault(); handleSend(); }}
               className="flex gap-2"
