@@ -12,13 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Scenario } from '@/types/scenario';
 
-interface ScenarioCardProps {
+interface EventCardProps {
   scenario: Scenario;
   onClick: () => void;
   onDelete: () => void;
 }
 
-export function ScenarioCard({ scenario, onClick, onDelete }: ScenarioCardProps) {
+export function EventCard({ scenario, onClick, onDelete }: EventCardProps) {
   const lifecycleVariant = scenario.lifecycle_stage === 'Pre-Event' 
     ? 'pre-event' 
     : scenario.lifecycle_stage === 'Event' 

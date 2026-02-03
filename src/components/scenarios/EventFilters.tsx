@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-interface ScenarioFiltersProps {
+interface EventFiltersProps {
   viewMode: 'table' | 'cards';
   onViewModeChange: (mode: 'table' | 'cards') => void;
   stageFilter: string;
@@ -19,7 +19,7 @@ interface ScenarioFiltersProps {
   onCreateClick: () => void;
 }
 
-export function ScenarioFilters({
+export function EventFilters({
   viewMode,
   onViewModeChange,
   stageFilter,
@@ -27,7 +27,7 @@ export function ScenarioFilters({
   lifecycleFilter,
   onLifecycleFilterChange,
   onCreateClick,
-}: ScenarioFiltersProps) {
+}: EventFiltersProps) {
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-3">

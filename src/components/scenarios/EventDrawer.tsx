@@ -46,7 +46,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface ScenarioDrawerProps {
+interface EventDrawerProps {
   open: boolean;
   onClose: () => void;
   scenario: Scenario | null;
@@ -54,7 +54,7 @@ interface ScenarioDrawerProps {
   isLoading?: boolean;
 }
 
-export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: ScenarioDrawerProps) {
+export function EventDrawer({ open, onClose, scenario, onSave, isLoading }: EventDrawerProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
