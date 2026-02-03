@@ -54,13 +54,13 @@ export function ScenarioCard({ scenario, onClick, onDelete }: ScenarioCardProps)
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClick(); }}>
-                  Edit
+                  Edit Event
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
                   className="text-destructive"
                 >
-                  Delete
+                  Delete Event
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
