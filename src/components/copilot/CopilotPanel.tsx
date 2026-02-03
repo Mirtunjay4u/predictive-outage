@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle, FileText, Lightbulb } from 'lucide-react';
+import { Bot, Send, Sparkles, ChevronRight, ShieldAlert, AlertCircle, FileText, Lightbulb, Copy } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,6 +38,62 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const copyResponseToClipboard = () => {
+    if (!response) return;
+
+    const lines: string[] = [];
+    
+    // Mode banner
+    lines.push(`[${response.mode_banner}]`);
+    lines.push('');
+    
+    // Framing line
+    if (response.framing_line) {
+      lines.push(response.framing_line);
+      lines.push('');
+    }
+    
+    // Insights
+    if (response.insights && response.insights.length > 0) {
+      response.insights.forEach((insight, index) => {
+        lines.push(`${index + 1}. ${insight.title}`);
+        insight.bullets.forEach(bullet => {
+          lines.push(`   • ${bullet}`);
+        });
+        lines.push('');
+      });
+    }
+    
+    // Assumptions
+    if (response.assumptions && response.assumptions.length > 0) {
+      lines.push('ASSUMPTIONS:');
+      response.assumptions.forEach(assumption => {
+        lines.push(`• ${assumption}`);
+      });
+      lines.push('');
+    }
+    
+    // Source Notes
+    if (response.source_notes && response.source_notes.length > 0) {
+      lines.push('SOURCE NOTES:');
+      response.source_notes.forEach(note => {
+        lines.push(`• ${note}`);
+      });
+      lines.push('');
+    }
+    
+    // Disclaimer
+    lines.push('DISCLAIMER:');
+    lines.push(response.disclaimer);
+
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      toast({
+        description: "Copied",
+        duration: 2000,
+      });
+    });
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -130,6 +187,17 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                 </p>
               </div>
             </div>
+            {response && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={copyResponseToClipboard}
+                className="h-8 w-8 flex-shrink-0"
+                title="Copy response"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            )}
           </motion.div>
         )}
       </div>
