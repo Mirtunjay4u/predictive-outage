@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface CopilotRequest {
-  mode: "DEMO" | "ACTIVE_EVENT" | "PLANNING" | "POST_EVENT_REVIEW";
+  mode?: "DEMO" | "ACTIVE_EVENT" | "PLANNING" | "POST_EVENT_REVIEW";
   user_message: string;
   context_packet: Record<string, unknown>;
   retrieved_knowledge: string[];
@@ -15,10 +15,9 @@ interface CopilotRequest {
 
 interface CopilotResponse {
   mode_banner: string;
-  framing_line?: string;
+  framing_line: string;
   insights: string[];
-  tradeoffs?: string[];
-  source_notes?: string[];
+  why_it_helps: string;
   disclaimer: string;
 }
 
@@ -35,7 +34,7 @@ function inferMode(userMessage: string): CopilotRequest["mode"] {
 }
 
 function generateMockResponse(request: CopilotRequest): CopilotResponse {
-  const { user_message, context_packet } = request;
+  const { user_message } = request;
   
   // Use provided mode or infer from message
   const mode = request.mode || inferMode(user_message);
@@ -48,30 +47,20 @@ function generateMockResponse(request: CopilotRequest): CopilotResponse {
     POST_EVENT_REVIEW: "MODE: POST-EVENT REVIEW MODE",
   };
 
-  const scenarioContext = context_packet?.scenario_name 
-    ? ` for scenario "${context_packet.scenario_name}"`
-    : "";
-
   // DEMO MODE response
   if (mode === "DEMO") {
     return {
       mode_banner: modeBanners.DEMO,
-      framing_line: `This demonstration illustrates how the Operator Copilot surfaces actionable intelligence${scenarioContext}.`,
+      framing_line: "This response helps explain what an operator would consider when reviewing a predictive outage scenario (demo-only).",
       insights: [
-        `The model highlights key operational factors derived from the user query: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
-        "This helps surface contextual awareness by synthesizing scenario parameters and historical patterns.",
-        "The Copilot identifies decision-relevant trade-offs an operator would typically evaluate.",
-        "An operator would then weigh these factors against current constraints and priorities.",
-        "The model presents options ranked by operational impact and implementation complexity.",
-        "This approach reduces cognitive load during high-tempo decision windows.",
-        "Why this helps operators: Rapid synthesis of complex inputs enables faster, more confident decisions.",
+        "This helps surface potential feeder exposure and customer impact at a high level.",
+        "The model highlights uncertainty in cause until confirmed by field/OMS records (not assumed live).",
+        "An operator would weigh restoration prioritization vs. crew availability and critical loads.",
+        "Trade-offs between speed, safety, and customer impact are made explicit for review.",
+        "No live SCADA/OMS/ADMS/weather access is implied; this is decision support only.",
       ],
-      tradeoffs: [
-        "Speed vs. thoroughness: Demo responses prioritize breadth over depth.",
-        "Generic vs. specific: Without live data, insights remain illustrative.",
-      ],
-      source_notes: [],
-      disclaimer: "This is a demonstration of Copilot capabilities. No live SCADA, OMS, ADMS, or weather systems were accessed. All insights are illustrative mock data.",
+      why_it_helps: "Operators and stakeholders get a consistent, auditable summary without implying automation or control.",
+      disclaimer: "Decision support only. This system does not execute, authorize, or recommend operational actions. All decisions require explicit human approval.",
     };
   }
 
@@ -79,23 +68,15 @@ function generateMockResponse(request: CopilotRequest): CopilotResponse {
   if (mode === "ACTIVE_EVENT") {
     return {
       mode_banner: modeBanners.ACTIVE_EVENT,
-      framing_line: `Real-time operational support active${scenarioContext}.`,
+      framing_line: "Real-time operational support is active. Situation awareness and decision considerations follow.",
       insights: [
-        `**Situation Summary:** Analyzing operational context for query: "${user_message.slice(0, 50)}${user_message.length > 50 ? '...' : ''}"`,
-        "Current scenario parameters indicate standard operational conditions with no critical alerts flagged.",
-        "**Key Uncertainties:** External factors (weather, demand fluctuations) remain unmeasured in this mock environment.",
-        "Resource availability and personnel positioning data would typically inform prioritization.",
-        "**Decision Considerations:** Evaluate response timing against operational tempo requirements.",
+        "Situation Summary: Current scenario parameters indicate active conditions requiring operator attention.",
+        "Key Uncertainties: External factors (weather, demand fluctuations) remain unmeasured in this mock environment.",
+        "Decision Considerations: Evaluate response timing against operational tempo requirements.",
         "Consider escalation pathways if conditions exceed defined thresholds.",
         "Cross-functional coordination may be required depending on scenario scope.",
       ],
-      tradeoffs: [
-        "Immediate action vs. information gathering: Balance speed with situational awareness.",
-        "Local optimization vs. system-wide impact: Consider downstream effects of decisions.",
-      ],
-      source_notes: [
-        "Source Notes: No external systems accessed; demo mock only.",
-      ],
+      why_it_helps: "Operators receive structured situation awareness with clear decision points and uncertainty flags.",
       disclaimer: "Decision support only. No control actions. Human approval required. No live SCADA, OMS, ADMS, or weather feeds were accessed.",
     };
   }
@@ -104,23 +85,15 @@ function generateMockResponse(request: CopilotRequest): CopilotResponse {
   if (mode === "PLANNING") {
     return {
       mode_banner: modeBanners.PLANNING,
-      framing_line: `Strategic planning and training analysis${scenarioContext}.`,
+      framing_line: "Strategic planning and training analysis mode. Preparation considerations follow.",
       insights: [
-        `The model analyzes planning considerations for: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
-        "**Preparation Phase:** Optimal readiness windows identified based on scenario parameters.",
+        "Preparation Phase: Optimal readiness windows identified based on scenario parameters.",
         "Resource allocation models suggest load-balanced distribution across operational zones.",
-        "**Risk Assessment:** Potential bottlenecks flagged for proactive mitigation.",
+        "Risk Assessment: Potential bottlenecks flagged for proactive mitigation.",
         "Training scenarios can be generated from historical pattern analysis.",
-        "**Optimization Opportunities:** Process improvements identified through comparative analysis.",
-        "Why this helps operators: Systematic preparation reduces response variance during live events.",
+        "Optimization Opportunities: Process improvements identified through comparative analysis.",
       ],
-      tradeoffs: [
-        "Comprehensive planning vs. operational flexibility: Over-specification may limit adaptability.",
-        "Training fidelity vs. resource investment: Higher-fidelity exercises require more preparation.",
-      ],
-      source_notes: [
-        "Source Notes: No external systems accessed; demo mock only.",
-      ],
+      why_it_helps: "Systematic preparation reduces response variance during live events and improves team readiness.",
       disclaimer: "Planning support only. No live SCADA, OMS, ADMS, or weather feeds were accessed. All insights are illustrative.",
     };
   }
@@ -128,23 +101,15 @@ function generateMockResponse(request: CopilotRequest): CopilotResponse {
   // POST_EVENT_REVIEW MODE response
   return {
     mode_banner: modeBanners.POST_EVENT_REVIEW,
-    framing_line: `Post-event analysis and lessons learned${scenarioContext}.`,
+    framing_line: "Post-event analysis mode. Reviewing decision points and lessons learned.",
     insights: [
-      `Reviewing event context: "${user_message.slice(0, 40)}${user_message.length > 40 ? '...' : ''}"`,
-      "**Timeline Reconstruction:** Key decision points identified for sequential analysis.",
-      "**Performance Metrics:** Response timing and resource utilization tracked against benchmarks.",
+      "Timeline Reconstruction: Key decision points identified for sequential analysis.",
+      "Performance Metrics: Response timing and resource utilization tracked against benchmarks.",
       "Deviation analysis highlights variance from standard operating procedures.",
-      "**Lessons Learned:** Improvement opportunities catalogued for future reference.",
+      "Lessons Learned: Improvement opportunities catalogued for future reference.",
       "Process refinements suggested based on observed patterns.",
-      "Why this helps operators: Structured retrospectives accelerate organizational learning.",
     ],
-    tradeoffs: [
-      "Depth of analysis vs. time to actionable insights: Balance thoroughness with urgency.",
-      "Individual accountability vs. systemic improvement: Focus on process, not blame.",
-    ],
-    source_notes: [
-      "Source Notes: No external systems accessed; demo mock only.",
-    ],
+    why_it_helps: "Structured retrospectives accelerate organizational learning and improve future response.",
     disclaimer: "Review and analysis only. No live SCADA, OMS, ADMS, or weather feeds were accessed. Historical data is simulated.",
   };
 }
@@ -166,16 +131,16 @@ serve(async (req) => {
     const body: CopilotRequest = await req.json();
 
     // Validate required fields
-    if (!body.mode || !body.user_message) {
+    if (!body.user_message) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: mode and user_message are required' }),
+        JSON.stringify({ error: 'Missing required field: user_message is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate mode
+    // Validate mode if provided
     const validModes = ["DEMO", "ACTIVE_EVENT", "PLANNING", "POST_EVENT_REVIEW"];
-    if (!validModes.includes(body.mode)) {
+    if (body.mode && !validModes.includes(body.mode)) {
       return new Response(
         JSON.stringify({ error: `Invalid mode. Must be one of: ${validModes.join(', ')}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

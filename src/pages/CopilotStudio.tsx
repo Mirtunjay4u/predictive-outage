@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles, AlertTriangle, Lightbulb, FileText, ChevronDown } from 'lucide-react';
+import { Send, Bot, Sparkles, AlertTriangle, Lightbulb, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -210,16 +210,16 @@ export default function CopilotStudio() {
                     className="space-y-5"
                   >
                     {/* Mode Banner */}
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                      <p className="font-bold text-foreground tracking-wide">{response.mode_banner}</p>
+                    <div className="flex items-center justify-start">
+                      <Badge className="bg-primary/90 text-primary-foreground text-sm font-bold px-4 py-1.5">
+                        {response.mode_banner}
+                      </Badge>
                     </div>
 
                     {/* Framing Line */}
-                    {response.framing_line && (
-                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <p className="text-sm text-foreground italic">{response.framing_line}</p>
-                      </div>
-                    )}
+                    <div className="text-sm text-muted-foreground italic border-l-2 border-muted pl-3">
+                      {response.framing_line}
+                    </div>
 
                     {/* Insights */}
                     <div className="space-y-2">
@@ -234,50 +234,26 @@ export default function CopilotStudio() {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.1 }}
-                            className="text-sm text-muted-foreground pl-4 border-l-2 border-primary/30"
+                            className="text-sm text-muted-foreground pl-4 border-l-2 border-primary/30 flex items-start gap-2"
                           >
-                            {insight}
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 flex-shrink-0" />
+                            <span>{insight}</span>
                           </motion.li>
                         ))}
                       </ul>
                     </div>
 
-                    {/* Tradeoffs */}
-                    {response.tradeoffs && response.tradeoffs.length > 0 && (
-                      <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-destructive" />
-                        Tradeoffs
+                    {/* Why It Helps */}
+                    <div className="p-3 rounded-lg bg-success/10 border border-success/30">
+                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
+                        <Info className="w-4 h-4 text-success" />
+                        Why This Helps
                       </h4>
-                      <ul className="space-y-1">
-                        {response.tradeoffs.map((tradeoff, i) => (
-                          <li key={i} className="text-sm text-muted-foreground pl-4 border-l-2 border-destructive/30">
-                              {tradeoff}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Source Notes */}
-                    {response.source_notes && response.source_notes.length > 0 && (
-                      <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-primary" />
-                        Source Notes
-                      </h4>
-                      <ul className="space-y-1">
-                        {response.source_notes.map((note, i) => (
-                          <li key={i} className="text-xs text-muted-foreground pl-4 border-l-2 border-primary/30">
-                              {note}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                      <p className="text-sm text-muted-foreground">{response.why_it_helps}</p>
+                    </div>
 
                     {/* Disclaimer */}
-                    <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                    <div className="pt-3 border-t border-border">
                       <p className="text-xs text-muted-foreground italic">{response.disclaimer}</p>
                     </div>
                   </motion.div>
