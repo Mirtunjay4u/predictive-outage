@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert, Lightbulb, FileText } from 'lucide-react';
+import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert, Lightbulb, FileText, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -34,6 +35,60 @@ export default function CopilotStudio() {
   const [response, setResponse] = useState<CopilotResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const formatResponseForCopy = (res: CopilotResponse): string => {
+    let text = `[${res.mode_banner}]\n\n`;
+    
+    if (res.framing_line) {
+      text += `${res.framing_line}\n\n`;
+    }
+    
+    if (res.insights && res.insights.length > 0) {
+      res.insights.forEach((insight, index) => {
+        text += `${index + 1}. ${insight.title}\n`;
+        insight.bullets.forEach((bullet) => {
+          text += `   • ${bullet}\n`;
+        });
+        text += '\n';
+      });
+    }
+    
+    if (res.assumptions && res.assumptions.length > 0) {
+      text += `ASSUMPTIONS:\n`;
+      res.assumptions.forEach((assumption) => {
+        text += `• ${assumption}\n`;
+      });
+      text += '\n';
+    }
+    
+    if (res.source_notes && res.source_notes.length > 0) {
+      text += `SOURCE NOTES:\n`;
+      res.source_notes.forEach((note) => {
+        text += `• ${note}\n`;
+      });
+      text += '\n';
+    }
+    
+    if (res.disclaimer) {
+      text += `DISCLAIMER: ${res.disclaimer}`;
+    }
+    
+    return text;
+  };
+
+  const handleCopyResponse = async () => {
+    if (!response) return;
+    
+    try {
+      await navigator.clipboard.writeText(formatResponseForCopy(response));
+      setCopied(true);
+      toast.success('Response copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error('Failed to copy response');
+    }
+  };
 
   const handleSend = async () => {
     if (!userMessage.trim()) return;
@@ -185,13 +240,34 @@ export default function CopilotStudio() {
             </CardContent>
           </Card>
 
-          {/* Response Panel */}
           <Card className="shadow-card border-border/50">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Bot className="w-5 h-5 text-primary" />
-                Copilot Response
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Bot className="w-5 h-5 text-primary" />
+                  Copilot Response
+                </CardTitle>
+                {response && !isLoading && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-muted-foreground hover:text-foreground"
+                    onClick={handleCopyResponse}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 text-green-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <AnimatePresence mode="wait">
