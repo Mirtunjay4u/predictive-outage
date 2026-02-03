@@ -9,6 +9,11 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
+const OUTAGE_TYPES = [
+  'Storm', 'Flood', 'Heavy Rain', 'Heatwave', 'Wildfire',
+  'Lightning', 'Ice/Snow', 'High Wind', 'Equipment Failure', 'Vegetation', 'Unknown'
+] as const;
+
 interface EventFiltersProps {
   viewMode: 'table' | 'cards';
   onViewModeChange: (mode: 'table' | 'cards') => void;
@@ -16,6 +21,8 @@ interface EventFiltersProps {
   onStageFilterChange: (value: string) => void;
   lifecycleFilter: string;
   onLifecycleFilterChange: (value: string) => void;
+  outageTypeFilter: string;
+  onOutageTypeFilterChange: (value: string) => void;
   onCreateClick: () => void;
 }
 
@@ -26,6 +33,8 @@ export function EventFilters({
   onStageFilterChange,
   lifecycleFilter,
   onLifecycleFilterChange,
+  outageTypeFilter,
+  onOutageTypeFilterChange,
   onCreateClick,
 }: EventFiltersProps) {
   return (
@@ -76,6 +85,19 @@ export function EventFilters({
             <SelectItem value="Pre-Event">Pre-Event</SelectItem>
             <SelectItem value="Event">Event</SelectItem>
             <SelectItem value="Post-Event">Post-Event</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Outage Type Filter */}
+        <Select value={outageTypeFilter} onValueChange={onOutageTypeFilterChange}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {OUTAGE_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

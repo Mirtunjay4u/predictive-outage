@@ -27,18 +27,26 @@ export default function Scenarios() {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [stageFilter, setStageFilter] = useState('all');
   const [lifecycleFilter, setLifecycleFilter] = useState('all');
+  const [outageTypeFilter, setOutageTypeFilter] = useState('all');
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
   const [copilotScenario, setCopilotScenario] = useState<Scenario | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Read lifecycle filter from URL params on mount
+  // Read filters from URL params on mount
   useEffect(() => {
     const lifecycleParam = searchParams.get('lifecycle');
-    if (lifecycleParam) {
-      setLifecycleFilter(lifecycleParam);
-      // Clear the URL param after applying
+    const outageTypeParam = searchParams.get('outage_type');
+    
+    if (lifecycleParam || outageTypeParam) {
+      if (lifecycleParam) {
+        setLifecycleFilter(lifecycleParam);
+      }
+      if (outageTypeParam) {
+        setOutageTypeFilter(outageTypeParam);
+      }
+      // Clear the URL params after applying
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -57,9 +65,24 @@ export default function Scenarios() {
       if (lifecycleFilter !== 'all' && scenario.lifecycle_stage !== lifecycleFilter) {
         return false;
       }
+      if (outageTypeFilter !== 'all' && scenario.outage_type !== outageTypeFilter) {
+        return false;
+      }
       return true;
     });
-  }, [scenarios, stageFilter, lifecycleFilter]);
+  }, [scenarios, stageFilter, lifecycleFilter, outageTypeFilter]);
+
+  const activeFilters = useMemo(() => {
+    const filters: string[] = [];
+    if (lifecycleFilter !== 'all') filters.push(lifecycleFilter);
+    if (outageTypeFilter !== 'all') filters.push(outageTypeFilter);
+    return filters;
+  }, [lifecycleFilter, outageTypeFilter]);
+
+  const clearFilters = () => {
+    setLifecycleFilter('all');
+    setOutageTypeFilter('all');
+  };
 
   const handleCreate = () => {
     setEditingScenario(null);
@@ -126,6 +149,24 @@ export default function Scenarios() {
             </p>
           </motion.div>
 
+          {/* Active Filter Banner */}
+          {activeFilters.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-4 flex items-center gap-2 text-sm"
+            >
+              <span className="text-muted-foreground">Filtered by:</span>
+              <span className="font-medium">{activeFilters.join(' • ')}</span>
+              <button
+                onClick={clearFilters}
+                className="ml-2 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+              >
+                Clear filters
+              </button>
+            </motion.div>
+          )}
+
           {/* Filters */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -140,6 +181,8 @@ export default function Scenarios() {
               onStageFilterChange={setStageFilter}
               lifecycleFilter={lifecycleFilter}
               onLifecycleFilterChange={setLifecycleFilter}
+              outageTypeFilter={outageTypeFilter}
+              onOutageTypeFilterChange={setOutageTypeFilter}
               onCreateClick={handleCreate}
             />
           </motion.div>
