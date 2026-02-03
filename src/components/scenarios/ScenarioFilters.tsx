@@ -86,7 +86,7 @@ export function ScenarioFilters({
         className="gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
       >
         <Plus className="w-4 h-4" />
-        New Scenario
+        New Event
       </Button>
     </div>
   );
