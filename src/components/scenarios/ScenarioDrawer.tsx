@@ -29,7 +29,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import type { Scenario, ScenarioInsert, LifecycleStage } from '@/types/scenario';
+import type { Scenario, ScenarioInsert, LifecycleStage, OutageType } from '@/types/scenario';
+import { OUTAGE_TYPES } from '@/types/scenario';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -40,6 +41,7 @@ const formSchema = z.object({
   operator_role: z.string().optional(),
   notes: z.string().optional(),
   priority: z.string().optional(),
+  outage_type: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -64,6 +66,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
       operator_role: '',
       notes: '',
       priority: 'medium',
+      outage_type: 'Unknown',
     },
   });
 
@@ -78,6 +81,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
         operator_role: scenario.operator_role || '',
         notes: scenario.notes || '',
         priority: scenario.priority || 'medium',
+        outage_type: scenario.outage_type || 'Unknown',
       });
     } else {
       form.reset({
@@ -89,6 +93,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
         operator_role: '',
         notes: '',
         priority: 'medium',
+        outage_type: 'Unknown',
       });
     }
   }, [scenario, form]);
@@ -103,6 +108,7 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
       operator_role: values.operator_role || null,
       notes: values.notes || null,
       priority: values.priority || null,
+      outage_type: (values.outage_type as OutageType) || null,
     });
   };
 
@@ -194,6 +200,31 @@ export function ScenarioDrawer({ open, onClose, scenario, onSave, isLoading }: S
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="outage_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Outage Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'Unknown'}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select outage type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {OUTAGE_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

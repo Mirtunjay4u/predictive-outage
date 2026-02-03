@@ -1,5 +1,32 @@
 export type LifecycleStage = 'Pre-Event' | 'Event' | 'Post-Event';
 
+export type OutageType = 
+  | 'Storm'
+  | 'Flood'
+  | 'Heavy Rain'
+  | 'Heatwave'
+  | 'Wildfire'
+  | 'Lightning'
+  | 'Ice/Snow'
+  | 'High Wind'
+  | 'Equipment Failure'
+  | 'Vegetation'
+  | 'Unknown';
+
+export const OUTAGE_TYPES: OutageType[] = [
+  'Storm',
+  'Flood',
+  'Heavy Rain',
+  'Heatwave',
+  'Wildfire',
+  'Lightning',
+  'Ice/Snow',
+  'High Wind',
+  'Equipment Failure',
+  'Vegetation',
+  'Unknown',
+];
+
 export interface Scenario {
   id: string;
   name: string;
@@ -10,6 +37,7 @@ export interface Scenario {
   operator_role: string | null;
   notes: string | null;
   priority: string | null;
+  outage_type: OutageType | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +51,7 @@ export interface ScenarioInsert {
   operator_role?: string | null;
   notes?: string | null;
   priority?: string | null;
+  outage_type?: OutageType | null;
 }
 
 export interface ScenarioUpdate extends Partial<ScenarioInsert> {}
