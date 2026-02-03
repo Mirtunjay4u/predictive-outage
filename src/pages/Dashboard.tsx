@@ -84,7 +84,9 @@ function BreakdownList({ breakdown, lifecycleFilter, onTypeClick }: BreakdownLis
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios();
+  const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({ 
+    refetchInterval: 30000 // Auto-refresh every 30 seconds
+  });
 
   const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter(s => s.lifecycle_stage === 'Event');

@@ -3,10 +3,11 @@ import { scenarioService } from '@/lib/scenarios';
 import type { Scenario, ScenarioInsert, ScenarioUpdate } from '@/types/scenario';
 import { toast } from 'sonner';
 
-export function useScenarios() {
+export function useScenarios(options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: ['scenarios'],
     queryFn: () => scenarioService.getAll(),
+    refetchInterval: options?.refetchInterval,
   });
 }
 
