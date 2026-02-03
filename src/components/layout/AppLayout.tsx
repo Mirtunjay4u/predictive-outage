@@ -16,7 +16,13 @@ export function AppLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar />
-        <main id="main-content" className="flex-1 overflow-auto" tabIndex={-1}>
+        <main 
+          id="main-content" 
+          className="flex-1 overflow-auto" 
+          tabIndex={-1}
+          role="main"
+          aria-label="Main content"
+        >
           <Outlet />
         </main>
       </div>
