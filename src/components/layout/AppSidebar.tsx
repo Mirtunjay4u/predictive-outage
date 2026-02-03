@@ -35,9 +35,9 @@ export function AppSidebar() {
       className="relative flex flex-col h-screen bg-sidebar border-r border-sidebar-border"
     >
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
+      <div className="flex items-center min-h-16 px-4 py-3 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <Bot className="w-5 h-5 text-primary-foreground" />
           </div>
           {!collapsed && (
@@ -45,10 +45,10 @@ export function AppSidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col"
+              className="flex flex-col min-w-0"
             >
-              <span className="text-sm font-semibold text-sidebar-foreground">Operator</span>
-              <span className="text-xs text-sidebar-foreground/60">Copilot</span>
+              <span className="text-sm font-bold text-sidebar-foreground leading-tight">Grid Resilience Command Center</span>
+              <span className="text-[10px] text-sidebar-foreground/60 leading-tight mt-0.5">AI-assisted outage awareness, prioritization, and post-event insight</span>
             </motion.div>
           )}
         </div>

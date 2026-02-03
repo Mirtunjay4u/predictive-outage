@@ -37,17 +37,17 @@ export default function Login() {
                 <Bot className="w-7 h-7" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Operator Copilot</h1>
-                <p className="text-sm text-primary-foreground/80">Scenario Studio</p>
+                <h1 className="text-2xl font-bold">Grid Resilience Command Center</h1>
+                <p className="text-sm text-primary-foreground/80">AI-assisted outage awareness</p>
               </div>
             </div>
             
             <h2 className="text-4xl font-bold leading-tight mb-6">
-              Intelligent scenario management<br />powered by AI
+              Predictive outage management<br />powered by AI
             </h2>
             
             <p className="text-lg text-primary-foreground/80 max-w-md">
-              Create, validate, and optimize operational scenarios with an AI copilot that understands your business.
+              AI-assisted outage awareness, prioritization, and post-event insight for grid operations.
             </p>
           </motion.div>
         </div>
@@ -61,11 +61,14 @@ export default function Login() {
           className="w-full max-w-md"
         >
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-              <Bot className="w-6 h-6 text-primary-foreground" />
+          <div className="lg:hidden flex flex-col items-center gap-2 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                <Bot className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <span className="text-xl font-bold">Grid Resilience Command Center</span>
             </div>
-            <span className="text-xl font-bold">Operator Copilot</span>
+            <span className="text-xs text-muted-foreground">AI-assisted outage awareness, prioritization, and post-event insight</span>
           </div>
 
           <Card className="shadow-elevated border-border/50">
