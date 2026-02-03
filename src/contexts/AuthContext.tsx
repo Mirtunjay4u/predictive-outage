@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
     localStorage.setItem('demo_user', JSON.stringify(newUser));
     toast.success('Signed in (Demo)');
-    navigate('/scenarios');
+    navigate('/dashboard');
     return true;
   }, [navigate]);
 
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
     localStorage.setItem('demo_user', JSON.stringify(newUser));
     toast.success('Signed in (Demo)');
-    navigate('/scenarios');
+    navigate('/dashboard');
   }, [navigate]);
 
   const logout = useCallback(() => {
