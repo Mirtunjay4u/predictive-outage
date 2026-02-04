@@ -14,6 +14,8 @@ export type OutageType =
   | 'Others';
 
 export type EtrConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
+export type EtrRiskLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export type CriticalRunwayStatus = 'NORMAL' | 'AT_RISK' | 'BREACH';
 
 export const OUTAGE_TYPES: OutageType[] = [
   'Storm',
@@ -30,6 +32,8 @@ export const OUTAGE_TYPES: OutageType[] = [
 ];
 
 export const ETR_CONFIDENCE_LEVELS: EtrConfidence[] = ['HIGH', 'MEDIUM', 'LOW'];
+export const ETR_RISK_LEVELS: EtrRiskLevel[] = ['HIGH', 'MEDIUM', 'LOW'];
+export const CRITICAL_RUNWAY_STATUSES: CriticalRunwayStatus[] = ['NORMAL', 'AT_RISK', 'BREACH'];
 
 export interface GeoCenter {
   lat: number;
@@ -39,6 +43,17 @@ export interface GeoCenter {
 export interface GeoArea {
   type: 'Polygon' | 'MultiPolygon';
   coordinates: number[][][] | number[][][][];
+}
+
+// Copilot signals structure for AI context
+export interface CopilotSignals {
+  etr_confidence: EtrConfidence | null;
+  etr_risk_level: EtrRiskLevel | null;
+  critical_runway_status: CriticalRunwayStatus | null;
+  has_critical_load: boolean;
+  critical_load_types: string[];
+  hours_remaining: number | null;
+  threshold_hours: number | null;
 }
 
 export interface Scenario {
@@ -80,6 +95,19 @@ export interface Scenario {
   // Location metadata (Demo/synthetic data)
   location_name: string | null;
   service_area: string | null;
+}
+
+// Extended scenario with derived intelligence fields (from events_intelligence view)
+export interface ScenarioWithIntelligence extends Scenario {
+  // Derived ETR risk assessment
+  etr_band_hours: number | null;
+  etr_risk_level: EtrRiskLevel | null;
+  // Derived critical load runway status
+  critical_runway_status: CriticalRunwayStatus | null;
+  // Escalation signal
+  requires_escalation: boolean;
+  // Copilot narrative inputs (structured JSON)
+  copilot_signals: CopilotSignals | null;
 }
 
 export interface ScenarioInsert {
