@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
@@ -18,6 +19,7 @@ interface OutageMapViewProps {
   selectedEventId: string | null;
   onMarkerClick: (scenario: Scenario) => void;
   showHeatmap?: boolean;
+  enableClustering?: boolean;
 }
 
 // Custom colored marker icons
@@ -35,6 +37,69 @@ const createColoredIcon = (color: string, isSelected: boolean) => {
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
+  });
+};
+
+// Custom cluster icon with count and severity-based styling
+const createClusterCustomIcon = (cluster: any) => {
+  const childCount = cluster.getChildCount();
+  const markers = cluster.getAllChildMarkers();
+  
+  // Determine cluster color based on most severe lifecycle stage in cluster
+  let hasEvent = false;
+  let hasPreEvent = false;
+  let totalCustomers = 0;
+  
+  markers.forEach((marker: any) => {
+    const scenario = marker.options.scenario as Scenario | undefined;
+    if (scenario) {
+      if (scenario.lifecycle_stage === 'Event') hasEvent = true;
+      if (scenario.lifecycle_stage === 'Pre-Event') hasPreEvent = true;
+      totalCustomers += scenario.customers_impacted || 0;
+    }
+  });
+  
+  // Color priority: Event (red) > Pre-Event (amber) > Post-Event (gray)
+  let bgColor = '#6b7280'; // Default gray
+  let borderColor = '#4b5563';
+  if (hasEvent) {
+    bgColor = '#ef4444';
+    borderColor = '#dc2626';
+  } else if (hasPreEvent) {
+    bgColor = '#f59e0b';
+    borderColor = '#d97706';
+  }
+  
+  // Size based on count
+  let size = 40;
+  if (childCount >= 10) size = 50;
+  if (childCount >= 20) size = 60;
+  
+  return L.divIcon({
+    html: `
+      <div class="cluster-marker" style="
+        background: ${bgColor};
+        border: 3px solid ${borderColor};
+        width: ${size}px;
+        height: ${size}px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: ${size > 40 ? '14px' : '12px'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        cursor: pointer;
+      ">
+        <span>${childCount}</span>
+        ${totalCustomers > 0 ? `<span style="font-size: 8px; opacity: 0.9;">${(totalCustomers / 1000).toFixed(0)}k</span>` : ''}
+      </div>
+    `,
+    className: 'custom-cluster-icon',
+    iconSize: L.point(size, size),
+    iconAnchor: L.point(size / 2, size / 2),
   });
 };
 
@@ -91,7 +156,13 @@ function geoAreaToLatLngs(geoArea: GeoArea): L.LatLngExpression[][] {
   }
 }
 
-export function OutageMapView({ scenarios, selectedEventId, onMarkerClick, showHeatmap = false }: OutageMapViewProps) {
+export function OutageMapView({ 
+  scenarios, 
+  selectedEventId, 
+  onMarkerClick, 
+  showHeatmap = false,
+  enableClustering = true 
+}: OutageMapViewProps) {
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
     if (scenarios.length === 0) return [29.7604, -95.3698] as [number, number];
@@ -104,6 +175,44 @@ export function OutageMapView({ scenarios, selectedEventId, onMarkerClick, showH
     
     return [avgLat, avgLng] as [number, number];
   }, [scenarios]);
+
+  // Render markers (used both inside and outside cluster)
+  const renderMarkers = () => {
+    return scenarios.map(scenario => {
+      if (!scenario.geo_center) return null;
+      
+      const isSelected = scenario.id === selectedEventId;
+      const color = getMarkerColor(scenario);
+      const icon = createColoredIcon(color, isSelected);
+      
+      return (
+        <Marker
+          key={`marker-${scenario.id}`}
+          position={[scenario.geo_center.lat, scenario.geo_center.lng]}
+          icon={icon}
+          // @ts-ignore - attach scenario for cluster icon calculation
+          scenario={scenario}
+          eventHandlers={{
+            click: () => onMarkerClick(scenario),
+          }}
+        >
+          <Popup className="custom-popup">
+            <div className="p-1">
+              <h3 className="font-semibold text-sm text-foreground">{scenario.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {scenario.outage_type || 'Unknown'} • {scenario.lifecycle_stage}
+              </p>
+              {scenario.customers_impacted && scenario.customers_impacted > 0 && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {scenario.customers_impacted.toLocaleString()} customers
+                </p>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      );
+    });
+  };
 
   return (
     <MapContainer
@@ -147,39 +256,22 @@ export function OutageMapView({ scenarios, selectedEventId, onMarkerClick, showH
         );
       })}
       
-      {/* Render markers - always visible but smaller when heatmap active */}
-      {scenarios.map(scenario => {
-        if (!scenario.geo_center) return null;
-        
-        const isSelected = scenario.id === selectedEventId;
-        const color = getMarkerColor(scenario);
-        const icon = createColoredIcon(color, isSelected);
-        
-        return (
-          <Marker
-            key={`marker-${scenario.id}`}
-            position={[scenario.geo_center.lat, scenario.geo_center.lng]}
-            icon={icon}
-            eventHandlers={{
-              click: () => onMarkerClick(scenario),
-            }}
-          >
-            <Popup className="custom-popup">
-              <div className="p-1">
-                <h3 className="font-semibold text-sm text-foreground">{scenario.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {scenario.outage_type || 'Unknown'} • {scenario.lifecycle_stage}
-                </p>
-                {scenario.customers_impacted && scenario.customers_impacted > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {scenario.customers_impacted.toLocaleString()} customers
-                  </p>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
+      {/* Render markers - with or without clustering */}
+      {enableClustering && !showHeatmap ? (
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={createClusterCustomIcon}
+          maxClusterRadius={60}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          zoomToBoundsOnClick={true}
+          disableClusteringAtZoom={13}
+        >
+          {renderMarkers()}
+        </MarkerClusterGroup>
+      ) : (
+        renderMarkers()
+      )}
     </MapContainer>
   );
 }
