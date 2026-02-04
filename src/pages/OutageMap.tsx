@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
-import { useCrews, useCrewsRealtime, useDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
+import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
 import {
   Select,
   SelectContent,
@@ -86,8 +86,8 @@ export default function OutageMap() {
   // Fetch feeder zones
   const { data: feederZones = [] } = useFeederZones();
   
-  // Fetch crews with realtime updates
-  const { data: crews = [] } = useCrews();
+  // Fetch crews with realtime updates and availability status
+  const { data: crews = [] } = useCrewsWithAvailability();
   useCrewsRealtime();
   
   // Crew mutations

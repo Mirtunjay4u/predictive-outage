@@ -4,21 +4,22 @@ import {
   Truck, 
   ChevronDown, 
   ChevronUp, 
-  Users, 
   Clock, 
-  MapPin,
   Send,
-  RefreshCw
+  RefreshCw,
+  Moon,
+  Coffee
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { Crew } from '@/types/crew';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
 interface CrewDispatchPanelProps {
-  crews: Crew[];
+  crews: CrewWithAvailability[];
   scenarios: Scenario[];
   selectedEventId: string | null;
   onDispatchCrew: (crewId: string, eventId: string) => void;
@@ -27,7 +28,7 @@ interface CrewDispatchPanelProps {
 }
 
 // Get status color
-const getStatusColor = (status: Crew['status']) => {
+const getStatusColor = (status: CrewWithAvailability['status']) => {
   switch (status) {
     case 'available': return 'bg-green-500';
     case 'dispatched': return 'bg-amber-500';
@@ -39,7 +40,7 @@ const getStatusColor = (status: Crew['status']) => {
 };
 
 // Get status text color
-const getStatusTextColor = (status: Crew['status']) => {
+const getStatusTextColor = (status: CrewWithAvailability['status']) => {
   switch (status) {
     case 'available': return 'text-green-400';
     case 'dispatched': return 'text-amber-400';
@@ -48,6 +49,62 @@ const getStatusTextColor = (status: Crew['status']) => {
     case 'returning': return 'text-gray-400';
     default: return 'text-gray-400';
   }
+};
+
+// Get shift status badge
+const getShiftStatusBadge = (crew: CrewWithAvailability) => {
+  if (crew.shiftStatus === 'off_duty') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-muted text-muted-foreground border-muted-foreground/30">
+              <Moon className="w-2.5 h-2.5 mr-0.5" />
+              Off
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs">
+            <p>Off duty - outside shift hours</p>
+            <p className="text-muted-foreground">
+              Shift: {formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  if (crew.shiftStatus === 'on_break') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-warning/10 text-warning border-warning/30">
+              <Coffee className="w-2.5 h-2.5 mr-0.5" />
+              Break
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="text-xs">
+            <p>On break</p>
+            <p className="text-muted-foreground">
+              Break: {formatTime(crew.break_start)} - {formatTime(crew.break_end)}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  return null;
+};
+
+// Format time for display
+const formatTime = (time: string | null): string => {
+  if (!time) return '--:--';
+  const parts = time.split(':');
+  const hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
 };
 
 // Format ETA
@@ -68,8 +125,9 @@ export function CrewDispatchPanel({
 }: CrewDispatchPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Group crews by status
-  const availableCrews = crews.filter(c => c.status === 'available');
+  // Group crews by availability and status
+  const onShiftAvailable = crews.filter(c => c.status === 'available' && c.isOnShift);
+  const offDutyAvailable = crews.filter(c => c.status === 'available' && !c.isOnShift);
   const activeCrews = crews.filter(c => ['dispatched', 'en_route', 'on_site'].includes(c.status));
   
   // Get assigned event name
@@ -136,16 +194,17 @@ export function CrewDispatchPanel({
                 </div>
               )}
               
-              <ScrollArea className="max-h-[300px]">
+              <ScrollArea className="max-h-[350px]">
                 <div className="p-2 space-y-2">
-                  {/* Available Crews Section */}
-                  {availableCrews.length > 0 && (
+                  {/* On-Shift Available Crews */}
+                  {onShiftAvailable.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2 px-1">
-                        Available ({availableCrews.length})
+                      <p className="text-xs font-medium text-muted-foreground mb-2 px-1 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        On Shift ({onShiftAvailable.length})
                       </p>
                       <div className="space-y-1.5">
-                        {availableCrews.map(crew => (
+                        {onShiftAvailable.map(crew => (
                           <div
                             key={crew.id}
                             className="flex items-center justify-between p-2 rounded-md bg-background border border-border"
@@ -178,9 +237,42 @@ export function CrewDispatchPanel({
                     </div>
                   )}
 
+                  {/* Off-Duty/Break Crews */}
+                  {offDutyAvailable.length > 0 && (
+                    <div className={onShiftAvailable.length > 0 ? 'pt-2' : ''}>
+                      <p className="text-xs font-medium text-muted-foreground mb-2 px-1 flex items-center gap-1.5">
+                        <Moon className="w-3 h-3" />
+                        Off Duty ({offDutyAvailable.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {offDutyAvailable.map(crew => (
+                          <div
+                            key={crew.id}
+                            className="flex items-center justify-between p-2 rounded-md bg-muted/30 border border-border/50 opacity-60"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-2 h-2 rounded-full bg-gray-400" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-muted-foreground truncate">
+                                    {crew.crew_name}
+                                  </p>
+                                  {getShiftStatusBadge(crew)}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  Shift: {formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Active Crews Section */}
                   {activeCrews.length > 0 && (
-                    <div className={availableCrews.length > 0 ? 'pt-2' : ''}>
+                    <div className={(onShiftAvailable.length > 0 || offDutyAvailable.length > 0) ? 'pt-2' : ''}>
                       <p className="text-xs font-medium text-muted-foreground mb-2 px-1">
                         Active ({activeCrews.length})
                       </p>
@@ -221,7 +313,7 @@ export function CrewDispatchPanel({
                   )}
 
                   {/* Dispatch Hint */}
-                  {!selectedEventId && availableCrews.length > 0 && (
+                  {!selectedEventId && onShiftAvailable.length > 0 && (
                     <p className="text-[10px] text-muted-foreground text-center py-2 px-4">
                       Select an event on the map to dispatch crews
                     </p>

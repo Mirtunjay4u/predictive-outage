@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,19 +11,28 @@ import {
   Play,
   CheckCircle,
   RotateCcw,
-  Zap
+  Zap,
+  Calendar,
+  Coffee,
+  Moon,
+  Sun
 } from 'lucide-react';
-import type { Crew } from '@/types/crew';
+import type { Crew, CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
 interface CrewDetailDrawerProps {
-  crew: Crew | null;
+  crew: Crew | CrewWithAvailability | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   assignedEvent: Scenario | null;
   onSimulateMovement?: () => void;
   onMarkArrived?: () => void;
   onMarkAvailable?: () => void;
+}
+
+// Type guard to check if crew has availability info
+function hasAvailability(crew: Crew | CrewWithAvailability): crew is CrewWithAvailability {
+  return 'shiftStatus' in crew;
 }
 
 // Get status badge variant
@@ -51,6 +59,16 @@ const getStatusDisplay = (status: Crew['status']) => {
   }
 };
 
+// Get shift status display
+const getShiftStatusDisplay = (shiftStatus: CrewWithAvailability['shiftStatus']) => {
+  switch (shiftStatus) {
+    case 'on_shift': return { label: 'On Shift', color: 'bg-green-500', icon: Sun };
+    case 'on_break': return { label: 'On Break', color: 'bg-amber-500', icon: Coffee };
+    case 'off_duty': return { label: 'Off Duty', color: 'bg-gray-500', icon: Moon };
+    default: return { label: 'Unknown', color: 'bg-gray-500', icon: Clock };
+  }
+};
+
 // Format ETA
 const formatEta = (minutes: number | null) => {
   if (minutes === null) return 'N/A';
@@ -59,6 +77,17 @@ const formatEta = (minutes: number | null) => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours}h ${mins}m`;
+};
+
+// Format time for display (HH:MM:SS -> 12h format)
+const formatTime = (time: string | null): string => {
+  if (!time) return '--:--';
+  const parts = time.split(':');
+  const hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
 };
 
 // Format dispatch time
@@ -70,6 +99,15 @@ const formatDispatchTime = (time: string | null) => {
     minute: '2-digit',
     hour12: true 
   });
+};
+
+// Format days of week
+const formatDaysOfWeek = (days: string[] | null): string => {
+  if (!days || days.length === 0) return 'No schedule';
+  if (days.length === 7) return 'Every day';
+  if (days.length === 5 && !days.includes('Sat') && !days.includes('Sun')) return 'Weekdays';
+  if (days.length === 2 && days.includes('Sat') && days.includes('Sun')) return 'Weekends';
+  return days.join(', ');
 };
 
 export function CrewDetailDrawer({
@@ -86,6 +124,11 @@ export function CrewDetailDrawer({
   const statusDisplay = getStatusDisplay(crew.status);
   const isActive = crew.status === 'dispatched' || crew.status === 'en_route';
   const isOnSite = crew.status === 'on_site';
+  
+  const crewWithAvailability = hasAvailability(crew) ? crew : null;
+  const shiftStatusDisplay = crewWithAvailability 
+    ? getShiftStatusDisplay(crewWithAvailability.shiftStatus)
+    : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -96,13 +139,24 @@ export function CrewDetailDrawer({
               <SheetTitle className="text-lg">{crew.crew_name}</SheetTitle>
               <p className="text-sm text-muted-foreground mt-1">{crew.crew_id}</p>
             </div>
-            <Badge 
-              variant={getStatusVariant(crew.status)} 
-              className="flex items-center gap-1.5"
-            >
-              <span className={`w-2 h-2 rounded-full ${statusDisplay.color}`} />
-              {statusDisplay.label}
-            </Badge>
+            <div className="flex flex-col gap-1.5 items-end">
+              <Badge 
+                variant={getStatusVariant(crew.status)} 
+                className="flex items-center gap-1.5"
+              >
+                <span className={`w-2 h-2 rounded-full ${statusDisplay.color}`} />
+                {statusDisplay.label}
+              </Badge>
+              {shiftStatusDisplay && (
+                <Badge 
+                  variant="outline" 
+                  className="flex items-center gap-1.5 text-xs"
+                >
+                  <shiftStatusDisplay.icon className="w-3 h-3" />
+                  {shiftStatusDisplay.label}
+                </Badge>
+              )}
+            </div>
           </div>
         </SheetHeader>
 
@@ -154,6 +208,52 @@ export function CrewDetailDrawer({
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Shift Schedule */}
+          <div>
+            <h4 className="text-sm font-medium text-foreground mb-3">Shift Schedule</h4>
+            <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Shift Hours</p>
+                </div>
+              </div>
+              
+              {crew.break_start && crew.break_end && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                    <Coffee className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {formatTime(crew.break_start)} - {formatTime(crew.break_end)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Break Period</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatDaysOfWeek(crew.days_of_week)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Work Days</p>
+                </div>
+              </div>
             </div>
           </div>
 

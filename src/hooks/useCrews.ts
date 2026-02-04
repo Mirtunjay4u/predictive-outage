@@ -1,7 +1,83 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Crew, CrewStatus } from '@/types/crew';
+import type { Crew, CrewStatus, CrewWithAvailability, DayOfWeek } from '@/types/crew';
+
+// Helper to parse time string "HH:MM:SS" to minutes since midnight
+function parseTimeToMinutes(timeStr: string | null): number | null {
+  if (!timeStr) return null;
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return null;
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+// Get current day abbreviation
+function getCurrentDay(): DayOfWeek {
+  const days: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return days[new Date().getDay()];
+}
+
+// Get current time in minutes since midnight
+function getCurrentTimeMinutes(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+// Check if current time is within a time range (handles overnight shifts)
+function isWithinTimeRange(
+  current: number,
+  start: number | null,
+  end: number | null
+): boolean {
+  if (start === null || end === null) return false;
+  
+  if (start <= end) {
+    // Normal shift (e.g., 08:00 - 18:00)
+    return current >= start && current < end;
+  } else {
+    // Overnight shift (e.g., 22:00 - 06:00)
+    return current >= start || current < end;
+  }
+}
+
+// Calculate crew shift availability
+export function calculateCrewAvailability(crew: Crew): CrewWithAvailability {
+  const currentDay = getCurrentDay();
+  const currentMinutes = getCurrentTimeMinutes();
+  
+  const shiftStart = parseTimeToMinutes(crew.shift_start);
+  const shiftEnd = parseTimeToMinutes(crew.shift_end);
+  const breakStart = parseTimeToMinutes(crew.break_start);
+  const breakEnd = parseTimeToMinutes(crew.break_end);
+  
+  // Check if today is a work day
+  const isWorkDay = crew.days_of_week?.includes(currentDay) ?? false;
+  
+  // Check if within shift hours
+  const isWithinShift = isWithinTimeRange(currentMinutes, shiftStart, shiftEnd);
+  
+  // Check if on break
+  const isOnBreak = breakStart !== null && breakEnd !== null && 
+    isWithinTimeRange(currentMinutes, breakStart, breakEnd);
+  
+  const isOnShift = isWorkDay && isWithinShift && !isOnBreak;
+  
+  let shiftStatus: CrewWithAvailability['shiftStatus'];
+  if (!isWorkDay || !isWithinShift) {
+    shiftStatus = 'off_duty';
+  } else if (isOnBreak) {
+    shiftStatus = 'on_break';
+  } else {
+    shiftStatus = 'on_shift';
+  }
+  
+  return {
+    ...crew,
+    isOnShift,
+    isOnBreak,
+    shiftStatus,
+  };
+}
 
 // Fetch all crews
 export function useCrews() {
@@ -21,6 +97,18 @@ export function useCrews() {
       })) as Crew[];
     },
   });
+}
+
+// Fetch crews with availability status
+export function useCrewsWithAvailability() {
+  const { data: crews, ...rest } = useCrews();
+  
+  const crewsWithAvailability = useMemo(() => {
+    if (!crews) return [];
+    return crews.map(calculateCrewAvailability);
+  }, [crews]);
+  
+  return { data: crewsWithAvailability, ...rest };
 }
 
 // Real-time subscription for crew updates
