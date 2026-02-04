@@ -220,4 +220,24 @@
   .asset-marker-icon.highlighted {
     filter: drop-shadow(0 0 6px hsl(var(--primary)));
   }
+
+  /* Crew marker styling */
+  .crew-marker-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .crew-marker-icon:hover {
+    transform: scale(1.1);
+  }
+
+  /* Crew popup styling */
+  .crew-popup .leaflet-popup-content-wrapper {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .crew-popup .leaflet-popup-tip {
+    background: hsl(var(--card));
+  }
 }

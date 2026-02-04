@@ -6,10 +6,12 @@ import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
+import type { Crew } from '@/types/crew';
 import { HeatmapLayer } from './HeatmapLayer';
 import { WeatherOverlay } from './WeatherOverlay';
 import { AssetMarkers } from './AssetMarkers';
 import { FeederZoneLayer } from './FeederZoneLayer';
+import { CrewMarkers } from './CrewMarkers';
 import type { WeatherPoint } from '@/hooks/useWeatherData';
 
 // Fix Leaflet default marker icons
@@ -38,6 +40,11 @@ interface OutageMapViewProps {
   onFeederClick?: (zone: FeederZone) => void;
   zoomTarget?: { lat: number; lng: number; zoom?: number } | null;
   highlightedAssetId?: string | null;
+  // Crew dispatch props
+  showCrews?: boolean;
+  crews?: Crew[];
+  onCrewClick?: (crew: Crew) => void;
+  onSimulateCrewMovement?: (crewId: string, targetLat: number, targetLng: number) => void;
 }
 
 // Custom colored marker icons
@@ -231,6 +238,10 @@ export function OutageMapView({
   onFeederClick,
   zoomTarget = null,
   highlightedAssetId = null,
+  showCrews = false,
+  crews = [],
+  onCrewClick,
+  onSimulateCrewMovement,
 }: OutageMapViewProps) {
   const [zoomToAssetType, setZoomToAssetType] = useState<Asset['asset_type'] | null>(null);
 
@@ -366,6 +377,17 @@ export function OutageMapView({
           visible={showAssets}
           onAssetClick={onAssetClick}
           highlightedAssetId={highlightedAssetId}
+        />
+      )}
+      
+      {/* Crew Markers Layer */}
+      {showCrews && onCrewClick && (
+        <CrewMarkers
+          crews={crews}
+          scenarios={scenarios}
+          visible={showCrews}
+          onCrewClick={onCrewClick}
+          onSimulateMovement={onSimulateCrewMovement}
         />
       )}
       
