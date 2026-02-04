@@ -36,6 +36,7 @@ export default function OutageMap() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [enableClustering, setEnableClustering] = useState(true);
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -215,14 +216,27 @@ export default function OutageMap() {
           selectedEventId={selectedEventId}
           onMarkerClick={handleMarkerClick}
           showHeatmap={showHeatmap}
+          enableClustering={enableClustering}
         />
         
         {/* Layer Toggle Controls */}
-        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3">
+        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 space-y-3">
           <div className="flex items-center gap-3">
             <Layers className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="cluster-toggle" className="text-xs font-medium text-foreground cursor-pointer">
+              Cluster Markers
+            </Label>
+            <Switch
+              id="cluster-toggle"
+              checked={enableClustering}
+              onCheckedChange={setEnableClustering}
+              disabled={showHeatmap}
+            />
+          </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Flame className="w-4 h-4 text-muted-foreground" />
             <Label htmlFor="heatmap-toggle" className="text-xs font-medium text-foreground cursor-pointer">
-              Customer Impact Heatmap
+              Impact Heatmap
             </Label>
             <Switch
               id="heatmap-toggle"
@@ -266,6 +280,12 @@ export default function OutageMap() {
                   <div className="w-3 h-3 rounded-full bg-muted-foreground" />
                   <span className="text-muted-foreground">Post-Event</span>
                 </div>
+                {enableClustering && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
+                    <div className="w-5 h-5 rounded-full bg-destructive flex items-center justify-center text-[8px] text-white font-bold">3</div>
+                    <span className="text-muted-foreground">Clustered Events</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
                   <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
                   <span className="text-muted-foreground">Outage Area</span>
