@@ -252,10 +252,18 @@ export type Database = {
       }
       scenarios: {
         Row: {
+          backup_runtime_hours: number | null
+          backup_runtime_remaining_hours: number | null
           created_at: string
+          critical_escalation_threshold_hours: number | null
+          critical_load_type: string | null
           customers_impacted: number | null
           description: string | null
           eta: string | null
+          etr_confidence: string | null
+          etr_earliest: string | null
+          etr_latest: string | null
+          etr_uncertainty_drivers: Json | null
           event_end_time: string | null
           event_last_update_time: string | null
           event_start_time: string | null
@@ -263,6 +271,7 @@ export type Database = {
           feeder_id: string | null
           geo_area: Json | null
           geo_center: Json | null
+          has_critical_load: boolean | null
           id: string
           lifecycle_stage: Database["public"]["Enums"]["lifecycle_stage"]
           name: string
@@ -276,10 +285,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          backup_runtime_hours?: number | null
+          backup_runtime_remaining_hours?: number | null
           created_at?: string
+          critical_escalation_threshold_hours?: number | null
+          critical_load_type?: string | null
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_latest?: string | null
+          etr_uncertainty_drivers?: Json | null
           event_end_time?: string | null
           event_last_update_time?: string | null
           event_start_time?: string | null
@@ -287,6 +304,7 @@ export type Database = {
           feeder_id?: string | null
           geo_area?: Json | null
           geo_center?: Json | null
+          has_critical_load?: boolean | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
           name: string
@@ -300,10 +318,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          backup_runtime_hours?: number | null
+          backup_runtime_remaining_hours?: number | null
           created_at?: string
+          critical_escalation_threshold_hours?: number | null
+          critical_load_type?: string | null
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_latest?: string | null
+          etr_uncertainty_drivers?: Json | null
           event_end_time?: string | null
           event_last_update_time?: string | null
           event_start_time?: string | null
@@ -311,6 +337,7 @@ export type Database = {
           feeder_id?: string | null
           geo_area?: Json | null
           geo_center?: Json | null
+          has_critical_load?: boolean | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
           name?: string
