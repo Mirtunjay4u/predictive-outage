@@ -92,6 +92,36 @@ export type Database = {
           },
         ]
       }
+      feeder_zones: {
+        Row: {
+          created_at: string
+          feeder_id: string
+          feeder_name: string
+          geo_area: Json
+          id: string
+          meta: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feeder_id: string
+          feeder_name: string
+          geo_area: Json
+          id?: string
+          meta?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feeder_id?: string
+          feeder_name?: string
+          geo_area?: Json
+          id?: string
+          meta?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scenarios: {
         Row: {
           created_at: string
