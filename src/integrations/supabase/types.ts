@@ -17,7 +17,13 @@ export type Database = {
       scenarios: {
         Row: {
           created_at: string
+          customers_impacted: number | null
           description: string | null
+          eta: string | null
+          fault_id: string | null
+          feeder_id: string | null
+          geo_area: Json | null
+          geo_center: Json | null
           id: string
           lifecycle_stage: Database["public"]["Enums"]["lifecycle_stage"]
           name: string
@@ -27,11 +33,18 @@ export type Database = {
           priority: string | null
           scenario_time: string | null
           stage: boolean
+          transformer_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          customers_impacted?: number | null
           description?: string | null
+          eta?: string | null
+          fault_id?: string | null
+          feeder_id?: string | null
+          geo_area?: Json | null
+          geo_center?: Json | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
           name: string
@@ -41,11 +54,18 @@ export type Database = {
           priority?: string | null
           scenario_time?: string | null
           stage?: boolean
+          transformer_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          customers_impacted?: number | null
           description?: string | null
+          eta?: string | null
+          fault_id?: string | null
+          feeder_id?: string | null
+          geo_area?: Json | null
+          geo_center?: Json | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
           name?: string
@@ -55,6 +75,7 @@ export type Database = {
           priority?: string | null
           scenario_time?: string | null
           stage?: boolean
+          transformer_id?: string | null
           updated_at?: string
         }
         Relationships: []
