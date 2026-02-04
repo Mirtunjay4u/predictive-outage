@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { TroubleshootingFAQ } from '@/components/settings/TroubleshootingFAQ';
 
 export default function Settings() {
   return (
@@ -174,6 +175,9 @@ export default function Settings() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Troubleshooting FAQ */}
+        <TroubleshootingFAQ />
       </div>
     </div>
   );

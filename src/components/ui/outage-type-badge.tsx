@@ -40,7 +40,7 @@ const outageConfig: Record<OutageType, { icon: LucideIcon; className: string }> 
     icon: Zap, 
     className: 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30 dark:text-yellow-400' 
   },
-  'Ice/Snow': { 
+  'Snow Storm': { 
     icon: Snowflake, 
     className: 'bg-cyan-500/15 text-cyan-600 border-cyan-500/30 dark:text-cyan-400' 
   },
@@ -56,7 +56,7 @@ const outageConfig: Record<OutageType, { icon: LucideIcon; className: string }> 
     icon: TreeDeciduous, 
     className: 'bg-green-500/15 text-green-600 border-green-500/30 dark:text-green-400' 
   },
-  'Unknown': { 
+  'Others': { 
     icon: HelpCircle, 
     className: 'bg-muted text-muted-foreground border-border' 
   },
@@ -68,8 +68,8 @@ interface OutageTypeBadgeProps {
 }
 
 export function OutageTypeBadge({ type, className }: OutageTypeBadgeProps) {
-  const outageType = type || 'Unknown';
-  const config = outageConfig[outageType] || outageConfig['Unknown'];
+  const outageType = type || 'Others';
+  const config = outageConfig[outageType] || outageConfig['Others'];
   const Icon = config.icon;
 
   return (

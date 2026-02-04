@@ -7,11 +7,11 @@ export type OutageType =
   | 'Heatwave'
   | 'Wildfire'
   | 'Lightning'
-  | 'Ice/Snow'
+  | 'Snow Storm'
   | 'High Wind'
   | 'Equipment Failure'
   | 'Vegetation'
-  | 'Unknown';
+  | 'Others';
 
 export const OUTAGE_TYPES: OutageType[] = [
   'Storm',
@@ -20,11 +20,11 @@ export const OUTAGE_TYPES: OutageType[] = [
   'Heatwave',
   'Wildfire',
   'Lightning',
-  'Ice/Snow',
+  'Snow Storm',
   'High Wind',
   'Equipment Failure',
   'Vegetation',
-  'Unknown',
+  'Others',
 ];
 
 export interface GeoCenter {
