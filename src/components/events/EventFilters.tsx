@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const OUTAGE_TYPES = [
   'Storm', 'Flood', 'Heavy Rain', 'Heatwave', 'Wildfire',
-  'Lightning', 'Ice/Snow', 'High Wind', 'Equipment Failure', 'Vegetation', 'Unknown'
+  'Lightning', 'Snow Storm', 'High Wind', 'Equipment Failure', 'Vegetation', 'Others'
 ] as const;
 
 interface EventFiltersProps {
