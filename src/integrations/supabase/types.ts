@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          asset_type: Database["public"]["Enums"]["asset_type"]
+          created_at: string
+          fault_id: string | null
+          feeder_id: string | null
+          id: string
+          lat: number
+          lng: number
+          meta: Json | null
+          name: string
+          transformer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_type: Database["public"]["Enums"]["asset_type"]
+          created_at?: string
+          fault_id?: string | null
+          feeder_id?: string | null
+          id?: string
+          lat: number
+          lng: number
+          meta?: Json | null
+          name: string
+          transformer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_type?: Database["public"]["Enums"]["asset_type"]
+          created_at?: string
+          fault_id?: string | null
+          feeder_id?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          meta?: Json | null
+          name?: string
+          transformer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      event_assets: {
+        Row: {
+          asset_id: string
+          created_at: string
+          event_id: string
+          id: string
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          event_id: string
+          id?: string
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_assets_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_assets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenarios: {
         Row: {
           created_at: string
@@ -88,6 +166,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      asset_type: "Fault" | "Feeder" | "Transformer"
       lifecycle_stage: "Pre-Event" | "Event" | "Post-Event"
       outage_type:
         | "Storm"
@@ -228,6 +307,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      asset_type: ["Fault", "Feeder", "Transformer"],
       lifecycle_stage: ["Pre-Event", "Event", "Post-Event"],
       outage_type: [
         "Storm",
