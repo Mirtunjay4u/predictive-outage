@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Filter, ChevronRight, AlertTriangle, Bot, Map } from 'lucide-react';
+import { MapPin, ChevronRight, Bot, Map, Layers, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -19,7 +20,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useScenarios } from '@/hooks/useScenarios';
 import { OutageMapView } from '@/components/map/OutageMapView';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
-import type { Scenario, LifecycleStage, OutageType } from '@/types/scenario';
+import type { Scenario, LifecycleStage } from '@/types/scenario';
 import { OUTAGE_TYPES } from '@/types/scenario';
 
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
@@ -34,6 +35,7 @@ export default function OutageMap() {
   const [outageTypeFilter, setOutageTypeFilter] = useState<string>('all');
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -212,28 +214,64 @@ export default function OutageMap() {
           scenarios={filteredScenarios}
           selectedEventId={selectedEventId}
           onMarkerClick={handleMarkerClick}
+          showHeatmap={showHeatmap}
         />
+        
+        {/* Layer Toggle Controls */}
+        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3">
+          <div className="flex items-center gap-3">
+            <Layers className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="heatmap-toggle" className="text-xs font-medium text-foreground cursor-pointer">
+              Customer Impact Heatmap
+            </Label>
+            <Switch
+              id="heatmap-toggle"
+              checked={showHeatmap}
+              onCheckedChange={setShowHeatmap}
+            />
+          </div>
+        </div>
         
         {/* Map Legend */}
         <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3">
           <h4 className="text-xs font-semibold text-foreground mb-2">Legend</h4>
           <div className="space-y-1.5 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-destructive" />
-              <span className="text-muted-foreground">Active Event</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-warning" />
-              <span className="text-muted-foreground">Pre-Event</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-muted-foreground" />
-              <span className="text-muted-foreground">Post-Event</span>
-            </div>
-            <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-              <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
-              <span className="text-muted-foreground">Outage Area</span>
-            </div>
+            {showHeatmap ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Flame className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground font-medium">Customer Impact Density</span>
+                </div>
+                <div className="flex items-center gap-1 mt-2">
+                  <div className="h-2 w-full rounded-sm" style={{ 
+                    background: 'linear-gradient(to right, #1e3a5f, #3b82f6, #f59e0b, #ef4444, #dc2626)' 
+                  }} />
+                </div>
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>Low</span>
+                  <span>High</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-destructive" />
+                  <span className="text-muted-foreground">Active Event</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-warning" />
+                  <span className="text-muted-foreground">Pre-Event</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-muted-foreground" />
+                  <span className="text-muted-foreground">Post-Event</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
+                  <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
+                  <span className="text-muted-foreground">Outage Area</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
