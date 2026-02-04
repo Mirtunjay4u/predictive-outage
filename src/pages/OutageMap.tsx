@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -59,7 +59,7 @@ export default function OutageMap() {
   const [showWeather, setShowWeather] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
   const [showFeederZones, setShowFeederZones] = useState(false);
-  const [showCrews, setShowCrews] = useState(true); // Crews visible by default
+  const [showCrews, setShowCrews] = useState(true);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -122,13 +122,12 @@ export default function OutageMap() {
           : Date.now();
         const currentTime = playbackTime.getTime();
         
-        // Event must have started and not ended yet at playback time
         if (startTime > currentTime || currentTime > endTime) {
           return false;
         }
       }
       
-      // Search filter - match name, outage type, description, fault/feeder/transformer IDs
+      // Search filter
       if (query) {
         const searchableFields = [
           scenario.name,
@@ -153,19 +152,6 @@ export default function OutageMap() {
     });
   }, [geoScenarios, searchQuery, lifecycleFilter, priorityFilter, outageTypeFilter, isPlaybackActive, playbackTime]);
 
-  // Get visible event IDs for asset filtering
-  const visibleEventIds = useMemo(() => {
-    return new Set(filteredScenarios.map(s => s.id));
-  }, [filteredScenarios]);
-
-  // Filter assets based on playback (only show assets linked to visible events)
-  const playbackFilteredAssets = useMemo(() => {
-    if (!isPlaybackActive) return assets;
-    // When playback is active, we'd need linked assets info
-    // For now, keep all assets but they'll be dimmed based on linkedAssetIds
-    return assets;
-  }, [assets, isPlaybackActive]);
-
   const hasActiveFilters = searchQuery || lifecycleFilter !== 'all' || priorityFilter !== 'all' || outageTypeFilter !== 'all' || isPlaybackActive;
 
   const clearAllFilters = () => {
@@ -187,12 +173,10 @@ export default function OutageMap() {
   }, [priorityFilter]);
 
   const handleTopFeederClick = useCallback((feederId: string) => {
-    // Find the feeder zone and zoom to it
     const zone = feederZones.find(z => z.feeder_id === feederId);
     if (zone) {
       setHighlightedFeederId(feederId);
       setShowFeederZones(true);
-      // Calculate centroid from geo_area for zoom target
       const geoArea = zone.geo_area as { coordinates: number[][][] };
       if (geoArea?.coordinates?.[0]) {
         const coords = geoArea.coordinates[0];
@@ -239,12 +223,9 @@ export default function OutageMap() {
     navigate(`/copilot-studio?prefill=${prompt}`);
   };
 
-  // Search result handler
   const handleSearchSelect = useCallback((result: SearchResult) => {
     if (result.lat && result.lng) {
       setZoomTarget({ lat: result.lat, lng: result.lng, zoom: result.type === 'feeder_zone' ? 11 : 15 });
-      
-      // Clear after animation
       setTimeout(() => setZoomTarget(null), 1000);
       
       if (result.type === 'feeder_zone') {
@@ -257,7 +238,6 @@ export default function OutageMap() {
     }
   }, []);
 
-  // Reset map handler
   const handleResetMap = useCallback(() => {
     setSelectedEventId(null);
     setHighlightedFeederId(null);
@@ -269,13 +249,11 @@ export default function OutageMap() {
     setCrewDrawerOpen(false);
   }, []);
 
-  // Clear search highlights
   const handleSearchClear = useCallback(() => {
     setHighlightedFeederId(null);
     setHighlightedAssetId(null);
   }, []);
 
-  // Crew handlers
   const handleCrewClick = useCallback((crew: Crew) => {
     setSelectedCrew(crew);
     setCrewDrawerOpen(true);
@@ -339,7 +317,6 @@ export default function OutageMap() {
     toast.success('Crew positions updated');
   }, [crews, scenarios, simulateMovementMutation]);
 
-  // Emergency dispatch for off-duty crews
   const handleEmergencyDispatch = useCallback((crewId: string, eventId: string, authorizedBy: string, notes: string) => {
     const event = scenarios?.find(s => s.id === eventId);
     if (!event?.geo_center) {
@@ -365,7 +342,6 @@ export default function OutageMap() {
     });
   }, [scenarios, emergencyDispatchMutation]);
 
-  // Get assigned event for selected crew
   const selectedCrewEvent = useMemo(() => {
     if (!selectedCrew?.assigned_event_id || !scenarios) return null;
     return scenarios.find(s => s.id === selectedCrew.assigned_event_id) || null;
@@ -381,439 +357,380 @@ export default function OutageMap() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Panel - Events List */}
-      <div className="w-96 border-r border-border flex flex-col bg-card">
-        <div className="p-4 border-b border-border space-y-4">
-          <div className="flex items-center gap-2">
-            <Map className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-bold text-foreground">Outage Map</h1>
-          <Badge variant="outline" className="ml-auto text-xs bg-warning/10 text-warning border-warning/30">
-              Demo Geography
-            </Badge>
-          </div>
-          
-          {/* Search Box */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search events, types, IDs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 h-9 text-sm bg-background"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-          
-          {/* Filters */}
-          <div className="grid grid-cols-3 gap-2">
-            <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Lifecycle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stages</SelectItem>
-                {LIFECYCLE_OPTIONS.map(opt => (
-                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priority</SelectItem>
-                {PRIORITY_OPTIONS.map(opt => (
-                  <SelectItem key={opt} value={opt} className="capitalize">{opt}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={outageTypeFilter} onValueChange={setOutageTypeFilter}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {OUTAGE_TYPES.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Active Filters Indicator */}
-          {hasActiveFilters && (
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {filteredScenarios.length} of {geoScenarios.length} events
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-3 h-3 mr-1" />
-                Clear filters
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Events List */}
-        <ScrollArea className="flex-1">
-          <div className="p-2 space-y-2">
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="p-3 rounded-lg border border-border bg-background">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              ))
-            ) : filteredScenarios.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No events with location data</p>
-              </div>
-            ) : (
-              filteredScenarios.map(scenario => (
-                <motion.div
-                  key={scenario.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                    selectedEventId === scenario.id 
-                      ? 'border-primary bg-primary/5 shadow-md' 
-                      : 'border-border bg-background hover:border-primary/50 hover:shadow-sm'
-                  }`}
-                  onClick={() => handleViewOnMap(scenario)}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="text-sm font-medium text-foreground line-clamp-1">
-                      {scenario.name}
-                    </h3>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </div>
-                  
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {scenario.outage_type && (
-                      <OutageTypeBadge type={scenario.outage_type} className="text-[10px]" />
-                    )}
-                    <StatusBadge 
-                      variant={scenario.lifecycle_stage === 'Event' ? 'event' : scenario.lifecycle_stage === 'Pre-Event' ? 'pre-event' : 'post-event'}
-                    >
-                      {scenario.lifecycle_stage}
-                    </StatusBadge>
-                    {scenario.priority && (
-                      <span className={`text-xs font-medium capitalize ${getPriorityColor(scenario.priority)}`}>
-                        {scenario.priority}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {scenario.customers_impacted && scenario.customers_impacted > 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {scenario.customers_impacted.toLocaleString()} customers impacted
-                    </p>
-                  )}
-                </motion.div>
-              ))
-            )}
-          </div>
-        </ScrollArea>
-
-        {/* Footer Stats */}
-        <div className="p-3 border-t border-border bg-muted/30">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{filteredScenarios.length} events shown</span>
-            <span>{geoScenarios.length} with location data</span>
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+      {/* ===== TOP HEADER (fixed, compact) ===== */}
+      <header className="flex-shrink-0 h-14 border-b border-border bg-card px-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Map className="w-5 h-5 text-primary" />
+          <div>
+            <h1 className="text-base font-bold text-foreground leading-tight">Outage Command Map</h1>
+            <p className="text-[10px] text-muted-foreground leading-none">Situational awareness and decision support (Demo)</p>
           </div>
         </div>
-      </div>
-
-      {/* Main Panel - Map */}
-      <div className="flex-1 relative">
-        <MapErrorBoundary>
-          <OutageMapView 
-            scenarios={filteredScenarios}
-            selectedEventId={selectedEventId}
-            onMarkerClick={handleMarkerClick}
-            showHeatmap={showHeatmap}
-            enableClustering={enableClustering}
-            showWeather={showWeather}
-            weatherPoints={weatherData?.points || []}
-            showAssets={showAssets}
-            assets={assets}
-            linkedAssetIds={linkedAssetIds}
-            onAssetClick={handleAssetClick}
-            showFeederZones={showFeederZones}
-            feederZones={feederZones}
-            highlightedFeederId={highlightedFeederId}
-            onFeederClick={handleFeederClick}
-            zoomTarget={zoomTarget}
-            highlightedAssetId={highlightedAssetId}
-            showCrews={showCrews}
-            crews={crews}
-            onCrewClick={handleCrewClick}
-            onSimulateCrewMovement={handleSimulateCrewMovement}
-          />
-        </MapErrorBoundary>
         
-        {/* Crew Dispatch Panel */}
-        {showCrews && (
-          <CrewDispatchPanel
-            crews={crews}
-            scenarios={scenarios || []}
-            selectedEventId={selectedEventId}
-            onDispatchCrew={handleDispatchCrew}
-            onEmergencyDispatch={handleEmergencyDispatch}
-            onSimulateAll={handleSimulateAll}
-            isSimulating={isSimulating}
-          />
-        )}
-        
-        {/* Playback Panel */}
+        {/* Playback Controls in Header */}
         <PlaybackPanel
           scenarios={geoScenarios}
           onPlaybackTimeChange={setPlaybackTime}
           isPlaybackActive={isPlaybackActive}
           onPlaybackActiveChange={setIsPlaybackActive}
         />
-        
-        {/* Top Search Bar */}
-        <div className="absolute top-4 left-4 z-[1000] flex items-center gap-2">
-          <MapSearchBar
-            assets={assets}
-            feederZones={feederZones}
-            onSelect={handleSearchSelect}
-            onClear={handleSearchClear}
-          />
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleResetMap}
-                className="h-9 w-9 bg-card/95 backdrop-blur-sm border-border"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Reset Map</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        
-        {/* Command Summary Cards */}
+      </header>
+
+      {/* ===== COMMAND SUMMARY ROW ===== */}
+      <div className="flex-shrink-0 border-b border-border bg-muted/30 px-4 py-2">
         <CommandSummary
           scenarios={filteredScenarios}
           onHighPriorityClick={handleHighPriorityClick}
           onTopFeederClick={handleTopFeederClick}
           isHighPriorityActive={priorityFilter === 'high'}
         />
-        
-        {/* Layer Toggle Controls */}
-        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 space-y-3">
-          <div className="flex items-center gap-3">
-            <Layers className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="cluster-toggle" className="text-xs font-medium text-foreground cursor-pointer">
-              Cluster Markers
-            </Label>
-            <Switch
-              id="cluster-toggle"
-              checked={enableClustering}
-              onCheckedChange={setEnableClustering}
-              disabled={showHeatmap}
-            />
+      </div>
+
+      {/* ===== MAIN CONTENT AREA (two-panel layout) ===== */}
+      <div className="flex flex-1 min-h-0">
+        {/* LEFT PANEL - Event List (30% width) */}
+        <aside className="w-[360px] min-w-[320px] border-r border-border flex flex-col bg-card">
+          {/* Search & Filters Header */}
+          <div className="flex-shrink-0 p-4 space-y-3 border-b border-border">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search events, types, IDs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-10 text-sm bg-background"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded hover:bg-muted"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            
+            {/* Filters - Grouped Clearly */}
+            <div className="space-y-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Filters</span>
+              <div className="grid grid-cols-3 gap-2">
+                <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Lifecycle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stages</SelectItem>
+                    {LIFECYCLE_OPTIONS.map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priority</SelectItem>
+                    {PRIORITY_OPTIONS.map(opt => (
+                      <SelectItem key={opt} value={opt} className="capitalize">{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={outageTypeFilter} onValueChange={setOutageTypeFilter}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {OUTAGE_TYPES.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Active Filters Indicator */}
+            {hasActiveFilters && (
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="text-xs text-muted-foreground">
+                  {filteredScenarios.length} of {geoScenarios.length} events
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                >
+                  <X className="w-3 h-3" />
+                  Clear
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <Flame className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="heatmap-toggle" className="text-xs font-medium text-foreground cursor-pointer">
-              Impact Heatmap
-            </Label>
-            <Switch
+
+          {/* Events List - Scrollable */}
+          <ScrollArea className="flex-1">
+            <div className="p-3 space-y-2">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-border bg-background">
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))
+              ) : filteredScenarios.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <MapPin className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                  <p className="text-sm font-medium">No events found</p>
+                  <p className="text-xs mt-1">Try adjusting your filters</p>
+                </div>
+              ) : (
+                filteredScenarios.map(scenario => (
+                  <motion.div
+                    key={scenario.id}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`group p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      selectedEventId === scenario.id 
+                        ? 'border-primary bg-primary/5 shadow-md' 
+                        : 'border-transparent bg-background hover:border-border hover:shadow-sm hover:bg-muted/30'
+                    }`}
+                    onClick={() => handleViewOnMap(scenario)}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
+                        {scenario.name}
+                      </h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkerClick(scenario);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Badges Row */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <StatusBadge 
+                        variant={scenario.lifecycle_stage === 'Event' ? 'event' : scenario.lifecycle_stage === 'Pre-Event' ? 'pre-event' : 'post-event'}
+                        className="text-[10px]"
+                      >
+                        {scenario.lifecycle_stage}
+                      </StatusBadge>
+                      {scenario.priority && (
+                        <StatusBadge 
+                          variant={scenario.priority === 'high' ? 'high' : scenario.priority === 'medium' ? 'medium' : 'low'}
+                          className="text-[10px] capitalize"
+                        >
+                          {scenario.priority}
+                        </StatusBadge>
+                      )}
+                      {scenario.outage_type && (
+                        <OutageTypeBadge type={scenario.outage_type} className="text-[10px]" />
+                      )}
+                    </div>
+                    
+                    {/* Customer Impact */}
+                    {scenario.customers_impacted && scenario.customers_impacted > 0 && (
+                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+                        <span className="font-semibold text-foreground">{scenario.customers_impacted.toLocaleString()}</span>
+                        customers impacted
+                      </p>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Footer Stats */}
+          <div className="flex-shrink-0 p-3 border-t border-border bg-muted/30">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="font-medium">{filteredScenarios.length} events</span>
+              <span>{geoScenarios.length} with location data</span>
+            </div>
+          </div>
+        </aside>
+
+        {/* RIGHT PANEL - Interactive Map (70% width) */}
+        <main className="flex-1 relative min-w-0">
+          <MapErrorBoundary>
+            <OutageMapView 
+              scenarios={filteredScenarios}
+              selectedEventId={selectedEventId}
+              onMarkerClick={handleMarkerClick}
+              showHeatmap={showHeatmap}
+              enableClustering={enableClustering}
+              showWeather={showWeather}
+              weatherPoints={weatherData?.points || []}
+              showAssets={showAssets}
+              assets={assets}
+              linkedAssetIds={linkedAssetIds}
+              onAssetClick={handleAssetClick}
+              showFeederZones={showFeederZones}
+              feederZones={feederZones}
+              highlightedFeederId={highlightedFeederId}
+              onFeederClick={handleFeederClick}
+              zoomTarget={zoomTarget}
+              highlightedAssetId={highlightedAssetId}
+              showCrews={showCrews}
+              crews={crews}
+              onCrewClick={handleCrewClick}
+              onSimulateCrewMovement={handleSimulateCrewMovement}
+            />
+          </MapErrorBoundary>
+          
+          {/* Crew Dispatch Panel */}
+          {showCrews && (
+            <CrewDispatchPanel
+              crews={crews}
+              scenarios={scenarios || []}
+              selectedEventId={selectedEventId}
+              onDispatchCrew={handleDispatchCrew}
+              onEmergencyDispatch={handleEmergencyDispatch}
+              onSimulateAll={handleSimulateAll}
+              isSimulating={isSimulating}
+            />
+          )}
+          
+          {/* Top Controls Row */}
+          <div className="absolute top-4 left-4 z-[1000] flex items-center gap-3">
+            <MapSearchBar
+              assets={assets}
+              feederZones={feederZones}
+              onSelect={handleSearchSelect}
+              onClear={handleSearchClear}
+            />
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleResetMap}
+                  className="h-10 w-10 bg-card/95 backdrop-blur-sm border-border hover:bg-primary/10 hover:border-primary/50 transition-all"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Reset Map</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
+          {/* Layer Toggle Controls (top-right) */}
+          <div className="absolute top-4 right-4 z-[1000] bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-4 space-y-3 min-w-[200px]">
+            <div className="flex items-center gap-2 pb-2 border-b border-border">
+              <Layers className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Map Layers</span>
+            </div>
+            
+            <LayerToggle
               id="heatmap-toggle"
+              icon={<Flame className="w-4 h-4" />}
+              label="Impact Heatmap"
               checked={showHeatmap}
               onCheckedChange={setShowHeatmap}
             />
-          </div>
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <Cable className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="feeder-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
-              Feeder Zones
-            </Label>
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
-              Demo
-            </Badge>
-            <Switch
+            
+            <LayerToggle
               id="feeder-toggle"
+              icon={<Cable className="w-4 h-4" />}
+              label="Feeder Zones"
+              badge="Demo"
               checked={showFeederZones}
               onCheckedChange={setShowFeederZones}
             />
-          </div>
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <Box className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="assets-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
-              GIS Assets
-            </Label>
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
-              Demo
-            </Badge>
-            <Switch
+            
+            <LayerToggle
               id="assets-toggle"
+              icon={<Box className="w-4 h-4" />}
+              label="GIS Assets"
+              badge="Demo"
               checked={showAssets}
               onCheckedChange={setShowAssets}
             />
-          </div>
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <Cloud className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="weather-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
-              Weather Overlay
-            </Label>
-            {showWeather && (
-              <button
-                onClick={() => refetchWeather()}
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                title="Refresh weather"
-              >
-                <RefreshCw className={`w-3 h-3 ${weatherLoading ? 'animate-spin' : ''}`} />
-              </button>
-            )}
-            <Switch
+            
+            <LayerToggle
               id="weather-toggle"
+              icon={<Cloud className="w-4 h-4" />}
+              label="Weather Overlay"
               checked={showWeather}
               onCheckedChange={setShowWeather}
+              onRefresh={showWeather ? () => refetchWeather() : undefined}
+              isRefreshing={weatherLoading}
             />
-          </div>
-          <div className="flex items-center gap-3 pt-2 border-t border-border">
-            <Truck className="w-4 h-4 text-muted-foreground" />
-            <Label htmlFor="crews-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
-              Crew Dispatch
-            </Label>
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
-              Live
-            </Badge>
-            <Switch
+            
+            <LayerToggle
               id="crews-toggle"
+              icon={<Truck className="w-4 h-4" />}
+              label="Crew Dispatch"
+              badge="Live"
+              badgeVariant="live"
               checked={showCrews}
               onCheckedChange={setShowCrews}
             />
           </div>
-        </div>
-        
-        {/* Map Legend */}
-        <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3">
-          <h4 className="text-xs font-semibold text-foreground mb-2">Legend</h4>
-          <div className="space-y-1.5 text-xs">
-            {showHeatmap ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <Flame className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground font-medium">Customer Impact Density</span>
-                </div>
-                <div className="flex items-center gap-1 mt-2">
-                  <div className="h-2 w-full rounded-sm" style={{ 
+          
+          {/* Map Legend (bottom-left) */}
+          <div className="absolute bottom-4 left-4 z-[1000] bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-4 max-w-[200px]">
+            <h4 className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wide">Legend</h4>
+            <div className="space-y-2 text-xs">
+              {showHeatmap ? (
+                <>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Flame className="w-3.5 h-3.5" />
+                    <span>Customer Impact</span>
+                  </div>
+                  <div className="h-2 w-full rounded-sm mt-2" style={{ 
                     background: 'linear-gradient(to right, #1e3a5f, #3b82f6, #f59e0b, #ef4444, #dc2626)' 
                   }} />
-                </div>
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>Low</span>
-                  <span>High</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-destructive" />
-                  <span className="text-muted-foreground">Active Event</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-warning" />
-                  <span className="text-muted-foreground">Pre-Event</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-muted-foreground" />
-                  <span className="text-muted-foreground">Post-Event</span>
-                </div>
-                {enableClustering && (
-                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-                    <div className="w-5 h-5 rounded-full bg-destructive flex items-center justify-center text-[8px] text-white font-bold">3</div>
-                    <span className="text-muted-foreground">Clustered Events</span>
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>Low</span>
+                    <span>High</span>
                   </div>
-                )}
-                <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-                  <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
-                  <span className="text-muted-foreground">Outage Area</span>
-                </div>
-                {showFeederZones && (
-                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-                    <div className="w-4 h-2 bg-primary/20 border border-primary/50 rounded-sm" style={{ borderStyle: 'dashed' }} />
-                    <span className="text-muted-foreground">Feeder Zone</span>
-                  </div>
-                )}
-                {showAssets && (
-                  <div className="pt-1 border-t border-border mt-1 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-destructive">
-                        <polygon fill="currentColor" points="13,2 3,14 12,14 11,22 21,10 12,10"/>
-                      </svg>
-                      <span className="text-muted-foreground">Fault</span>
+                </>
+              ) : (
+                <>
+                  <LegendItem color="bg-destructive" label="Active Event" />
+                  <LegendItem color="bg-warning" label="Pre-Event" />
+                  <LegendItem color="bg-muted-foreground" label="Post-Event" />
+                  
+                  {showFeederZones && (
+                    <div className="pt-2 mt-2 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-2 bg-primary/20 border border-primary/50 rounded-sm" style={{ borderStyle: 'dashed' }} />
+                        <span className="text-muted-foreground">Feeder Zone</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-primary">
-                        <rect x="4" y="8" width="16" height="8" rx="2" fill="currentColor"/>
-                      </svg>
-                      <span className="text-muted-foreground">Feeder</span>
+                  )}
+                  
+                  {showCrews && (
+                    <div className="pt-2 mt-2 border-t border-border space-y-1.5">
+                      <LegendItem color="bg-green-500" label="Available" />
+                      <LegendItem color="bg-blue-500" label="En Route" />
+                      <LegendItem color="bg-purple-500" label="On Site" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-warning">
-                        <rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor"/>
-                      </svg>
-                      <span className="text-muted-foreground">Transformer</span>
-                    </div>
-                  </div>
-                )}
-                {showWeather && (
-                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
-                    <Cloud className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-muted-foreground">Weather (click for details)</span>
-                  </div>
-                )}
-                {showCrews && (
-                  <div className="pt-1 border-t border-border mt-1 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span className="text-muted-foreground">Crew Available</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span className="text-muted-foreground">Crew En Route</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-purple-500" />
-                      <span className="text-muted-foreground">Crew On Site</span>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </main>
       </div>
 
-      {/* Event Detail Drawer */}
+      {/* ===== DETAIL DRAWERS ===== */}
       <EventDetailDrawer
         event={selectedEvent}
         open={drawerOpen}
@@ -821,14 +738,12 @@ export default function OutageMap() {
         onOpenInCopilot={handleOpenInCopilot}
       />
       
-      {/* Asset Detail Drawer */}
       <AssetDetailDrawer
         asset={selectedAsset}
         open={assetDrawerOpen}
         onOpenChange={setAssetDrawerOpen}
       />
       
-      {/* Feeder Zone Detail Drawer */}
       <FeederDetailDrawer
         feederZone={selectedFeederZone}
         open={feederDrawerOpen}
@@ -840,7 +755,6 @@ export default function OutageMap() {
         scenarios={scenarios || []}
       />
       
-      {/* Crew Detail Drawer */}
       <CrewDetailDrawer
         crew={selectedCrew}
         open={crewDrawerOpen}
@@ -863,6 +777,74 @@ export default function OutageMap() {
           toast.success('Crew marked as available');
         } : undefined}
       />
+    </div>
+  );
+}
+
+// ===== Helper Components =====
+
+function LayerToggle({ 
+  id, 
+  icon, 
+  label, 
+  badge, 
+  badgeVariant = 'demo',
+  checked, 
+  onCheckedChange,
+  onRefresh,
+  isRefreshing 
+}: { 
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  badge?: string;
+  badgeVariant?: 'demo' | 'live';
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-1.5 px-1 rounded-lg hover:bg-muted/50 transition-colors -mx-1">
+      <span className="text-muted-foreground">{icon}</span>
+      <Label htmlFor={id} className="text-xs font-medium text-foreground cursor-pointer flex-1">
+        {label}
+      </Label>
+      {badge && (
+        <Badge 
+          variant="outline" 
+          className={`text-[9px] px-1.5 py-0 ${
+            badgeVariant === 'live' 
+              ? 'bg-primary/10 text-primary border-primary/30' 
+              : 'bg-warning/10 text-warning border-warning/30'
+          }`}
+        >
+          {badge}
+        </Badge>
+      )}
+      {onRefresh && (
+        <button
+          onClick={onRefresh}
+          className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
+      )}
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+      />
+    </div>
+  );
+}
+
+function LegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`w-3 h-3 rounded-full ${color}`} />
+      <span className="text-muted-foreground">{label}</span>
     </div>
   );
 }
