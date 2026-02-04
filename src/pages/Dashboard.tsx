@@ -176,15 +176,15 @@ export default function Dashboard() {
               Operations Dashboard
             </h1>
             <p
-              className="text-sm text-muted-foreground leading-relaxed"
+              className="text-sm leading-relaxed"
               aria-live="polite"
               aria-atomic="true"
             >
               <span className="font-medium text-foreground">{summary.emphasis}</span>
               {' '}
               <span className="text-muted-foreground">{summary.detail}</span>
-              <span className="mx-2 text-border">•</span>
-              <span className="text-muted-foreground/70">
+              <span className="mx-2 text-muted-foreground/50">•</span>
+              <span className="font-medium text-foreground">
                 {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
               </span>
             </p>
