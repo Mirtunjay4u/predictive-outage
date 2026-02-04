@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useMemo, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
-import type { Scenario, GeoArea } from '@/types/scenario';
+import type { Scenario, ScenarioWithIntelligence, GeoArea } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
 import type { Crew } from '@/types/crew';
@@ -33,9 +33,9 @@ declare module 'leaflet' {
 }
 
 interface OutageMapViewProps {
-  scenarios: Scenario[];
+  scenarios: (Scenario | ScenarioWithIntelligence)[];
   selectedEventId: string | null;
-  onMarkerClick: (scenario: Scenario) => void;
+  onMarkerClick: (scenario: Scenario | ScenarioWithIntelligence) => void;
   showHeatmap?: boolean;
   enableClustering?: boolean;
   showWeather?: boolean;
@@ -57,7 +57,7 @@ interface OutageMapViewProps {
 }
 
 // Helper functions
-const getMarkerColor = (scenario: Scenario) => {
+const getMarkerColor = (scenario: Scenario | ScenarioWithIntelligence) => {
   switch (scenario.lifecycle_stage) {
     case 'Event': return '#ef4444';
     case 'Pre-Event': return '#f59e0b';
@@ -66,7 +66,7 @@ const getMarkerColor = (scenario: Scenario) => {
   }
 };
 
-const getPolygonColor = (scenario: Scenario) => {
+const getPolygonColor = (scenario: Scenario | ScenarioWithIntelligence) => {
   switch (scenario.lifecycle_stage) {
     case 'Event': return { fill: '#ef444430', stroke: '#ef4444' };
     case 'Pre-Event': return { fill: '#f59e0b30', stroke: '#f59e0b' };

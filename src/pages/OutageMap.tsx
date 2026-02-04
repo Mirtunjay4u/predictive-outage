@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/select';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { useScenarios } from '@/hooks/useScenarios';
+import { useScenariosWithIntelligence } from '@/hooks/useScenarios';
 import { OutageMapView } from '@/components/map/OutageMapView';
 import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
@@ -36,7 +36,7 @@ import { CrewDispatchPanel } from '@/components/map/CrewDispatchPanel';
 import { PlaybackPanel } from '@/components/map/PlaybackPanel';
 import { CommandSummary } from '@/components/map/CommandSummary';
 import { MapSearchBar, type SearchResult } from '@/components/map/MapSearchBar';
-import type { Scenario, LifecycleStage } from '@/types/scenario';
+import type { ScenarioWithIntelligence, LifecycleStage } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
 import type { Crew } from '@/types/crew';
@@ -47,7 +47,7 @@ const PRIORITY_OPTIONS = ['high', 'medium', 'low'];
 
 export default function OutageMap() {
   const navigate = useNavigate();
-  const { data: scenarios, isLoading } = useScenarios({ refetchInterval: 30000 });
+  const { data: scenarios, isLoading } = useScenariosWithIntelligence({ refetchInterval: 30000 });
   
   const [searchQuery, setSearchQuery] = useState('');
   const [lifecycleFilter, setLifecycleFilter] = useState<string>('all');
@@ -197,11 +197,11 @@ export default function OutageMap() {
     return scenarios.find(s => s.id === selectedEventId) || null;
   }, [selectedEventId, scenarios]);
 
-  const handleViewOnMap = (scenario: Scenario) => {
+  const handleViewOnMap = (scenario: ScenarioWithIntelligence) => {
     setSelectedEventId(scenario.id);
   };
 
-  const handleMarkerClick = (scenario: Scenario) => {
+  const handleMarkerClick = (scenario: ScenarioWithIntelligence) => {
     setSelectedEventId(scenario.id);
     setDrawerOpen(true);
   };
