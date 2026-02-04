@@ -59,15 +59,20 @@ export type Database = {
       crews: {
         Row: {
           assigned_event_id: string | null
+          break_end: string | null
+          break_start: string | null
           contact_phone: string | null
           created_at: string
           crew_id: string
           crew_name: string
           current_lat: number
           current_lng: number
+          days_of_week: string[] | null
           dispatch_time: string | null
           eta_minutes: number | null
           id: string
+          shift_end: string | null
+          shift_start: string | null
           specialization: string | null
           status: Database["public"]["Enums"]["crew_status"]
           team_size: number
@@ -76,15 +81,20 @@ export type Database = {
         }
         Insert: {
           assigned_event_id?: string | null
+          break_end?: string | null
+          break_start?: string | null
           contact_phone?: string | null
           created_at?: string
           crew_id: string
           crew_name: string
           current_lat: number
           current_lng: number
+          days_of_week?: string[] | null
           dispatch_time?: string | null
           eta_minutes?: number | null
           id?: string
+          shift_end?: string | null
+          shift_start?: string | null
           specialization?: string | null
           status?: Database["public"]["Enums"]["crew_status"]
           team_size?: number
@@ -93,15 +103,20 @@ export type Database = {
         }
         Update: {
           assigned_event_id?: string | null
+          break_end?: string | null
+          break_start?: string | null
           contact_phone?: string | null
           created_at?: string
           crew_id?: string
           crew_name?: string
           current_lat?: number
           current_lng?: number
+          days_of_week?: string[] | null
           dispatch_time?: string | null
           eta_minutes?: number | null
           id?: string
+          shift_end?: string | null
+          shift_start?: string | null
           specialization?: string | null
           status?: Database["public"]["Enums"]["crew_status"]
           team_size?: number
