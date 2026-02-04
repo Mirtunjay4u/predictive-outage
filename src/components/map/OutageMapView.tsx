@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
+import { HeatmapLayer } from './HeatmapLayer';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -16,6 +17,7 @@ interface OutageMapViewProps {
   scenarios: Scenario[];
   selectedEventId: string | null;
   onMarkerClick: (scenario: Scenario) => void;
+  showHeatmap?: boolean;
 }
 
 // Custom colored marker icons
@@ -89,7 +91,7 @@ function geoAreaToLatLngs(geoArea: GeoArea): L.LatLngExpression[][] {
   }
 }
 
-export function OutageMapView({ scenarios, selectedEventId, onMarkerClick }: OutageMapViewProps) {
+export function OutageMapView({ scenarios, selectedEventId, onMarkerClick, showHeatmap = false }: OutageMapViewProps) {
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
     if (scenarios.length === 0) return [29.7604, -95.3698] as [number, number];
@@ -117,8 +119,11 @@ export function OutageMapView({ scenarios, selectedEventId, onMarkerClick }: Out
       
       <MapController selectedEventId={selectedEventId} scenarios={scenarios} />
       
-      {/* Render outage areas first (below markers) */}
-      {scenarios.map(scenario => {
+      {/* Heatmap Layer */}
+      <HeatmapLayer scenarios={scenarios} visible={showHeatmap} />
+      
+      {/* Render outage areas first (below markers) - hide when heatmap is active */}
+      {!showHeatmap && scenarios.map(scenario => {
         if (!scenario.geo_area) return null;
         
         const colors = getPolygonColor(scenario);
@@ -142,7 +147,7 @@ export function OutageMapView({ scenarios, selectedEventId, onMarkerClick }: Out
         );
       })}
       
-      {/* Render markers */}
+      {/* Render markers - always visible but smaller when heatmap active */}
       {scenarios.map(scenario => {
         if (!scenario.geo_center) return null;
         
