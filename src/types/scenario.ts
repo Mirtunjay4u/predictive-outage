@@ -13,6 +13,8 @@ export type OutageType =
   | 'Vegetation'
   | 'Others';
 
+export type EtrConfidence = 'High' | 'Medium' | 'Low';
+
 export const OUTAGE_TYPES: OutageType[] = [
   'Storm',
   'Flood',
@@ -26,6 +28,8 @@ export const OUTAGE_TYPES: OutageType[] = [
   'Vegetation',
   'Others',
 ];
+
+export const ETR_CONFIDENCE_LEVELS: EtrConfidence[] = ['High', 'Medium', 'Low'];
 
 export interface GeoCenter {
   lat: number;
@@ -61,6 +65,17 @@ export interface Scenario {
   event_start_time: string | null;
   event_last_update_time: string | null;
   event_end_time: string | null;
+  // ETR uncertainty fields (Demo/synthetic data)
+  etr_earliest: string | null;
+  etr_latest: string | null;
+  etr_confidence: EtrConfidence | null;
+  etr_uncertainty_drivers: string[] | null;
+  // Critical load continuity fields (Demo/synthetic data)
+  has_critical_load: boolean | null;
+  critical_load_type: string | null;
+  backup_runtime_hours: number | null;
+  backup_runtime_remaining_hours: number | null;
+  critical_escalation_threshold_hours: number | null;
 }
 
 export interface ScenarioInsert {
@@ -80,6 +95,17 @@ export interface ScenarioInsert {
   transformer_id?: string | null;
   customers_impacted?: number | null;
   eta?: string | null;
+  // ETR uncertainty fields
+  etr_earliest?: string | null;
+  etr_latest?: string | null;
+  etr_confidence?: EtrConfidence | null;
+  etr_uncertainty_drivers?: string[] | null;
+  // Critical load continuity fields
+  has_critical_load?: boolean | null;
+  critical_load_type?: string | null;
+  backup_runtime_hours?: number | null;
+  backup_runtime_remaining_hours?: number | null;
+  critical_escalation_threshold_hours?: number | null;
 }
 
 export interface ScenarioUpdate extends Partial<ScenarioInsert> {}
