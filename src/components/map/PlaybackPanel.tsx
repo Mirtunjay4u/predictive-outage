@@ -3,7 +3,7 @@ import { Play, Pause, RotateCcw, Clock, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Scenario } from '@/types/scenario';
 
 interface PlaybackPanelProps {
@@ -152,47 +152,43 @@ export function PlaybackPanel({
     <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 min-w-[400px]">
       <div className="flex items-center gap-3 mb-3">
         {/* Play/Pause Button */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant={isPlaying ? 'default' : 'outline'}
-                className="h-8 w-8 p-0"
-                onClick={handlePlayPause}
-              >
-                {isPlaying ? (
-                  <Pause className="w-4 h-4" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{isPlaying ? 'Pause' : 'Play'} Timeline</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant={isPlaying ? 'default' : 'outline'}
+              className="h-8 w-8 p-0"
+              onClick={handlePlayPause}
+            >
+              {isPlaying ? (
+                <Pause className="w-4 h-4" />
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isPlaying ? 'Pause' : 'Play'} Timeline</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* Reset Button */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={handleReset}
-                disabled={!isPlaybackActive}
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Reset to Live</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0"
+              onClick={handleReset}
+              disabled={!isPlaybackActive}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Reset to Live</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* Stage Label */}
         <div className="flex-1 flex items-center justify-center">
