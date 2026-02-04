@@ -1,50 +1,94 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
-import { Bot, ChevronDown, ChevronUp, Copy, Check, Loader2 } from 'lucide-react';
+import { Bot, ChevronDown, ChevronUp, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
+import type { CopilotResponse } from '@/types/copilot';
 
 interface EtrRunwayExplainerProps {
   event: ScenarioWithIntelligence;
 }
 
-interface ExplanationSection {
-  id: string;
-  title: string;
-  content: string[];
-}
-
 export function EtrRunwayExplainer({ event }: EtrRunwayExplainerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [response, setResponse] = useState<CopilotResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Generate explanation based on event data
-  const explanation = useMemo(() => {
-    if (!isOpen) return null;
-    return generateExplanation(event);
-  }, [event, isOpen]);
-
-  const handleToggle = () => {
-    if (!isOpen) {
-      setIsGenerating(true);
-      // Simulate brief generation delay for UX
-      setTimeout(() => {
-        setIsOpen(true);
-        setIsGenerating(false);
-      }, 300);
-    } else {
+  const handleToggle = async () => {
+    if (isOpen) {
       setIsOpen(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Build specialized ETR + Runway analysis prompt
+      const analysisPrompt = buildEtrRunwayPrompt(event);
+
+      const { data, error: fnError } = await supabase.functions.invoke('copilot', {
+        body: {
+          mode: 'DEMO',
+          user_message: analysisPrompt,
+          scenario_id: event.id,
+          scenario: {
+            scenario_name: event.name,
+            lifecycle_stage: event.lifecycle_stage,
+            stage: event.stage,
+            operator_role: event.operator_role,
+            scenario_time: event.scenario_time,
+            notes: event.notes,
+            description: event.description,
+            outage_type: event.outage_type,
+            // Include ETR and critical load fields for context
+            etr_earliest: event.etr_earliest,
+            etr_expected: event.etr_expected,
+            etr_latest: event.etr_latest,
+            etr_confidence: event.etr_confidence,
+            etr_uncertainty_drivers: event.etr_uncertainty_drivers,
+            has_critical_load: event.has_critical_load,
+            critical_load_types: event.critical_load_types,
+            backup_runtime_remaining_hours: event.backup_runtime_remaining_hours,
+            critical_escalation_threshold_hours: event.critical_escalation_threshold_hours,
+            location_name: event.location_name,
+            service_area: event.service_area,
+            // Derived fields
+            etr_band_hours: event.etr_band_hours,
+            etr_risk_level: event.etr_risk_level,
+            critical_runway_status: event.critical_runway_status,
+            requires_escalation: event.requires_escalation,
+          },
+          constraints: [
+            'Focus specifically on ETR confidence and critical load runway analysis',
+            'Do not recommend autonomous switching or field actions',
+            'Use advisory language throughout',
+          ],
+        },
+      });
+
+      if (fnError) throw fnError;
+
+      setResponse(data as CopilotResponse);
+      setIsOpen(true);
+    } catch (err) {
+      console.error('ETR Explainer error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate explanation');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCopy = async () => {
-    if (!explanation) return;
+    if (!response) return;
     
-    const textContent = formatExplanationForCopy(explanation);
+    const textContent = formatResponseForCopy(response);
     await navigator.clipboard.writeText(textContent);
     setCopied(true);
     toast.success('Explanation copied to clipboard');
@@ -58,21 +102,48 @@ export function EtrRunwayExplainer({ event }: EtrRunwayExplainerProps) {
         size="sm"
         className="w-full gap-2 h-10 text-xs font-medium"
         onClick={handleToggle}
-        disabled={isGenerating}
+        disabled={isLoading}
       >
-        {isGenerating ? (
+        {isLoading ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />
         ) : (
           <Bot className="w-3.5 h-3.5" />
         )}
         Explain ETR + Runway (Copilot)
-        {!isGenerating && (
+        {!isLoading && (
           isOpen ? <ChevronUp className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />
         )}
       </Button>
 
       <AnimatePresence>
-        {isOpen && explanation && (
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Error</span>
+              </div>
+              <p className="text-sm">{error}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-2"
+                onClick={() => setError(null)}
+              >
+                Dismiss
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Response Display */}
+        {isOpen && response && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -85,7 +156,7 @@ export function EtrRunwayExplainer({ event }: EtrRunwayExplainerProps) {
               <div className="flex items-center justify-between">
                 <div className="px-2.5 py-1 rounded bg-primary/10 border border-primary/20">
                   <span className="text-[10px] font-semibold text-primary uppercase tracking-wide">
-                    MODE: DEMO MODE — Decision support only
+                    {response.mode_banner}
                   </span>
                 </div>
                 <Button
@@ -94,63 +165,99 @@ export function EtrRunwayExplainer({ event }: EtrRunwayExplainerProps) {
                   className="h-7 px-2 gap-1.5"
                   onClick={handleCopy}
                 >
-                {copied ? (
-                  <Check className="w-3 h-3 text-success" />
-                ) : (
-                  <Copy className="w-3 h-3" />
-                )}
+                  {copied ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
                   <span className="text-[10px]">{copied ? 'Copied' : 'Copy'}</span>
                 </Button>
               </div>
 
-              {/* Explanation Sections */}
+              {/* Framing Line */}
+              {response.framing_line && (
+                <p className="text-sm font-medium text-foreground leading-relaxed border-l-2 border-muted-foreground/30 pl-3">
+                  {response.framing_line}
+                </p>
+              )}
+
+              {/* Insights */}
               <div className="space-y-4">
-                {explanation.sections.map((section) => (
-                  <div key={section.id}>
-                    <h4 className="text-xs font-semibold text-foreground mb-2">
-                      {section.title}
+                {response.insights.map((insight, index) => (
+                  <div key={index}>
+                    <h4 className="text-xs font-semibold text-foreground mb-2 flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-[10px] flex items-center justify-center font-medium flex-shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <span>{insight.title}</span>
                     </h4>
-                    {section.content.length === 1 ? (
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {section.content[0]}
-                      </p>
-                    ) : (
-                      <ul className="space-y-1.5">
-                        {section.content.map((item, idx) => (
-                          <li key={idx} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
-                            <span className="text-muted-foreground/50 mt-0.5">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <ul className="space-y-1.5 ml-7">
+                      {insight.bullets.map((bullet, bulletIdx) => (
+                        <li key={bulletIdx} className="text-sm text-muted-foreground leading-relaxed flex items-start gap-2">
+                          <span className="text-muted-foreground/50 mt-0.5">•</span>
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
 
-              <Separator className="my-3" />
+              {/* Assumptions */}
+              {response.assumptions && response.assumptions.length > 0 && (
+                <>
+                  <Separator className="my-3" />
+                  <div className="p-3 rounded bg-muted/50 border border-border">
+                    <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Assumptions
+                    </h4>
+                    <ul className="space-y-1">
+                      {response.assumptions.map((assumption, idx) => (
+                        <li key={idx} className="text-[11px] text-muted-foreground flex items-start gap-2">
+                          <span className="mt-0.5">•</span>
+                          <span>{assumption}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
 
               {/* Source Notes */}
-              <div className="p-3 rounded bg-muted/50 border border-border">
-                <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Source Notes
-                </h4>
-                <ul className="space-y-1">
-                  {explanation.sourceNotes.map((note, idx) => (
-                    <li key={idx} className="text-[11px] text-muted-foreground">
-                      {note}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {response.source_notes && response.source_notes.length > 0 && (
+                <div className="p-3 rounded bg-muted/50 border border-border">
+                  <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Source Notes
+                  </h4>
+                  <ul className="space-y-1">
+                    {response.source_notes.map((note, idx) => (
+                      <li key={idx} className="text-[11px] text-muted-foreground">
+                        {note}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Safety Disclaimer */}
               <div className="p-2.5 rounded bg-warning/5 border border-warning/20">
                 <p className="text-[10px] text-warning leading-relaxed">
-                  <strong>Advisory only.</strong> This analysis is for situational awareness and does not authorize 
-                  autonomous switching, field dispatch, or operational actions. All decisions require operator review.
+                  <strong>Disclaimer:</strong> {response.disclaimer}
                 </p>
               </div>
+
+              {/* Reset Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={() => {
+                  setIsOpen(false);
+                  setResponse(null);
+                }}
+              >
+                Close explanation
+              </Button>
             </div>
           </motion.div>
         )}
@@ -159,260 +266,117 @@ export function EtrRunwayExplainer({ event }: EtrRunwayExplainerProps) {
   );
 }
 
-// ===== Explanation Generation Logic =====
+// ===== Prompt Builder =====
 
-interface GeneratedExplanation {
-  sections: ExplanationSection[];
-  sourceNotes: string[];
-}
-
-function generateExplanation(event: ScenarioWithIntelligence): GeneratedExplanation {
-  const sections: ExplanationSection[] = [];
-  const sourceNotes: string[] = [];
-
-  // Track which fields were used
-  const usedFields: string[] = [];
-
-  // Section A: ETR Confidence Summary
-  const etrSummary = generateEtrSummary(event, usedFields);
-  sections.push({
-    id: 'etr-summary',
-    title: 'A. ETR Confidence Summary',
-    content: [etrSummary],
-  });
-
-  // Section B: Why the ETR is uncertain
-  const uncertaintyBullets = generateUncertaintyBullets(event, usedFields);
-  sections.push({
-    id: 'uncertainty',
-    title: 'B. Why the ETR is Uncertain',
-    content: uncertaintyBullets,
-  });
-
-  // Section C: Critical Load Runway
-  const runwayContent = generateRunwayContent(event, usedFields);
-  sections.push({
-    id: 'runway',
-    title: 'C. Critical Load Runway',
-    content: [runwayContent],
-  });
-
-  // Section D: Escalation Triggers
-  const escalationBullets = generateEscalationTriggers(event, usedFields);
-  sections.push({
-    id: 'escalation',
-    title: 'D. Escalation Triggers',
-    content: escalationBullets,
-  });
-
-  // Source Notes
-  sourceNotes.push(`Event record: "${event.name}" (${event.lifecycle_stage})`);
-  if (usedFields.length > 0) {
-    sourceNotes.push(`Fields referenced: ${usedFields.join(', ')}`);
-  }
-  if (event.location_name || event.service_area) {
-    sourceNotes.push(`Location context: ${event.location_name || 'Unknown'} ${event.service_area ? `(${event.service_area})` : ''}`);
-  }
-  sourceNotes.push('Analysis generated from demo event data');
-
-  return { sections, sourceNotes };
-}
-
-function generateEtrSummary(event: ScenarioWithIntelligence, usedFields: string[]): string {
+function buildEtrRunwayPrompt(event: ScenarioWithIntelligence): string {
   const parts: string[] = [];
 
+  parts.push('Provide a structured ETR Confidence and Critical Load Runway analysis for this event.');
+  parts.push('');
+  parts.push('## ETR Data');
+  
   if (event.etr_earliest && event.etr_latest) {
-    usedFields.push('etr_earliest', 'etr_latest');
-    const earliest = format(new Date(event.etr_earliest), 'h:mm a');
-    const latest = format(new Date(event.etr_latest), 'h:mm a');
-    parts.push(`The estimated restoration window spans from ${earliest} to ${latest}`);
-
-    if (event.etr_band_hours !== null) {
-      usedFields.push('etr_band_hours');
-      parts.push(`(${event.etr_band_hours.toFixed(1)} hour band)`);
-    }
-  } else if (event.etr_expected) {
-    usedFields.push('etr_expected');
-    const expected = format(new Date(event.etr_expected), 'h:mm a');
-    parts.push(`The expected restoration time is ${expected}`);
-  } else {
-    parts.push('No ETR window data is currently available');
+    parts.push(`- Restoration Window: ${format(new Date(event.etr_earliest), 'h:mm a')} to ${format(new Date(event.etr_latest), 'h:mm a')}`);
   }
-
+  if (event.etr_expected) {
+    parts.push(`- Expected ETR: ${format(new Date(event.etr_expected), 'h:mm a')}`);
+  }
+  if (event.etr_band_hours !== null && event.etr_band_hours !== undefined) {
+    parts.push(`- Band Width: ${event.etr_band_hours.toFixed(1)} hours`);
+  }
   if (event.etr_confidence) {
-    usedFields.push('etr_confidence');
-    const confidenceDesc = event.etr_confidence === 'HIGH' 
-      ? 'high confidence based on available information'
-      : event.etr_confidence === 'MEDIUM'
-      ? 'moderate confidence with some uncertainty factors'
-      : 'low confidence due to significant unknowns';
-    parts.push(`with ${confidenceDesc}.`);
-  } else {
-    parts.push('.');
+    parts.push(`- Confidence Level: ${event.etr_confidence}`);
   }
-
   if (event.etr_risk_level) {
-    usedFields.push('etr_risk_level');
-    const riskDesc = event.etr_risk_level === 'HIGH'
-      ? 'This represents elevated risk that the restoration may extend beyond the estimated window.'
-      : event.etr_risk_level === 'MEDIUM'
-      ? 'This represents moderate risk of schedule variation.'
-      : 'This represents low risk of schedule deviation.';
-    parts.push(riskDesc);
+    parts.push(`- Risk Level: ${event.etr_risk_level}`);
   }
-
-  return parts.join(' ').replace(/\s+/g, ' ').trim();
-}
-
-function generateUncertaintyBullets(event: ScenarioWithIntelligence, usedFields: string[]): string[] {
-  const bullets: string[] = [];
+  
   const drivers = event.etr_uncertainty_drivers || [];
-
   if (drivers.length > 0) {
-    usedFields.push('etr_uncertainty_drivers');
-    
-    drivers.forEach(driver => {
-      const driverLower = driver.toLowerCase();
-      if (driverLower.includes('weather')) {
-        bullets.push('Weather conditions may affect crew access and work safety, potentially extending restoration time.');
-      } else if (driverLower.includes('access')) {
-        bullets.push('Access constraints such as road conditions or site accessibility may delay crew arrival.');
-      } else if (driverLower.includes('crew') || driverLower.includes('resource')) {
-        bullets.push('Crew availability or resource allocation may impact the restoration timeline.');
-      } else if (driverLower.includes('damage') || driverLower.includes('extent')) {
-        bullets.push('The full extent of damage may not yet be assessed, which could reveal additional work.');
-      } else if (driverLower.includes('equipment') || driverLower.includes('parts')) {
-        bullets.push('Equipment or parts availability may affect the ability to complete repairs.');
-      } else {
-        bullets.push(`${driver} has been identified as an uncertainty factor.`);
-      }
-    });
+    parts.push(`- Uncertainty Drivers: ${drivers.join(', ')}`);
   }
 
-  // Add contextual bullets based on other factors
-  if (event.etr_band_hours && event.etr_band_hours > 4) {
-    bullets.push('The wide restoration window suggests multiple potential scenarios that operators would need to monitor.');
+  parts.push('');
+  parts.push('## Critical Load Data');
+  parts.push(`- Has Critical Load: ${event.has_critical_load ? 'Yes' : 'No'}`);
+  
+  if (event.has_critical_load) {
+    const loadTypes = event.critical_load_types || [];
+    if (loadTypes.length > 0) {
+      parts.push(`- Critical Facilities: ${loadTypes.join(', ')}`);
+    }
+    if (event.backup_runtime_remaining_hours !== null && event.backup_runtime_remaining_hours !== undefined) {
+      parts.push(`- Backup Runtime Remaining: ${event.backup_runtime_remaining_hours.toFixed(1)} hours`);
+    }
+    if (event.critical_escalation_threshold_hours !== null && event.critical_escalation_threshold_hours !== undefined) {
+      parts.push(`- Escalation Threshold: ${event.critical_escalation_threshold_hours.toFixed(1)} hours`);
+    }
+    if (event.critical_runway_status) {
+      parts.push(`- Runway Status: ${event.critical_runway_status}`);
+    }
+    if (event.requires_escalation) {
+      parts.push(`- Escalation Required: Yes`);
+    }
   }
 
-  if (event.etr_confidence === 'LOW') {
-    bullets.push('Low confidence rating indicates significant unknowns that require ongoing assessment.');
+  if (event.location_name || event.service_area) {
+    parts.push('');
+    parts.push('## Location');
+    if (event.location_name) parts.push(`- Location: ${event.location_name}`);
+    if (event.service_area) parts.push(`- Service Area: ${event.service_area}`);
   }
 
-  if (bullets.length === 0) {
-    bullets.push('No specific uncertainty drivers have been documented for this event.');
-    bullets.push('An operator would review field reports and system data for additional context.');
-  }
+  parts.push('');
+  parts.push('## Required Analysis Sections');
+  parts.push('1. ETR Confidence Summary (1-2 sentences on the restoration window and confidence)');
+  parts.push('2. Why the ETR is Uncertain (3-5 bullets tied to uncertainty drivers)');
+  parts.push('3. Critical Load Runway (explicit remaining hours and status)');
+  parts.push('4. Escalation Triggers (communication and coordination guidance only, no switching instructions)');
+  parts.push('');
+  parts.push('Use advisory language. State "Unknown" for missing data. Do not recommend field actions.');
 
-  // Ensure 3-5 bullets
-  while (bullets.length < 3) {
-    bullets.push('Additional situational factors may be identified as the event progresses.');
-  }
-
-  return bullets.slice(0, 5);
+  return parts.join('\n');
 }
 
-function generateRunwayContent(event: ScenarioWithIntelligence, usedFields: string[]): string {
-  if (!event.has_critical_load) {
-    usedFields.push('has_critical_load');
-    return 'No critical load facilities are flagged for this event. Standard restoration prioritization would apply.';
-  }
+// ===== Copy Formatter =====
 
-  usedFields.push('has_critical_load');
-  const parts: string[] = [];
-
-  // Critical load types
-  const loadTypes = event.critical_load_types || [];
-  if (loadTypes.length > 0) {
-    usedFields.push('critical_load_types');
-    parts.push(`Critical facilities affected include: ${loadTypes.join(', ')}.`);
-  } else {
-    parts.push('Critical load facilities are affected.');
-  }
-
-  // Remaining hours
-  if (event.backup_runtime_remaining_hours !== null) {
-    usedFields.push('backup_runtime_remaining_hours');
-    parts.push(`Backup power runway shows ${event.backup_runtime_remaining_hours.toFixed(1)} hours remaining.`);
-  } else {
-    parts.push('Backup runtime data is not available.');
-  }
-
-  // Threshold comparison
-  if (event.critical_escalation_threshold_hours !== null) {
-    usedFields.push('critical_escalation_threshold_hours');
-    parts.push(`The escalation threshold is set at ${event.critical_escalation_threshold_hours.toFixed(1)} hours.`);
-  }
-
-  // Status
-  if (event.critical_runway_status) {
-    usedFields.push('critical_runway_status');
-    const statusDesc = event.critical_runway_status === 'BREACH'
-      ? 'The runway has been breached — immediate attention is required.'
-      : event.critical_runway_status === 'AT_RISK'
-      ? 'The runway is at risk of breach if restoration is delayed.'
-      : 'The runway status is normal with adequate backup time.';
-    parts.push(statusDesc);
-  }
-
-  return parts.join(' ');
-}
-
-function generateEscalationTriggers(event: ScenarioWithIntelligence, usedFields: string[]): string[] {
-  const bullets: string[] = [];
-
-  if (event.requires_escalation) {
-    usedFields.push('requires_escalation');
-    bullets.push('This event has triggered escalation requirements based on critical load runway status.');
-  }
-
-  if (event.critical_runway_status === 'BREACH') {
-    bullets.push('Operator would coordinate with facility contacts regarding backup power status and fuel reserves.');
-    bullets.push('Escalation to operations leadership helps surface this event for priority resource allocation.');
-  } else if (event.critical_runway_status === 'AT_RISK') {
-    bullets.push('Proactive communication with affected facilities helps them prepare contingency plans.');
-    bullets.push('Operator would consider flagging this event for priority in crew dispatch decisions.');
-  }
-
-  if (event.etr_risk_level === 'HIGH') {
-    bullets.push('High ETR risk suggests operators may need to communicate uncertainty to stakeholders.');
-  }
-
-  // Default guidance if no specific triggers
-  if (bullets.length === 0) {
-    bullets.push('No immediate escalation triggers have been identified for this event.');
-    bullets.push('Standard monitoring and communication protocols would apply.');
-  }
-
-  // Add coordination note
-  bullets.push('All escalation decisions require operator judgment and appropriate authorization.');
-
-  return bullets.slice(0, 5);
-}
-
-function formatExplanationForCopy(explanation: GeneratedExplanation): string {
+function formatResponseForCopy(response: CopilotResponse): string {
   const lines: string[] = [];
   
-  lines.push('MODE: DEMO MODE — Decision support only');
+  lines.push(`MODE: ${response.mode_banner}`);
   lines.push('');
 
-  explanation.sections.forEach(section => {
-    lines.push(section.title);
-    section.content.forEach(item => {
-      if (section.content.length === 1) {
-        lines.push(item);
-      } else {
-        lines.push(`• ${item}`);
-      }
+  if (response.framing_line) {
+    lines.push(response.framing_line);
+    lines.push('');
+  }
+
+  response.insights.forEach((insight, index) => {
+    lines.push(`${index + 1}. ${insight.title}`);
+    insight.bullets.forEach(bullet => {
+      lines.push(`   • ${bullet}`);
     });
     lines.push('');
   });
 
-  lines.push('SOURCE NOTES');
-  explanation.sourceNotes.forEach(note => {
-    lines.push(`• ${note}`);
-  });
-  lines.push('');
-  lines.push('Advisory only. This analysis does not authorize operational actions.');
+  if (response.assumptions && response.assumptions.length > 0) {
+    lines.push('ASSUMPTIONS');
+    response.assumptions.forEach(assumption => {
+      lines.push(`• ${assumption}`);
+    });
+    lines.push('');
+  }
+
+  if (response.source_notes && response.source_notes.length > 0) {
+    lines.push('SOURCE NOTES');
+    response.source_notes.forEach(note => {
+      lines.push(`• ${note}`);
+    });
+    lines.push('');
+  }
+
+  lines.push('DISCLAIMER');
+  lines.push(response.disclaimer);
 
   return lines.join('\n');
 }
