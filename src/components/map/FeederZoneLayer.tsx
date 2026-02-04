@@ -61,12 +61,12 @@ export function FeederZoneLayer({
               opacity={0.95}
               className="feeder-tooltip"
             >
-              <div className="text-sm font-medium">
+              <span className="block text-sm font-medium">
                 Feeder {zone.feeder_name}
-              </div>
-              <div className="text-xs text-muted-foreground">
+              </span>
+              <span className="block text-xs text-muted-foreground">
                 {zone.feeder_id}
-              </div>
+              </span>
             </Tooltip>
           </Polygon>
         );
