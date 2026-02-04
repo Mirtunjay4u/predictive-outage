@@ -179,24 +179,37 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {assetCounts.Fault > 0 && (
-                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 gap-1">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-destructive/10 text-destructive border-destructive/30 gap-1 cursor-pointer hover:bg-destructive/20 transition-colors"
+                        onClick={() => window.dispatchEvent(new CustomEvent('zoom-to-assets', { detail: 'Fault' }))}
+                      >
                         <Zap className="w-3 h-3" />
                         {assetCounts.Fault} Fault{assetCounts.Fault !== 1 ? 's' : ''}
                       </Badge>
                     )}
                     {assetCounts.Feeder > 0 && (
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-primary/10 text-primary border-primary/30 gap-1 cursor-pointer hover:bg-primary/20 transition-colors"
+                        onClick={() => window.dispatchEvent(new CustomEvent('zoom-to-assets', { detail: 'Feeder' }))}
+                      >
                         <Cable className="w-3 h-3" />
                         {assetCounts.Feeder} Feeder{assetCounts.Feeder !== 1 ? 's' : ''}
                       </Badge>
                     )}
                     {assetCounts.Transformer > 0 && (
-                      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 gap-1">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-warning/10 text-warning border-warning/30 gap-1 cursor-pointer hover:bg-warning/20 transition-colors"
+                        onClick={() => window.dispatchEvent(new CustomEvent('zoom-to-assets', { detail: 'Transformer' }))}
+                      >
                         <Box className="w-3 h-3" />
                         {assetCounts.Transformer} Transformer{assetCounts.Transformer !== 1 ? 's' : ''}
                       </Badge>
                     )}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-2">Click badge to zoom to assets</p>
                 </div>
               )}
               
