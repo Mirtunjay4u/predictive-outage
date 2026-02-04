@@ -1,13 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ChevronRight, Bot, Map, Layers, Flame } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ export default function OutageMap() {
   const navigate = useNavigate();
   const { data: scenarios, isLoading } = useScenarios({ refetchInterval: 30000 });
   
+  const [searchQuery, setSearchQuery] = useState('');
   const [lifecycleFilter, setLifecycleFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [outageTypeFilter, setOutageTypeFilter] = useState<string>('all');
@@ -44,15 +46,44 @@ export default function OutageMap() {
     return scenarios.filter(s => s.geo_center);
   }, [scenarios]);
 
-  // Apply filters
+  // Apply search and filters
   const filteredScenarios = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    
     return geoScenarios.filter(scenario => {
+      // Search filter - match name, outage type, description, fault/feeder/transformer IDs
+      if (query) {
+        const searchableFields = [
+          scenario.name,
+          scenario.outage_type,
+          scenario.description,
+          scenario.notes,
+          scenario.fault_id,
+          scenario.feeder_id,
+          scenario.transformer_id,
+          scenario.operator_role,
+        ].filter(Boolean).map(f => f!.toLowerCase());
+        
+        const matchesSearch = searchableFields.some(field => field.includes(query));
+        if (!matchesSearch) return false;
+      }
+      
+      // Dropdown filters
       if (lifecycleFilter !== 'all' && scenario.lifecycle_stage !== lifecycleFilter) return false;
       if (priorityFilter !== 'all' && scenario.priority !== priorityFilter) return false;
       if (outageTypeFilter !== 'all' && scenario.outage_type !== outageTypeFilter) return false;
       return true;
     });
-  }, [geoScenarios, lifecycleFilter, priorityFilter, outageTypeFilter]);
+  }, [geoScenarios, searchQuery, lifecycleFilter, priorityFilter, outageTypeFilter]);
+
+  const hasActiveFilters = searchQuery || lifecycleFilter !== 'all' || priorityFilter !== 'all' || outageTypeFilter !== 'all';
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setLifecycleFilter('all');
+    setPriorityFilter('all');
+    setOutageTypeFilter('all');
+  };
 
   const selectedEvent = useMemo(() => {
     if (!selectedEventId || !scenarios) return null;
@@ -98,6 +129,25 @@ export default function OutageMap() {
             </Badge>
           </div>
           
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search events, types, IDs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8 h-9 text-sm bg-background"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          
           {/* Filters */}
           <div className="grid grid-cols-3 gap-2">
             <Select value={lifecycleFilter} onValueChange={setLifecycleFilter}>
@@ -136,6 +186,24 @@ export default function OutageMap() {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Active Filters Indicator */}
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {filteredScenarios.length} of {geoScenarios.length} events
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3 mr-1" />
+                Clear filters
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Events List */}
