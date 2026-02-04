@@ -5,9 +5,11 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
+import type { FeederZone } from '@/types/feederZone';
 import { HeatmapLayer } from './HeatmapLayer';
 import { WeatherOverlay } from './WeatherOverlay';
 import { AssetMarkers } from './AssetMarkers';
+import { FeederZoneLayer } from './FeederZoneLayer';
 import type { WeatherPoint } from '@/hooks/useWeatherData';
 
 // Fix Leaflet default marker icons
@@ -30,6 +32,12 @@ interface OutageMapViewProps {
   assets?: Asset[];
   linkedAssetIds?: string[];
   onAssetClick?: (asset: Asset) => void;
+  showFeederZones?: boolean;
+  feederZones?: FeederZone[];
+  highlightedFeederId?: string | null;
+  onFeederClick?: (zone: FeederZone) => void;
+  zoomTarget?: { lat: number; lng: number; zoom?: number } | null;
+  highlightedAssetId?: string | null;
 }
 
 // Custom colored marker icons
@@ -138,12 +146,14 @@ function MapController({
   zoomToAssetType,
   assets,
   linkedAssetIds,
+  zoomTarget,
 }: { 
   selectedEventId: string | null; 
   scenarios: Scenario[];
   zoomToAssetType: Asset['asset_type'] | null;
   assets: Asset[];
   linkedAssetIds: string[];
+  zoomTarget?: { lat: number; lng: number; zoom?: number } | null;
 }) {
   const map = useMap();
   
@@ -173,6 +183,15 @@ function MapController({
       }
     }
   }, [zoomToAssetType, assets, linkedAssetIds, map]);
+
+  // Zoom to search target
+  useEffect(() => {
+    if (zoomTarget) {
+      map.flyTo([zoomTarget.lat, zoomTarget.lng], zoomTarget.zoom || 13, {
+        duration: 0.8,
+      });
+    }
+  }, [zoomTarget, map]);
   
   return null;
 }
@@ -206,6 +225,12 @@ export function OutageMapView({
   assets = [],
   linkedAssetIds = [],
   onAssetClick,
+  showFeederZones = false,
+  feederZones = [],
+  highlightedFeederId = null,
+  onFeederClick,
+  zoomTarget = null,
+  highlightedAssetId = null,
 }: OutageMapViewProps) {
   const [zoomToAssetType, setZoomToAssetType] = useState<Asset['asset_type'] | null>(null);
 
@@ -288,7 +313,18 @@ export function OutageMapView({
         zoomToAssetType={zoomToAssetType}
         assets={assets}
         linkedAssetIds={linkedAssetIds}
+        zoomTarget={zoomTarget}
       />
+      
+      {/* Feeder Zones Layer - rendered first (below other layers) */}
+      {onFeederClick && (
+        <FeederZoneLayer
+          feederZones={feederZones}
+          visible={showFeederZones}
+          highlightedFeederId={highlightedFeederId}
+          onFeederClick={onFeederClick}
+        />
+      )}
       
       {/* Weather Overlay - rendered first (below other layers) */}
       <WeatherOverlay weatherPoints={weatherPoints} visible={showWeather} />
@@ -329,6 +365,7 @@ export function OutageMapView({
           selectedEventId={selectedEventId}
           visible={showAssets}
           onAssetClick={onAssetClick}
+          highlightedAssetId={highlightedAssetId}
         />
       )}
       

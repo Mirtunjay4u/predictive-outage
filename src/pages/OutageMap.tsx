@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,8 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
+import { useFeederZones } from '@/hooks/useFeederZones';
 import {
   Select,
   SelectContent,
@@ -24,8 +26,11 @@ import { useScenarios } from '@/hooks/useScenarios';
 import { OutageMapView } from '@/components/map/OutageMapView';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
 import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
+import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
+import { MapSearchBar, type SearchResult } from '@/components/map/MapSearchBar';
 import type { Scenario, LifecycleStage } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
+import type { FeederZone } from '@/types/feederZone';
 import { OUTAGE_TYPES } from '@/types/scenario';
 
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
@@ -45,10 +50,20 @@ export default function OutageMap() {
   const [enableClustering, setEnableClustering] = useState(true);
   const [showWeather, setShowWeather] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
+  const [showFeederZones, setShowFeederZones] = useState(false);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [assetDrawerOpen, setAssetDrawerOpen] = useState(false);
+  
+  // Feeder zone selection state
+  const [selectedFeederZone, setSelectedFeederZone] = useState<FeederZone | null>(null);
+  const [feederDrawerOpen, setFeederDrawerOpen] = useState(false);
+  const [highlightedFeederId, setHighlightedFeederId] = useState<string | null>(null);
+  
+  // Search & zoom state
+  const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
+  const [highlightedAssetId, setHighlightedAssetId] = useState<string | null>(null);
 
   // Fetch weather data
   const { data: weatherData, isLoading: weatherLoading, refetch: refetchWeather } = useWeatherData(showWeather);
@@ -56,6 +71,9 @@ export default function OutageMap() {
   // Fetch assets data
   const { data: assets = [] } = useAssets();
   const { data: linkedAssetIds = [] } = useEventAssets(selectedEventId);
+  
+  // Fetch feeder zones
+  const { data: feederZones = [] } = useFeederZones();
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -121,6 +139,12 @@ export default function OutageMap() {
     setAssetDrawerOpen(true);
   };
 
+  const handleFeederClick = (zone: FeederZone) => {
+    setSelectedFeederZone(zone);
+    setFeederDrawerOpen(true);
+    setHighlightedFeederId(zone.feeder_id);
+  };
+
   const handleOpenInCopilot = () => {
     if (!selectedEvent) return;
     const prompt = encodeURIComponent(
@@ -128,6 +152,41 @@ export default function OutageMap() {
     );
     navigate(`/copilot-studio?prefill=${prompt}`);
   };
+
+  // Search result handler
+  const handleSearchSelect = useCallback((result: SearchResult) => {
+    if (result.lat && result.lng) {
+      setZoomTarget({ lat: result.lat, lng: result.lng, zoom: result.type === 'feeder_zone' ? 11 : 15 });
+      
+      // Clear after animation
+      setTimeout(() => setZoomTarget(null), 1000);
+      
+      if (result.type === 'feeder_zone') {
+        setHighlightedFeederId(result.feederId || null);
+        setShowFeederZones(true);
+      } else if (result.type === 'asset') {
+        setHighlightedAssetId(result.id);
+        setShowAssets(true);
+      }
+    }
+  }, []);
+
+  // Reset map handler
+  const handleResetMap = useCallback(() => {
+    setSelectedEventId(null);
+    setHighlightedFeederId(null);
+    setHighlightedAssetId(null);
+    setZoomTarget(null);
+    setDrawerOpen(false);
+    setAssetDrawerOpen(false);
+    setFeederDrawerOpen(false);
+  }, []);
+
+  // Clear search highlights
+  const handleSearchClear = useCallback(() => {
+    setHighlightedFeederId(null);
+    setHighlightedAssetId(null);
+  }, []);
 
   const getPriorityColor = (priority: string | null) => {
     switch (priority) {
@@ -313,7 +372,41 @@ export default function OutageMap() {
           assets={assets}
           linkedAssetIds={linkedAssetIds}
           onAssetClick={handleAssetClick}
+          showFeederZones={showFeederZones}
+          feederZones={feederZones}
+          highlightedFeederId={highlightedFeederId}
+          onFeederClick={handleFeederClick}
+          zoomTarget={zoomTarget}
+          highlightedAssetId={highlightedAssetId}
         />
+        
+        {/* Top Search Bar */}
+        <div className="absolute top-4 left-4 z-[1000] flex items-center gap-2">
+          <MapSearchBar
+            assets={assets}
+            feederZones={feederZones}
+            onSelect={handleSearchSelect}
+            onClear={handleSearchClear}
+          />
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleResetMap}
+                  className="h-9 w-9 bg-card/95 backdrop-blur-sm border-border"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reset Map</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         
         {/* Layer Toggle Controls */}
         <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 space-y-3">
@@ -338,6 +431,20 @@ export default function OutageMap() {
               id="heatmap-toggle"
               checked={showHeatmap}
               onCheckedChange={setShowHeatmap}
+            />
+          </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Cable className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="feeder-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+              Feeder Zones
+            </Label>
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
+              Demo
+            </Badge>
+            <Switch
+              id="feeder-toggle"
+              checked={showFeederZones}
+              onCheckedChange={setShowFeederZones}
             />
           </div>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
@@ -420,6 +527,12 @@ export default function OutageMap() {
                   <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
                   <span className="text-muted-foreground">Outage Area</span>
                 </div>
+                {showFeederZones && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
+                    <div className="w-4 h-2 bg-primary/20 border border-primary/50 rounded-sm" style={{ borderStyle: 'dashed' }} />
+                    <span className="text-muted-foreground">Feeder Zone</span>
+                  </div>
+                )}
                 {showAssets && (
                   <div className="pt-1 border-t border-border mt-1 space-y-1.5">
                     <div className="flex items-center gap-2">
@@ -467,6 +580,18 @@ export default function OutageMap() {
         asset={selectedAsset}
         open={assetDrawerOpen}
         onOpenChange={setAssetDrawerOpen}
+      />
+      
+      {/* Feeder Zone Detail Drawer */}
+      <FeederDetailDrawer
+        feederZone={selectedFeederZone}
+        open={feederDrawerOpen}
+        onOpenChange={(open) => {
+          setFeederDrawerOpen(open);
+          if (!open) setHighlightedFeederId(null);
+        }}
+        assets={assets}
+        scenarios={scenarios || []}
       />
     </div>
   );
