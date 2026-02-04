@@ -306,6 +306,7 @@ export function OutageMapView({
     });
   };
 
+  // MapContainer renders all Leaflet-compatible components as children
   return (
     <MapContainer
       center={mapCenter}
