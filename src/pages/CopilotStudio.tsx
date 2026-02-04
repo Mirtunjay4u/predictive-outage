@@ -28,6 +28,7 @@ const modeOptions: { value: CopilotMode; label: string; icon: string }[] = [
 ];
 
 export default function CopilotStudio() {
+  // Copilot Studio - testing interface for AI copilot I/O contract
   const [mode, setMode] = useState<CopilotMode>('DEMO');
   const [outageType, setOutageType] = useState<OutageType>('Storm');
   const [scenarioName, setScenarioName] = useState('Test Scenario');
