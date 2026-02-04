@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useWeatherData } from '@/hooks/useWeatherData';
 import {
   Select,
   SelectContent,
@@ -39,6 +40,10 @@ export default function OutageMap() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [enableClustering, setEnableClustering] = useState(true);
+  const [showWeather, setShowWeather] = useState(false);
+
+  // Fetch weather data
+  const { data: weatherData, isLoading: weatherLoading, refetch: refetchWeather } = useWeatherData(showWeather);
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -285,6 +290,8 @@ export default function OutageMap() {
           onMarkerClick={handleMarkerClick}
           showHeatmap={showHeatmap}
           enableClustering={enableClustering}
+          showWeather={showWeather}
+          weatherPoints={weatherData?.points || []}
         />
         
         {/* Layer Toggle Controls */}
@@ -310,6 +317,26 @@ export default function OutageMap() {
               id="heatmap-toggle"
               checked={showHeatmap}
               onCheckedChange={setShowHeatmap}
+            />
+          </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Cloud className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="weather-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+              Weather Overlay
+            </Label>
+            {showWeather && (
+              <button
+                onClick={() => refetchWeather()}
+                className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                title="Refresh weather"
+              >
+                <RefreshCw className={`w-3 h-3 ${weatherLoading ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+            <Switch
+              id="weather-toggle"
+              checked={showWeather}
+              onCheckedChange={setShowWeather}
             />
           </div>
         </div>
@@ -358,6 +385,12 @@ export default function OutageMap() {
                   <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
                   <span className="text-muted-foreground">Outage Area</span>
                 </div>
+                {showWeather && (
+                  <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
+                    <Cloud className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-muted-foreground">Weather (click for details)</span>
+                  </div>
+                )}
               </>
             )}
           </div>
