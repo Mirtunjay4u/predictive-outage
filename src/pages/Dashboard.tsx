@@ -7,6 +7,7 @@ import type { Scenario } from '@/types/scenario';
 import { format } from 'date-fns';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { HighPriorityAlert } from '@/components/dashboard/HighPriorityAlert';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 const KPI_TOOLTIPS: Record<string, string> = {
@@ -190,31 +191,34 @@ export default function Dashboard() {
           </div>
 
           <div
-            className="flex items-center gap-3 text-xs text-muted-foreground/70"
+            className="flex items-center gap-2 text-xs text-muted-foreground/70"
             aria-live="polite"
             aria-atomic="true"
           >
             {dataUpdatedAt > 0 && (
               <span
-                className="tabular-nums"
+                className="tabular-nums mr-1"
                 aria-label={`Data last updated at ${format(new Date(dataUpdatedAt), 'h:mm a')}`}
               >
                 Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
               </span>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'h-8 w-8 text-muted-foreground hover:text-foreground',
-                'hover:bg-muted/50 transition-colors'
-              )}
-              onClick={() => refetch()}
-              disabled={isFetching}
-              aria-label="Refresh data"
-            >
-              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
-            </Button>
+            <div className="flex items-center gap-1 border-l border-border/50 pl-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 text-muted-foreground hover:text-foreground',
+                  'hover:bg-muted/50 transition-colors'
+                )}
+                onClick={() => refetch()}
+                disabled={isFetching}
+                aria-label="Refresh data"
+              >
+                <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
