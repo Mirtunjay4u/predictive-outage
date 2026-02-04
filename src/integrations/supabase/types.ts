@@ -241,6 +241,69 @@ export type Database = {
           },
         ]
       }
+      event_status_history: {
+        Row: {
+          backup_runtime_remaining_hours: number | null
+          change_note: string | null
+          created_at: string
+          critical_runway_status: string | null
+          etr_confidence: string | null
+          etr_earliest: string | null
+          etr_expected: string | null
+          etr_latest: string | null
+          etr_risk_level: string | null
+          event_id: string
+          id: string
+          recorded_at: string
+          uncertainty_drivers: Json | null
+        }
+        Insert: {
+          backup_runtime_remaining_hours?: number | null
+          change_note?: string | null
+          created_at?: string
+          critical_runway_status?: string | null
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_expected?: string | null
+          etr_latest?: string | null
+          etr_risk_level?: string | null
+          event_id: string
+          id?: string
+          recorded_at?: string
+          uncertainty_drivers?: Json | null
+        }
+        Update: {
+          backup_runtime_remaining_hours?: number | null
+          change_note?: string | null
+          created_at?: string
+          critical_runway_status?: string | null
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_expected?: string | null
+          etr_latest?: string | null
+          etr_risk_level?: string | null
+          event_id?: string
+          id?: string
+          recorded_at?: string
+          uncertainty_drivers?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_status_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_intelligence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_status_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feeder_zones: {
         Row: {
           created_at: string
