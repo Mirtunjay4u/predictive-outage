@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -60,6 +61,7 @@ export default function OutageMap() {
   const [showAssets, setShowAssets] = useState(false);
   const [showFeederZones, setShowFeederZones] = useState(false);
   const [showCrews, setShowCrews] = useState(true);
+  const [layersPanelOpen, setLayersPanelOpen] = useState(true);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -629,58 +631,99 @@ export default function OutageMap() {
             </Tooltip>
           </div>
           
-          {/* Layer Toggle Controls (top-right) */}
-          <div className="absolute top-4 right-4 z-[1000] bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-4 space-y-3 min-w-[200px]">
-            <div className="flex items-center gap-2 pb-2 border-b border-border">
-              <Layers className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Map Layers</span>
+          {/* Collapsible Layer Toggle Controls (top-right) */}
+          <div className="absolute top-4 right-4 z-[1000] flex items-start gap-2">
+            {/* Toggle Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setLayersPanelOpen(!layersPanelOpen)}
+              className={cn(
+                "h-10 w-10 bg-card/95 backdrop-blur-sm border-border shadow-lg transition-all duration-200",
+                layersPanelOpen 
+                  ? "bg-primary/10 border-primary/50 text-primary" 
+                  : "hover:bg-primary/10 hover:border-primary/50"
+              )}
+              title={layersPanelOpen ? "Collapse layers panel" : "Expand layers panel"}
+            >
+              <Layers className="w-4 h-4" />
+            </Button>
+            
+            {/* Collapsible Panel */}
+            <div 
+              className={cn(
+                "bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg overflow-hidden transition-all duration-300 ease-in-out origin-top-right",
+                layersPanelOpen 
+                  ? "opacity-100 scale-100 translate-x-0" 
+                  : "opacity-0 scale-95 translate-x-4 pointer-events-none w-0 h-0"
+              )}
+            >
+              <div className={cn(
+                "p-4 space-y-3 min-w-[220px]",
+                !layersPanelOpen && "hidden"
+              )}>
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Map Layers</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setLayersPanelOpen(false)}
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <LayerToggle
+                  id="heatmap-toggle"
+                  icon={<Flame className="w-4 h-4" />}
+                  label="Impact Heatmap"
+                  checked={showHeatmap}
+                  onCheckedChange={setShowHeatmap}
+                />
+                
+                <LayerToggle
+                  id="feeder-toggle"
+                  icon={<Cable className="w-4 h-4" />}
+                  label="Feeder Zones"
+                  badge="Demo"
+                  checked={showFeederZones}
+                  onCheckedChange={setShowFeederZones}
+                />
+                
+                <LayerToggle
+                  id="assets-toggle"
+                  icon={<Box className="w-4 h-4" />}
+                  label="GIS Assets"
+                  badge="Demo"
+                  checked={showAssets}
+                  onCheckedChange={setShowAssets}
+                />
+                
+                <LayerToggle
+                  id="weather-toggle"
+                  icon={<Cloud className="w-4 h-4" />}
+                  label="Weather Overlay"
+                  checked={showWeather}
+                  onCheckedChange={setShowWeather}
+                  onRefresh={showWeather ? () => refetchWeather() : undefined}
+                  isRefreshing={weatherLoading}
+                />
+                
+                <LayerToggle
+                  id="crews-toggle"
+                  icon={<Truck className="w-4 h-4" />}
+                  label="Crew Dispatch"
+                  badge="Live"
+                  badgeVariant="live"
+                  checked={showCrews}
+                  onCheckedChange={setShowCrews}
+                />
+              </div>
             </div>
-            
-            <LayerToggle
-              id="heatmap-toggle"
-              icon={<Flame className="w-4 h-4" />}
-              label="Impact Heatmap"
-              checked={showHeatmap}
-              onCheckedChange={setShowHeatmap}
-            />
-            
-            <LayerToggle
-              id="feeder-toggle"
-              icon={<Cable className="w-4 h-4" />}
-              label="Feeder Zones"
-              badge="Demo"
-              checked={showFeederZones}
-              onCheckedChange={setShowFeederZones}
-            />
-            
-            <LayerToggle
-              id="assets-toggle"
-              icon={<Box className="w-4 h-4" />}
-              label="GIS Assets"
-              badge="Demo"
-              checked={showAssets}
-              onCheckedChange={setShowAssets}
-            />
-            
-            <LayerToggle
-              id="weather-toggle"
-              icon={<Cloud className="w-4 h-4" />}
-              label="Weather Overlay"
-              checked={showWeather}
-              onCheckedChange={setShowWeather}
-              onRefresh={showWeather ? () => refetchWeather() : undefined}
-              isRefreshing={weatherLoading}
-            />
-            
-            <LayerToggle
-              id="crews-toggle"
-              icon={<Truck className="w-4 h-4" />}
-              label="Crew Dispatch"
-              badge="Live"
-              badgeVariant="live"
-              checked={showCrews}
-              onCheckedChange={setShowCrews}
-            />
           </div>
           
           {/* Map Legend (bottom-left) */}
