@@ -256,12 +256,13 @@ export type Database = {
           backup_runtime_remaining_hours: number | null
           created_at: string
           critical_escalation_threshold_hours: number | null
-          critical_load_type: string | null
+          critical_load_types: Json | null
           customers_impacted: number | null
           description: string | null
           eta: string | null
           etr_confidence: string | null
           etr_earliest: string | null
+          etr_expected: string | null
           etr_latest: string | null
           etr_uncertainty_drivers: Json | null
           event_end_time: string | null
@@ -274,12 +275,14 @@ export type Database = {
           has_critical_load: boolean | null
           id: string
           lifecycle_stage: Database["public"]["Enums"]["lifecycle_stage"]
+          location_name: string | null
           name: string
           notes: string | null
           operator_role: string | null
           outage_type: Database["public"]["Enums"]["outage_type"] | null
           priority: string | null
           scenario_time: string | null
+          service_area: string | null
           stage: boolean
           transformer_id: string | null
           updated_at: string
@@ -289,12 +292,13 @@ export type Database = {
           backup_runtime_remaining_hours?: number | null
           created_at?: string
           critical_escalation_threshold_hours?: number | null
-          critical_load_type?: string | null
+          critical_load_types?: Json | null
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
           etr_confidence?: string | null
           etr_earliest?: string | null
+          etr_expected?: string | null
           etr_latest?: string | null
           etr_uncertainty_drivers?: Json | null
           event_end_time?: string | null
@@ -307,12 +311,14 @@ export type Database = {
           has_critical_load?: boolean | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
+          location_name?: string | null
           name: string
           notes?: string | null
           operator_role?: string | null
           outage_type?: Database["public"]["Enums"]["outage_type"] | null
           priority?: string | null
           scenario_time?: string | null
+          service_area?: string | null
           stage?: boolean
           transformer_id?: string | null
           updated_at?: string
@@ -322,12 +328,13 @@ export type Database = {
           backup_runtime_remaining_hours?: number | null
           created_at?: string
           critical_escalation_threshold_hours?: number | null
-          critical_load_type?: string | null
+          critical_load_types?: Json | null
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
           etr_confidence?: string | null
           etr_earliest?: string | null
+          etr_expected?: string | null
           etr_latest?: string | null
           etr_uncertainty_drivers?: Json | null
           event_end_time?: string | null
@@ -340,12 +347,14 @@ export type Database = {
           has_critical_load?: boolean | null
           id?: string
           lifecycle_stage?: Database["public"]["Enums"]["lifecycle_stage"]
+          location_name?: string | null
           name?: string
           notes?: string | null
           operator_role?: string | null
           outage_type?: Database["public"]["Enums"]["outage_type"] | null
           priority?: string | null
           scenario_time?: string | null
+          service_area?: string | null
           stage?: boolean
           transformer_id?: string | null
           updated_at?: string
