@@ -26,6 +26,7 @@ import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useScenarios } from '@/hooks/useScenarios';
 import { OutageMapView } from '@/components/map/OutageMapView';
+import { MapErrorBoundary } from '@/components/map/MapErrorBoundary';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
 import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
 import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
@@ -542,29 +543,31 @@ export default function OutageMap() {
 
       {/* Main Panel - Map */}
       <div className="flex-1 relative">
-        <OutageMapView 
-          scenarios={filteredScenarios}
-          selectedEventId={selectedEventId}
-          onMarkerClick={handleMarkerClick}
-          showHeatmap={showHeatmap}
-          enableClustering={enableClustering}
-          showWeather={showWeather}
-          weatherPoints={weatherData?.points || []}
-          showAssets={showAssets}
-          assets={assets}
-          linkedAssetIds={linkedAssetIds}
-          onAssetClick={handleAssetClick}
-          showFeederZones={showFeederZones}
-          feederZones={feederZones}
-          highlightedFeederId={highlightedFeederId}
-          onFeederClick={handleFeederClick}
-          zoomTarget={zoomTarget}
-          highlightedAssetId={highlightedAssetId}
-          showCrews={showCrews}
-          crews={crews}
-          onCrewClick={handleCrewClick}
-          onSimulateCrewMovement={handleSimulateCrewMovement}
-        />
+        <MapErrorBoundary>
+          <OutageMapView 
+            scenarios={filteredScenarios}
+            selectedEventId={selectedEventId}
+            onMarkerClick={handleMarkerClick}
+            showHeatmap={showHeatmap}
+            enableClustering={enableClustering}
+            showWeather={showWeather}
+            weatherPoints={weatherData?.points || []}
+            showAssets={showAssets}
+            assets={assets}
+            linkedAssetIds={linkedAssetIds}
+            onAssetClick={handleAssetClick}
+            showFeederZones={showFeederZones}
+            feederZones={feederZones}
+            highlightedFeederId={highlightedFeederId}
+            onFeederClick={handleFeederClick}
+            zoomTarget={zoomTarget}
+            highlightedAssetId={highlightedAssetId}
+            showCrews={showCrews}
+            crews={crews}
+            onCrewClick={handleCrewClick}
+            onSimulateCrewMovement={handleSimulateCrewMovement}
+          />
+        </MapErrorBoundary>
         
         {/* Crew Dispatch Panel */}
         {showCrews && (
