@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Crew, CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
@@ -253,6 +253,114 @@ const getShiftStatusLabel = (shiftStatus: CrewWithAvailability['shiftStatus']) =
   }
 };
 
+// Crew Popup Content - extracted to avoid div issues
+function CrewPopupContent({
+  crew,
+  assignedEvent,
+  onSimulateMovement,
+}: {
+  crew: Crew | CrewWithAvailability;
+  assignedEvent: Scenario | undefined;
+  onSimulateMovement?: (crewId: string, targetLat: number, targetLng: number) => void;
+}) {
+  const hasAssignment = !!crew.assigned_event_id;
+  const isMoving = crew.status === 'en_route';
+
+  return (
+    <div className="p-2 min-w-[240px]">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-semibold text-sm text-foreground">{crew.crew_name}</h3>
+        <span className={`text-xs font-medium flex items-center gap-1 ${getStatusColor(crew.status)}`}>
+          {isMoving && <Navigation className="w-3 h-3 animate-pulse" />}
+          {getStatusLabel(crew.status)}
+        </span>
+      </div>
+      
+      {/* Crew ID & Shift Status */}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-muted-foreground">
+          {crew.crew_id}
+        </p>
+        {hasAvailability(crew) && (
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+            crew.shiftStatus === 'on_shift' 
+              ? 'bg-green-500/20 text-green-400' 
+              : crew.shiftStatus === 'on_break'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'bg-gray-500/20 text-gray-400'
+          }`}>
+            {getShiftStatusLabel(crew.shiftStatus)}
+          </span>
+        )}
+      </div>
+      
+      {/* Shift Hours */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+        <Clock className="w-3 h-3" />
+        <span>{formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}</span>
+      </div>
+      
+      {/* Details Grid */}
+      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Truck className="w-3 h-3" />
+          <span>{crew.vehicle_type}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Users className="w-3 h-3" />
+          <span>{crew.team_size} members</span>
+        </div>
+        {crew.specialization && (
+          <div className="col-span-2 text-muted-foreground">
+            <span className="font-medium">Spec:</span> {crew.specialization}
+          </div>
+        )}
+        {crew.contact_phone && (
+          <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground">
+            <Phone className="w-3 h-3" />
+            <span>{crew.contact_phone}</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Assignment Info */}
+      {hasAssignment && assignedEvent && (
+        <div className="bg-primary/10 rounded-md p-2 mb-2">
+          <p className="text-xs text-foreground font-medium mb-1">
+            Assigned to: {assignedEvent.name}
+          </p>
+          {crew.eta_minutes !== null && (
+            <p className="text-xs text-primary font-semibold">
+              ETA: {formatEta(crew.eta_minutes)}
+            </p>
+          )}
+        </div>
+      )}
+      
+      {/* Simulate Movement Button */}
+      {onSimulateMovement && (crew.status === 'dispatched' || crew.status === 'en_route') && assignedEvent?.geo_center && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full h-7 text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSimulateMovement(
+              crew.id,
+              assignedEvent.geo_center!.lat,
+              assignedEvent.geo_center!.lng
+            );
+          }}
+        >
+          <Play className="w-3 h-3 mr-1" />
+          Simulate Movement
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function AnimatedCrewMarkers({ 
   crews, 
   scenarios,
@@ -291,170 +399,89 @@ export function AnimatedCrewMarkers({
     return scenarios.find(s => s.id === eventId);
   };
 
-  return (
-    <>
-      {crews.map(crew => {
-        const hasAssignment = !!crew.assigned_event_id;
-        const assignedEvent = getAssignedEvent(crew.assigned_event_id);
-        const shiftStatus = hasAvailability(crew) ? crew.shiftStatus : undefined;
-        const isMoving = crew.status === 'en_route';
-        const icon = createCrewIcon(crew.status, hasAssignment, shiftStatus, isMoving);
-        const history = positionHistory[crew.id] || [];
-        
-        return (
-          <React.Fragment key={`crew-group-${crew.id}`}>
-            {/* Route trail - fading breadcrumb path */}
-            {showRouteTrails && history.length > 1 && (crew.status === 'en_route' || crew.status === 'dispatched') && (
-              <>
-                {/* Trail shadow */}
-                <Polyline
-                  positions={history}
-                  pathOptions={{
-                    color: '#000',
-                    weight: 5,
-                    opacity: 0.1,
-                  }}
-                />
-                {/* Main trail with gradient effect via multiple segments */}
-                {history.slice(0, -1).map((pos, i) => {
-                  const nextPos = history[i + 1];
-                  const opacity = 0.2 + (i / history.length) * 0.6; // Fade from old to new
-                  return (
-                    <Polyline
-                      key={`trail-${crew.id}-${i}`}
-                      positions={[pos, nextPos]}
-                      pathOptions={{
-                        color: crew.status === 'en_route' ? '#3b82f6' : '#f59e0b',
-                        weight: 3,
-                        opacity,
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                      }}
-                    />
-                  );
-                })}
-              </>
-            )}
+  // Build flat array of all elements to render
+  const elements: React.ReactNode[] = [];
 
-            {/* Projected route to destination */}
-            {hasAssignment && assignedEvent?.geo_center && (crew.status === 'dispatched' || crew.status === 'en_route') && (
-              <Polyline
-                positions={[
-                  [crew.current_lat, crew.current_lng],
-                  [assignedEvent.geo_center.lat, assignedEvent.geo_center.lng],
-                ]}
-                pathOptions={{
-                  color: crew.status === 'en_route' ? '#3b82f6' : '#f59e0b',
-                  weight: 2,
-                  opacity: 0.5,
-                  dashArray: '8, 12',
-                }}
-              />
-            )}
-            
-            {/* Animated crew marker */}
-            <AnimatedMarker
-              crew={crew}
-              icon={icon}
-              onCrewClick={onCrewClick}
-            >
-              <Popup className="custom-popup crew-popup" maxWidth={280}>
-                <div className="p-2 min-w-[240px]">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-sm text-foreground">{crew.crew_name}</h3>
-                    <span className={`text-xs font-medium flex items-center gap-1 ${getStatusColor(crew.status)}`}>
-                      {isMoving && <Navigation className="w-3 h-3 animate-pulse" />}
-                      {getStatusLabel(crew.status)}
-                    </span>
-                  </div>
-                  
-                  {/* Crew ID & Shift Status */}
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-muted-foreground">
-                      {crew.crew_id}
-                    </p>
-                    {hasAvailability(crew) && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                        crew.shiftStatus === 'on_shift' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : crew.shiftStatus === 'on_break'
-                          ? 'bg-amber-500/20 text-amber-400'
-                          : 'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {getShiftStatusLabel(crew.shiftStatus)}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Shift Hours */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}</span>
-                  </div>
-                  
-                  {/* Details Grid */}
-                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Truck className="w-3 h-3" />
-                      <span>{crew.vehicle_type}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Users className="w-3 h-3" />
-                      <span>{crew.team_size} members</span>
-                    </div>
-                    {crew.specialization && (
-                      <div className="col-span-2 text-muted-foreground">
-                        <span className="font-medium">Spec:</span> {crew.specialization}
-                      </div>
-                    )}
-                    {crew.contact_phone && (
-                      <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground">
-                        <Phone className="w-3 h-3" />
-                        <span>{crew.contact_phone}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Assignment Info */}
-                  {hasAssignment && assignedEvent && (
-                    <div className="bg-primary/10 rounded-md p-2 mb-2">
-                      <p className="text-xs text-foreground font-medium mb-1">
-                        Assigned to: {assignedEvent.name}
-                      </p>
-                      {crew.eta_minutes !== null && (
-                        <p className="text-xs text-primary font-semibold">
-                          ETA: {formatEta(crew.eta_minutes)}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Simulate Movement Button */}
-                  {onSimulateMovement && (crew.status === 'dispatched' || crew.status === 'en_route') && assignedEvent?.geo_center && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full h-7 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSimulateMovement(
-                          crew.id,
-                          assignedEvent.geo_center!.lat,
-                          assignedEvent.geo_center!.lng
-                        );
-                      }}
-                    >
-                      <Play className="w-3 h-3 mr-1" />
-                      Simulate Movement
-                    </Button>
-                  )}
-                </div>
-              </Popup>
-            </AnimatedMarker>
-          </React.Fragment>
+  crews.forEach(crew => {
+    const hasAssignment = !!crew.assigned_event_id;
+    const assignedEvent = getAssignedEvent(crew.assigned_event_id);
+    const shiftStatus = hasAvailability(crew) ? crew.shiftStatus : undefined;
+    const isMoving = crew.status === 'en_route';
+    const icon = createCrewIcon(crew.status, hasAssignment, shiftStatus, isMoving);
+    const history = positionHistory[crew.id] || [];
+    
+    // Add route trail elements
+    if (showRouteTrails && history.length > 1 && (crew.status === 'en_route' || crew.status === 'dispatched')) {
+      // Trail shadow
+      elements.push(
+        <Polyline
+          key={`trail-shadow-${crew.id}`}
+          positions={history}
+          pathOptions={{
+            color: '#000',
+            weight: 5,
+            opacity: 0.1,
+          }}
+        />
+      );
+      
+      // Trail segments with gradient effect
+      history.slice(0, -1).forEach((pos, i) => {
+        const nextPos = history[i + 1];
+        const opacity = 0.2 + (i / history.length) * 0.6;
+        elements.push(
+          <Polyline
+            key={`trail-${crew.id}-${i}`}
+            positions={[pos, nextPos]}
+            pathOptions={{
+              color: crew.status === 'en_route' ? '#3b82f6' : '#f59e0b',
+              weight: 3,
+              opacity,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
         );
-      })}
-    </>
-  );
+      });
+    }
+
+    // Add projected route to destination
+    if (hasAssignment && assignedEvent?.geo_center && (crew.status === 'dispatched' || crew.status === 'en_route')) {
+      elements.push(
+        <Polyline
+          key={`route-${crew.id}`}
+          positions={[
+            [crew.current_lat, crew.current_lng],
+            [assignedEvent.geo_center.lat, assignedEvent.geo_center.lng],
+          ]}
+          pathOptions={{
+            color: crew.status === 'en_route' ? '#3b82f6' : '#f59e0b',
+            weight: 2,
+            opacity: 0.5,
+            dashArray: '8, 12',
+          }}
+        />
+      );
+    }
+    
+    // Add crew marker
+    elements.push(
+      <AnimatedMarker
+        key={`crew-${crew.id}`}
+        crew={crew}
+        icon={icon}
+        onCrewClick={onCrewClick}
+      >
+        <Popup className="custom-popup crew-popup" maxWidth={280}>
+          <CrewPopupContent
+            crew={crew}
+            assignedEvent={assignedEvent}
+            onSimulateMovement={onSimulateMovement}
+          />
+        </Popup>
+      </AnimatedMarker>
+    );
+  });
+
+  return <>{elements}</>;
 }
