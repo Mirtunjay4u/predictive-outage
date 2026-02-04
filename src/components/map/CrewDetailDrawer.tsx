@@ -17,6 +17,7 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
+import { CrewCommunicationPanel } from './CrewCommunicationPanel';
 import type { Crew, CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
@@ -312,6 +313,15 @@ export function CrewDetailDrawer({
               </div>
             </>
           )}
+
+          <Separator />
+
+          {/* Communication Panel */}
+          <CrewCommunicationPanel
+            crewName={crew.crew_name}
+            crewId={crew.crew_id}
+            contactPhone={crew.contact_phone}
+          />
 
           <Separator />
 
