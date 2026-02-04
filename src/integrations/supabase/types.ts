@@ -256,6 +256,9 @@ export type Database = {
           customers_impacted: number | null
           description: string | null
           eta: string | null
+          event_end_time: string | null
+          event_last_update_time: string | null
+          event_start_time: string | null
           fault_id: string | null
           feeder_id: string | null
           geo_area: Json | null
@@ -277,6 +280,9 @@ export type Database = {
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
+          event_end_time?: string | null
+          event_last_update_time?: string | null
+          event_start_time?: string | null
           fault_id?: string | null
           feeder_id?: string | null
           geo_area?: Json | null
@@ -298,6 +304,9 @@ export type Database = {
           customers_impacted?: number | null
           description?: string | null
           eta?: string | null
+          event_end_time?: string | null
+          event_last_update_time?: string | null
+          event_start_time?: string | null
           fault_id?: string | null
           feeder_id?: string | null
           geo_area?: Json | null
