@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
+import { useCrews, useCrewsRealtime, useDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
 import {
   Select,
   SelectContent,
@@ -27,10 +29,13 @@ import { OutageMapView } from '@/components/map/OutageMapView';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
 import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
 import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
+import { CrewDetailDrawer } from '@/components/map/CrewDetailDrawer';
+import { CrewDispatchPanel } from '@/components/map/CrewDispatchPanel';
 import { MapSearchBar, type SearchResult } from '@/components/map/MapSearchBar';
 import type { Scenario, LifecycleStage } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
+import type { Crew } from '@/types/crew';
 import { OUTAGE_TYPES } from '@/types/scenario';
 
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
@@ -51,6 +56,7 @@ export default function OutageMap() {
   const [showWeather, setShowWeather] = useState(false);
   const [showAssets, setShowAssets] = useState(false);
   const [showFeederZones, setShowFeederZones] = useState(false);
+  const [showCrews, setShowCrews] = useState(true); // Crews visible by default
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -60,6 +66,11 @@ export default function OutageMap() {
   const [selectedFeederZone, setSelectedFeederZone] = useState<FeederZone | null>(null);
   const [feederDrawerOpen, setFeederDrawerOpen] = useState(false);
   const [highlightedFeederId, setHighlightedFeederId] = useState<string | null>(null);
+  
+  // Crew selection state
+  const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
+  const [crewDrawerOpen, setCrewDrawerOpen] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
   
   // Search & zoom state
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
@@ -74,6 +85,15 @@ export default function OutageMap() {
   
   // Fetch feeder zones
   const { data: feederZones = [] } = useFeederZones();
+  
+  // Fetch crews with realtime updates
+  const { data: crews = [] } = useCrews();
+  useCrewsRealtime();
+  
+  // Crew mutations
+  const dispatchCrewMutation = useDispatchCrew();
+  const simulateMovementMutation = useSimulateCrewMovement();
+  const updateCrewStatusMutation = useUpdateCrewStatus();
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -180,6 +200,7 @@ export default function OutageMap() {
     setDrawerOpen(false);
     setAssetDrawerOpen(false);
     setFeederDrawerOpen(false);
+    setCrewDrawerOpen(false);
   }, []);
 
   // Clear search highlights
@@ -187,6 +208,76 @@ export default function OutageMap() {
     setHighlightedFeederId(null);
     setHighlightedAssetId(null);
   }, []);
+
+  // Crew handlers
+  const handleCrewClick = useCallback((crew: Crew) => {
+    setSelectedCrew(crew);
+    setCrewDrawerOpen(true);
+  }, []);
+
+  const handleDispatchCrew = useCallback((crewId: string, eventId: string) => {
+    const event = scenarios?.find(s => s.id === eventId);
+    if (!event?.geo_center) {
+      toast.error('Event location not available');
+      return;
+    }
+    
+    dispatchCrewMutation.mutate({
+      crewId,
+      eventId,
+      eventLat: event.geo_center.lat,
+      eventLng: event.geo_center.lng,
+    }, {
+      onSuccess: () => {
+        toast.success('Crew dispatched successfully');
+      },
+      onError: (error) => {
+        toast.error('Failed to dispatch crew');
+        console.error(error);
+      }
+    });
+  }, [scenarios, dispatchCrewMutation]);
+
+  const handleSimulateCrewMovement = useCallback((crewId: string, targetLat: number, targetLng: number) => {
+    simulateMovementMutation.mutate({
+      crewId,
+      targetLat,
+      targetLng,
+    }, {
+      onSuccess: (result) => {
+        if (result.arrived) {
+          toast.success('Crew has arrived on site!');
+        }
+      },
+    });
+  }, [simulateMovementMutation]);
+
+  const handleSimulateAll = useCallback(async () => {
+    setIsSimulating(true);
+    const activeCrews = crews.filter(c => 
+      (c.status === 'dispatched' || c.status === 'en_route') && c.assigned_event_id
+    );
+    
+    for (const crew of activeCrews) {
+      const event = scenarios?.find(s => s.id === crew.assigned_event_id);
+      if (event?.geo_center) {
+        await simulateMovementMutation.mutateAsync({
+          crewId: crew.id,
+          targetLat: event.geo_center.lat,
+          targetLng: event.geo_center.lng,
+        });
+      }
+    }
+    
+    setIsSimulating(false);
+    toast.success('Crew positions updated');
+  }, [crews, scenarios, simulateMovementMutation]);
+
+  // Get assigned event for selected crew
+  const selectedCrewEvent = useMemo(() => {
+    if (!selectedCrew?.assigned_event_id || !scenarios) return null;
+    return scenarios.find(s => s.id === selectedCrew.assigned_event_id) || null;
+  }, [selectedCrew, scenarios]);
 
   const getPriorityColor = (priority: string | null) => {
     switch (priority) {
@@ -378,7 +469,23 @@ export default function OutageMap() {
           onFeederClick={handleFeederClick}
           zoomTarget={zoomTarget}
           highlightedAssetId={highlightedAssetId}
+          showCrews={showCrews}
+          crews={crews}
+          onCrewClick={handleCrewClick}
+          onSimulateCrewMovement={handleSimulateCrewMovement}
         />
+        
+        {/* Crew Dispatch Panel */}
+        {showCrews && (
+          <CrewDispatchPanel
+            crews={crews}
+            scenarios={scenarios || []}
+            selectedEventId={selectedEventId}
+            onDispatchCrew={handleDispatchCrew}
+            onSimulateAll={handleSimulateAll}
+            isSimulating={isSimulating}
+          />
+        )}
         
         {/* Top Search Bar */}
         <div className="absolute top-4 left-4 z-[1000] flex items-center gap-2">
@@ -481,6 +588,20 @@ export default function OutageMap() {
               onCheckedChange={setShowWeather}
             />
           </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Truck className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="crews-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+              Crew Dispatch
+            </Label>
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
+              Live
+            </Badge>
+            <Switch
+              id="crews-toggle"
+              checked={showCrews}
+              onCheckedChange={setShowCrews}
+            />
+          </div>
         </div>
         
         {/* Map Legend */}
@@ -561,6 +682,22 @@ export default function OutageMap() {
                     <span className="text-muted-foreground">Weather (click for details)</span>
                   </div>
                 )}
+                {showCrews && (
+                  <div className="pt-1 border-t border-border mt-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Crew Available</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500" />
+                      <span className="text-muted-foreground">Crew En Route</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-500" />
+                      <span className="text-muted-foreground">Crew On Site</span>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -592,6 +729,30 @@ export default function OutageMap() {
         }}
         assets={assets}
         scenarios={scenarios || []}
+      />
+      
+      {/* Crew Detail Drawer */}
+      <CrewDetailDrawer
+        crew={selectedCrew}
+        open={crewDrawerOpen}
+        onOpenChange={setCrewDrawerOpen}
+        assignedEvent={selectedCrewEvent}
+        onSimulateMovement={selectedCrew && selectedCrewEvent?.geo_center ? () => {
+          handleSimulateCrewMovement(
+            selectedCrew.id,
+            selectedCrewEvent.geo_center!.lat,
+            selectedCrewEvent.geo_center!.lng
+          );
+        } : undefined}
+        onMarkArrived={selectedCrew ? () => {
+          updateCrewStatusMutation.mutate({ crewId: selectedCrew.id, status: 'on_site' });
+          toast.success('Crew marked as arrived');
+        } : undefined}
+        onMarkAvailable={selectedCrew ? () => {
+          updateCrewStatusMutation.mutate({ crewId: selectedCrew.id, status: 'available' });
+          setCrewDrawerOpen(false);
+          toast.success('Crew marked as available');
+        } : undefined}
       />
     </div>
   );
