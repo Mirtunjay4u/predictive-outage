@@ -56,6 +56,68 @@ export type Database = {
         }
         Relationships: []
       }
+      crews: {
+        Row: {
+          assigned_event_id: string | null
+          contact_phone: string | null
+          created_at: string
+          crew_id: string
+          crew_name: string
+          current_lat: number
+          current_lng: number
+          dispatch_time: string | null
+          eta_minutes: number | null
+          id: string
+          specialization: string | null
+          status: Database["public"]["Enums"]["crew_status"]
+          team_size: number
+          updated_at: string
+          vehicle_type: string
+        }
+        Insert: {
+          assigned_event_id?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          crew_id: string
+          crew_name: string
+          current_lat: number
+          current_lng: number
+          dispatch_time?: string | null
+          eta_minutes?: number | null
+          id?: string
+          specialization?: string | null
+          status?: Database["public"]["Enums"]["crew_status"]
+          team_size?: number
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Update: {
+          assigned_event_id?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          crew_id?: string
+          crew_name?: string
+          current_lat?: number
+          current_lng?: number
+          dispatch_time?: string | null
+          eta_minutes?: number | null
+          id?: string
+          specialization?: string | null
+          status?: Database["public"]["Enums"]["crew_status"]
+          team_size?: number
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crews_assigned_event_id_fkey"
+            columns: ["assigned_event_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_assets: {
         Row: {
           asset_id: string
@@ -197,6 +259,12 @@ export type Database = {
     }
     Enums: {
       asset_type: "Fault" | "Feeder" | "Transformer"
+      crew_status:
+        | "available"
+        | "dispatched"
+        | "en_route"
+        | "on_site"
+        | "returning"
       lifecycle_stage: "Pre-Event" | "Event" | "Post-Event"
       outage_type:
         | "Storm"
@@ -338,6 +406,13 @@ export const Constants = {
   public: {
     Enums: {
       asset_type: ["Fault", "Feeder", "Transformer"],
+      crew_status: [
+        "available",
+        "dispatched",
+        "en_route",
+        "on_site",
+        "returning",
+      ],
       lifecycle_stage: ["Pre-Event", "Event", "Post-Event"],
       outage_type: [
         "Storm",
