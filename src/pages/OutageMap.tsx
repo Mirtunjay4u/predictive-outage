@@ -603,8 +603,8 @@ export default function OutageMap() {
             />
           )}
           
-          {/* Top Controls Row */}
-          <div className="absolute top-4 left-4 z-[1000] flex items-center gap-3">
+          {/* Search Bar - Positioned to avoid zoom controls */}
+          <div className="absolute top-4 left-16 z-[1000] flex items-center gap-2">
             <MapSearchBar
               assets={assets}
               feederZones={feederZones}
@@ -618,7 +618,7 @@ export default function OutageMap() {
                   variant="outline"
                   size="icon"
                   onClick={handleResetMap}
-                  className="h-10 w-10 bg-card/95 backdrop-blur-sm border-border hover:bg-primary/10 hover:border-primary/50 transition-all"
+                  className="h-9 w-9 bg-card/95 backdrop-blur-sm border-border hover:bg-primary/10 hover:border-primary/50 transition-all"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
