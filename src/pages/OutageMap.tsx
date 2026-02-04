@@ -31,6 +31,7 @@ import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
 import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
 import { CrewDetailDrawer } from '@/components/map/CrewDetailDrawer';
 import { CrewDispatchPanel } from '@/components/map/CrewDispatchPanel';
+import { PlaybackPanel } from '@/components/map/PlaybackPanel';
 import { MapSearchBar, type SearchResult } from '@/components/map/MapSearchBar';
 import type { Scenario, LifecycleStage } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
@@ -75,6 +76,10 @@ export default function OutageMap() {
   // Search & zoom state
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [highlightedAssetId, setHighlightedAssetId] = useState<string | null>(null);
+  
+  // Playback state
+  const [playbackTime, setPlaybackTime] = useState<Date | null>(null);
+  const [isPlaybackActive, setIsPlaybackActive] = useState(false);
 
   // Fetch weather data
   const { data: weatherData, isLoading: weatherLoading, refetch: refetchWeather } = useWeatherData(showWeather);
@@ -107,6 +112,20 @@ export default function OutageMap() {
     const query = searchQuery.toLowerCase().trim();
     
     return geoScenarios.filter(scenario => {
+      // Playback time filter
+      if (isPlaybackActive && playbackTime && scenario.event_start_time) {
+        const startTime = new Date(scenario.event_start_time).getTime();
+        const endTime = scenario.event_end_time 
+          ? new Date(scenario.event_end_time).getTime() 
+          : Date.now();
+        const currentTime = playbackTime.getTime();
+        
+        // Event must have started and not ended yet at playback time
+        if (startTime > currentTime || currentTime > endTime) {
+          return false;
+        }
+      }
+      
       // Search filter - match name, outage type, description, fault/feeder/transformer IDs
       if (query) {
         const searchableFields = [
@@ -130,15 +149,30 @@ export default function OutageMap() {
       if (outageTypeFilter !== 'all' && scenario.outage_type !== outageTypeFilter) return false;
       return true;
     });
-  }, [geoScenarios, searchQuery, lifecycleFilter, priorityFilter, outageTypeFilter]);
+  }, [geoScenarios, searchQuery, lifecycleFilter, priorityFilter, outageTypeFilter, isPlaybackActive, playbackTime]);
 
-  const hasActiveFilters = searchQuery || lifecycleFilter !== 'all' || priorityFilter !== 'all' || outageTypeFilter !== 'all';
+  // Get visible event IDs for asset filtering
+  const visibleEventIds = useMemo(() => {
+    return new Set(filteredScenarios.map(s => s.id));
+  }, [filteredScenarios]);
+
+  // Filter assets based on playback (only show assets linked to visible events)
+  const playbackFilteredAssets = useMemo(() => {
+    if (!isPlaybackActive) return assets;
+    // When playback is active, we'd need linked assets info
+    // For now, keep all assets but they'll be dimmed based on linkedAssetIds
+    return assets;
+  }, [assets, isPlaybackActive]);
+
+  const hasActiveFilters = searchQuery || lifecycleFilter !== 'all' || priorityFilter !== 'all' || outageTypeFilter !== 'all' || isPlaybackActive;
 
   const clearAllFilters = () => {
     setSearchQuery('');
     setLifecycleFilter('all');
     setPriorityFilter('all');
     setOutageTypeFilter('all');
+    setIsPlaybackActive(false);
+    setPlaybackTime(null);
   };
 
   const selectedEvent = useMemo(() => {
@@ -514,6 +548,14 @@ export default function OutageMap() {
             isSimulating={isSimulating}
           />
         )}
+        
+        {/* Playback Panel */}
+        <PlaybackPanel
+          scenarios={geoScenarios}
+          onPlaybackTimeChange={setPlaybackTime}
+          isPlaybackActive={isPlaybackActive}
+          onPlaybackActiveChange={setIsPlaybackActive}
+        />
         
         {/* Top Search Bar */}
         <div className="absolute top-4 left-4 z-[1000] flex items-center gap-2">
