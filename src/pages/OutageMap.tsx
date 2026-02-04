@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import {
   Select,
   SelectContent,
@@ -22,7 +23,9 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { useScenarios } from '@/hooks/useScenarios';
 import { OutageMapView } from '@/components/map/OutageMapView';
 import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
+import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
 import type { Scenario, LifecycleStage } from '@/types/scenario';
+import type { Asset } from '@/types/asset';
 import { OUTAGE_TYPES } from '@/types/scenario';
 
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
@@ -41,9 +44,18 @@ export default function OutageMap() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [enableClustering, setEnableClustering] = useState(true);
   const [showWeather, setShowWeather] = useState(false);
+  const [showAssets, setShowAssets] = useState(false);
+  
+  // Asset selection state
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [assetDrawerOpen, setAssetDrawerOpen] = useState(false);
 
   // Fetch weather data
   const { data: weatherData, isLoading: weatherLoading, refetch: refetchWeather } = useWeatherData(showWeather);
+  
+  // Fetch assets data
+  const { data: assets = [] } = useAssets();
+  const { data: linkedAssetIds = [] } = useEventAssets(selectedEventId);
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -102,6 +114,11 @@ export default function OutageMap() {
   const handleMarkerClick = (scenario: Scenario) => {
     setSelectedEventId(scenario.id);
     setDrawerOpen(true);
+  };
+
+  const handleAssetClick = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setAssetDrawerOpen(true);
   };
 
   const handleOpenInCopilot = () => {
@@ -292,6 +309,10 @@ export default function OutageMap() {
           enableClustering={enableClustering}
           showWeather={showWeather}
           weatherPoints={weatherData?.points || []}
+          showAssets={showAssets}
+          assets={assets}
+          linkedAssetIds={linkedAssetIds}
+          onAssetClick={handleAssetClick}
         />
         
         {/* Layer Toggle Controls */}
@@ -317,6 +338,20 @@ export default function OutageMap() {
               id="heatmap-toggle"
               checked={showHeatmap}
               onCheckedChange={setShowHeatmap}
+            />
+          </div>
+          <div className="flex items-center gap-3 pt-2 border-t border-border">
+            <Box className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="assets-toggle" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+              GIS Assets
+            </Label>
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-warning/10 text-warning border-warning/30">
+              Demo
+            </Badge>
+            <Switch
+              id="assets-toggle"
+              checked={showAssets}
+              onCheckedChange={setShowAssets}
             />
           </div>
           <div className="flex items-center gap-3 pt-2 border-t border-border">
@@ -385,6 +420,28 @@ export default function OutageMap() {
                   <div className="w-4 h-2 bg-destructive/30 border border-destructive/50 rounded-sm" />
                   <span className="text-muted-foreground">Outage Area</span>
                 </div>
+                {showAssets && (
+                  <div className="pt-1 border-t border-border mt-1 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-destructive">
+                        <polygon fill="currentColor" points="13,2 3,14 12,14 11,22 21,10 12,10"/>
+                      </svg>
+                      <span className="text-muted-foreground">Fault</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-primary">
+                        <rect x="4" y="8" width="16" height="8" rx="2" fill="currentColor"/>
+                      </svg>
+                      <span className="text-muted-foreground">Feeder</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg width="12" height="12" viewBox="0 0 24 24" className="text-warning">
+                        <rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor"/>
+                      </svg>
+                      <span className="text-muted-foreground">Transformer</span>
+                    </div>
+                  </div>
+                )}
                 {showWeather && (
                   <div className="flex items-center gap-2 pt-1 border-t border-border mt-1">
                     <Cloud className="w-3.5 h-3.5 text-primary" />
@@ -403,6 +460,13 @@ export default function OutageMap() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         onOpenInCopilot={handleOpenInCopilot}
+      />
+      
+      {/* Asset Detail Drawer */}
+      <AssetDetailDrawer
+        asset={selectedAsset}
+        open={assetDrawerOpen}
+        onOpenChange={setAssetDrawerOpen}
       />
     </div>
   );

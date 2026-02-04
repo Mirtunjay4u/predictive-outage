@@ -4,8 +4,10 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
+import type { Asset } from '@/types/asset';
 import { HeatmapLayer } from './HeatmapLayer';
 import { WeatherOverlay } from './WeatherOverlay';
+import { AssetMarkers } from './AssetMarkers';
 import type { WeatherPoint } from '@/hooks/useWeatherData';
 
 // Fix Leaflet default marker icons
@@ -24,6 +26,10 @@ interface OutageMapViewProps {
   enableClustering?: boolean;
   showWeather?: boolean;
   weatherPoints?: WeatherPoint[];
+  showAssets?: boolean;
+  assets?: Asset[];
+  linkedAssetIds?: string[];
+  onAssetClick?: (asset: Asset) => void;
 }
 
 // Custom colored marker icons
@@ -168,6 +174,10 @@ export function OutageMapView({
   enableClustering = true,
   showWeather = false,
   weatherPoints = [],
+  showAssets = false,
+  assets = [],
+  linkedAssetIds = [],
+  onAssetClick,
 }: OutageMapViewProps) {
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
@@ -264,6 +274,17 @@ export function OutageMapView({
           />
         );
       })}
+      
+      {/* Asset Markers Layer */}
+      {showAssets && onAssetClick && (
+        <AssetMarkers
+          assets={assets}
+          linkedAssetIds={linkedAssetIds}
+          selectedEventId={selectedEventId}
+          visible={showAssets}
+          onAssetClick={onAssetClick}
+        />
+      )}
       
       {/* Render markers - with or without clustering */}
       {enableClustering && !showHeatmap ? (
