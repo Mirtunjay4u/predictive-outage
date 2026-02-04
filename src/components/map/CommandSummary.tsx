@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Eye, AlertTriangle, Cable, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
+import { useMemo } from 'react';
+import { Eye, AlertTriangle, Cable, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import type { Scenario } from '@/types/scenario';
 
 interface CommandSummaryProps {
@@ -17,12 +16,11 @@ export function CommandSummary({
   onTopFeederClick,
   isHighPriorityActive,
 }: CommandSummaryProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
   // Calculate summary metrics
   const metrics = useMemo(() => {
     const visibleCount = scenarios.length;
     const highPriorityCount = scenarios.filter(s => s.priority === 'high').length;
+    const totalCustomers = scenarios.reduce((sum, s) => sum + (s.customers_impacted || 0), 0);
     
     // Calculate top impact feeder
     const feederImpact = scenarios.reduce((acc, scenario) => {
@@ -41,112 +39,107 @@ export function CommandSummary({
     return {
       visibleCount,
       highPriorityCount,
+      totalCustomers,
       topFeeder,
     };
   }, [scenarios]);
 
   return (
-    <div className="absolute top-16 left-4 z-[1000]">
-      {/* Collapsed State - Compact Toggle Button */}
-      {!isExpanded ? (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsExpanded(true)}
-          className="h-9 bg-card/95 backdrop-blur-sm border-border gap-2"
-          title="Expand Summary"
-        >
-          <BarChart3 className="w-4 h-4" />
-          <span className="text-xs font-medium">{metrics.visibleCount}</span>
-          {metrics.highPriorityCount > 0 && (
-            <span className="text-xs text-destructive font-medium">
-              ({metrics.highPriorityCount} high)
-            </span>
-          )}
-          <ChevronDown className="w-3 h-3 ml-1" />
-        </Button>
-      ) : (
-        /* Expanded State - Full Cards */
-        <div className="flex items-stretch gap-2">
-          {/* Visible Events Card */}
-          <div className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-3 py-2 min-w-[120px]">
-            <div className="flex items-center gap-2">
-              <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Visible Events</span>
-            </div>
-            <div className="text-lg font-semibold text-foreground mt-0.5">
-              {metrics.visibleCount}
-            </div>
-          </div>
+    <div className="flex items-stretch gap-3">
+      {/* Visible Events Card */}
+      <KPICard
+        icon={<Eye className="w-4 h-4" />}
+        label="Visible Events"
+        value={metrics.visibleCount}
+      />
 
-          {/* High Priority Card */}
-          <button
-            onClick={onHighPriorityClick}
-            className={cn(
-              "bg-card/95 backdrop-blur-sm rounded-lg border px-3 py-2 min-w-[120px] text-left transition-all hover:border-destructive/50 hover:bg-destructive/5",
-              isHighPriorityActive 
-                ? "border-destructive/60 bg-destructive/10" 
-                : "border-border"
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">High Priority</span>
-            </div>
-            <div className={cn(
-              "text-lg font-semibold mt-0.5",
-              metrics.highPriorityCount > 0 ? "text-destructive" : "text-foreground"
-            )}>
-              {metrics.highPriorityCount}
-            </div>
-          </button>
+      {/* High Priority Card */}
+      <KPICard
+        icon={<AlertTriangle className="w-4 h-4" />}
+        label="High Priority"
+        value={metrics.highPriorityCount}
+        onClick={onHighPriorityClick}
+        isActive={isHighPriorityActive}
+        variant={metrics.highPriorityCount > 0 ? 'danger' : 'default'}
+      />
 
-          {/* Top Impact Feeder Card */}
-          {metrics.topFeeder ? (
-            <button
-              onClick={() => onTopFeederClick(metrics.topFeeder!.feederId)}
-              className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-3 py-2 min-w-[160px] text-left transition-all hover:border-primary/50 hover:bg-primary/5"
-            >
-              <div className="flex items-center gap-2">
-                <Cable className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Top Impact Feeder</span>
-              </div>
-              <div className="text-sm font-medium text-foreground mt-0.5 truncate">
-                {metrics.topFeeder.feederId}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {metrics.topFeeder.total.toLocaleString()} customers
-              </div>
-            </button>
-          ) : (
-            <div className="bg-card/95 backdrop-blur-sm rounded-lg border border-border px-3 py-2 min-w-[160px]">
-              <div className="flex items-center gap-2">
-                <Cable className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Top Impact Feeder</span>
-              </div>
-              <div className="text-sm text-muted-foreground mt-0.5">
-                No data
-              </div>
-            </div>
-          )}
+      {/* Total Customers Impacted */}
+      <KPICard
+        icon={<Users className="w-4 h-4" />}
+        label="Customers Impacted"
+        value={metrics.totalCustomers.toLocaleString()}
+      />
 
-          {/* Collapse Button & Demo Footnote */}
-          <div className="flex flex-col justify-between items-start">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsExpanded(false)}
-              className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              title="Collapse Summary"
-            >
-              <ChevronUp className="w-4 h-4" />
-            </Button>
-            <span className="text-[10px] text-muted-foreground/60 italic">
-              Demo data
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Top Impact Feeder Card */}
+      <KPICard
+        icon={<Cable className="w-4 h-4" />}
+        label="Top Impact Feeder"
+        value={metrics.topFeeder?.feederId || '—'}
+        subValue={metrics.topFeeder ? `${metrics.topFeeder.total.toLocaleString()} customers` : undefined}
+        onClick={metrics.topFeeder ? () => onTopFeederClick(metrics.topFeeder!.feederId) : undefined}
+        variant="primary"
+      />
+
+      {/* Demo indicator */}
+      <div className="flex items-center pl-2">
+        <span className="text-[10px] text-muted-foreground/60 italic">Demo data</span>
+      </div>
     </div>
+  );
+}
+
+// ===== KPI Card Component =====
+
+interface KPICardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subValue?: string;
+  onClick?: () => void;
+  isActive?: boolean;
+  variant?: 'default' | 'danger' | 'primary';
+}
+
+function KPICard({ icon, label, value, subValue, onClick, isActive, variant = 'default' }: KPICardProps) {
+  const isClickable = !!onClick;
+  
+  const baseClasses = cn(
+    "flex items-center gap-3 px-4 py-2 rounded-lg border transition-all min-w-[140px]",
+    isClickable && "cursor-pointer",
+    isActive && variant === 'danger' && "border-destructive/50 bg-destructive/10",
+    isActive && variant === 'primary' && "border-primary/50 bg-primary/10",
+    !isActive && "border-border bg-card/80 backdrop-blur-sm",
+    isClickable && !isActive && variant === 'danger' && "hover:border-destructive/40 hover:bg-destructive/5",
+    isClickable && !isActive && variant === 'primary' && "hover:border-primary/40 hover:bg-primary/5",
+    isClickable && !isActive && variant === 'default' && "hover:border-border hover:bg-muted/50"
+  );
+
+  const Wrapper = isClickable ? 'button' : 'div';
+
+  return (
+    <Wrapper className={baseClasses} onClick={onClick}>
+      <div className={cn(
+        "flex-shrink-0",
+        variant === 'danger' && "text-destructive",
+        variant === 'primary' && "text-primary",
+        variant === 'default' && "text-muted-foreground"
+      )}>
+        {icon}
+      </div>
+      <div className="text-left min-w-0">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wide leading-none mb-0.5">{label}</p>
+        <p className={cn(
+          "text-base font-bold leading-tight truncate",
+          variant === 'danger' && (typeof value === 'number' && value > 0) && "text-destructive",
+          variant === 'primary' && "text-primary",
+          variant === 'default' && "text-foreground"
+        )}>
+          {value}
+        </p>
+        {subValue && (
+          <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{subValue}</p>
+        )}
+      </div>
+    </Wrapper>
   );
 }
