@@ -31,26 +31,26 @@ export function KPICard({
   onBreakdownClick,
 }: KPICardProps) {
   const emphasisStyles = {
-    critical: 'border-red-300/40 bg-red-50/50 hover:border-red-400/60 hover:bg-red-50 dark:border-destructive/40 dark:bg-destructive/[0.03] dark:hover:border-destructive/60 dark:hover:bg-destructive/[0.05]',
+    critical: 'border-red-300/40 bg-red-50/50 hover:border-red-400/60 hover:bg-red-50 dark:border-red-500/30 dark:bg-red-500/[0.03] dark:hover:border-red-500/50 dark:hover:bg-red-500/[0.05]',
     high: 'border-sky-300/40 bg-sky-50/50 hover:border-sky-400/60 hover:bg-sky-50 dark:border-cyan-500/30 dark:bg-cyan-500/[0.03] dark:hover:border-cyan-500/50 dark:hover:bg-cyan-500/[0.05]',
     medium: 'border-amber-300/40 bg-amber-50/50 hover:border-amber-400/60 hover:bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/[0.03] dark:hover:border-amber-500/50 dark:hover:bg-amber-500/[0.05]',
-    low: 'border-slate-200/60 bg-slate-50/30 hover:border-slate-300/80 hover:bg-slate-50/50 dark:border-slate-600/40 dark:bg-slate-800/20 dark:hover:border-slate-500/60 dark:hover:bg-slate-700/30',
+    low: 'border-blue-200/40 bg-blue-50/30 hover:border-blue-300/60 hover:bg-blue-50/50 dark:border-blue-500/30 dark:bg-blue-500/[0.03] dark:hover:border-blue-500/50 dark:hover:bg-blue-500/[0.05]',
   };
 
-  // Executive industrial color palette for icons - refined for light/dark modes
+  // Executive industrial color palette for icons - refined for light/dark modes with uniform visibility
   const iconStyles = {
-    critical: 'bg-red-100 text-red-600 dark:bg-destructive/15 dark:text-red-400',
-    high: 'bg-sky-100 text-sky-600 dark:bg-cyan-500/15 dark:text-cyan-400',
-    medium: 'bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400',
-    low: 'bg-slate-100 text-slate-500 dark:bg-slate-700/40 dark:text-slate-400',
+    critical: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400',
+    high: 'bg-sky-100 text-sky-600 dark:bg-cyan-500/20 dark:text-cyan-400',
+    medium: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+    low: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
   };
 
-  // Executive value styles with refined glow for dark mode, solid colors for light mode
+  // Executive value styles with uniform glow intensity across all emphasis levels
   const valueStyles = {
-    critical: 'text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]',
-    high: 'text-sky-600 dark:text-cyan-400 dark:drop-shadow-[0_0_10px_rgba(34,211,238,0.45)]',
-    medium: 'text-amber-600 dark:text-amber-400 dark:drop-shadow-[0_0_10px_rgba(251,191,36,0.45)]',
-    low: 'text-slate-600 dark:text-slate-300 dark:drop-shadow-[0_0_8px_rgba(148,163,184,0.35)]',
+    critical: 'text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_12px_rgba(239,68,68,0.55)]',
+    high: 'text-sky-600 dark:text-cyan-400 dark:drop-shadow-[0_0_12px_rgba(34,211,238,0.55)]',
+    medium: 'text-amber-600 dark:text-amber-400 dark:drop-shadow-[0_0_12px_rgba(251,191,36,0.55)]',
+    low: 'text-blue-600 dark:text-blue-400 dark:drop-shadow-[0_0_12px_rgba(96,165,250,0.55)]',
   };
 
   return (
