@@ -605,8 +605,8 @@ export default function OutageMap() {
             />
           )}
           
-          {/* Search Bar - Positioned to avoid zoom controls */}
-          <div className="absolute top-4 left-16 z-[1000] flex items-center gap-2">
+          {/* Search Bar + Legend - Positioned to avoid zoom controls */}
+          <div className="absolute top-4 left-16 right-16 z-[1000] flex items-center gap-2 flex-wrap">
             <MapSearchBar
               assets={assets}
               feederZones={feederZones}
@@ -629,6 +629,13 @@ export default function OutageMap() {
                 <p>Reset Map</p>
               </TooltipContent>
             </Tooltip>
+            
+            {/* Horizontal Collapsible Legend */}
+            <HorizontalLegend 
+              showHeatmap={showHeatmap}
+              showFeederZones={showFeederZones}
+              showCrews={showCrews}
+            />
           </div>
           
           {/* Collapsible Layer Toggle Controls (top-right) */}
@@ -726,50 +733,6 @@ export default function OutageMap() {
             </div>
           </div>
           
-          {/* Map Legend (bottom-left) */}
-          <div className="absolute bottom-4 left-4 z-[1000] bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-4 max-w-[200px]">
-            <h4 className="text-xs font-semibold text-foreground mb-3 uppercase tracking-wide">Legend</h4>
-            <div className="space-y-2 text-xs">
-              {showHeatmap ? (
-                <>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Flame className="w-3.5 h-3.5" />
-                    <span>Customer Impact</span>
-                  </div>
-                  <div className="h-2 w-full rounded-sm mt-2" style={{ 
-                    background: 'linear-gradient(to right, #1e3a5f, #3b82f6, #f59e0b, #ef4444, #dc2626)' 
-                  }} />
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Low</span>
-                    <span>High</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <LegendItem color="bg-destructive" label="Active Event" />
-                  <LegendItem color="bg-warning" label="Pre-Event" />
-                  <LegendItem color="bg-muted-foreground" label="Post-Event" />
-                  
-                  {showFeederZones && (
-                    <div className="pt-2 mt-2 border-t border-border">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-2 bg-primary/20 border border-primary/50 rounded-sm" style={{ borderStyle: 'dashed' }} />
-                        <span className="text-muted-foreground">Feeder Zone</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {showCrews && (
-                    <div className="pt-2 mt-2 border-t border-border space-y-1.5">
-                      <LegendItem color="bg-green-500" label="Available" />
-                      <LegendItem color="bg-blue-500" label="En Route" />
-                      <LegendItem color="bg-purple-500" label="On Site" />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
         </main>
       </div>
 
@@ -888,6 +851,89 @@ function LegendItem({ color, label }: { color: string; label: string }) {
     <div className="flex items-center gap-2">
       <div className={`w-3 h-3 rounded-full ${color}`} />
       <span className="text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+function HorizontalLegend({ 
+  showHeatmap, 
+  showFeederZones, 
+  showCrews 
+}: { 
+  showHeatmap: boolean;
+  showFeederZones: boolean;
+  showCrews: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  return (
+    <div className="flex items-center">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          "h-9 px-3 flex items-center gap-2 bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-md transition-all hover:bg-primary/10 hover:border-primary/50",
+          isExpanded && "rounded-r-none border-r-0"
+        )}
+        title={isExpanded ? "Collapse legend" : "Expand legend"}
+      >
+        <Eye className="w-4 h-4 text-muted-foreground" />
+        <span className="text-xs font-medium text-foreground">Legend</span>
+        <ChevronRight className={cn(
+          "w-3 h-3 text-muted-foreground transition-transform",
+          isExpanded && "rotate-180"
+        )} />
+      </button>
+      
+      {isExpanded && (
+        <div className="h-9 px-3 flex items-center gap-4 bg-card/95 backdrop-blur-sm border border-border border-l-0 rounded-r-lg shadow-md">
+          {showHeatmap ? (
+            <div className="flex items-center gap-2">
+              <Flame className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Impact</span>
+              <div 
+                className="h-2 w-16 rounded-sm" 
+                style={{ 
+                  background: 'linear-gradient(to right, #1e3a5f, #3b82f6, #f59e0b, #ef4444, #dc2626)' 
+                }} 
+              />
+            </div>
+          ) : (
+            <>
+              <HorizontalLegendItem color="bg-destructive" label="Event" />
+              <HorizontalLegendItem color="bg-warning" label="Pre-Event" />
+              <HorizontalLegendItem color="bg-muted-foreground" label="Post-Event" />
+              
+              {showFeederZones && (
+                <>
+                  <div className="w-px h-4 bg-border" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-2 bg-primary/20 border border-primary/50 rounded-sm" style={{ borderStyle: 'dashed' }} />
+                    <span className="text-xs text-muted-foreground">Feeder</span>
+                  </div>
+                </>
+              )}
+              
+              {showCrews && (
+                <>
+                  <div className="w-px h-4 bg-border" />
+                  <HorizontalLegendItem color="bg-green-500" label="Available" />
+                  <HorizontalLegendItem color="bg-blue-500" label="En Route" />
+                  <HorizontalLegendItem color="bg-purple-500" label="On Site" />
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HorizontalLegendItem({ color, label }: { color: string; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
+      <span className="text-xs text-muted-foreground whitespace-nowrap">{label}</span>
     </div>
   );
 }
