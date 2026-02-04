@@ -201,4 +201,23 @@
   .glass {
     @apply bg-card/80 backdrop-blur-md;
   }
+
+  /* Leaflet tooltip styling for feeder zones */
+  .leaflet-tooltip.feeder-tooltip {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--foreground));
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+  }
+
+  .leaflet-tooltip.feeder-tooltip::before {
+    border-top-color: hsl(var(--border));
+  }
+
+  /* Asset marker highlight animation */
+  .asset-marker-icon.highlighted {
+    filter: drop-shadow(0 0 6px hsl(var(--primary)));
+  }
 }
