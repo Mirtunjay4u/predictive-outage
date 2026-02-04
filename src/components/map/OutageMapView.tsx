@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
@@ -132,7 +132,19 @@ const getPolygonColor = (scenario: Scenario) => {
 };
 
 // Component to handle map updates when selection changes
-function MapController({ selectedEventId, scenarios }: { selectedEventId: string | null; scenarios: Scenario[] }) {
+function MapController({ 
+  selectedEventId, 
+  scenarios,
+  zoomToAssetType,
+  assets,
+  linkedAssetIds,
+}: { 
+  selectedEventId: string | null; 
+  scenarios: Scenario[];
+  zoomToAssetType: Asset['asset_type'] | null;
+  assets: Asset[];
+  linkedAssetIds: string[];
+}) {
   const map = useMap();
   
   useEffect(() => {
@@ -145,6 +157,22 @@ function MapController({ selectedEventId, scenarios }: { selectedEventId: string
       }
     }
   }, [selectedEventId, scenarios, map]);
+
+  // Zoom to assets of a specific type
+  useEffect(() => {
+    if (zoomToAssetType && linkedAssetIds.length > 0) {
+      const targetAssets = assets.filter(
+        a => a.asset_type === zoomToAssetType && linkedAssetIds.includes(a.id)
+      );
+      
+      if (targetAssets.length > 0) {
+        const bounds = L.latLngBounds(
+          targetAssets.map(a => [a.lat, a.lng] as L.LatLngExpression)
+        );
+        map.flyToBounds(bounds.pad(0.3), { duration: 0.8, maxZoom: 14 });
+      }
+    }
+  }, [zoomToAssetType, assets, linkedAssetIds, map]);
   
   return null;
 }
@@ -179,6 +207,18 @@ export function OutageMapView({
   linkedAssetIds = [],
   onAssetClick,
 }: OutageMapViewProps) {
+  const [zoomToAssetType, setZoomToAssetType] = useState<Asset['asset_type'] | null>(null);
+
+  // Listen for zoom requests from EventDetailDrawer
+  useEffect(() => {
+    const handler = (e: CustomEvent<Asset['asset_type']>) => {
+      setZoomToAssetType(e.detail);
+      // Reset after animation
+      setTimeout(() => setZoomToAssetType(null), 1000);
+    };
+    window.addEventListener('zoom-to-assets' as any, handler);
+    return () => window.removeEventListener('zoom-to-assets' as any, handler);
+  }, []);
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
     if (scenarios.length === 0) return [29.7604, -95.3698] as [number, number];
@@ -242,7 +282,13 @@ export function OutageMapView({
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       
-      <MapController selectedEventId={selectedEventId} scenarios={scenarios} />
+      <MapController 
+        selectedEventId={selectedEventId} 
+        scenarios={scenarios} 
+        zoomToAssetType={zoomToAssetType}
+        assets={assets}
+        linkedAssetIds={linkedAssetIds}
+      />
       
       {/* Weather Overlay - rendered first (below other layers) */}
       <WeatherOverlay weatherPoints={weatherPoints} visible={showWeather} />
