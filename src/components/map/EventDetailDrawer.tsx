@@ -1,11 +1,12 @@
 import { format } from 'date-fns';
-import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info } from 'lucide-react';
+import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info, Cable, Box } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import type { Scenario } from '@/types/scenario';
 
 interface EventDetailDrawerProps {
@@ -16,6 +17,18 @@ interface EventDetailDrawerProps {
 }
 
 export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }: EventDetailDrawerProps) {
+  const { data: assets = [] } = useAssets();
+  const { data: linkedAssetIds = [] } = useEventAssets(event?.id || null);
+
+  // Calculate asset counts by type
+  const linkedAssets = assets.filter(a => linkedAssetIds.includes(a.id));
+  const assetCounts = {
+    Fault: linkedAssets.filter(a => a.asset_type === 'Fault').length,
+    Feeder: linkedAssets.filter(a => a.asset_type === 'Feeder').length,
+    Transformer: linkedAssets.filter(a => a.asset_type === 'Transformer').length,
+  };
+  const hasLinkedAssets = linkedAssets.length > 0;
+
   const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
       case 'high':
@@ -154,6 +167,38 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                   </div>
                 </div>
               </div>
+              
+              <Separator />
+
+              {/* Linked Assets Summary */}
+              {hasLinkedAssets && (
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Box className="w-4 h-4" />
+                    Linked Assets
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {assetCounts.Fault > 0 && (
+                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30 gap-1">
+                        <Zap className="w-3 h-3" />
+                        {assetCounts.Fault} Fault{assetCounts.Fault !== 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                    {assetCounts.Feeder > 0 && (
+                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1">
+                        <Cable className="w-3 h-3" />
+                        {assetCounts.Feeder} Feeder{assetCounts.Feeder !== 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                    {assetCounts.Transformer > 0 && (
+                      <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30 gap-1">
+                        <Box className="w-3 h-3" />
+                        {assetCounts.Transformer} Transformer{assetCounts.Transformer !== 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <Separator />
               
