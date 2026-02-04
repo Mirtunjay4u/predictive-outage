@@ -223,11 +223,38 @@
 
   /* Crew marker styling */
   .crew-marker-icon {
-    transition: transform 0.3s ease;
+    transition: transform 0.2s ease;
   }
 
   .crew-marker-icon:hover {
-    transform: scale(1.1);
+    transform: scale(1.15);
+    z-index: 1000 !important;
+  }
+
+  /* Moving crew animation */
+  .crew-marker-icon.crew-moving {
+    z-index: 999 !important;
+  }
+
+  /* Pulse ring for en-route crews */
+  @keyframes crew-pulse {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(1.2);
+    }
+  }
+
+  .crew-pulse-ring {
+    animation: crew-pulse 2s ease-in-out infinite;
+  }
+
+  /* Smooth position transitions are handled in JS */
+  .leaflet-marker-icon {
+    transition: none; /* Disable CSS transitions, JS handles animation */
   }
 
   /* Crew popup styling */
@@ -239,5 +266,10 @@
 
   .crew-popup .leaflet-popup-tip {
     background: hsl(var(--card));
+  }
+
+  /* Route trail glow effect */
+  .leaflet-interactive.route-trail {
+    filter: drop-shadow(0 0 3px currentColor);
   }
 }

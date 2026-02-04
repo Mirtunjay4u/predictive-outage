@@ -11,7 +11,7 @@ import { HeatmapLayer } from './HeatmapLayer';
 import { WeatherOverlay } from './WeatherOverlay';
 import { AssetMarkers } from './AssetMarkers';
 import { FeederZoneLayer } from './FeederZoneLayer';
-import { CrewMarkers } from './CrewMarkers';
+import { AnimatedCrewMarkers } from './AnimatedCrewMarkers';
 import type { WeatherPoint } from '@/hooks/useWeatherData';
 
 // Fix Leaflet default marker icons
@@ -380,14 +380,15 @@ export function OutageMapView({
         />
       )}
       
-      {/* Crew Markers Layer */}
+      {/* Animated Crew Markers Layer */}
       {showCrews && onCrewClick && (
-        <CrewMarkers
+        <AnimatedCrewMarkers
           crews={crews}
           scenarios={scenarios}
           visible={showCrews}
           onCrewClick={onCrewClick}
           onSimulateMovement={onSimulateCrewMovement}
+          showRouteTrails={true}
         />
       )}
       
