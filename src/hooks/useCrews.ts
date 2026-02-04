@@ -275,6 +275,94 @@ export function useUpdateCrewStatus() {
   });
 }
 
+// Emergency dispatch an off-duty crew (with overtime logging)
+export function useEmergencyDispatchCrew() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      crewId,
+      eventId,
+      eventLat,
+      eventLng,
+      authorizedBy,
+      notes,
+    }: {
+      crewId: string;
+      eventId: string;
+      eventLat: number;
+      eventLng: number;
+      authorizedBy: string;
+      notes?: string;
+    }) => {
+      // Get current crew position to calculate ETA
+      const { data: crew } = await supabase
+        .from('crews')
+        .select('current_lat, current_lng')
+        .eq('id', crewId)
+        .single();
+
+      if (!crew) throw new Error('Crew not found');
+
+      // Calculate ETA
+      const distanceKm = calculateDistance(
+        Number(crew.current_lat),
+        Number(crew.current_lng),
+        eventLat,
+        eventLng
+      );
+      const etaMinutes = Math.round((distanceKm / 48) * 60);
+
+      // Update crew status
+      const { error: crewError } = await supabase
+        .from('crews')
+        .update({
+          status: 'dispatched' as CrewStatus,
+          assigned_event_id: eventId,
+          eta_minutes: etaMinutes,
+          dispatch_time: new Date().toISOString(),
+        })
+        .eq('id', crewId);
+
+      if (crewError) throw crewError;
+
+      // Log overtime entry
+      const { error: overtimeError } = await supabase
+        .from('crew_overtime_logs')
+        .insert({
+          crew_id: crewId,
+          event_id: eventId,
+          reason: 'Emergency dispatch',
+          authorized_by: authorizedBy,
+          notes: notes || null,
+        });
+
+      if (overtimeError) throw overtimeError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crews'] });
+      queryClient.invalidateQueries({ queryKey: ['crew-overtime-logs'] });
+    },
+  });
+}
+
+// Fetch overtime logs
+export function useOvertimeLogs() {
+  return useQuery({
+    queryKey: ['crew-overtime-logs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('crew_overtime_logs')
+        .select('*, crews(crew_name), scenarios(name)')
+        .order('dispatch_time', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 // Haversine distance calculation (km)
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371; // Earth's radius in km

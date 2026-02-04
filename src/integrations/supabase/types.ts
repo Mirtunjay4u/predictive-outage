@@ -56,6 +56,57 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_overtime_logs: {
+        Row: {
+          authorized_by: string | null
+          created_at: string
+          crew_id: string
+          dispatch_time: string
+          end_time: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          reason: string
+        }
+        Insert: {
+          authorized_by?: string | null
+          created_at?: string
+          crew_id: string
+          dispatch_time?: string
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+        }
+        Update: {
+          authorized_by?: string | null
+          created_at?: string
+          crew_id?: string
+          dispatch_time?: string
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_overtime_logs_crew_id_fkey"
+            columns: ["crew_id"]
+            isOneToOne: false
+            referencedRelation: "crews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_overtime_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crews: {
         Row: {
           assigned_event_id: string | null
