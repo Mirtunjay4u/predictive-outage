@@ -8,6 +8,7 @@ import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
+import { EtrRunwayExplainer } from '@/components/map/EtrRunwayExplainer';
 import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from '@/types/scenario';
 
 interface EventDetailDrawerProps {
@@ -126,6 +127,9 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
 
                 {/* SECTION: Critical Load Runway */}
                 <CriticalLoadSection event={event} />
+
+                {/* SECTION: Copilot ETR + Runway Explainer */}
+                <EtrRunwayExplainer event={event} />
                 
                 {/* SECTION: Location */}
                 {(event.location_name || event.geo_center) && (
@@ -425,9 +429,9 @@ function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
 
           {/* Escalation Warning */}
           {event.requires_escalation && (
-            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
-              <Activity className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700 dark:text-amber-400">
+            <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 flex items-start gap-2">
+              <Activity className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-warning">
                 <span className="font-medium">Escalation required</span> — operator review needed.
               </p>
             </div>
