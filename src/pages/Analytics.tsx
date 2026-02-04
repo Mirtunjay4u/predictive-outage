@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { BarChart3, TrendingUp, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
@@ -154,8 +154,8 @@ export default function Analytics() {
             <CardContent>
               <div className="space-y-5">
                 {Object.entries(byLifecycle).map(([stage, stageScenarios]) => (
-                  <HoverCard key={stage} openDelay={100} closeDelay={100}>
-                    <HoverCardTrigger asChild>
+                  <Popover key={stage}>
+                    <PopoverTrigger asChild>
                       <div className="cursor-pointer group">
                         <div className="flex justify-between text-sm mb-2">
                           <span className="font-medium text-foreground group-hover:text-primary transition-colors">
@@ -174,15 +174,15 @@ export default function Analytics() {
                           />
                         </div>
                       </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent side="right" align="start" className="p-3">
+                    </PopoverTrigger>
+                    <PopoverContent side="right" align="start" className="p-3">
                       <ScenarioList
                         scenarios={stageScenarios}
                         title={`${stage} Scenarios`}
                         emptyMessage={`No ${stage.toLowerCase()} scenarios`}
                       />
-                    </HoverCardContent>
-                  </HoverCard>
+                    </PopoverContent>
+                  </Popover>
                 ))}
               </div>
             </CardContent>
@@ -206,8 +206,8 @@ export default function Analytics() {
             <CardContent>
               <div className="space-y-5">
                 {Object.entries(byPriority).map(([priority, priorityScenarios]) => (
-                  <HoverCard key={priority} openDelay={100} closeDelay={100}>
-                    <HoverCardTrigger asChild>
+                  <Popover key={priority}>
+                    <PopoverTrigger asChild>
                       <div className="cursor-pointer group">
                         <div className="flex justify-between text-sm mb-2">
                           <span className="font-medium capitalize text-foreground group-hover:text-primary transition-colors">
@@ -226,15 +226,15 @@ export default function Analytics() {
                           />
                         </div>
                       </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent side="left" align="start" className="p-3">
+                    </PopoverTrigger>
+                    <PopoverContent side="left" align="start" className="p-3">
                       <ScenarioList
                         scenarios={priorityScenarios}
                         title={`${priority.charAt(0).toUpperCase() + priority.slice(1)} Priority`}
                         emptyMessage={`No ${priority} priority scenarios`}
                       />
-                    </HoverCardContent>
-                  </HoverCard>
+                    </PopoverContent>
+                  </Popover>
                 ))}
               </div>
             </CardContent>
@@ -258,8 +258,8 @@ export default function Analytics() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {summaryMetrics.map((metric, index) => (
-                  <HoverCard key={metric.key} openDelay={100} closeDelay={100}>
-                    <HoverCardTrigger asChild>
+                  <Popover key={metric.key}>
+                    <PopoverTrigger asChild>
                       <div className="text-center p-5 rounded-lg bg-muted/40 border border-border/50 cursor-pointer hover:bg-muted/60 hover:border-border transition-all group">
                         <p className={`text-3xl font-bold ${metricColors[index]} group-hover:scale-105 transition-transform`}>
                           {metric.displayValue}
@@ -268,15 +268,15 @@ export default function Analytics() {
                           {metric.label}
                         </p>
                       </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent side="top" align="center" className="p-3">
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="center" className="p-3">
                       <ScenarioList
                         scenarios={metric.scenarios}
                         title={metric.label}
                         emptyMessage="No scenarios in this category"
                       />
-                    </HoverCardContent>
-                  </HoverCard>
+                    </PopoverContent>
+                  </Popover>
                 ))}
               </div>
             </CardContent>
