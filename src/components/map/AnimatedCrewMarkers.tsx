@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { Crew, CrewWithAvailability } from '@/types/crew';
@@ -302,7 +302,7 @@ export function AnimatedCrewMarkers({
         const history = positionHistory[crew.id] || [];
         
         return (
-          <div key={`crew-group-${crew.id}`}>
+          <React.Fragment key={`crew-group-${crew.id}`}>
             {/* Route trail - fading breadcrumb path */}
             {showRouteTrails && history.length > 1 && (crew.status === 'en_route' || crew.status === 'dispatched') && (
               <>
@@ -452,7 +452,7 @@ export function AnimatedCrewMarkers({
                 </div>
               </Popup>
             </AnimatedMarker>
-          </div>
+          </React.Fragment>
         );
       })}
     </>
