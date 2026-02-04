@@ -8,13 +8,15 @@ import {
   Send,
   RefreshCw,
   Moon,
-  Coffee
+  Coffee,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { EmergencyDispatchDialog } from './EmergencyDispatchDialog';
 import type { CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
@@ -23,6 +25,7 @@ interface CrewDispatchPanelProps {
   scenarios: Scenario[];
   selectedEventId: string | null;
   onDispatchCrew: (crewId: string, eventId: string) => void;
+  onEmergencyDispatch: (crewId: string, eventId: string, authorizedBy: string, notes: string) => void;
   onSimulateAll: () => void;
   isSimulating?: boolean;
 }
@@ -120,10 +123,13 @@ export function CrewDispatchPanel({
   scenarios,
   selectedEventId,
   onDispatchCrew,
+  onEmergencyDispatch,
   onSimulateAll,
   isSimulating = false,
 }: CrewDispatchPanelProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
+  const [selectedOffDutyCrew, setSelectedOffDutyCrew] = useState<CrewWithAvailability | null>(null);
 
   // Group crews by availability and status
   const onShiftAvailable = crews.filter(c => c.status === 'available' && c.isOnShift);
@@ -141,6 +147,19 @@ export function CrewDispatchPanel({
   const selectedEvent = selectedEventId 
     ? scenarios.find(s => s.id === selectedEventId)
     : null;
+
+  // Handle emergency dispatch button click
+  const handleEmergencyDispatchClick = (crew: CrewWithAvailability) => {
+    setSelectedOffDutyCrew(crew);
+    setEmergencyDialogOpen(true);
+  };
+
+  // Handle emergency dispatch confirmation
+  const handleEmergencyConfirm = (authorizedBy: string, notes: string) => {
+    if (selectedOffDutyCrew && selectedEventId) {
+      onEmergencyDispatch(selectedOffDutyCrew.id, selectedEventId, authorizedBy, notes);
+    }
+  };
 
   return (
     <div className="absolute bottom-4 right-4 z-[1000] w-80">
@@ -248,11 +267,11 @@ export function CrewDispatchPanel({
                         {offDutyAvailable.map(crew => (
                           <div
                             key={crew.id}
-                            className="flex items-center justify-between p-2 rounded-md bg-muted/30 border border-border/50 opacity-60"
+                            className="flex items-center justify-between p-2 rounded-md bg-muted/30 border border-border/50"
                           >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="w-2 h-2 rounded-full bg-gray-400" />
-                              <div className="min-w-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                              <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
                                   <p className="text-xs font-medium text-muted-foreground truncate">
                                     {crew.crew_name}
@@ -264,6 +283,26 @@ export function CrewDispatchPanel({
                                 </p>
                               </div>
                             </div>
+                            {selectedEvent?.geo_center && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleEmergencyDispatchClick(crew)}
+                                    >
+                                      <AlertTriangle className="w-3 h-3 mr-1" />
+                                      Override
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left" className="text-xs">
+                                    <p>Emergency dispatch (overtime)</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -324,6 +363,15 @@ export function CrewDispatchPanel({
           )}
         </AnimatePresence>
       </motion.div>
+      
+      {/* Emergency Dispatch Dialog */}
+      <EmergencyDispatchDialog
+        open={emergencyDialogOpen}
+        onOpenChange={setEmergencyDialogOpen}
+        crew={selectedOffDutyCrew}
+        eventName={selectedEvent?.name || ''}
+        onConfirm={handleEmergencyConfirm}
+      />
     </div>
   );
 }

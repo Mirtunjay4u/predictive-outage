@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
-import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
+import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useEmergencyDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
 import {
   Select,
   SelectContent,
@@ -92,6 +92,7 @@ export default function OutageMap() {
   
   // Crew mutations
   const dispatchCrewMutation = useDispatchCrew();
+  const emergencyDispatchMutation = useEmergencyDispatchCrew();
   const simulateMovementMutation = useSimulateCrewMovement();
   const updateCrewStatusMutation = useUpdateCrewStatus();
 
@@ -272,6 +273,32 @@ export default function OutageMap() {
     setIsSimulating(false);
     toast.success('Crew positions updated');
   }, [crews, scenarios, simulateMovementMutation]);
+
+  // Emergency dispatch for off-duty crews
+  const handleEmergencyDispatch = useCallback((crewId: string, eventId: string, authorizedBy: string, notes: string) => {
+    const event = scenarios?.find(s => s.id === eventId);
+    if (!event?.geo_center) {
+      toast.error('Event location not available');
+      return;
+    }
+    
+    emergencyDispatchMutation.mutate({
+      crewId,
+      eventId,
+      eventLat: event.geo_center.lat,
+      eventLng: event.geo_center.lng,
+      authorizedBy,
+      notes,
+    }, {
+      onSuccess: () => {
+        toast.success('Emergency dispatch logged - crew deployed with overtime');
+      },
+      onError: (error) => {
+        toast.error('Failed to dispatch crew');
+        console.error(error);
+      }
+    });
+  }, [scenarios, emergencyDispatchMutation]);
 
   // Get assigned event for selected crew
   const selectedCrewEvent = useMemo(() => {
@@ -482,6 +509,7 @@ export default function OutageMap() {
             scenarios={scenarios || []}
             selectedEventId={selectedEventId}
             onDispatchCrew={handleDispatchCrew}
+            onEmergencyDispatch={handleEmergencyDispatch}
             onSimulateAll={handleSimulateAll}
             isSimulating={isSimulating}
           />
