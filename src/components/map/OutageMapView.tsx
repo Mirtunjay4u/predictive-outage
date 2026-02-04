@@ -5,6 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
 import { HeatmapLayer } from './HeatmapLayer';
+import { WeatherOverlay } from './WeatherOverlay';
+import type { WeatherPoint } from '@/hooks/useWeatherData';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -20,6 +22,8 @@ interface OutageMapViewProps {
   onMarkerClick: (scenario: Scenario) => void;
   showHeatmap?: boolean;
   enableClustering?: boolean;
+  showWeather?: boolean;
+  weatherPoints?: WeatherPoint[];
 }
 
 // Custom colored marker icons
@@ -161,7 +165,9 @@ export function OutageMapView({
   selectedEventId, 
   onMarkerClick, 
   showHeatmap = false,
-  enableClustering = true 
+  enableClustering = true,
+  showWeather = false,
+  weatherPoints = [],
 }: OutageMapViewProps) {
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
@@ -227,6 +233,9 @@ export function OutageMapView({
       />
       
       <MapController selectedEventId={selectedEventId} scenarios={scenarios} />
+      
+      {/* Weather Overlay - rendered first (below other layers) */}
+      <WeatherOverlay weatherPoints={weatherPoints} visible={showWeather} />
       
       {/* Heatmap Layer */}
       <HeatmapLayer scenarios={scenarios} visible={showHeatmap} />
