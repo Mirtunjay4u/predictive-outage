@@ -57,6 +57,10 @@ export interface Scenario {
   transformer_id: string | null;
   customers_impacted: number | null;
   eta: string | null;
+  // Event timeline timestamps
+  event_start_time: string | null;
+  event_last_update_time: string | null;
+  event_end_time: string | null;
 }
 
 export interface ScenarioInsert {
