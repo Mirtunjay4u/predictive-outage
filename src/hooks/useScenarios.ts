@@ -1,12 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scenarioService } from '@/lib/scenarios';
-import type { Scenario, ScenarioInsert, ScenarioUpdate } from '@/types/scenario';
+import type { Scenario, ScenarioInsert, ScenarioUpdate, ScenarioWithIntelligence } from '@/types/scenario';
 import { toast } from 'sonner';
 
 export function useScenarios(options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: ['scenarios'],
     queryFn: () => scenarioService.getAll(),
+    refetchInterval: options?.refetchInterval,
+  });
+}
+
+export function useScenariosWithIntelligence(options?: { refetchInterval?: number }) {
+  return useQuery({
+    queryKey: ['scenarios-intelligence'],
+    queryFn: () => scenarioService.getAllWithIntelligence(),
     refetchInterval: options?.refetchInterval,
   });
 }
@@ -19,6 +27,14 @@ export function useScenario(id: string | null) {
   });
 }
 
+export function useScenarioWithIntelligence(id: string | null) {
+  return useQuery({
+    queryKey: ['scenario-intelligence', id],
+    queryFn: () => id ? scenarioService.getByIdWithIntelligence(id) : null,
+    enabled: !!id,
+  });
+}
+
 export function useCreateScenario() {
   const queryClient = useQueryClient();
   
@@ -26,6 +42,7 @@ export function useCreateScenario() {
     mutationFn: (scenario: ScenarioInsert) => scenarioService.create(scenario),
     onSuccess: (newScenario) => {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
+      queryClient.invalidateQueries({ queryKey: ['scenarios-intelligence'] });
       toast.success('Scenario created successfully');
       return newScenario;
     },
@@ -44,7 +61,9 @@ export function useUpdateScenario() {
       scenarioService.update(id, data),
     onSuccess: (updatedScenario, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
+      queryClient.invalidateQueries({ queryKey: ['scenarios-intelligence'] });
       queryClient.invalidateQueries({ queryKey: ['scenario', id] });
+      queryClient.invalidateQueries({ queryKey: ['scenario-intelligence', id] });
       toast.success('Scenario updated successfully');
       return updatedScenario;
     },
@@ -62,6 +81,7 @@ export function useDeleteScenario() {
     mutationFn: (id: string) => scenarioService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scenarios'] });
+      queryClient.invalidateQueries({ queryKey: ['scenarios-intelligence'] });
       toast.success('Scenario deleted successfully');
     },
     onError: (error) => {

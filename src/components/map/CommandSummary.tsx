@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Eye, AlertTriangle, Cable, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Scenario } from '@/types/scenario';
+import type { Scenario, ScenarioWithIntelligence } from '@/types/scenario';
 
 interface CommandSummaryProps {
-  scenarios: Scenario[];
+  scenarios: (Scenario | ScenarioWithIntelligence)[];
   onHighPriorityClick: () => void;
   onTopFeederClick: (feederId: string) => void;
   isHighPriorityActive: boolean;

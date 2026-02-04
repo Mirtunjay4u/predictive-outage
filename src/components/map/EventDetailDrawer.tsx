@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info, Cable, Box, ExternalLink } from 'lucide-react';
+import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info, Cable, Box, ExternalLink, Gauge, ShieldAlert, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,10 @@ import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
-import type { Scenario } from '@/types/scenario';
+import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from '@/types/scenario';
 
 interface EventDetailDrawerProps {
-  event: Scenario | null;
+  event: ScenarioWithIntelligence | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenInCopilot: () => void;
@@ -120,18 +120,32 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                     )}
                   </div>
                 </section>
+
+                {/* SECTION: ETR Confidence Band */}
+                <EtrConfidenceSection event={event} />
+
+                {/* SECTION: Critical Load Runway */}
+                <CriticalLoadSection event={event} />
                 
                 {/* SECTION: Location */}
-                {event.geo_center && (
+                {(event.location_name || event.geo_center) && (
                   <section>
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Location</h3>
                     <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-center gap-3">
                       <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div>
-                        <p className="text-sm font-mono text-foreground">
-                          {event.geo_center.lat.toFixed(4)}, {event.geo_center.lng.toFixed(4)}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Demo geography</p>
+                        {event.location_name && (
+                          <p className="text-sm font-medium text-foreground">{event.location_name}</p>
+                        )}
+                        {event.service_area && (
+                          <p className="text-xs text-muted-foreground">{event.service_area}</p>
+                        )}
+                        {event.geo_center && (
+                          <p className="text-[10px] font-mono text-muted-foreground mt-1">
+                            {event.geo_center.lat.toFixed(4)}, {event.geo_center.lng.toFixed(4)}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">Demo geography</p>
                       </div>
                     </div>
                   </section>
@@ -232,6 +246,195 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+// ===== ETR Confidence Section =====
+
+function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
+  const hasEtrData = event.etr_earliest || event.etr_latest || event.etr_confidence;
+  
+  if (!hasEtrData) return null;
+
+  const formatEtrTime = (dateStr: string | null) => {
+    if (!dateStr) return '—';
+    return format(new Date(dateStr), 'h:mm a');
+  };
+
+  const getConfidenceBadgeStyle = (confidence: EtrConfidence | null) => {
+    switch (confidence) {
+      case 'HIGH':
+        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
+      case 'MEDIUM':
+        return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30';
+      case 'LOW':
+        return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const getRiskBadgeStyle = (risk: EtrRiskLevel | null) => {
+    switch (risk) {
+      case 'LOW':
+        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
+      case 'MEDIUM':
+        return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30';
+      case 'HIGH':
+        return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const uncertaintyDrivers = event.etr_uncertainty_drivers || [];
+
+  return (
+    <section>
+      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+        <Gauge className="w-3.5 h-3.5" />
+        ETR Confidence
+      </h3>
+      <div className="space-y-3">
+        {/* ETR Band */}
+        {(event.etr_earliest || event.etr_latest) && (
+          <div className="p-3 rounded-lg bg-muted/50 border border-border">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Restoration Window</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-mono text-foreground">{formatEtrTime(event.etr_earliest)}</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="font-mono text-foreground">{formatEtrTime(event.etr_latest)}</span>
+            </div>
+            {event.etr_band_hours !== null && (
+              <p className="text-[10px] text-muted-foreground mt-1.5">
+                Band width: {event.etr_band_hours.toFixed(1)} hrs
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Badges Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {event.etr_confidence && (
+            <Badge variant="outline" className={`text-[10px] ${getConfidenceBadgeStyle(event.etr_confidence)}`}>
+              Confidence: {event.etr_confidence}
+            </Badge>
+          )}
+          {event.etr_risk_level && (
+            <Badge variant="outline" className={`text-[10px] ${getRiskBadgeStyle(event.etr_risk_level)}`}>
+              Risk: {event.etr_risk_level}
+            </Badge>
+          )}
+        </div>
+
+        {/* Uncertainty Drivers */}
+        {uncertaintyDrivers.length > 0 && (
+          <div className="pt-2">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-2">Uncertainty Factors</span>
+            <div className="flex flex-wrap gap-1.5">
+              {uncertaintyDrivers.map((driver, idx) => (
+                <span 
+                  key={idx} 
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted/70 text-muted-foreground border border-border"
+                >
+                  {driver}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ===== Critical Load Section =====
+
+function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
+  const getRunwayStatusStyle = (status: CriticalRunwayStatus | null) => {
+    switch (status) {
+      case 'NORMAL':
+        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
+      case 'AT_RISK':
+        return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30';
+      case 'BREACH':
+        return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const criticalLoadTypes = event.critical_load_types || [];
+
+  return (
+    <section>
+      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+        <ShieldAlert className="w-3.5 h-3.5" />
+        Critical Load Continuity
+      </h3>
+
+      {!event.has_critical_load ? (
+        <p className="text-sm text-muted-foreground italic">
+          No critical load flagged for this event.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {/* Critical Load Types */}
+          {criticalLoadTypes.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {criticalLoadTypes.map((loadType, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-[10px] bg-primary/5 text-primary border-primary/20"
+                >
+                  {loadType}
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          {/* Runtime Stats */}
+          <div className="grid grid-cols-2 gap-2">
+            {event.backup_runtime_remaining_hours !== null && (
+              <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Hours Remaining</span>
+                <span className="text-lg font-bold text-foreground">
+                  {event.backup_runtime_remaining_hours.toFixed(1)}
+                </span>
+              </div>
+            )}
+            {event.critical_escalation_threshold_hours !== null && (
+              <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Escalation Threshold</span>
+                <span className="text-lg font-bold text-foreground">
+                  {event.critical_escalation_threshold_hours.toFixed(1)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Status Badge */}
+          {event.critical_runway_status && (
+            <Badge variant="outline" className={`text-[10px] ${getRunwayStatusStyle(event.critical_runway_status)}`}>
+              Status: {event.critical_runway_status.replace('_', ' ')}
+            </Badge>
+          )}
+
+          {/* Escalation Warning */}
+          {event.requires_escalation && (
+            <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-start gap-2">
+              <Activity className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                <span className="font-medium">Escalation required</span> — operator review needed.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

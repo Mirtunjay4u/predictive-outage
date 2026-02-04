@@ -1,5 +1,17 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Scenario, ScenarioInsert, ScenarioUpdate, LifecycleStage, GeoCenter, GeoArea } from '@/types/scenario';
+import type { 
+  Scenario, 
+  ScenarioInsert, 
+  ScenarioUpdate, 
+  ScenarioWithIntelligence,
+  LifecycleStage, 
+  GeoCenter, 
+  GeoArea,
+  EtrConfidence,
+  EtrRiskLevel,
+  CriticalRunwayStatus,
+  CopilotSignals
+} from '@/types/scenario';
 import type { Json } from '@/integrations/supabase/types';
 
 // Helper to safely parse JSON fields
@@ -21,6 +33,28 @@ function parseGeoArea(json: Json | null): GeoArea | null {
   return null;
 }
 
+function parseStringArray(json: Json | null): string[] | null {
+  if (!json) return null;
+  if (Array.isArray(json)) return json.filter((s): s is string => typeof s === 'string');
+  return null;
+}
+
+function parseCopilotSignals(json: Json | null): CopilotSignals | null {
+  if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
+  const obj = json as Record<string, unknown>;
+  return {
+    etr_confidence: (obj.etr_confidence as EtrConfidence) || null,
+    etr_risk_level: (obj.etr_risk_level as EtrRiskLevel) || null,
+    critical_runway_status: (obj.critical_runway_status as CriticalRunwayStatus) || null,
+    has_critical_load: Boolean(obj.has_critical_load),
+    critical_load_types: Array.isArray(obj.critical_load_types) 
+      ? obj.critical_load_types.filter((s): s is string => typeof s === 'string')
+      : [],
+    hours_remaining: typeof obj.hours_remaining === 'number' ? obj.hours_remaining : null,
+    threshold_hours: typeof obj.threshold_hours === 'number' ? obj.threshold_hours : null,
+  };
+}
+
 // Map database row to Scenario type
 function mapRowToScenario(row: any): Scenario {
   return {
@@ -28,13 +62,29 @@ function mapRowToScenario(row: any): Scenario {
     lifecycle_stage: row.lifecycle_stage as LifecycleStage,
     geo_center: parseGeoCenter(row.geo_center),
     geo_area: parseGeoArea(row.geo_area),
+    etr_uncertainty_drivers: parseStringArray(row.etr_uncertainty_drivers),
+    critical_load_types: parseStringArray(row.critical_load_types),
+  };
+}
+
+// Map database row from events_intelligence view to ScenarioWithIntelligence
+function mapRowToScenarioWithIntelligence(row: any): ScenarioWithIntelligence {
+  return {
+    ...mapRowToScenario(row),
+    etr_band_hours: typeof row.etr_band_hours === 'number' ? row.etr_band_hours : null,
+    etr_risk_level: (row.etr_risk_level as EtrRiskLevel) || null,
+    critical_runway_status: (row.critical_runway_status as CriticalRunwayStatus) || null,
+    requires_escalation: Boolean(row.requires_escalation),
+    copilot_signals: parseCopilotSignals(row.copilot_signals),
   };
 }
 
 // Data adapter interface for future Dataverse integration
 export interface ScenarioDataAdapter {
   getAll(): Promise<Scenario[]>;
+  getAllWithIntelligence(): Promise<ScenarioWithIntelligence[]>;
   getById(id: string): Promise<Scenario | null>;
+  getByIdWithIntelligence(id: string): Promise<ScenarioWithIntelligence | null>;
   create(scenario: ScenarioInsert): Promise<Scenario>;
   update(id: string, scenario: ScenarioUpdate): Promise<Scenario>;
   delete(id: string): Promise<void>;
@@ -52,6 +102,16 @@ class SupabaseScenarioAdapter implements ScenarioDataAdapter {
     return (data || []).map(mapRowToScenario);
   }
 
+  async getAllWithIntelligence(): Promise<ScenarioWithIntelligence[]> {
+    const { data, error } = await supabase
+      .from('events_intelligence')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return (data || []).map(mapRowToScenarioWithIntelligence);
+  }
+
   async getById(id: string): Promise<Scenario | null> {
     const { data, error } = await supabase
       .from('scenarios')
@@ -64,6 +124,20 @@ class SupabaseScenarioAdapter implements ScenarioDataAdapter {
       throw error;
     }
     return data ? mapRowToScenario(data) : null;
+  }
+
+  async getByIdWithIntelligence(id: string): Promise<ScenarioWithIntelligence | null> {
+    const { data, error } = await supabase
+      .from('events_intelligence')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data ? mapRowToScenarioWithIntelligence(data) : null;
   }
 
   async create(scenario: ScenarioInsert): Promise<Scenario> {
