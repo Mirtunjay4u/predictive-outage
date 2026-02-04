@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, AlertCircle, X } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
 import { format } from 'date-fns';
-
-type OutageType = Scenario['outage_type'];
+import { KPICard } from '@/components/dashboard/KPICard';
+import { HighPriorityAlert } from '@/components/dashboard/HighPriorityAlert';
+import { cn } from '@/lib/utils';
 
 const KPI_TOOLTIPS: Record<string, string> = {
   'Total Events': 'All tracked outage and risk events across their lifecycle.',
@@ -33,55 +31,21 @@ const OUTAGE_TYPE_TOOLTIPS: Record<string, string> = {
   'Unknown': 'Events with undetermined or unclassified cause.',
 };
 
-function getOutageBreakdown(scenarios: Scenario[]): Record<string, number> {
+function getOutageBreakdown(scenarios: Scenario[]): { type: string; count: number; tooltip: string }[] {
   const breakdown: Record<string, number> = {};
   scenarios.forEach(s => {
     const type = s.outage_type || 'Unknown';
     breakdown[type] = (breakdown[type] || 0) + 1;
   });
-  return breakdown;
-}
-
-interface BreakdownListProps {
-  breakdown: Record<string, number>;
-  lifecycleFilter: string | null;
-  onTypeClick: (lifecycle: string | null, outageType: string) => void;
-}
-
-function BreakdownList({ breakdown, lifecycleFilter, onTypeClick }: BreakdownListProps) {
-  const entries = Object.entries(breakdown)
+  
+  return Object.entries(breakdown)
     .filter(([_, count]) => count > 0)
-    .sort((a, b) => b[1] - a[1]);
-
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="mt-3 pt-3 border-t border-border/40">
-      <div className="max-h-24 overflow-y-auto space-y-1">
-        {entries.map(([type, count]) => (
-          <Tooltip key={type} delayDuration={300}>
-            <TooltipTrigger asChild>
-              <p 
-                className="text-xs text-muted-foreground/70 cursor-pointer hover:text-foreground hover:underline transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTypeClick(lifecycleFilter, type);
-                }}
-              >
-                • {type}: {count}
-              </p>
-            </TooltipTrigger>
-            <TooltipContent 
-              side="right" 
-              className="max-w-[200px] text-xs bg-popover/95 text-popover-foreground border-border/50"
-            >
-              {OUTAGE_TYPE_TOOLTIPS[type] || `Events categorized as ${type}.`}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-    </div>
-  );
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count]) => ({
+      type,
+      count,
+      tooltip: OUTAGE_TYPE_TOOLTIPS[type] || `Events categorized as ${type}.`,
+    }));
 }
 
 const HIGH_PRIORITY_THRESHOLD = 3;
@@ -90,7 +54,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [alertDismissed, setAlertDismissed] = useState(false);
   const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({ 
-    refetchInterval: 30000 // Auto-refresh every 30 seconds
+    refetchInterval: 30000
   });
 
   const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
@@ -105,21 +69,6 @@ export default function Dashboard() {
     highPriority: highPriorityScenarios.length,
     postEvent: postEventScenarios.length,
   };
-
-  const breakdowns = {
-    preEvent: getOutageBreakdown(preEventScenarios),
-    active: getOutageBreakdown(activeScenarios),
-    highPriority: getOutageBreakdown(highPriorityScenarios),
-    postEvent: getOutageBreakdown(postEventScenarios),
-  };
-
-  const statCards = [
-    { label: 'Total Events', value: stats.total, icon: FileText, breakdown: null, filter: null },
-    { label: 'Pre-Event', value: stats.preEvent, icon: Clock, breakdown: breakdowns.preEvent, filter: 'Pre-Event' },
-    { label: 'Active Events', value: stats.active, icon: Activity, breakdown: breakdowns.active, filter: 'Event' },
-    { label: 'High Priority', value: stats.highPriority, icon: AlertTriangle, breakdown: breakdowns.highPriority, filter: 'Event&priority=high' },
-    { label: 'Post-Event', value: stats.postEvent, icon: CheckCircle, breakdown: breakdowns.postEvent, filter: 'Post-Event' },
-  ];
 
   const handleTileClick = (filter: string | null) => {
     if (filter) {
@@ -138,136 +87,165 @@ export default function Dashboard() {
     navigate(`/events?${params.toString()}`);
   };
 
-  // Generate operational summary
   const getOperationalSummary = () => {
     if (stats.highPriority > 0) {
-      return `${stats.highPriority} high priority event${stats.highPriority > 1 ? 's' : ''} requiring attention`;
+      return {
+        emphasis: `${stats.highPriority} high priority event${stats.highPriority > 1 ? 's' : ''}`,
+        detail: 'require attention',
+      };
     }
     if (stats.active > 0) {
-      return `${stats.active} active event${stats.active > 1 ? 's' : ''} in progress`;
+      return {
+        emphasis: `${stats.active} active event${stats.active > 1 ? 's' : ''}`,
+        detail: 'in progress',
+      };
     }
     if (stats.preEvent > 0) {
-      return `${stats.preEvent} event${stats.preEvent > 1 ? 's' : ''} under monitoring`;
+      return {
+        emphasis: `${stats.preEvent} event${stats.preEvent > 1 ? 's' : ''}`,
+        detail: 'under monitoring',
+      };
     }
-    return 'No active events at this time';
+    return {
+      emphasis: 'No active events',
+      detail: 'at this time',
+    };
   };
 
+  const summary = getOperationalSummary();
+
+  const kpiCards = [
+    {
+      label: 'Total Events',
+      value: stats.total,
+      icon: FileText,
+      tooltip: KPI_TOOLTIPS['Total Events'],
+      breakdown: undefined,
+      filter: null,
+      emphasis: 'low' as const,
+    },
+    {
+      label: 'Pre-Event',
+      value: stats.preEvent,
+      icon: Clock,
+      tooltip: KPI_TOOLTIPS['Pre-Event'],
+      breakdown: getOutageBreakdown(preEventScenarios),
+      filter: 'Pre-Event',
+      emphasis: 'medium' as const,
+    },
+    {
+      label: 'Active Events',
+      value: stats.active,
+      icon: Activity,
+      tooltip: KPI_TOOLTIPS['Active Events'],
+      breakdown: getOutageBreakdown(activeScenarios),
+      filter: 'Event',
+      emphasis: 'high' as const,
+    },
+    {
+      label: 'High Priority',
+      value: stats.highPriority,
+      icon: AlertTriangle,
+      tooltip: KPI_TOOLTIPS['High Priority'],
+      breakdown: getOutageBreakdown(highPriorityScenarios),
+      filter: 'Event&priority=high',
+      emphasis: 'critical' as const,
+    },
+    {
+      label: 'Post-Event',
+      value: stats.postEvent,
+      icon: CheckCircle,
+      tooltip: KPI_TOOLTIPS['Post-Event'],
+      breakdown: getOutageBreakdown(postEventScenarios),
+      filter: 'Post-Event',
+      emphasis: 'low' as const,
+    },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Welcome back</p>
-            <h1 className="text-2xl font-bold mb-2">Operations Dashboard</h1>
-            <p 
-              className="text-sm text-muted-foreground"
+    <div className="p-8 max-w-[1600px] mx-auto">
+      {/* Header Section */}
+      <header className="mb-10">
+        <div className="flex items-start justify-between gap-6">
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
+              Welcome back
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+              Operations Dashboard
+            </h1>
+            <p
+              className="text-sm text-muted-foreground leading-relaxed"
               aria-live="polite"
               aria-atomic="true"
             >
-              {getOperationalSummary()} • {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
+              <span className="font-medium text-foreground">{summary.emphasis}</span>
+              {' '}
+              <span className="text-muted-foreground">{summary.detail}</span>
+              <span className="mx-2 text-border">•</span>
+              <span className="text-muted-foreground/70">
+                {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
+              </span>
             </p>
           </div>
-          <div 
-            className="flex items-center gap-2 text-xs text-muted-foreground"
+
+          <div
+            className="flex items-center gap-3 text-xs text-muted-foreground/70"
             aria-live="polite"
             aria-atomic="true"
           >
             {dataUpdatedAt > 0 && (
-              <span aria-label={`Data last updated at ${format(new Date(dataUpdatedAt), 'h:mm a')}`}>
+              <span
+                className="tabular-nums"
+                aria-label={`Data last updated at ${format(new Date(dataUpdatedAt), 'h:mm a')}`}
+              >
                 Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
               </span>
             )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-7 w-7" 
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'h-8 w-8 text-muted-foreground hover:text-foreground',
+                'hover:bg-muted/50 transition-colors'
+              )}
               onClick={() => refetch()}
               disabled={isFetching}
+              aria-label="Refresh data"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
             </Button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* High Priority Alert Banner */}
       {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && !alertDismissed && (
-        <Alert 
-          variant="destructive" 
-          className="mb-6 border-destructive/30 bg-destructive/5 transition-colors hover:bg-destructive/10 focus-within:ring-2 focus-within:ring-destructive/50 focus-within:ring-offset-2"
-        >
-          <div 
-            className="flex items-center flex-1 cursor-pointer"
-            onClick={() => navigate('/events?lifecycle=Event&priority=high')}
-            onKeyDown={(e) => e.key === 'Enter' && navigate('/events?lifecycle=Event&priority=high')}
-            tabIndex={0}
-            role="button"
-            aria-label={`View ${stats.highPriority} high priority events`}
-          >
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="ml-2">
-              <span className="font-medium">{stats.highPriority} high priority events</span>
-              <span className="text-muted-foreground"> require immediate attention</span>
-              <span className="ml-2 text-xs underline">View all →</span>
-            </AlertDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 ml-auto shrink-0 hover:bg-destructive/20"
-            onClick={(e) => {
-              e.stopPropagation();
-              setAlertDismissed(true);
-            }}
-            aria-label="Dismiss alert"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </Alert>
+        <HighPriorityAlert
+          count={stats.highPriority}
+          onView={() => navigate('/events?lifecycle=Event&priority=high')}
+          onDismiss={() => setAlertDismissed(true)}
+        />
       )}
 
-      {/* KPI Tiles */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {statCards.map((stat) => (
-          <Tooltip key={stat.label} delayDuration={400}>
-            <TooltipTrigger asChild>
-              <Card 
-                className="border-border/50 cursor-pointer transition-all hover:border-primary/40 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
-                onClick={() => handleTileClick(stat.filter)}
-                onKeyDown={(e) => e.key === 'Enter' && handleTileClick(stat.filter)}
-                tabIndex={0}
-                role="button"
-                aria-label={`${stat.label}: ${stat.value} events. Click to view details.`}
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                  </div>
-                  {stat.breakdown && (
-                    <BreakdownList 
-                      breakdown={stat.breakdown} 
-                      lifecycleFilter={stat.filter} 
-                      onTypeClick={handleTypeClick}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent 
-              side="bottom" 
-              className="max-w-[220px] text-xs bg-popover/95 text-popover-foreground border-border/50"
-            >
-              {KPI_TOOLTIPS[stat.label]}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
+      {/* KPI Cards Grid */}
+      <section aria-label="Key Performance Indicators">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          {kpiCards.map((card) => (
+            <KPICard
+              key={card.label}
+              label={card.label}
+              value={card.value}
+              icon={card.icon}
+              tooltip={card.tooltip}
+              breakdown={card.breakdown}
+              emphasis={card.emphasis}
+              onClick={() => handleTileClick(card.filter)}
+              onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
