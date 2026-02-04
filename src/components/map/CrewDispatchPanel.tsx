@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmergencyDispatchDialog } from './EmergencyDispatchDialog';
+import { DispatchRecommendations } from './DispatchRecommendations';
 import type { CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
@@ -213,8 +214,20 @@ export function CrewDispatchPanel({
                 </div>
               )}
               
-              <ScrollArea className="max-h-[350px]">
-                <div className="p-2 space-y-2">
+              <ScrollArea className="max-h-[400px]">
+                <div className="p-2 space-y-3">
+                  {/* AI Recommendations - Show when event selected */}
+                  {selectedEvent && (
+                    <>
+                      <DispatchRecommendations
+                        crews={crews}
+                        selectedEvent={selectedEvent}
+                        onDispatchCrew={onDispatchCrew}
+                        onEmergencyDispatch={onEmergencyDispatch}
+                      />
+                      <Separator className="my-2" />
+                    </>
+                  )}
                   {/* On-Shift Available Crews */}
                   {onShiftAvailable.length > 0 && (
                     <div>
