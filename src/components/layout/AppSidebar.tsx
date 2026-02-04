@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Bot,
-  HelpCircle
+  HelpCircle,
+  Map
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'Events', path: '/events' },
+  { icon: Map, label: 'Outage Map', path: '/outage-map' },
   { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' },
