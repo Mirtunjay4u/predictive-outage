@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Eye, AlertTriangle, Cable, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Scenario } from '@/types/scenario';
 
 interface CommandSummaryProps {
@@ -50,30 +50,28 @@ export function CommandSummary({
     <div className="absolute top-16 left-4 z-[1000]">
       {/* Collapsed State - Compact Toggle Button */}
       {!isExpanded ? (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsExpanded(true)}
-                className="h-9 bg-card/95 backdrop-blur-sm border-border gap-2"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span className="text-xs font-medium">{metrics.visibleCount}</span>
-                {metrics.highPriorityCount > 0 && (
-                  <span className="text-xs text-destructive font-medium">
-                    ({metrics.highPriorityCount} high)
-                  </span>
-                )}
-                <ChevronDown className="w-3 h-3 ml-1" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Expand Summary</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExpanded(true)}
+              className="h-9 bg-card/95 backdrop-blur-sm border-border gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-xs font-medium">{metrics.visibleCount}</span>
+              {metrics.highPriorityCount > 0 && (
+                <span className="text-xs text-destructive font-medium">
+                  ({metrics.highPriorityCount} high)
+                </span>
+              )}
+              <ChevronDown className="w-3 h-3 ml-1" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Expand Summary</p>
+          </TooltipContent>
+        </Tooltip>
       ) : (
         /* Expanded State - Full Cards */
         <div className="flex items-stretch gap-2">
@@ -141,23 +139,21 @@ export function CommandSummary({
 
           {/* Collapse Button & Demo Footnote */}
           <div className="flex flex-col justify-between items-start">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsExpanded(false)}
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Collapse Summary</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsExpanded(false)}
+                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Collapse Summary</p>
+              </TooltipContent>
+            </Tooltip>
             <span className="text-[10px] text-muted-foreground/60 italic">
               Demo data
             </span>
