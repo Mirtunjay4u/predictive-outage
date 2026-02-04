@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmergencyDispatchDialog } from './EmergencyDispatchDialog';
 import { DispatchRecommendations } from './DispatchRecommendations';
 import type { CrewWithAvailability } from '@/types/crew';
@@ -59,42 +59,38 @@ const getStatusTextColor = (status: CrewWithAvailability['status']) => {
 const getShiftStatusBadge = (crew: CrewWithAvailability) => {
   if (crew.shiftStatus === 'off_duty') {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-muted text-muted-foreground border-muted-foreground/30">
-              <Moon className="w-2.5 h-2.5 mr-0.5" />
-              Off
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent side="left" className="text-xs">
-            <p>Off duty - outside shift hours</p>
-            <p className="text-muted-foreground">
-              Shift: {formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-muted text-muted-foreground border-muted-foreground/30">
+            <Moon className="w-2.5 h-2.5 mr-0.5" />
+            Off
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="text-xs">
+          <p>Off duty - outside shift hours</p>
+          <p className="text-muted-foreground">
+            Shift: {formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}
+          </p>
+        </TooltipContent>
+      </Tooltip>
     );
   }
   if (crew.shiftStatus === 'on_break') {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger>
-            <Badge variant="outline" className="text-[9px] px-1 py-0 bg-warning/10 text-warning border-warning/30">
-              <Coffee className="w-2.5 h-2.5 mr-0.5" />
-              Break
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent side="left" className="text-xs">
-            <p>On break</p>
-            <p className="text-muted-foreground">
-              Break: {formatTime(crew.break_start)} - {formatTime(crew.break_end)}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <Badge variant="outline" className="text-[9px] px-1 py-0 bg-warning/10 text-warning border-warning/30">
+            <Coffee className="w-2.5 h-2.5 mr-0.5" />
+            Break
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="text-xs">
+          <p>On break</p>
+          <p className="text-muted-foreground">
+            Break: {formatTime(crew.break_start)} - {formatTime(crew.break_end)}
+          </p>
+        </TooltipContent>
+      </Tooltip>
     );
   }
   return null;
@@ -297,24 +293,22 @@ export function CrewDispatchPanel({
                               </div>
                             </div>
                             {selectedEvent?.geo_center && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                                      onClick={() => handleEmergencyDispatchClick(crew)}
-                                    >
-                                      <AlertTriangle className="w-3 h-3 mr-1" />
-                                      Override
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="left" className="text-xs">
-                                    <p>Emergency dispatch (overtime)</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleEmergencyDispatchClick(crew)}
+                                  >
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    Override
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" className="text-xs">
+                                  <p>Emergency dispatch (overtime)</p>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         ))}

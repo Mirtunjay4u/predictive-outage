@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
 
@@ -225,21 +225,19 @@ export function DispatchRecommendations({
             </div>
             
             <div className="flex flex-col items-end gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div className={`text-lg font-bold ${getScoreColor(topRecommendation.score)}`}>
-                      {topRecommendation.score}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="text-xs space-y-1">
-                    <p>Match Score Breakdown:</p>
-                    <p>Proximity: {Math.round(topRecommendation.proximityScore)}/40</p>
-                    <p>Specialization: {Math.round(topRecommendation.specializationScore)}/35</p>
-                    <p>Availability: {Math.round(topRecommendation.availabilityScore)}/25</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className={`text-lg font-bold ${getScoreColor(topRecommendation.score)}`}>
+                    {topRecommendation.score}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="text-xs space-y-1">
+                  <p>Match Score Breakdown:</p>
+                  <p>Proximity: {Math.round(topRecommendation.proximityScore)}/40</p>
+                  <p>Specialization: {Math.round(topRecommendation.specializationScore)}/35</p>
+                  <p>Availability: {Math.round(topRecommendation.availabilityScore)}/25</p>
+                </TooltipContent>
+              </Tooltip>
               
               <Button
                 size="sm"
