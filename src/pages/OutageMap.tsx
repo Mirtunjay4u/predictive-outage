@@ -32,6 +32,7 @@ import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
 import { CrewDetailDrawer } from '@/components/map/CrewDetailDrawer';
 import { CrewDispatchPanel } from '@/components/map/CrewDispatchPanel';
 import { PlaybackPanel } from '@/components/map/PlaybackPanel';
+import { CommandSummary } from '@/components/map/CommandSummary';
 import { MapSearchBar, type SearchResult } from '@/components/map/MapSearchBar';
 import type { Scenario, LifecycleStage } from '@/types/scenario';
 import type { Asset } from '@/types/asset';
@@ -174,6 +175,35 @@ export default function OutageMap() {
     setIsPlaybackActive(false);
     setPlaybackTime(null);
   };
+
+  // Command Summary handlers
+  const handleHighPriorityClick = useCallback(() => {
+    if (priorityFilter === 'high') {
+      setPriorityFilter('all');
+    } else {
+      setPriorityFilter('high');
+    }
+  }, [priorityFilter]);
+
+  const handleTopFeederClick = useCallback((feederId: string) => {
+    // Find the feeder zone and zoom to it
+    const zone = feederZones.find(z => z.feeder_id === feederId);
+    if (zone) {
+      setHighlightedFeederId(feederId);
+      setShowFeederZones(true);
+      // Calculate centroid from geo_area for zoom target
+      const geoArea = zone.geo_area as { coordinates: number[][][] };
+      if (geoArea?.coordinates?.[0]) {
+        const coords = geoArea.coordinates[0];
+        const centroid = coords.reduce(
+          (acc, [lng, lat]) => ({ lat: acc.lat + lat / coords.length, lng: acc.lng + lng / coords.length }),
+          { lat: 0, lng: 0 }
+        );
+        setZoomTarget({ lat: centroid.lat, lng: centroid.lng, zoom: 11 });
+        setTimeout(() => setZoomTarget(null), 1000);
+      }
+    }
+  }, [feederZones]);
 
   const selectedEvent = useMemo(() => {
     if (!selectedEventId || !scenarios) return null;
@@ -584,6 +614,14 @@ export default function OutageMap() {
             </Tooltip>
           </TooltipProvider>
         </div>
+        
+        {/* Command Summary Cards */}
+        <CommandSummary
+          scenarios={filteredScenarios}
+          onHighPriorityClick={handleHighPriorityClick}
+          onTopFeederClick={handleTopFeederClick}
+          isHighPriorityActive={priorityFilter === 'high'}
+        />
         
         {/* Layer Toggle Controls */}
         <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 space-y-3">
