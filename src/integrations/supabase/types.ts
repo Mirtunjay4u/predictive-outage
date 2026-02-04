@@ -102,6 +102,13 @@ export type Database = {
             foreignKeyName: "crew_overtime_logs_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "events_intelligence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_overtime_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "scenarios"
             referencedColumns: ["id"]
           },
@@ -179,6 +186,13 @@ export type Database = {
             foreignKeyName: "crews_assigned_event_id_fkey"
             columns: ["assigned_event_id"]
             isOneToOne: false
+            referencedRelation: "events_intelligence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crews_assigned_event_id_fkey"
+            columns: ["assigned_event_id"]
+            isOneToOne: false
             referencedRelation: "scenarios"
             referencedColumns: ["id"]
           },
@@ -209,6 +223,13 @@ export type Database = {
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_assets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events_intelligence"
             referencedColumns: ["id"]
           },
           {
@@ -363,7 +384,136 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      events_intelligence: {
+        Row: {
+          backup_runtime_hours: number | null
+          backup_runtime_remaining_hours: number | null
+          copilot_signals: Json | null
+          created_at: string | null
+          critical_escalation_threshold_hours: number | null
+          critical_load_types: Json | null
+          critical_runway_status: string | null
+          customers_impacted: number | null
+          description: string | null
+          eta: string | null
+          etr_band_hours: number | null
+          etr_confidence: string | null
+          etr_earliest: string | null
+          etr_expected: string | null
+          etr_latest: string | null
+          etr_risk_level: string | null
+          etr_uncertainty_drivers: Json | null
+          event_end_time: string | null
+          event_last_update_time: string | null
+          event_start_time: string | null
+          fault_id: string | null
+          feeder_id: string | null
+          geo_area: Json | null
+          geo_center: Json | null
+          has_critical_load: boolean | null
+          id: string | null
+          lifecycle_stage: Database["public"]["Enums"]["lifecycle_stage"] | null
+          location_name: string | null
+          name: string | null
+          notes: string | null
+          operator_role: string | null
+          outage_type: Database["public"]["Enums"]["outage_type"] | null
+          priority: string | null
+          requires_escalation: boolean | null
+          scenario_time: string | null
+          service_area: string | null
+          stage: boolean | null
+          transformer_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          backup_runtime_hours?: number | null
+          backup_runtime_remaining_hours?: number | null
+          copilot_signals?: never
+          created_at?: string | null
+          critical_escalation_threshold_hours?: number | null
+          critical_load_types?: Json | null
+          critical_runway_status?: never
+          customers_impacted?: number | null
+          description?: string | null
+          eta?: string | null
+          etr_band_hours?: never
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_expected?: string | null
+          etr_latest?: string | null
+          etr_risk_level?: never
+          etr_uncertainty_drivers?: Json | null
+          event_end_time?: string | null
+          event_last_update_time?: string | null
+          event_start_time?: string | null
+          fault_id?: string | null
+          feeder_id?: string | null
+          geo_area?: Json | null
+          geo_center?: Json | null
+          has_critical_load?: boolean | null
+          id?: string | null
+          lifecycle_stage?:
+            | Database["public"]["Enums"]["lifecycle_stage"]
+            | null
+          location_name?: string | null
+          name?: string | null
+          notes?: string | null
+          operator_role?: string | null
+          outage_type?: Database["public"]["Enums"]["outage_type"] | null
+          priority?: string | null
+          requires_escalation?: never
+          scenario_time?: string | null
+          service_area?: string | null
+          stage?: boolean | null
+          transformer_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          backup_runtime_hours?: number | null
+          backup_runtime_remaining_hours?: number | null
+          copilot_signals?: never
+          created_at?: string | null
+          critical_escalation_threshold_hours?: number | null
+          critical_load_types?: Json | null
+          critical_runway_status?: never
+          customers_impacted?: number | null
+          description?: string | null
+          eta?: string | null
+          etr_band_hours?: never
+          etr_confidence?: string | null
+          etr_earliest?: string | null
+          etr_expected?: string | null
+          etr_latest?: string | null
+          etr_risk_level?: never
+          etr_uncertainty_drivers?: Json | null
+          event_end_time?: string | null
+          event_last_update_time?: string | null
+          event_start_time?: string | null
+          fault_id?: string | null
+          feeder_id?: string | null
+          geo_area?: Json | null
+          geo_center?: Json | null
+          has_critical_load?: boolean | null
+          id?: string | null
+          lifecycle_stage?:
+            | Database["public"]["Enums"]["lifecycle_stage"]
+            | null
+          location_name?: string | null
+          name?: string | null
+          notes?: string | null
+          operator_role?: string | null
+          outage_type?: Database["public"]["Enums"]["outage_type"] | null
+          priority?: string | null
+          requires_escalation?: never
+          scenario_time?: string | null
+          service_area?: string | null
+          stage?: boolean | null
+          transformer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
