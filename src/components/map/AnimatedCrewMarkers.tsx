@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Marker, Popup, Polyline } from 'react-leaflet';
+import { Marker, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Crew, CrewWithAvailability } from '@/types/crew';
 import type { Scenario } from '@/types/scenario';
-import { Button } from '@/components/ui/button';
-import { Play, Phone, Users, Truck, Clock, Navigation } from 'lucide-react';
 
 interface AnimatedCrewMarkersProps {
   crews: Crew[] | CrewWithAvailability[];
@@ -133,21 +131,87 @@ const createCrewIcon = (
   });
 };
 
-// Animated marker wrapper
+// Format time for display
+const formatTime = (time: string | null): string => {
+  if (!time) return '--:--';
+  const parts = time.split(':');
+  const hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
+};
+
+// Format ETA display
+const formatEta = (minutes: number | null) => {
+  if (minutes === null) return 'N/A';
+  if (minutes === 0) return 'Arrived';
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+};
+
+// Get status display label
+const getStatusLabel = (status: Crew['status']) => {
+  switch (status) {
+    case 'available': return 'Available';
+    case 'dispatched': return 'Dispatched';
+    case 'en_route': return 'En Route';
+    case 'on_site': return 'On Site';
+    case 'returning': return 'Returning';
+    default: return status;
+  }
+};
+
+// Get status color
+const getStatusColor = (status: Crew['status']) => {
+  switch (status) {
+    case 'available': return '#22c55e';
+    case 'dispatched': return '#f59e0b';
+    case 'en_route': return '#3b82f6';
+    case 'on_site': return '#8b5cf6';
+    case 'returning': return '#6b7280';
+    default: return '#6b7280';
+  }
+};
+
+// Get shift status label
+const getShiftStatusLabel = (shiftStatus: CrewWithAvailability['shiftStatus']) => {
+  switch (shiftStatus) {
+    case 'on_shift': return 'On Shift';
+    case 'on_break': return 'On Break';
+    case 'off_duty': return 'Off Duty';
+    default: return '';
+  }
+};
+
+// Get shift status color
+const getShiftStatusColor = (shiftStatus: CrewWithAvailability['shiftStatus']) => {
+  switch (shiftStatus) {
+    case 'on_shift': return '#22c55e';
+    case 'on_break': return '#f59e0b';
+    case 'off_duty': return '#6b7280';
+    default: return '#6b7280';
+  }
+};
+
+// Animated marker with native popup binding
 function AnimatedMarker({ 
   crew, 
   icon, 
   onCrewClick,
-  children 
+  assignedEvent,
 }: { 
-  crew: Crew;
+  crew: Crew | CrewWithAvailability;
   icon: L.DivIcon;
   onCrewClick: (crew: Crew) => void;
-  children: React.ReactNode;
+  assignedEvent: Scenario | undefined;
 }) {
   const markerRef = useRef<L.Marker>(null);
   const previousPosition = useRef<[number, number]>([crew.current_lat, crew.current_lng]);
   
+  // Animate position changes
   useEffect(() => {
     const marker = markerRef.current;
     if (!marker) return;
@@ -184,6 +248,91 @@ function AnimatedMarker({
     }
   }, [crew.current_lat, crew.current_lng]);
 
+  // Bind native popup
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    const hasAssignment = !!crew.assigned_event_id;
+    const isMoving = crew.status === 'en_route';
+    const statusColor = getStatusColor(crew.status);
+    
+    let shiftStatusHtml = '';
+    if (hasAvailability(crew)) {
+      const shiftColor = getShiftStatusColor(crew.shiftStatus);
+      shiftStatusHtml = `
+        <span style="font-size: 10px; padding: 2px 6px; border-radius: 9999px; background: ${shiftColor}20; color: ${shiftColor};">
+          ${getShiftStatusLabel(crew.shiftStatus)}
+        </span>
+      `;
+    }
+
+    const popupContent = `
+      <div style="padding: 8px; min-width: 240px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0;">${crew.crew_name}</h3>
+          <span style="font-size: 12px; font-weight: 500; color: ${statusColor}; display: flex; align-items: center; gap: 4px;">
+            ${isMoving ? '◉ ' : ''}${getStatusLabel(crew.status)}
+          </span>
+        </div>
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <p style="font-size: 12px; color: #888; margin: 0;">${crew.crew_id}</p>
+          ${shiftStatusHtml}
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; margin-bottom: 8px;">
+          <span>🕐</span>
+          <span>${formatTime(crew.shift_start)} - ${formatTime(crew.shift_end)}</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 12px;">
+          <div style="display: flex; align-items: center; gap: 6px; color: #888;">
+            <span>🚚</span>
+            <span>${crew.vehicle_type}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; color: #888;">
+            <span>👥</span>
+            <span>${crew.team_size} members</span>
+          </div>
+          ${crew.specialization ? `
+            <div style="grid-column: span 2; color: #888;">
+              <span style="font-weight: 500;">Spec:</span> ${crew.specialization}
+            </div>
+          ` : ''}
+          ${crew.contact_phone ? `
+            <div style="grid-column: span 2; display: flex; align-items: center; gap: 6px; color: #888;">
+              <span>📞</span>
+              <span>${crew.contact_phone}</span>
+            </div>
+          ` : ''}
+        </div>
+        
+        ${hasAssignment && assignedEvent ? `
+          <div style="background: rgba(59, 130, 246, 0.1); border-radius: 6px; padding: 8px; margin-bottom: 8px;">
+            <p style="font-size: 12px; color: #fff; font-weight: 500; margin: 0 0 4px 0;">
+              Assigned to: ${assignedEvent.name}
+            </p>
+            ${crew.eta_minutes !== null ? `
+              <p style="font-size: 12px; color: #3b82f6; font-weight: 600; margin: 0;">
+                ETA: ${formatEta(crew.eta_minutes)}
+              </p>
+            ` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    marker.bindPopup(popupContent, { 
+      className: 'custom-popup crew-popup',
+      maxWidth: 280,
+    });
+
+    return () => {
+      marker.unbindPopup();
+    };
+  }, [crew, assignedEvent]);
+
   return (
     <Marker
       ref={markerRef}
@@ -192,172 +341,7 @@ function AnimatedMarker({
       eventHandlers={{
         click: () => onCrewClick(crew),
       }}
-    >
-      {children}
-    </Marker>
-  );
-}
-
-// Format time for display
-const formatTime = (time: string | null): string => {
-  if (!time) return '--:--';
-  const parts = time.split(':');
-  const hour = parseInt(parts[0], 10);
-  const minute = parts[1];
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12;
-  return `${hour12}:${minute} ${ampm}`;
-};
-
-// Format ETA display
-const formatEta = (minutes: number | null) => {
-  if (minutes === null) return 'N/A';
-  if (minutes === 0) return 'Arrived';
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${hours}h ${mins}m`;
-};
-
-// Get status display label
-const getStatusLabel = (status: Crew['status']) => {
-  switch (status) {
-    case 'available': return 'Available';
-    case 'dispatched': return 'Dispatched';
-    case 'en_route': return 'En Route';
-    case 'on_site': return 'On Site';
-    case 'returning': return 'Returning';
-    default: return status;
-  }
-};
-
-// Get status color class
-const getStatusColor = (status: Crew['status']) => {
-  switch (status) {
-    case 'available': return 'text-green-400';
-    case 'dispatched': return 'text-amber-400';
-    case 'en_route': return 'text-blue-400';
-    case 'on_site': return 'text-purple-400';
-    case 'returning': return 'text-gray-400';
-    default: return 'text-muted-foreground';
-  }
-};
-
-// Get shift status label
-const getShiftStatusLabel = (shiftStatus: CrewWithAvailability['shiftStatus']) => {
-  switch (shiftStatus) {
-    case 'on_shift': return 'On Shift';
-    case 'on_break': return 'On Break';
-    case 'off_duty': return 'Off Duty';
-    default: return '';
-  }
-};
-
-// Crew Popup Content - extracted to avoid div issues
-function CrewPopupContent({
-  crew,
-  assignedEvent,
-  onSimulateMovement,
-}: {
-  crew: Crew | CrewWithAvailability;
-  assignedEvent: Scenario | undefined;
-  onSimulateMovement?: (crewId: string, targetLat: number, targetLng: number) => void;
-}) {
-  const hasAssignment = !!crew.assigned_event_id;
-  const isMoving = crew.status === 'en_route';
-
-  return (
-    <div className="p-2 min-w-[240px]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-sm text-foreground">{crew.crew_name}</h3>
-        <span className={`text-xs font-medium flex items-center gap-1 ${getStatusColor(crew.status)}`}>
-          {isMoving && <Navigation className="w-3 h-3 animate-pulse" />}
-          {getStatusLabel(crew.status)}
-        </span>
-      </div>
-      
-      {/* Crew ID & Shift Status */}
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-muted-foreground">
-          {crew.crew_id}
-        </p>
-        {hasAvailability(crew) && (
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-            crew.shiftStatus === 'on_shift' 
-              ? 'bg-green-500/20 text-green-400' 
-              : crew.shiftStatus === 'on_break'
-              ? 'bg-amber-500/20 text-amber-400'
-              : 'bg-gray-500/20 text-gray-400'
-          }`}>
-            {getShiftStatusLabel(crew.shiftStatus)}
-          </span>
-        )}
-      </div>
-      
-      {/* Shift Hours */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-        <Clock className="w-3 h-3" />
-        <span>{formatTime(crew.shift_start)} - {formatTime(crew.shift_end)}</span>
-      </div>
-      
-      {/* Details Grid */}
-      <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Truck className="w-3 h-3" />
-          <span>{crew.vehicle_type}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Users className="w-3 h-3" />
-          <span>{crew.team_size} members</span>
-        </div>
-        {crew.specialization && (
-          <div className="col-span-2 text-muted-foreground">
-            <span className="font-medium">Spec:</span> {crew.specialization}
-          </div>
-        )}
-        {crew.contact_phone && (
-          <div className="col-span-2 flex items-center gap-1.5 text-muted-foreground">
-            <Phone className="w-3 h-3" />
-            <span>{crew.contact_phone}</span>
-          </div>
-        )}
-      </div>
-      
-      {/* Assignment Info */}
-      {hasAssignment && assignedEvent && (
-        <div className="bg-primary/10 rounded-md p-2 mb-2">
-          <p className="text-xs text-foreground font-medium mb-1">
-            Assigned to: {assignedEvent.name}
-          </p>
-          {crew.eta_minutes !== null && (
-            <p className="text-xs text-primary font-semibold">
-              ETA: {formatEta(crew.eta_minutes)}
-            </p>
-          )}
-        </div>
-      )}
-      
-      {/* Simulate Movement Button */}
-      {onSimulateMovement && (crew.status === 'dispatched' || crew.status === 'en_route') && assignedEvent?.geo_center && (
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full h-7 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSimulateMovement(
-              crew.id,
-              assignedEvent.geo_center!.lat,
-              assignedEvent.geo_center!.lng
-            );
-          }}
-        >
-          <Play className="w-3 h-3 mr-1" />
-          Simulate Movement
-        </Button>
-      )}
-    </div>
+    />
   );
 }
 
@@ -464,22 +448,15 @@ export function AnimatedCrewMarkers({
       );
     }
     
-    // Add crew marker
+    // Add crew marker with native popup
     elements.push(
       <AnimatedMarker
         key={`crew-${crew.id}`}
         crew={crew}
         icon={icon}
         onCrewClick={onCrewClick}
-      >
-        <Popup className="custom-popup crew-popup" maxWidth={280}>
-          <CrewPopupContent
-            crew={crew}
-            assignedEvent={assignedEvent}
-            onSimulateMovement={onSimulateMovement}
-          />
-        </Popup>
-      </AnimatedMarker>
+        assignedEvent={assignedEvent}
+      />
     );
   });
 

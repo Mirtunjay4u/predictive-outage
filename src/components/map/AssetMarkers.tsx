@@ -1,4 +1,5 @@
-import { Marker, Popup } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
+import { Marker } from 'react-leaflet';
 import L from 'leaflet';
 import type { Asset } from '@/types/asset';
 
@@ -70,6 +71,60 @@ const createAssetIcon = (assetType: string, isLinked: boolean, hasSelectedEvent:
   });
 };
 
+// Individual asset marker with native popup binding
+function AssetMarker({
+  asset,
+  isLinked,
+  hasSelectedEvent,
+  isHighlighted,
+  onAssetClick,
+}: {
+  asset: Asset;
+  isLinked: boolean;
+  hasSelectedEvent: boolean;
+  isHighlighted: boolean;
+  onAssetClick: (asset: Asset) => void;
+}) {
+  const markerRef = useRef<L.Marker>(null);
+  const icon = createAssetIcon(asset.asset_type, isLinked, hasSelectedEvent, isHighlighted);
+
+  useEffect(() => {
+    const marker = markerRef.current;
+    if (!marker) return;
+
+    // Bind native Leaflet popup
+    marker.bindPopup(
+      `<div style="padding: 4px;">
+        <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">${asset.name}</h3>
+        <p style="font-size: 12px; color: #888; margin: 0;">
+          ${asset.asset_type}${asset.feeder_id ? ` • ${asset.feeder_id}` : ''}
+        </p>
+        ${isLinked && hasSelectedEvent ? `
+          <p style="font-size: 12px; color: hsl(217, 91%, 60%); margin: 4px 0 0 0; font-weight: 500;">
+            Linked to selected event
+          </p>
+        ` : ''}
+      </div>`,
+      { className: 'custom-popup' }
+    );
+
+    return () => {
+      marker.unbindPopup();
+    };
+  }, [asset, isLinked, hasSelectedEvent]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[asset.lat, asset.lng]}
+      icon={icon}
+      eventHandlers={{
+        click: () => onAssetClick(asset),
+      }}
+    />
+  );
+}
+
 export function AssetMarkers({ 
   assets, 
   linkedAssetIds, 
@@ -87,32 +142,16 @@ export function AssetMarkers({
       {assets.map(asset => {
         const isLinked = linkedAssetIds.includes(asset.id);
         const isHighlighted = highlightedAssetId === asset.id;
-        const icon = createAssetIcon(asset.asset_type, isLinked, hasSelectedEvent, isHighlighted);
         
         return (
-          <Marker
+          <AssetMarker
             key={`asset-${asset.id}`}
-            position={[asset.lat, asset.lng]}
-            icon={icon}
-            eventHandlers={{
-              click: () => onAssetClick(asset),
-            }}
-          >
-            <Popup className="custom-popup">
-              <div className="p-1">
-                <h3 className="font-semibold text-sm text-foreground">{asset.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {asset.asset_type}
-                  {asset.feeder_id && ` • ${asset.feeder_id}`}
-                </p>
-                {isLinked && hasSelectedEvent && (
-                  <p className="text-xs text-primary mt-1 font-medium">
-                    Linked to selected event
-                  </p>
-                )}
-              </div>
-            </Popup>
-          </Marker>
+            asset={asset}
+            isLinked={isLinked}
+            hasSelectedEvent={hasSelectedEvent}
+            isHighlighted={isHighlighted}
+            onAssetClick={onAssetClick}
+          />
         );
       })}
     </>

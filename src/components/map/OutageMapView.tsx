@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
@@ -267,43 +267,53 @@ export function OutageMapView({
     return [avgLat, avgLng] as [number, number];
   }, [scenarios]);
 
-  // Render markers (used both inside and outside cluster)
-  const renderMarkers = () => {
-    return scenarios.map(scenario => {
-      if (!scenario.geo_center) return null;
-      
-      const isSelected = scenario.id === selectedEventId;
-      const color = getMarkerColor(scenario);
-      const icon = createColoredIcon(color, isSelected);
-      
-      return (
-        <Marker
-          key={`marker-${scenario.id}`}
-          position={[scenario.geo_center.lat, scenario.geo_center.lng]}
-          icon={icon}
-          // @ts-ignore - attach scenario for cluster icon calculation
-          scenario={scenario}
-          eventHandlers={{
-            click: () => onMarkerClick(scenario),
-          }}
-        >
-          <Popup className="custom-popup">
-            <div className="p-1">
-              <h3 className="font-semibold text-sm text-foreground">{scenario.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                {scenario.outage_type || 'Unknown'} • {scenario.lifecycle_stage}
-              </p>
-              {scenario.customers_impacted && scenario.customers_impacted > 0 && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {scenario.customers_impacted.toLocaleString()} customers
-                </p>
-              )}
-            </div>
-          </Popup>
-        </Marker>
+  // Individual Scenario Marker with native popup binding
+  const ScenarioMarker = React.memo(({ scenario }: { scenario: Scenario }) => {
+    const markerRef = useRef<L.Marker>(null);
+    const isSelected = scenario.id === selectedEventId;
+    const color = getMarkerColor(scenario);
+    const icon = createColoredIcon(color, isSelected);
+
+    useEffect(() => {
+      const marker = markerRef.current;
+      if (!marker || !scenario.geo_center) return;
+
+      // Bind native Leaflet popup
+      marker.bindPopup(
+        `<div style="padding: 4px;">
+          <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">${scenario.name}</h3>
+          <p style="font-size: 12px; color: #888; margin: 0;">
+            ${scenario.outage_type || 'Unknown'} • ${scenario.lifecycle_stage}
+          </p>
+          ${scenario.customers_impacted && scenario.customers_impacted > 0 ? `
+            <p style="font-size: 12px; color: #888; margin: 2px 0 0 0;">
+              ${scenario.customers_impacted.toLocaleString()} customers
+            </p>
+          ` : ''}
+        </div>`,
+        { className: 'custom-popup' }
       );
-    });
-  };
+
+      return () => {
+        marker.unbindPopup();
+      };
+    }, [scenario, isSelected]);
+
+    if (!scenario.geo_center) return null;
+
+    return (
+      <Marker
+        ref={markerRef}
+        position={[scenario.geo_center.lat, scenario.geo_center.lng]}
+        icon={icon}
+        eventHandlers={{
+          click: () => onMarkerClick(scenario),
+        }}
+      />
+    );
+  });
+
+  ScenarioMarker.displayName = 'ScenarioMarker';
 
   // MapContainer renders all Leaflet-compatible components as children
   return (
@@ -392,8 +402,10 @@ export function OutageMapView({
         />
       )}
       
-      {/* Render markers - clustering temporarily disabled due to React 18/19 compatibility */}
-      {renderMarkers()}
+      {/* Render scenario markers with native popups */}
+      {scenarios.map(scenario => (
+        <ScenarioMarker key={`marker-${scenario.id}`} scenario={scenario} />
+      ))}
     </MapContainer>
   );
 }
