@@ -33,22 +33,24 @@ export function KPICard({
   const emphasisStyles = {
     critical: 'border-destructive/40 bg-destructive/[0.02] hover:border-destructive/60 hover:bg-destructive/[0.04]',
     high: 'border-primary/30 bg-primary/[0.02] hover:border-primary/50 hover:bg-primary/[0.04]',
-    medium: 'border-border/60 hover:border-border hover:bg-muted/30',
-    low: 'border-border/40 hover:border-border/60 hover:bg-muted/20',
+    medium: 'border-amber-500/30 bg-amber-500/[0.02] hover:border-amber-500/50 hover:bg-amber-500/[0.04]',
+    low: 'border-slate-500/40 hover:border-slate-500/60 hover:bg-slate-500/[0.04]',
   };
 
+  // Industrial color palette for icons
   const iconStyles = {
-    critical: 'bg-destructive/10 text-destructive',
-    high: 'bg-primary/10 text-primary',
-    medium: 'bg-muted text-muted-foreground',
-    low: 'bg-muted/60 text-muted-foreground/80',
+    critical: 'bg-destructive/15 text-destructive',
+    high: 'bg-cyan-500/15 text-cyan-400',
+    medium: 'bg-amber-500/15 text-amber-400',
+    low: 'bg-slate-500/15 text-slate-400',
   };
 
+  // Consistent glow effect for all values
   const valueStyles = {
-    critical: 'text-destructive',
-    high: 'text-foreground',
-    medium: 'text-foreground',
-    low: 'text-muted-foreground',
+    critical: 'text-destructive drop-shadow-[0_0_8px_hsl(var(--destructive)/0.6)]',
+    high: 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]',
+    medium: 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]',
+    low: 'text-slate-300 drop-shadow-[0_0_8px_rgba(148,163,184,0.4)]',
   };
 
   return (
