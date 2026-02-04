@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Scenario, GeoArea } from '@/types/scenario';
@@ -393,22 +392,8 @@ export function OutageMapView({
         />
       )}
       
-      {/* Render markers - with or without clustering */}
-      {enableClustering && !showHeatmap ? (
-        <MarkerClusterGroup
-          chunkedLoading
-          iconCreateFunction={createClusterCustomIcon}
-          maxClusterRadius={60}
-          spiderfyOnMaxZoom={true}
-          showCoverageOnHover={false}
-          zoomToBoundsOnClick={true}
-          disableClusteringAtZoom={13}
-        >
-          {renderMarkers()}
-        </MarkerClusterGroup>
-      ) : (
-        renderMarkers()
-      )}
+      {/* Render markers - clustering temporarily disabled due to React 18/19 compatibility */}
+      {renderMarkers()}
     </MapContainer>
   );
 }
