@@ -1,8 +1,19 @@
 // Situation Report Types
 
+export type ReportStatus = 'draft' | 'approved' | 'rejected';
+
 export interface SituationReportSection {
   title: string;
   content: string[] | string;
+}
+
+export interface ApprovalMetadata {
+  status: ReportStatus;
+  approved_by?: string;
+  approved_at?: string;
+  rejected_by?: string;
+  rejected_at?: string;
+  reviewer_comments?: string;
 }
 
 export interface SituationReport {
@@ -23,6 +34,7 @@ export interface SituationReport {
     source_notes: string[];
   };
   disclaimer: string;
+  approval?: ApprovalMetadata;
 }
 
 export interface SituationReportRequest {
