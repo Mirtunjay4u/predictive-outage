@@ -38,9 +38,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEventStatusHistory } from '@/hooks/useEventStatusHistory';
+import { CustomerCommunicationsPack } from './CustomerCommunicationsPack';
 import { cn } from '@/lib/utils';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
-import type { SituationReport, ReportStatus, DeliveryChannel, AudienceType } from '@/types/situation-report';
+import type { SituationReport, ReportStatus, DeliveryChannel, AudienceType, CustomerCommsMetadata } from '@/types/situation-report';
 
 interface SituationReportContentProps {
   event: ScenarioWithIntelligence;
@@ -250,6 +251,14 @@ Use advisory language only. Decision support only. No operational instructions.`
     toast({ 
       description: 'Report sent successfully (demo).', 
       duration: 3000 
+    });
+  };
+
+  const handleCommsGenerated = (comms: CustomerCommsMetadata) => {
+    if (!report) return;
+    setReport({
+      ...report,
+      customer_comms: comms,
     });
   };
 
@@ -638,6 +647,15 @@ Use advisory language only. Decision support only. No operational instructions.`
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {/* Customer Communications Pack */}
+          {(report.approval?.status === 'approved' || report.approval?.status === 'sent') && (
+            <CustomerCommunicationsPack 
+              event={event} 
+              report={report} 
+              onCommsGenerated={handleCommsGenerated} 
+            />
           )}
 
           {/* Send Panel */}
