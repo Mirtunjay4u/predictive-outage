@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   FileText, 
   X, 
@@ -12,18 +12,22 @@ import {
   Clock,
   Shield,
   Activity,
-  FileWarning
+  FileWarning,
+  Ban,
+  ClipboardCheck,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEventStatusHistory } from '@/hooks/useEventStatusHistory';
 import { cn } from '@/lib/utils';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
-import type { SituationReport } from '@/types/situation-report';
+import type { SituationReport, ReportStatus } from '@/types/situation-report';
 
 interface SituationReportPanelProps {
   event: ScenarioWithIntelligence;
@@ -34,6 +38,8 @@ export function SituationReportPanel({ event, onClose }: SituationReportPanelPro
   const [report, setReport] = useState<SituationReport | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [reviewerComments, setReviewerComments] = useState('');
   
   const { data: statusHistory = [] } = useEventStatusHistory(event.id || null);
 
@@ -151,6 +157,9 @@ Use advisory language only. Decision support only. No operational instructions.`
           source_notes: data.source_notes || ['Event record', 'Status history timeline'],
         },
         disclaimer: data.disclaimer || 'Decision support only. This system does not access live SCADA, OMS, ADMS, or weather feeds.',
+        approval: {
+          status: 'draft',
+        },
       };
 
       setReport(situationReport);
@@ -159,6 +168,79 @@ Use advisory language only. Decision support only. No operational instructions.`
       setError(err instanceof Error ? err.message : 'Failed to generate situation report');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const approveReport = () => {
+    if (!report) return;
+    
+    setReport({
+      ...report,
+      approval: {
+        status: 'approved',
+        approved_by: 'Demo Operator',
+        approved_at: new Date().toISOString(),
+      },
+    });
+    
+    toast({ 
+      description: 'Report approved — ready for sending (when enabled)', 
+      duration: 3000 
+    });
+  };
+
+  const rejectReport = () => {
+    if (!report) return;
+    
+    setReport({
+      ...report,
+      approval: {
+        status: 'rejected',
+        rejected_by: 'Demo Operator',
+        rejected_at: new Date().toISOString(),
+        reviewer_comments: reviewerComments || undefined,
+      },
+    });
+    
+    setShowRejectDialog(false);
+    setReviewerComments('');
+    
+    toast({ 
+      description: 'Report rejected — changes required', 
+      duration: 3000 
+    });
+  };
+
+  const getStatusBadgeStyle = (status: ReportStatus) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
+      case 'rejected':
+        return 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30';
+      default:
+        return 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30';
+    }
+  };
+
+  const getStatusLabel = (status: ReportStatus) => {
+    switch (status) {
+      case 'approved':
+        return 'Approved — Ready for Sending';
+      case 'rejected':
+        return 'Rejected — Changes Required';
+      default:
+        return 'Draft — Awaiting Approval';
+    }
+  };
+
+  const getStatusIcon = (status: ReportStatus) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case 'rejected':
+        return <Ban className="w-3.5 h-3.5" />;
+      default:
+        return <Clock className="w-3.5 h-3.5" />;
     }
   };
 
@@ -306,11 +388,22 @@ Use advisory language only. Decision support only. No operational instructions.`
           {/* Report Preview */}
           {report && (
             <div className="space-y-5">
+              {/* Status Badge */}
+              <div className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-lg border',
+                getStatusBadgeStyle(report.approval?.status || 'draft')
+              )}>
+                {getStatusIcon(report.approval?.status || 'draft')}
+                <span className="text-sm font-medium">
+                  {getStatusLabel(report.approval?.status || 'draft')}
+                </span>
+              </div>
+
               {/* Title & Mode Banner */}
               <div>
                 <h3 className="text-lg font-bold text-foreground mb-2">{report.title}</h3>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-600">
+                  <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                     {report.mode_banner}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
@@ -447,43 +540,181 @@ Use advisory language only. Decision support only. No operational instructions.`
                   {report.disclaimer}
                 </p>
               </div>
+
+              {/* Approval Log */}
+              {report.approval && (report.approval.status !== 'draft') && (
+                <section>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <History className="w-3.5 h-3.5" />
+                    Approval Log
+                  </h4>
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Status</span>
+                      <Badge 
+                        variant="outline" 
+                        className={cn('text-[10px]', getStatusBadgeStyle(report.approval.status))}
+                      >
+                        {report.approval.status.toUpperCase()}
+                      </Badge>
+                    </div>
+                    {report.approval.approved_by && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Approved By</span>
+                        <span className="text-xs font-medium text-foreground">{report.approval.approved_by}</span>
+                      </div>
+                    )}
+                    {report.approval.approved_at && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Approved At</span>
+                        <span className="text-xs text-foreground">{format(new Date(report.approval.approved_at), 'MMM d, h:mm a')}</span>
+                      </div>
+                    )}
+                    {report.approval.rejected_by && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Rejected By</span>
+                        <span className="text-xs font-medium text-foreground">{report.approval.rejected_by}</span>
+                      </div>
+                    )}
+                    {report.approval.rejected_at && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Rejected At</span>
+                        <span className="text-xs text-foreground">{format(new Date(report.approval.rejected_at), 'MMM d, h:mm a')}</span>
+                      </div>
+                    )}
+                    {report.approval.reviewer_comments && (
+                      <div className="pt-2 border-t border-border">
+                        <span className="text-xs text-muted-foreground block mb-1">Reviewer Notes</span>
+                        <p className="text-xs text-foreground italic">"{report.approval.reviewer_comments}"</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+
+          {/* Reject Dialog */}
+          {showRejectDialog && (
+            <div className="p-4 rounded-lg bg-muted border border-border space-y-3">
+              <div className="flex items-center gap-2">
+                <Ban className="w-4 h-4 text-destructive" />
+                <span className="text-sm font-medium text-foreground">Request Changes / Reject</span>
+              </div>
+              <Textarea
+                placeholder="Optional: Add reviewer comments..."
+                value={reviewerComments}
+                onChange={(e) => setReviewerComments(e.target.value)}
+                className="min-h-[80px] text-sm"
+              />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowRejectDialog(false);
+                    setReviewerComments('');
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={rejectReport}
+                  className="flex-1 gap-1"
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  Confirm Rejection
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </ScrollArea>
 
       {/* Footer Actions */}
-      <footer className="flex-shrink-0 p-4 border-t border-border bg-muted/30 space-y-2">
+      <footer className="flex-shrink-0 p-4 border-t border-border bg-muted/30 space-y-3">
         {report ? (
           <>
+            {/* Approval Actions - Only visible for Draft status */}
+            {report.approval?.status === 'draft' && !showRejectDialog && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRejectDialog(true)}
+                  className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  <Ban className="w-4 h-4" />
+                  Request Changes
+                </Button>
+                <Button
+                  onClick={approveReport}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <ClipboardCheck className="w-4 h-4" />
+                  Approve Report
+                </Button>
+              </div>
+            )}
+
+            {/* Approved state actions */}
+            {report.approval?.status === 'approved' && (
+              <div className="space-y-2">
+                <Button
+                  disabled
+                  className="w-full gap-2 opacity-50 cursor-not-allowed"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Send Report (Coming Soon)
+                </Button>
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Report approved — sending functionality not yet enabled
+                </p>
+              </div>
+            )}
+
+            {/* Rejected state - allow regenerate */}
+            {report.approval?.status === 'rejected' && (
+              <div className="space-y-2">
+                <Button
+                  onClick={() => {
+                    setReport(null);
+                    setError(null);
+                  }}
+                  variant="outline"
+                  className="w-full gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Generate New Report
+                </Button>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* Utility Actions */}
             <div className="grid grid-cols-2 gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={discardDraft}
-                className="gap-2"
+                className="gap-2 text-muted-foreground hover:text-foreground"
               >
-                <XCircle className="w-4 h-4" />
-                Discard Draft
+                <XCircle className="w-3.5 h-3.5" />
+                Discard
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
+                size="sm"
                 onClick={copyReportToClipboard}
-                className="gap-2"
+                className="gap-2 text-muted-foreground hover:text-foreground"
               >
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3.5 h-3.5" />
                 Copy Report
               </Button>
             </div>
-            <Button
-              disabled
-              className="w-full gap-2 opacity-50 cursor-not-allowed"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Approve for Sending
-            </Button>
-            <p className="text-[10px] text-muted-foreground text-center">
-              Sending functionality not yet enabled — draft preview only
-            </p>
           </>
         ) : (
           <Button
