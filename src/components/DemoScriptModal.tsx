@@ -12,24 +12,32 @@ import { cn } from '@/lib/utils';
 
 const demoSteps = [
   {
-    title: 'Browse Scenarios',
-    description: 'Navigate to the Scenarios page and explore the list. Toggle between table and card views, and use filters to narrow down results.',
+    title: 'Review the Operations Dashboard',
+    description: 'Start on the Dashboard to see active event KPIs, high-priority alerts, and system-wide metrics at a glance.',
   },
   {
-    title: 'Create a New Scenario',
-    description: 'Click "New Scenario" to open the creation form. Fill in the details including name, description, lifecycle stage, and operator role.',
+    title: 'Explore the Events List',
+    description: 'Navigate to Events to browse outage events. Toggle between table and card views, filter by lifecycle stage, priority, or outage type.',
   },
   {
-    title: 'Edit an Existing Scenario',
-    description: 'Click on any scenario row/card to open the edit drawer. Modify fields and save changes to see real-time updates.',
+    title: 'Open an Event & View Details',
+    description: 'Click any event to open the Event Details drawer. Review ETR confidence bands, critical-load runway, and crew assignments.',
   },
   {
-    title: 'Explore AI Copilot',
-    description: 'With a scenario selected, open the Copilot panel on the right. Try suggested prompts like "Summarize scenario" or "Find risks".',
+    title: 'Generate a Situation Report',
+    description: 'From Event Details, open the Situation Report panel. Generate an AI-assisted SitRep, review the content, and approve it.',
   },
   {
-    title: 'Review Analytics & Settings',
-    description: 'Visit the Analytics page for usage insights, and check Settings to see the Dataverse integration placeholder for Phase 2.',
+    title: 'Create Customer Communications',
+    description: 'With an approved SitRep, generate the Customer Communications Pack — SMS, Email, and Web Banner drafts in utility-safe language.',
+  },
+  {
+    title: 'Visualize on the Outage Map',
+    description: 'Navigate to the Outage Map to see events geographically. Select events, view feeder zones, and explore crew positions.',
+  },
+  {
+    title: 'Review Analytics & Copilot Studio',
+    description: 'Visit Analytics for operational insights, and explore Copilot Studio for AI-assisted event analysis and recommendations.',
   },
 ];
 
