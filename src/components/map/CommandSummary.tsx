@@ -45,7 +45,7 @@ export function CommandSummary({
   }, [scenarios]);
 
   return (
-    <div className="flex items-stretch gap-3">
+    <div className="flex items-stretch gap-2 flex-wrap">
       {/* Visible Events Card */}
       <KPICard
         icon={<Eye className="w-4 h-4" />}
@@ -81,7 +81,7 @@ export function CommandSummary({
       />
 
       {/* Demo indicator */}
-      <div className="flex items-center pl-2">
+      <div className="flex items-center pl-2 ml-auto">
         <span className="text-[10px] text-muted-foreground/60 italic">Demo data</span>
       </div>
     </div>
@@ -104,11 +104,11 @@ function KPICard({ icon, label, value, subValue, onClick, isActive, variant = 'd
   const isClickable = !!onClick;
   
   const baseClasses = cn(
-    "flex items-center gap-3 px-4 py-2 rounded-lg border transition-all min-w-[140px]",
+    "flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all min-w-[130px]",
     isClickable && "cursor-pointer",
     isActive && variant === 'danger' && "border-destructive/50 bg-destructive/10",
     isActive && variant === 'primary' && "border-primary/50 bg-primary/10",
-    !isActive && "border-border bg-card/80 backdrop-blur-sm",
+    !isActive && "border-border/50 bg-card/80 backdrop-blur-sm",
     isClickable && !isActive && variant === 'danger' && "hover:border-destructive/40 hover:bg-destructive/5",
     isClickable && !isActive && variant === 'primary' && "hover:border-primary/40 hover:bg-primary/5",
     isClickable && !isActive && variant === 'default' && "hover:border-border hover:bg-muted/50"
@@ -127,9 +127,9 @@ function KPICard({ icon, label, value, subValue, onClick, isActive, variant = 'd
         {icon}
       </div>
       <div className="text-left min-w-0">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wide leading-none mb-0.5">{label}</p>
+        <p className="text-[9px] text-muted-foreground uppercase tracking-wide leading-none mb-0.5">{label}</p>
         <p className={cn(
-          "text-base font-bold leading-tight truncate",
+          "text-sm font-bold leading-tight truncate",
           variant === 'danger' && (typeof value === 'number' && value > 0) && "text-destructive",
           variant === 'primary' && "text-primary",
           variant === 'default' && "text-foreground"

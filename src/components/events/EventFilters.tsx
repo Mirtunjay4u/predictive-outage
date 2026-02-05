@@ -38,34 +38,36 @@ export function EventFilters({
   onCreateClick,
 }: EventFiltersProps) {
   return (
-    <div className="flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-3 flex-wrap p-3 bg-card rounded-xl border border-border/50 shadow-sm">
+      <div className="flex items-center gap-2 flex-wrap">
         {/* View Toggle */}
         <ToggleGroup 
           type="single" 
           value={viewMode} 
           onValueChange={(v) => v && onViewModeChange(v as 'table' | 'cards')}
-          className="bg-muted/60 p-1 rounded-lg border border-border/50 shadow-sm"
+          className="bg-muted/60 p-1 rounded-lg border border-border/50"
         >
           <ToggleGroupItem 
             value="table" 
             aria-label="Table view" 
-            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all"
+            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all h-8 w-8"
           >
             <List className="w-4 h-4" />
           </ToggleGroupItem>
           <ToggleGroupItem 
             value="cards" 
             aria-label="Card view" 
-            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all"
+            className="data-[state=on]:bg-background data-[state=on]:shadow-sm transition-all h-8 w-8"
           >
             <LayoutGrid className="w-4 h-4" />
           </ToggleGroupItem>
         </ToggleGroup>
 
+        <div className="w-px h-6 bg-border/50 hidden sm:block" />
+
         {/* Stage Filter */}
         <Select value={stageFilter} onValueChange={onStageFilterChange}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[130px] h-9 text-sm">
             <SelectValue placeholder="All Stages" />
           </SelectTrigger>
           <SelectContent>
@@ -77,7 +79,7 @@ export function EventFilters({
 
         {/* Lifecycle Filter */}
         <Select value={lifecycleFilter} onValueChange={onLifecycleFilterChange}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[140px] h-9 text-sm">
             <SelectValue placeholder="All Lifecycles" />
           </SelectTrigger>
           <SelectContent>
@@ -90,7 +92,7 @@ export function EventFilters({
 
         {/* Outage Type Filter */}
         <Select value={outageTypeFilter} onValueChange={onOutageTypeFilterChange}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-[140px] h-9 text-sm">
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>
@@ -105,7 +107,7 @@ export function EventFilters({
       {/* Create Button */}
       <Button 
         onClick={onCreateClick} 
-        className="gap-2 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+        className="gap-2 h-9 shadow-sm hover:shadow-md transition-all duration-200"
       >
         <Plus className="w-4 h-4" />
         New Event
