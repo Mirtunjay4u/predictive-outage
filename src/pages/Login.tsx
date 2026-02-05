@@ -37,17 +37,22 @@ export default function Login() {
                 <Bot className="w-7 h-7" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Grid Resilience Command Center</h1>
-                <p className="text-sm text-primary-foreground/80">AI-assisted outage awareness</p>
+                <h1 className="text-2xl font-bold">Operator Copilot</h1>
+                <p className="text-sm text-primary-foreground/80">Predictive Outage Management</p>
               </div>
             </div>
             
             <h2 className="text-4xl font-bold leading-tight mb-6">
-              Predictive outage management<br />powered by AI
+              Grid Resilience Command Center
             </h2>
             
-            <p className="text-lg text-primary-foreground/80 max-w-md">
-              AI-assisted outage awareness, prioritization, and post-event insight for grid operations.
+            <p className="text-lg text-primary-foreground/80 max-w-md mb-4">
+              AI-assisted event prioritization, restoration decision support, and customer communications.
+            </p>
+            
+            <p className="text-base text-primary-foreground/70 max-w-md">
+              Track outage events, ETR confidence bands, and critical-load runway —<br />
+              and generate operator-approved updates, reports, and escalation messages.
             </p>
           </motion.div>
         </div>
@@ -66,9 +71,9 @@ export default function Login() {
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
                 <Bot className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">Grid Resilience Command Center</span>
+              <span className="text-xl font-bold">Operator Copilot</span>
             </div>
-            <span className="text-xs text-muted-foreground">AI-assisted outage awareness, prioritization, and post-event insight</span>
+            <span className="text-xs text-muted-foreground text-center">AI-assisted event prioritization, restoration decision support, and customer communications</span>
           </div>
 
           <Card className="shadow-elevated border-border/50">
@@ -130,7 +135,11 @@ export default function Login() {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground mt-4">
-                Demo mode provides full access with sample data
+                Explore the platform using synthetic demo events (no live system access).
+              </p>
+              
+              <p className="text-[10px] text-center text-muted-foreground/70 mt-6 pt-4 border-t border-border">
+                Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
               </p>
             </CardContent>
           </Card>
