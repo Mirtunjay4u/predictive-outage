@@ -9,8 +9,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import builderPhoto from '@/assets/builder-photo.png';
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -47,6 +48,7 @@ export function TopBar({ onSearch }: TopBarProps) {
         {/* Builder Identity */}
         <div className="flex items-center gap-2 pl-3 border-l border-border/50">
           <Avatar className="w-7 h-7">
+            <AvatarImage src={builderPhoto} alt="Mirtunjay Kumar" className="object-cover" />
             <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
               MK
             </AvatarFallback>
