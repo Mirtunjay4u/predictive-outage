@@ -51,8 +51,8 @@ export function AppSidebar() {
               exit={{ opacity: 0 }}
               className="flex flex-col min-w-0"
             >
-              <span className="text-sm font-bold text-sidebar-foreground leading-tight">Grid Resilience Command Center</span>
-              <span className="text-[10px] text-sidebar-foreground/60 leading-tight mt-0.5">AI-assisted outage awareness, prioritization, and post-event insight</span>
+              <span className="text-sm font-bold text-sidebar-foreground leading-tight">Operator Copilot</span>
+              <span className="text-[10px] text-sidebar-foreground/60 leading-tight mt-0.5">Predictive Outage Management</span>
             </motion.div>
           )}
         </div>
