@@ -72,7 +72,7 @@ export function EventFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Stages</SelectItem>
-            <SelectItem value="active">Activated</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
