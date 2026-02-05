@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import AppPage from "./pages/AppPage";
 import CopilotStudio from "./pages/CopilotStudio";
 import OutageMap from "./pages/OutageMap";
+import EventDetails from "./pages/EventDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/events" element={<Events />} />
         <Route path="/outage-map" element={<OutageMap />} />
+        <Route path="/event/:id" element={<EventDetails />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
