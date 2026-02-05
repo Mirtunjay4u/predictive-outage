@@ -18,6 +18,7 @@ import {
   Activity,
   ChevronDown,
   ChevronUp,
+  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
+import { SituationReportPanel } from "@/components/map/SituationReportPanel";
 import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
 interface EventDetailDrawerProps {
@@ -40,6 +42,7 @@ interface EventDetailDrawerProps {
 
 export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }: EventDetailDrawerProps) {
   const navigate = useNavigate();
+  const [showSituationReport, setShowSituationReport] = useState(false);
   const { data: assets = [] } = useAssets();
   const { data: linkedAssetIds = [] } = useEventAssets(event?.id || null);
 
@@ -180,6 +183,19 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                     
                     {/* ETR Movement History Explainer */}
                     <EtrMovementExplainer event={event} />
+                    
+                    <Separator className="my-2" />
+                    
+                    {/* Generate Situation Report Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 text-xs"
+                      onClick={() => setShowSituationReport(true)}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Generate Situation Report
+                    </Button>
                   </div>
                 </section>
                 
@@ -307,6 +323,14 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
               </p>
             </footer>
           </motion.div>
+          
+          {/* Situation Report Panel */}
+          {showSituationReport && event && (
+            <SituationReportPanel
+              event={event}
+              onClose={() => setShowSituationReport(false)}
+            />
+          )}
         </>
       )}
     </AnimatePresence>
