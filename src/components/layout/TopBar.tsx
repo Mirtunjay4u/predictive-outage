@@ -44,6 +44,19 @@ export function TopBar({ onSearch }: TopBarProps) {
           <span className="text-xs font-medium text-warning">Demo Mode</span>
         </div>
 
+        {/* Builder Identity */}
+        <div className="flex items-center gap-2 pl-3 border-l border-border/50">
+          <Avatar className="w-7 h-7">
+            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+              MK
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-foreground leading-tight">Mirtunjay Kumar</span>
+            <span className="text-[10px] text-muted-foreground leading-tight">Solution Builder (Demo)</span>
+          </div>
+        </div>
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors">
           <Bell className="w-5 h-5" />

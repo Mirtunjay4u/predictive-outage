@@ -25,6 +25,13 @@ export function AppLayout() {
         >
           <Outlet />
         </main>
+        
+        {/* Persistent Demo Footer */}
+        <footer className="h-8 border-t border-border/50 bg-muted/30 flex items-center justify-center px-4">
+          <p className="text-[10px] text-muted-foreground tracking-wide">
+            Prototype Demo • Synthetic Data • Decision Support Only • No SCADA/OMS/ADMS Integration
+          </p>
+        </footer>
       </div>
     </div>
   );
