@@ -30,7 +30,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
-import { SituationReportPanel } from "@/components/map/SituationReportPanel";
 import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
 interface EventDetailDrawerProps {
@@ -42,7 +41,6 @@ interface EventDetailDrawerProps {
 
 export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }: EventDetailDrawerProps) {
   const navigate = useNavigate();
-  const [showSituationReport, setShowSituationReport] = useState(false);
   const { data: assets = [] } = useAssets();
   const { data: linkedAssetIds = [] } = useEventAssets(event?.id || null);
 
@@ -58,6 +56,12 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
     if (!event) return;
     onOpenChange(false);
     navigate(`/event/${event.id}`);
+  };
+
+  const handleGenerateSituationReport = () => {
+    if (!event) return;
+    onOpenChange(false);
+    navigate(`/event/${event.id}/situation-report`);
   };
 
   const getPriorityBadge = (priority: string | null) => {
@@ -192,7 +196,7 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                     variant="default"
                     size="default"
                     className="w-full gap-2 bg-primary/90 hover:bg-primary"
-                    onClick={() => setShowSituationReport(true)}
+                    onClick={handleGenerateSituationReport}
                   >
                     <FileText className="w-4 h-4" />
                     Generate Situation Report
@@ -326,14 +330,6 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
               </p>
             </footer>
           </motion.div>
-          
-          {/* Situation Report Panel */}
-          {showSituationReport && event && (
-            <SituationReportPanel
-              event={event}
-              onClose={() => setShowSituationReport(false)}
-            />
-          )}
         </>
       )}
     </AnimatePresence>
