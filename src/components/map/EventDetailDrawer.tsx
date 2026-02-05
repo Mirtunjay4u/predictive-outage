@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
-import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info, Cable, Box, ExternalLink, Gauge, ShieldAlert, Activity } from 'lucide-react';
+import { X, Bot, MapPin, Clock, Users, Zap, AlertTriangle, Info, Cable, Box, ExternalLink, Gauge, ShieldAlert, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { EtrRunwayExplainer } from '@/components/map/EtrRunwayExplainer';
 import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from '@/types/scenario';
@@ -256,6 +258,7 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
 // ===== ETR Confidence Section =====
 
 function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
+  const [isOpen, setIsOpen] = useState(true);
   const hasEtrData = event.etr_earliest || event.etr_latest || event.etr_confidence;
   
   if (!hasEtrData) return null;
@@ -294,69 +297,82 @@ function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
   const uncertaintyDrivers = event.etr_uncertainty_drivers || [];
 
   return (
-    <section>
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-        <Gauge className="w-3.5 h-3.5" />
-        ETR Confidence
-      </h3>
-      <div className="space-y-3">
-        {/* ETR Band */}
-        {(event.etr_earliest || event.etr_latest) && (
-          <div className="p-3 rounded-lg bg-muted/50 border border-border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Restoration Window</span>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="w-full flex items-center justify-between gap-2 py-2 group hover:bg-muted/30 -mx-2 px-2 rounded-lg transition-colors">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <Gauge className="w-3.5 h-3.5" />
+            ETR Confidence
+          </h3>
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          )}
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        <div className="space-y-3">
+          {/* ETR Band */}
+          {(event.etr_earliest || event.etr_latest) && (
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Restoration Window</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-mono text-foreground">{formatEtrTime(event.etr_earliest)}</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="font-mono text-foreground">{formatEtrTime(event.etr_latest)}</span>
+              </div>
+              {event.etr_band_hours !== null && (
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  Band width: {event.etr_band_hours.toFixed(1)} hrs
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-mono text-foreground">{formatEtrTime(event.etr_earliest)}</span>
-              <span className="text-muted-foreground">→</span>
-              <span className="font-mono text-foreground">{formatEtrTime(event.etr_latest)}</span>
-            </div>
-            {event.etr_band_hours !== null && (
-              <p className="text-[10px] text-muted-foreground mt-1.5">
-                Band width: {event.etr_band_hours.toFixed(1)} hrs
-              </p>
+          )}
+
+          {/* Badges Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {event.etr_confidence && (
+              <Badge variant="outline" className={`text-[10px] ${getConfidenceBadgeStyle(event.etr_confidence)}`}>
+                Confidence: {event.etr_confidence}
+              </Badge>
+            )}
+            {event.etr_risk_level && (
+              <Badge variant="outline" className={`text-[10px] ${getRiskBadgeStyle(event.etr_risk_level)}`}>
+                Risk: {event.etr_risk_level}
+              </Badge>
             )}
           </div>
-        )}
 
-        {/* Badges Row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {event.etr_confidence && (
-            <Badge variant="outline" className={`text-[10px] ${getConfidenceBadgeStyle(event.etr_confidence)}`}>
-              Confidence: {event.etr_confidence}
-            </Badge>
-          )}
-          {event.etr_risk_level && (
-            <Badge variant="outline" className={`text-[10px] ${getRiskBadgeStyle(event.etr_risk_level)}`}>
-              Risk: {event.etr_risk_level}
-            </Badge>
+          {/* Uncertainty Drivers */}
+          {uncertaintyDrivers.length > 0 && (
+            <div className="pt-2">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-2">Uncertainty Factors</span>
+              <div className="flex flex-wrap gap-1.5">
+                {uncertaintyDrivers.map((driver, idx) => (
+                  <span 
+                    key={idx} 
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-muted/70 text-muted-foreground border border-border"
+                  >
+                    {driver}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Uncertainty Drivers */}
-        {uncertaintyDrivers.length > 0 && (
-          <div className="pt-2">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-2">Uncertainty Factors</span>
-            <div className="flex flex-wrap gap-1.5">
-              {uncertaintyDrivers.map((driver, idx) => (
-                <span 
-                  key={idx} 
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-muted/70 text-muted-foreground border border-border"
-                >
-                  {driver}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
 // ===== Critical Load Section =====
 
 function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
+  const [isOpen, setIsOpen] = useState(true);
+
   const getRunwayStatusStyle = (status: CriticalRunwayStatus | null) => {
     switch (status) {
       case 'NORMAL':
@@ -373,72 +389,85 @@ function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
   const criticalLoadTypes = event.critical_load_types || [];
 
   return (
-    <section>
-      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-        <ShieldAlert className="w-3.5 h-3.5" />
-        Critical Load Continuity
-      </h3>
-
-      {!event.has_critical_load ? (
-        <p className="text-sm text-muted-foreground italic">
-          No critical load flagged for this event.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {/* Critical Load Types */}
-          {criticalLoadTypes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {criticalLoadTypes.map((loadType, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className="text-[10px] bg-primary/5 text-primary border-primary/20"
-                >
-                  {loadType}
-                </Badge>
-              ))}
-            </div>
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <button className="w-full flex items-center justify-between gap-2 py-2 group hover:bg-muted/30 -mx-2 px-2 rounded-lg transition-colors">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            Critical Load Continuity
+            {event.requires_escalation && (
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-warning text-[8px] text-warning-foreground font-bold">!</span>
+            )}
+          </h3>
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
           )}
-
-          {/* Runtime Stats */}
-          <div className="grid grid-cols-2 gap-2">
-            {event.backup_runtime_remaining_hours !== null && (
-              <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Hours Remaining</span>
-                <span className="text-lg font-bold text-foreground">
-                  {event.backup_runtime_remaining_hours.toFixed(1)}
-                </span>
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        {!event.has_critical_load ? (
+          <p className="text-sm text-muted-foreground italic">
+            No critical load flagged for this event.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {/* Critical Load Types */}
+            {criticalLoadTypes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {criticalLoadTypes.map((loadType, idx) => (
+                  <Badge 
+                    key={idx} 
+                    variant="outline" 
+                    className="text-[10px] bg-primary/5 text-primary border-primary/20"
+                  >
+                    {loadType}
+                  </Badge>
+                ))}
               </div>
             )}
-            {event.critical_escalation_threshold_hours !== null && (
-              <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Escalation Threshold</span>
-                <span className="text-lg font-bold text-foreground">
-                  {event.critical_escalation_threshold_hours.toFixed(1)}
-                </span>
+
+            {/* Runtime Stats */}
+            <div className="grid grid-cols-2 gap-2">
+              {event.backup_runtime_remaining_hours !== null && (
+                <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Hours Remaining</span>
+                  <span className="text-lg font-bold text-foreground">
+                    {event.backup_runtime_remaining_hours.toFixed(1)}
+                  </span>
+                </div>
+              )}
+              {event.critical_escalation_threshold_hours !== null && (
+                <div className="p-2.5 rounded-lg bg-muted/50 border border-border">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide block">Escalation Threshold</span>
+                  <span className="text-lg font-bold text-foreground">
+                    {event.critical_escalation_threshold_hours.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Status Badge */}
+            {event.critical_runway_status && (
+              <Badge variant="outline" className={`text-[10px] ${getRunwayStatusStyle(event.critical_runway_status)}`}>
+                Status: {event.critical_runway_status.replace('_', ' ')}
+              </Badge>
+            )}
+
+            {/* Escalation Warning */}
+            {event.requires_escalation && (
+              <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 flex items-start gap-2">
+                <Activity className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-warning">
+                  <span className="font-medium">Escalation required</span> — operator review needed.
+                </p>
               </div>
             )}
           </div>
-
-          {/* Status Badge */}
-          {event.critical_runway_status && (
-            <Badge variant="outline" className={`text-[10px] ${getRunwayStatusStyle(event.critical_runway_status)}`}>
-              Status: {event.critical_runway_status.replace('_', ' ')}
-            </Badge>
-          )}
-
-          {/* Escalation Warning */}
-          {event.requires_escalation && (
-            <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 flex items-start gap-2">
-              <Activity className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-warning">
-                <span className="font-medium">Escalation required</span> — operator review needed.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-    </section>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 

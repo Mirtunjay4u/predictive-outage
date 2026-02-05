@@ -141,7 +141,7 @@ export default function Scenarios() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            className="mb-4"
           >
             <h1 className="text-2xl font-bold mb-1">Events</h1>
             <p className="text-muted-foreground">
@@ -154,13 +154,13 @@ export default function Scenarios() {
             <motion.div
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 flex items-center gap-2 text-sm"
+              className="mb-3 flex items-center gap-2 text-sm bg-muted/40 rounded-lg px-3 py-2 border border-border/50"
             >
               <span className="text-muted-foreground">Filtered by:</span>
               <span className="font-medium">{activeFilters.join(' • ')}</span>
               <button
                 onClick={clearFilters}
-                className="ml-2 text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                className="ml-auto text-xs text-muted-foreground hover:text-foreground underline transition-colors"
               >
                 Clear filters
               </button>
@@ -172,7 +172,7 @@ export default function Scenarios() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="mb-6"
+            className="mb-4"
           >
             <EventFilters
               viewMode={viewMode}
