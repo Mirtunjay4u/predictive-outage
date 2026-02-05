@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
 import { format } from 'date-fns';
-import { KPICard } from '@/components/dashboard/KPICard';
-import { HighPriorityAlert } from '@/components/dashboard/HighPriorityAlert';
+import { FlippableKPICard } from '@/components/dashboard/FlippableKPICard';
+import { FlippableHighPriorityAlert } from '@/components/dashboard/FlippableHighPriorityAlert';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 
@@ -122,6 +122,7 @@ export default function Dashboard() {
       icon: FileText,
       tooltip: KPI_TOOLTIPS['Total Events'],
       breakdown: undefined,
+      scenarios: scenarios,
       filter: null,
       emphasis: 'low' as const,
     },
@@ -131,6 +132,7 @@ export default function Dashboard() {
       icon: Clock,
       tooltip: KPI_TOOLTIPS['Pre-Event'],
       breakdown: getOutageBreakdown(preEventScenarios),
+      scenarios: preEventScenarios,
       filter: 'Pre-Event',
       emphasis: 'medium' as const,
     },
@@ -140,6 +142,7 @@ export default function Dashboard() {
       icon: Activity,
       tooltip: KPI_TOOLTIPS['Active Events'],
       breakdown: getOutageBreakdown(activeScenarios),
+      scenarios: activeScenarios,
       filter: 'Event',
       emphasis: 'high' as const,
     },
@@ -149,6 +152,7 @@ export default function Dashboard() {
       icon: AlertTriangle,
       tooltip: KPI_TOOLTIPS['High Priority'],
       breakdown: getOutageBreakdown(highPriorityScenarios),
+      scenarios: highPriorityScenarios,
       filter: 'Event&priority=high',
       emphasis: 'critical' as const,
     },
@@ -158,6 +162,7 @@ export default function Dashboard() {
       icon: CheckCircle,
       tooltip: KPI_TOOLTIPS['Post-Event'],
       breakdown: getOutageBreakdown(postEventScenarios),
+      scenarios: postEventScenarios,
       filter: 'Post-Event',
       emphasis: 'low' as const,
     },
@@ -225,8 +230,9 @@ export default function Dashboard() {
 
       {/* High Priority Alert Banner */}
       {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && !alertDismissed && (
-        <HighPriorityAlert
+        <FlippableHighPriorityAlert
           count={stats.highPriority}
+          scenarios={highPriorityScenarios}
           onView={() => navigate('/events?lifecycle=Event&priority=high')}
           onDismiss={() => setAlertDismissed(true)}
         />
@@ -236,13 +242,14 @@ export default function Dashboard() {
       <section aria-label="Key Performance Indicators">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
           {kpiCards.map((card) => (
-            <KPICard
+            <FlippableKPICard
               key={card.label}
               label={card.label}
               value={card.value}
               icon={card.icon}
               tooltip={card.tooltip}
               breakdown={card.breakdown}
+              scenarios={card.scenarios}
               emphasis={card.emphasis}
               onClick={() => handleTileClick(card.filter)}
               onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
