@@ -16,6 +16,7 @@ interface BreakdownItem {
 
 interface FlippableKPICardProps {
   label: string;
+  subtitle?: string;
   value: number;
   icon: LucideIcon;
   tooltip: string;
@@ -28,6 +29,7 @@ interface FlippableKPICardProps {
 
 export function FlippableKPICard({
   label,
+  subtitle,
   value,
   icon: Icon,
   tooltip,
@@ -72,7 +74,7 @@ export function FlippableKPICard({
 
   return (
     <div
-      className="relative h-[180px] group"
+      className="relative h-[200px] group"
       style={{ perspective: '1000px' }}
     >
       <motion.div
@@ -103,50 +105,61 @@ export function FlippableKPICard({
                 aria-label={`${label}: ${value} events. Click to flip for details.`}
               >
                 <CardContent className="p-5 h-full flex flex-col">
-                  <div className="flex items-start justify-between gap-4 flex-1">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70 mb-1.5">
-                        {label}
-                      </p>
-                      <p className={cn(
-                        'text-3xl font-semibold tracking-tight tabular-nums',
-                        valueStyles[emphasis]
-                      )}>
-                        {value}
-                      </p>
-                    </div>
-                    <div className={cn(
-                      'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                      iconStyles[emphasis]
+                  {/* Icon positioned top-right, subtle */}
+                  <div className={cn(
+                    'absolute top-4 right-4 w-8 h-8 rounded-md flex items-center justify-center opacity-60',
+                    iconStyles[emphasis]
+                  )}>
+                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-10">
+                    {/* Title - Medium weight */}
+                    <p className="text-xs font-medium tracking-wide text-muted-foreground/80 mb-2 leading-tight">
+                      {label}
+                    </p>
+                    
+                    {/* Metric Number - Bold, most prominent */}
+                    <p className={cn(
+                      'text-4xl font-bold tracking-tight tabular-nums leading-none',
+                      valueStyles[emphasis]
                     )}>
-                      <Icon className="w-5 h-5" strokeWidth={1.75} />
-                    </div>
+                      {value}
+                    </p>
+                    
+                    {/* Subtitle - Regular, muted */}
+                    {subtitle && (
+                      <p className="text-[10px] text-muted-foreground/50 font-normal mt-2 leading-relaxed line-clamp-2">
+                        {subtitle}
+                      </p>
+                    )}
                   </div>
 
                   {breakdown && breakdown.length > 0 && (
-                    <div className="mt-auto pt-3 border-t border-border/30">
-                      <div className="space-y-0.5">
+                    <div className="mt-auto pt-3 border-t border-border/20">
+                      <div className="space-y-1">
                         {breakdown.slice(0, 2).map(({ type, count }) => (
                           <div
                             key={type}
-                            className="flex items-center justify-between text-xs text-muted-foreground/60"
+                            className="flex items-center justify-between text-[11px] text-muted-foreground/50 leading-relaxed"
                           >
                             <span className="truncate">• {type}</span>
-                            <span className="ml-2 tabular-nums font-medium">{count}</span>
+                            <span className="ml-2 tabular-nums font-medium text-muted-foreground/70">{count}</span>
                           </div>
                         ))}
                         {breakdown.length > 2 && (
-                          <p className="text-[10px] text-muted-foreground/50 pt-1">
-                            +{breakdown.length - 2} more • Click to flip
+                          <p className="text-[9px] text-muted-foreground/40 pt-1">
+                            +{breakdown.length - 2} more
                           </p>
                         )}
                       </div>
                     </div>
                   )}
 
-                  {/* Flip hint */}
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-60 transition-opacity">
-                    <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
+                  {/* Flip hint - clearer cue */}
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-50 transition-opacity">
+                    <span className="text-[9px] text-muted-foreground">Click to drill down</span>
+                    <RotateCcw className="w-3 h-3 text-muted-foreground" />
                   </div>
                 </CardContent>
               </Card>

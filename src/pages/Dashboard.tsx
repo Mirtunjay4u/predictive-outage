@@ -10,12 +10,33 @@ import { FlippableHighPriorityAlert } from '@/components/dashboard/FlippableHigh
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 
-const KPI_TOOLTIPS: Record<string, string> = {
-  'Total Events': 'All tracked outage and risk events across their lifecycle.',
-  'Pre-Event': 'Events under monitoring or preparedness before outages occur.',
-  'Active Events': 'Ongoing outage or incident events requiring operational attention.',
-  'High Priority': 'Critical active events impacting safety, hospitals, or large customer counts.',
-  'Post-Event': 'Completed events under review or analysis.',
+// KPI card configuration with industrial-grade terminology
+const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
+  'Total Events': {
+    title: 'All Tracked Events',
+    subtitle: 'All outage-related events currently monitored',
+    tooltip: 'Complete inventory of events across all lifecycle stages.',
+  },
+  'Pre-Event': {
+    title: 'Upcoming Risk Events',
+    subtitle: 'Forecasted events with outage potential',
+    tooltip: 'Events under monitoring or preparedness before outages occur.',
+  },
+  'Active Events': {
+    title: 'Ongoing Outages',
+    subtitle: 'Events currently impacting service',
+    tooltip: 'Ongoing outage or incident events requiring operational attention.',
+  },
+  'High Priority': {
+    title: 'Immediate Attention',
+    subtitle: 'Critical load, uncertainty, or elevated risk detected',
+    tooltip: 'Critical active events impacting safety, hospitals, or large customer counts.',
+  },
+  'Post-Event': {
+    title: 'Recently Resolved',
+    subtitle: 'Events pending review or reporting',
+    tooltip: 'Completed events under review or analysis.',
+  },
 };
 
 const OUTAGE_TYPE_TOOLTIPS: Record<string, string> = {
@@ -117,50 +138,45 @@ export default function Dashboard() {
 
   const kpiCards = [
     {
-      label: 'Total Events',
+      key: 'Total Events',
       value: stats.total,
       icon: FileText,
-      tooltip: KPI_TOOLTIPS['Total Events'],
       breakdown: undefined,
       scenarios: scenarios,
       filter: null,
       emphasis: 'low' as const,
     },
     {
-      label: 'Pre-Event',
+      key: 'Pre-Event',
       value: stats.preEvent,
       icon: Clock,
-      tooltip: KPI_TOOLTIPS['Pre-Event'],
       breakdown: getOutageBreakdown(preEventScenarios),
       scenarios: preEventScenarios,
       filter: 'Pre-Event',
       emphasis: 'medium' as const,
     },
     {
-      label: 'Active Events',
+      key: 'Active Events',
       value: stats.active,
       icon: Activity,
-      tooltip: KPI_TOOLTIPS['Active Events'],
       breakdown: getOutageBreakdown(activeScenarios),
       scenarios: activeScenarios,
       filter: 'Event',
       emphasis: 'high' as const,
     },
     {
-      label: 'High Priority',
+      key: 'High Priority',
       value: stats.highPriority,
       icon: AlertTriangle,
-      tooltip: KPI_TOOLTIPS['High Priority'],
       breakdown: getOutageBreakdown(highPriorityScenarios),
       scenarios: highPriorityScenarios,
       filter: 'Event&priority=high',
       emphasis: 'critical' as const,
     },
     {
-      label: 'Post-Event',
+      key: 'Post-Event',
       value: stats.postEvent,
       icon: CheckCircle,
-      tooltip: KPI_TOOLTIPS['Post-Event'],
       breakdown: getOutageBreakdown(postEventScenarios),
       scenarios: postEventScenarios,
       filter: 'Post-Event',
@@ -171,32 +187,35 @@ export default function Dashboard() {
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
       {/* Header Section */}
-      <header className="mb-10">
+      <header className="mb-8">
         <div className="flex items-start justify-between gap-6">
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
+          <div className="space-y-1">
+            <p className="text-[10px] font-normal uppercase tracking-widest text-muted-foreground/40">
               Welcome back
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Operations Dashboard
             </h1>
+            <p className="text-xs text-muted-foreground/70 font-normal">
+              Real-time visibility into grid events, risk, and restoration status
+            </p>
             <p
-              className="text-sm leading-relaxed"
+              className="text-sm leading-relaxed pt-2"
               aria-live="polite"
               aria-atomic="true"
             >
               <span className="font-medium text-foreground">{summary.emphasis}</span>
               {' '}
               <span className="text-muted-foreground">{summary.detail}</span>
-              <span className="mx-2 text-muted-foreground/50">•</span>
-              <span className="font-medium text-foreground">
+              <span className="mx-2 text-muted-foreground/40">•</span>
+              <span className="text-muted-foreground">
                 {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
               </span>
             </p>
           </div>
 
           <div
-            className="flex items-center gap-2 text-xs text-muted-foreground/70"
+            className="flex items-center gap-2 text-xs text-muted-foreground/60"
             aria-live="polite"
             aria-atomic="true"
           >
@@ -208,19 +227,19 @@ export default function Dashboard() {
                 Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
               </span>
             )}
-            <div className="flex items-center gap-1 border-l border-border/50 pl-2">
+            <div className="flex items-center gap-1 border-l border-border/40 pl-2">
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-8 w-8 text-muted-foreground hover:text-foreground',
-                  'hover:bg-muted/50 transition-colors'
+                  'h-7 w-7 text-muted-foreground/60 hover:text-foreground',
+                  'hover:bg-muted/40 transition-colors'
                 )}
                 onClick={() => refetch()}
                 disabled={isFetching}
                 aria-label="Refresh data"
               >
-                <RefreshCw className={cn('h-4 w-4', isFetching && 'animate-spin')} />
+                <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
               </Button>
               <ThemeToggle />
             </div>
@@ -240,21 +259,25 @@ export default function Dashboard() {
 
       {/* KPI Cards Grid */}
       <section aria-label="Key Performance Indicators">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-          {kpiCards.map((card) => (
-            <FlippableKPICard
-              key={card.label}
-              label={card.label}
-              value={card.value}
-              icon={card.icon}
-              tooltip={card.tooltip}
-              breakdown={card.breakdown}
-              scenarios={card.scenarios}
-              emphasis={card.emphasis}
-              onClick={() => handleTileClick(card.filter)}
-              onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
-            />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {kpiCards.map((card) => {
+            const config = KPI_CONFIG[card.key];
+            return (
+              <FlippableKPICard
+                key={card.key}
+                label={config.title}
+                subtitle={config.subtitle}
+                value={card.value}
+                icon={card.icon}
+                tooltip={config.tooltip}
+                breakdown={card.breakdown}
+                scenarios={card.scenarios}
+                emphasis={card.emphasis}
+                onClick={() => handleTileClick(card.filter)}
+                onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
+              />
+            );
+          })}
         </div>
       </section>
     </div>
