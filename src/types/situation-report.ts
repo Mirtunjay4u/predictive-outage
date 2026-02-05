@@ -1,6 +1,10 @@
 // Situation Report Types
 
-export type ReportStatus = 'draft' | 'approved' | 'rejected';
+export type ReportStatus = 'draft' | 'approved' | 'rejected' | 'sent';
+
+export type DeliveryChannel = 'email' | 'message';
+
+export type AudienceType = 'executive_leadership' | 'operations_team' | 'external_stakeholders';
 
 export interface SituationReportSection {
   title: string;
@@ -14,6 +18,14 @@ export interface ApprovalMetadata {
   rejected_by?: string;
   rejected_at?: string;
   reviewer_comments?: string;
+}
+
+export interface DeliveryMetadata {
+  sent_by: string;
+  sent_at: string;
+  delivery_channel: DeliveryChannel;
+  audience: AudienceType;
+  message_note?: string;
 }
 
 export interface SituationReport {
@@ -35,6 +47,7 @@ export interface SituationReport {
   };
   disclaimer: string;
   approval?: ApprovalMetadata;
+  delivery?: DeliveryMetadata;
 }
 
 export interface SituationReportRequest {
