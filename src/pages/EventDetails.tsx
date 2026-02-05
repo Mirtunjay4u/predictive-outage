@@ -100,17 +100,21 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
    return (
      <div className="min-h-screen bg-background">
        {/* Top Navigation Bar */}
-       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="flex items-center justify-between h-14">
-             <div className="flex items-center gap-4">
-               <Button variant="ghost" size="sm" onClick={() => navigate("/outage-map")} className="gap-2">
-                 <ArrowLeft className="w-4 h-4" />
-                 <span className="hidden sm:inline">Back to Map</span>
-               </Button>
-               <Separator orientation="vertical" className="h-6" />
-               <span className="text-xs text-muted-foreground uppercase tracking-wide">Event Details</span>
-             </div>
+        <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-14">
+              <div className="flex items-center gap-4">
+                {/* Primary Navigation - Back to Dashboard */}
+                <Link 
+                  to="/dashboard" 
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Dashboard</span>
+                </Link>
+                <Separator orientation="vertical" className="h-5" />
+                <span className="text-xs text-muted-foreground uppercase tracking-wide">Event Details</span>
+              </div>
              <div className="flex items-center gap-2">
                <Button variant="outline" size="sm" onClick={handleViewOnMap} className="gap-2">
                  <Map className="w-4 h-4" />
