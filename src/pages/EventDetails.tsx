@@ -1,27 +1,28 @@
  import { useState, useMemo } from "react";
  import { useParams, useNavigate, Link } from "react-router-dom";
  import { format } from "date-fns";
- import {
-   ArrowLeft,
-   Bot,
-   MapPin,
-   Clock,
-   Users,
-   Zap,
-   AlertTriangle,
-   Info,
-   Cable,
-   Box,
-   ExternalLink,
-   Gauge,
-   ShieldAlert,
-   Activity,
-   ChevronDown,
-   ChevronUp,
-   Map,
-   Calendar,
-   Building2,
- } from "lucide-react";
+import {
+  ArrowLeft,
+  Bot,
+  MapPin,
+  Clock,
+  Users,
+  Zap,
+  AlertTriangle,
+  Info,
+  Cable,
+  Box,
+  ExternalLink,
+  Gauge,
+  ShieldAlert,
+  Activity,
+  ChevronDown,
+  ChevronUp,
+  Map,
+  Calendar,
+  Building2,
+  FileText,
+} from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
  import { Separator } from "@/components/ui/separator";
@@ -61,10 +62,15 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
      navigate(`/copilot-studio?prefill=${prompt}`);
    };
  
-   const handleViewOnMap = () => {
-     if (!event) return;
-     navigate(`/outage-map?event=${event.id}`);
-   };
+  const handleViewOnMap = () => {
+    if (!event) return;
+    navigate(`/outage-map?event=${event.id}`);
+  };
+
+  const handleGenerateSituationReport = () => {
+    if (!event) return;
+    navigate(`/event/${event.id}/situation-report`);
+  };
  
    if (isLoading) {
      return (
@@ -119,6 +125,10 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
                <Button variant="outline" size="sm" onClick={handleViewOnMap} className="gap-2">
                  <Map className="w-4 h-4" />
                  <span className="hidden sm:inline">View on Map</span>
+               </Button>
+               <Button variant="outline" size="sm" onClick={handleGenerateSituationReport} className="gap-2">
+                 <FileText className="w-4 h-4" />
+                 <span className="hidden sm:inline">Situation Report</span>
                </Button>
                <Button size="sm" onClick={handleOpenInCopilot} className="gap-2">
                  <Bot className="w-4 h-4" />
