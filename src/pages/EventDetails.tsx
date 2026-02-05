@@ -109,18 +109,18 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
         <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-14">
-              <div className="flex items-center gap-4">
-                {/* Primary Navigation - Back to Dashboard */}
+              <nav className="flex items-center gap-1.5 text-sm">
                 <Link 
                   to="/dashboard" 
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Dashboard</span>
+                  Dashboard
                 </Link>
-                <Separator orientation="vertical" className="h-5" />
-                <span className="text-xs text-muted-foreground uppercase tracking-wide">Event Details</span>
-              </div>
+                <span className="text-muted-foreground/50">/</span>
+                <span className="text-foreground font-medium truncate max-w-[200px]">
+                  {event.name}
+                </span>
+              </nav>
              <div className="flex items-center gap-2">
                <Button variant="outline" size="sm" onClick={handleViewOnMap} className="gap-2">
                  <Map className="w-4 h-4" />

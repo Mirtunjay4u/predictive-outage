@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Map } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useScenarioWithIntelligence } from '@/hooks/useScenarios';
 import { SituationReportContent } from '@/components/report/SituationReportContent';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,22 +41,23 @@ export default function SituationReport() {
     <div className="min-h-screen bg-background">
       {/* Persistent Navigation Header */}
       <header className="sticky top-0 z-40 h-14 border-b border-border bg-card/95 backdrop-blur-sm flex items-center px-6 gap-4">
-        <Link 
-          to={`/outage-map?event=${id}`}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Map</span>
-        </Link>
-        
-        <div className="h-4 w-px bg-border" />
-        
-        <div className="flex items-center gap-2">
-          <Map className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground truncate max-w-md">
+        <nav className="flex items-center gap-1.5 text-sm">
+          <Link 
+            to="/dashboard" 
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Dashboard
+          </Link>
+          <span className="text-muted-foreground/50">/</span>
+          <Link 
+            to={`/event/${id}`}
+            className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[150px]"
+          >
             {event.name}
-          </span>
-        </div>
+          </Link>
+          <span className="text-muted-foreground/50">/</span>
+          <span className="text-foreground font-medium">Situation Report</span>
+        </nav>
       </header>
 
       {/* Main Content */}
