@@ -183,20 +183,23 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                     
                     {/* ETR Movement History Explainer */}
                     <EtrMovementExplainer event={event} />
-                    
-                    <Separator className="my-2" />
-                    
-                    {/* Generate Situation Report Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-2 text-xs"
-                      onClick={() => setShowSituationReport(true)}
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      Generate Situation Report
-                    </Button>
                   </div>
+                </section>
+                
+                {/* ===== SITUATION REPORT ACTION ===== */}
+                <section className="rounded-lg border border-border bg-background p-4">
+                  <Button
+                    variant="default"
+                    size="default"
+                    className="w-full gap-2 bg-primary/90 hover:bg-primary"
+                    onClick={() => setShowSituationReport(true)}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Generate Situation Report
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center mt-2">
+                    Creates an executive-ready draft for review and approval
+                  </p>
                 </section>
                 
                 {/* SECTION: Location */}
