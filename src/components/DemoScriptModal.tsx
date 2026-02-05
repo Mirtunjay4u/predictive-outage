@@ -62,15 +62,15 @@ export function DemoScriptModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Play className="w-5 h-5 text-primary" />
             Demo Script
           </DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 space-y-3">
+        <div className="flex-1 overflow-y-auto mt-2 space-y-2 pr-1">
           {demoSteps.map((step, index) => {
             const isCompleted = completedSteps.includes(index);
             const isCurrent = currentStep === index;
@@ -80,9 +80,9 @@ export function DemoScriptModal() {
                 key={index}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
                 className={cn(
-                  'p-4 rounded-lg border transition-all cursor-pointer',
+                  'p-3 rounded-lg border transition-all cursor-pointer',
                   isCompleted 
                     ? 'bg-success/5 border-success/20' 
                     : isCurrent 
@@ -94,26 +94,26 @@ export function DemoScriptModal() {
                   toggleStep(index);
                 }}
               >
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
+                <div className="flex items-start gap-2">
+                  <div className="mt-0.5 flex-shrink-0">
                     {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5 text-success" />
+                      <CheckCircle2 className="w-4 h-4 text-success" />
                     ) : (
                       <Circle className={cn(
-                        'w-5 h-5',
+                        'w-4 h-4',
                         isCurrent ? 'text-primary' : 'text-muted-foreground'
                       )} />
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className={cn(
-                      'font-medium',
+                      'text-sm font-medium leading-tight',
                       isCompleted && 'text-success',
                       isCurrent && 'text-primary'
                     )}>
-                      Step {index + 1}: {step.title}
+                      {index + 1}. {step.title}
                     </h4>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
                       {step.description}
                     </p>
                   </div>
@@ -123,11 +123,11 @@ export function DemoScriptModal() {
           })}
         </div>
 
-        <div className="flex justify-between items-center mt-6 pt-4 border-t">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex justify-between items-center pt-3 border-t flex-shrink-0">
+          <span className="text-xs text-muted-foreground">
             {completedSteps.length} of {demoSteps.length} completed
           </span>
-          <Button onClick={() => setOpen(false)}>
+          <Button size="sm" onClick={() => setOpen(false)}>
             Close
           </Button>
         </div>
