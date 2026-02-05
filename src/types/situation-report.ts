@@ -48,6 +48,21 @@ export interface SituationReport {
   disclaimer: string;
   approval?: ApprovalMetadata;
   delivery?: DeliveryMetadata;
+  customer_comms?: CustomerCommsMetadata;
+}
+
+export type CommsTone = 'calm' | 'direct' | 'reassuring';
+
+export interface CustomerCommsDrafts {
+  sms: string;
+  email: string;
+  web_banner: string;
+}
+
+export interface CustomerCommsMetadata {
+  generated_at: string;
+  tone: CommsTone;
+  drafts: CustomerCommsDrafts;
 }
 
 export interface SituationReportRequest {
