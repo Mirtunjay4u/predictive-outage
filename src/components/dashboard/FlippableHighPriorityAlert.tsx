@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, X, ChevronRight, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,18 +44,20 @@ export function FlippableHighPriorityAlert({
           className="absolute inset-0 w-full h-full"
           style={{ backfaceVisibility: 'hidden' }}
         >
-          <Alert
-            variant="destructive"
+          <div
             className={cn(
-              'h-full border-2 border-destructive/25 bg-destructive/[0.03]',
+              'h-full rounded-lg border-2',
+              'bg-amber-500/10 dark:bg-amber-950/40',
+              'border-amber-500/50 dark:border-amber-500/60',
               'transition-all duration-200',
-              'hover:bg-destructive/[0.05] hover:border-destructive/35',
-              'focus-within:ring-2 focus-within:ring-destructive/30 focus-within:ring-offset-2'
+              'hover:bg-amber-500/15 dark:hover:bg-amber-950/50',
+              'hover:border-amber-500/70 dark:hover:border-amber-400/70',
+              'focus-within:ring-2 focus-within:ring-amber-500/40 focus-within:ring-offset-2'
             )}
           >
-            <div className="flex items-center w-full gap-3 h-full">
-              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-destructive/10 shrink-0">
-                <AlertCircle className="h-6 w-6 text-destructive" />
+            <div className="flex items-center w-full gap-4 h-full px-5">
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-amber-500/20 dark:bg-amber-500/25 shrink-0">
+                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
               </div>
               
               <div
@@ -67,25 +68,25 @@ export function FlippableHighPriorityAlert({
                 role="button"
                 aria-label={`${count} high priority events. Click to see details.`}
               >
-                <AlertDescription className="flex flex-col gap-1">
-                  <span className="font-semibold text-destructive text-lg">
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold text-amber-700 dark:text-amber-300 text-lg tracking-tight">
                     {count} high priority event{count > 1 ? 's' : ''}
                   </span>
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-amber-600/80 dark:text-amber-400/80 text-sm font-medium">
                     require{count === 1 ? 's' : ''} immediate attention
                   </span>
-                  <span className="text-xs text-muted-foreground/60 flex items-center gap-1 mt-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     <RotateCcw className="w-3 h-3" />
                     Click to see event list
                   </span>
-                </AlertDescription>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 px-4 text-destructive hover:text-destructive hover:bg-destructive/10 font-medium"
+                  className="h-9 px-4 text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 hover:bg-amber-500/20 font-semibold"
                   onClick={onView}
                 >
                   View all
@@ -106,7 +107,7 @@ export function FlippableHighPriorityAlert({
                 </Button>
               </div>
             </div>
-          </Alert>
+          </div>
         </div>
 
         {/* Back Side */}
@@ -117,26 +118,27 @@ export function FlippableHighPriorityAlert({
             transform: 'rotateY(180deg)'
           }}
         >
-          <Alert
-            variant="destructive"
+          <div
             className={cn(
-              'h-full border-2 border-destructive/25 bg-destructive/[0.03]',
+              'h-full rounded-lg border-2',
+              'bg-amber-500/10 dark:bg-amber-950/40',
+              'border-amber-500/50 dark:border-amber-500/60',
               'transition-all duration-200'
             )}
           >
-            <div className="flex items-start gap-3 h-full">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-destructive/10 shrink-0">
-                <AlertCircle className="h-5 w-5 text-destructive" />
+            <div className="flex items-start gap-4 h-full px-5 py-4">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-amber-500/20 dark:bg-amber-500/25 shrink-0">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-destructive">
+                  <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-300 tracking-tight">
                     High Priority Events
                   </h4>
                   <button
                     onClick={handleFlip}
-                    className="p-1 rounded hover:bg-destructive/10 transition-colors"
+                    className="p-1 rounded hover:bg-amber-500/20 transition-colors"
                     aria-label="Flip back"
                   >
                     <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
@@ -149,7 +151,7 @@ export function FlippableHighPriorityAlert({
                       <Badge
                         key={scenario.id}
                         variant="outline"
-                        className="text-[10px] border-destructive/40 text-destructive bg-destructive/5 px-2 py-0.5"
+                        className="text-[10px] border-amber-500/50 dark:border-amber-400/50 text-amber-700 dark:text-amber-300 bg-amber-500/10 dark:bg-amber-500/15 px-2 py-0.5 font-medium"
                       >
                         {scenario.name.length > 20 
                           ? `${scenario.name.slice(0, 20)}...` 
@@ -160,7 +162,7 @@ export function FlippableHighPriorityAlert({
                     {scenarios.length > 6 && (
                       <Badge
                         variant="outline"
-                        className="text-[10px] border-muted-foreground/30 text-muted-foreground"
+                        className="text-[10px] border-muted-foreground/30 text-muted-foreground font-medium"
                       >
                         +{scenarios.length - 6} more
                       </Badge>
@@ -173,7 +175,7 @@ export function FlippableHighPriorityAlert({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 text-destructive hover:text-destructive hover:bg-destructive/10 font-medium text-xs"
+                  className="h-8 px-3 text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 hover:bg-amber-500/20 font-semibold text-xs"
                   onClick={onView}
                 >
                   View all
@@ -194,7 +196,7 @@ export function FlippableHighPriorityAlert({
                 </Button>
               </div>
             </div>
-          </Alert>
+          </div>
         </div>
       </motion.div>
     </div>
