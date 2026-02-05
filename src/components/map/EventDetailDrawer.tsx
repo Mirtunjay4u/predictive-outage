@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
   X,
@@ -37,6 +38,7 @@ interface EventDetailDrawerProps {
 }
 
 export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }: EventDetailDrawerProps) {
+  const navigate = useNavigate();
   const { data: assets = [] } = useAssets();
   const { data: linkedAssetIds = [] } = useEventAssets(event?.id || null);
 
@@ -47,6 +49,12 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
     Transformer: linkedAssets.filter(a => a.asset_type === 'Transformer').length,
   };
   const hasLinkedAssets = linkedAssets.length > 0;
+
+  const handleViewFullDetails = () => {
+    if (!event) return;
+    onOpenChange(false);
+    navigate(`/event/${event.id}`);
+  };
 
   const getPriorityBadge = (priority: string | null) => {
     switch (priority) {
@@ -273,17 +281,25 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
             
             {/* Footer - Actions */}
             <footer className="flex-shrink-0 p-4 border-t border-border bg-muted/30 space-y-2">
-              <Button 
-                onClick={onOpenInCopilot}
-                className="w-full gap-2 h-10"
-                size="lg"
-              >
-                <Bot className="w-4 h-4" />
-                Open in Copilot
-                <ExternalLink className="w-3.5 h-3.5 ml-auto opacity-60" />
-              </Button>
-              <p className="text-[10px] text-muted-foreground text-center">
-                Get AI analysis of risks, trade-offs & checklists
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={handleViewFullDetails}
+                  className="gap-2 h-10"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Full Details
+                </Button>
+                <Button 
+                  onClick={onOpenInCopilot}
+                  className="gap-2 h-10"
+                >
+                  <Bot className="w-4 h-4" />
+                  Copilot
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-1">
+                Open full page for detailed analysis or get AI insights
               </p>
             </footer>
           </motion.div>

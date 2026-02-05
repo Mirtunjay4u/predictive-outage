@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -508,17 +508,40 @@ export default function OutageMap() {
                       <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug">
                         {scenario.name}
                       </h3>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMarkerClick(scenario);
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkerClick(scenario);
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">Quick Preview</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/event/${scenario.id}`);
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">Full Details</TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
                     
                     {/* Badges Row */}
