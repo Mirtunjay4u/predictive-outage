@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
+import { FlippableMetricCard } from '@/components/analytics/FlippableMetricCard';
 
 interface ScenarioListProps {
   scenarios: Scenario[];
@@ -258,25 +259,13 @@ export default function Analytics() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {summaryMetrics.map((metric, index) => (
-                  <Popover key={metric.key}>
-                    <PopoverTrigger asChild>
-                      <div className="text-center p-5 rounded-lg bg-muted/40 border border-border/50 cursor-pointer hover:bg-muted/60 hover:border-border transition-all group">
-                        <p className={`text-3xl font-bold ${metricColors[index]} group-hover:scale-105 transition-transform`}>
-                          {metric.displayValue}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1.5 font-medium">
-                          {metric.label}
-                        </p>
-                      </div>
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="center" className="p-3">
-                      <ScenarioList
-                        scenarios={metric.scenarios}
-                        title={metric.label}
-                        emptyMessage="No scenarios in this category"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FlippableMetricCard
+                    key={metric.key}
+                    value={metric.displayValue}
+                    label={metric.label}
+                    scenarios={metric.scenarios}
+                    colorClass={metricColors[index]}
+                  />
                 ))}
               </div>
             </CardContent>
