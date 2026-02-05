@@ -15,19 +15,34 @@ import {
   FileWarning,
   Ban,
   ClipboardCheck,
-  History
+  History,
+  Send,
+  Mail,
+  MessageSquare,
+  Users,
+  Building2,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useEventStatusHistory } from '@/hooks/useEventStatusHistory';
 import { cn } from '@/lib/utils';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
-import type { SituationReport, ReportStatus } from '@/types/situation-report';
+import type { SituationReport, ReportStatus, DeliveryChannel, AudienceType } from '@/types/situation-report';
 
 interface SituationReportPanelProps {
   event: ScenarioWithIntelligence;
@@ -40,6 +55,12 @@ export function SituationReportPanel({ event, onClose }: SituationReportPanelPro
   const [error, setError] = useState<string | null>(null);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [reviewerComments, setReviewerComments] = useState('');
+  
+  // Send panel state
+  const [showSendPanel, setShowSendPanel] = useState(false);
+  const [deliveryChannel, setDeliveryChannel] = useState<DeliveryChannel>('email');
+  const [audience, setAudience] = useState<AudienceType>('executive_leadership');
+  const [messageNote, setMessageNote] = useState('');
   
   const { data: statusHistory = [] } = useEventStatusHistory(event.id || null);
 
@@ -211,10 +232,61 @@ Use advisory language only. Decision support only. No operational instructions.`
     });
   };
 
+  const sendReport = () => {
+    if (!report || report.approval?.status !== 'approved') return;
+    
+    setReport({
+      ...report,
+      approval: {
+        ...report.approval,
+        status: 'sent',
+      },
+      delivery: {
+        sent_by: 'Demo Operator',
+        sent_at: new Date().toISOString(),
+        delivery_channel: deliveryChannel,
+        audience: audience,
+        message_note: messageNote || undefined,
+      },
+    });
+    
+    setShowSendPanel(false);
+    setMessageNote('');
+    
+    toast({ 
+      description: 'Report sent successfully (demo).', 
+      duration: 3000 
+    });
+  };
+
+  const getAudienceLabel = (aud: AudienceType) => {
+    switch (aud) {
+      case 'executive_leadership':
+        return 'Executive Leadership';
+      case 'operations_team':
+        return 'Operations Team';
+      case 'external_stakeholders':
+        return 'External Stakeholders (Demo)';
+    }
+  };
+
+  const getAudienceEmail = (aud: AudienceType) => {
+    switch (aud) {
+      case 'executive_leadership':
+        return 'exec-leadership@utility-demo.com';
+      case 'operations_team':
+        return 'ops-team@utility-demo.com';
+      case 'external_stakeholders':
+        return 'stakeholders@utility-demo.com';
+    }
+  };
+
   const getStatusBadgeStyle = (status: ReportStatus) => {
     switch (status) {
       case 'approved':
         return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30';
+      case 'sent':
+        return 'bg-primary/15 text-primary border-primary/30';
       case 'rejected':
         return 'bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30';
       default:
@@ -226,6 +298,8 @@ Use advisory language only. Decision support only. No operational instructions.`
     switch (status) {
       case 'approved':
         return 'Approved — Ready for Sending';
+      case 'sent':
+        return 'Sent — Delivered';
       case 'rejected':
         return 'Rejected — Changes Required';
       default:
@@ -237,6 +311,8 @@ Use advisory language only. Decision support only. No operational instructions.`
     switch (status) {
       case 'approved':
         return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case 'sent':
+        return <Send className="w-3.5 h-3.5" />;
       case 'rejected':
         return <Ban className="w-3.5 h-3.5" />;
       default:
@@ -591,6 +667,52 @@ Use advisory language only. Decision support only. No operational instructions.`
                   </div>
                 </section>
               )}
+
+              {/* Delivery Log */}
+              {report.delivery && (
+                <section>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                    <Send className="w-3.5 h-3.5" />
+                    Delivery Log
+                  </h4>
+                  <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Status</span>
+                      <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30">
+                        SENT
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Channel</span>
+                      <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                        {report.delivery.delivery_channel === 'email' ? (
+                          <><Mail className="w-3 h-3" /> Email</>
+                        ) : (
+                          <><MessageSquare className="w-3 h-3" /> Message</>
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Audience</span>
+                      <span className="text-xs font-medium text-foreground">{getAudienceLabel(report.delivery.audience)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Sent By</span>
+                      <span className="text-xs font-medium text-foreground">{report.delivery.sent_by}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Sent At</span>
+                      <span className="text-xs text-foreground">{format(new Date(report.delivery.sent_at), 'MMM d, h:mm a')}</span>
+                    </div>
+                    {report.delivery.message_note && (
+                      <div className="pt-2 border-t border-border">
+                        <span className="text-xs text-muted-foreground block mb-1">Message Note</span>
+                        <p className="text-xs text-foreground italic">"{report.delivery.message_note}"</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
             </div>
           )}
 
@@ -631,6 +753,122 @@ Use advisory language only. Decision support only. No operational instructions.`
               </div>
             </div>
           )}
+          {/* Send Panel */}
+          {showSendPanel && report?.approval?.status === 'approved' && (
+            <div className="p-4 rounded-lg bg-muted border border-border space-y-4">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">Send Situation Report</span>
+              </div>
+              
+              {/* Subject Preview */}
+              <div className="p-2 rounded bg-background border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Subject</span>
+                <p className="text-xs text-foreground font-medium">{report.title}</p>
+              </div>
+              
+              {/* Delivery Channel */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Delivery Channel</Label>
+                <RadioGroup 
+                  value={deliveryChannel} 
+                  onValueChange={(val) => setDeliveryChannel(val as DeliveryChannel)}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="email" />
+                    <Label htmlFor="email" className="text-sm flex items-center gap-1.5 cursor-pointer">
+                      <Mail className="w-3.5 h-3.5" /> Email
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="message" id="message" />
+                    <Label htmlFor="message" className="text-sm flex items-center gap-1.5 cursor-pointer">
+                      <MessageSquare className="w-3.5 h-3.5" /> Message
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              {/* Audience Selection */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Audience</Label>
+                <Select value={audience} onValueChange={(val) => setAudience(val as AudienceType)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="executive_leadership">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-3.5 h-3.5" />
+                        Executive Leadership
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="operations_team">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5" />
+                        Operations Team
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="external_stakeholders">
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-3.5 h-3.5" />
+                        External Stakeholders (Demo)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Recipient Preview */}
+              <div className="p-2 rounded bg-background/50 border border-border">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Demo Recipients</span>
+                <p className="text-xs text-foreground font-mono">{getAudienceEmail(audience)}</p>
+                <p className="text-[10px] text-muted-foreground/70 mt-1 italic">Demo recipients — no actual delivery</p>
+              </div>
+              
+              {/* Optional Message Note */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Message Note (optional)</Label>
+                <Textarea
+                  placeholder="Add a brief note..."
+                  value={messageNote}
+                  onChange={(e) => setMessageNote(e.target.value)}
+                  className="min-h-[60px] text-sm"
+                />
+              </div>
+              
+              {/* Demo disclaimer */}
+              <div className="p-2 rounded border border-border/60 bg-muted/20">
+                <p className="text-[10px] text-muted-foreground/80 leading-relaxed">
+                  <span className="font-medium">Decision support only.</span> This demo simulates report delivery without external integrations.
+                </p>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowSendPanel(false);
+                    setMessageNote('');
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={sendReport}
+                  className="flex-1 gap-1"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Confirm Send
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -659,18 +897,31 @@ Use advisory language only. Decision support only. No operational instructions.`
               </div>
             )}
 
-            {/* Approved state actions */}
-            {report.approval?.status === 'approved' && (
+            {/* Approved state - Send button */}
+            {report.approval?.status === 'approved' && !showSendPanel && (
               <div className="space-y-2">
                 <Button
-                  disabled
-                  className="w-full gap-2 opacity-50 cursor-not-allowed"
+                  onClick={() => setShowSendPanel(true)}
+                  className="w-full gap-2"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  Send Report (Coming Soon)
+                  <Send className="w-4 h-4" />
+                  Send Report
                 </Button>
                 <p className="text-[10px] text-muted-foreground text-center">
-                  Report approved — sending functionality not yet enabled
+                  Report approved — ready for controlled delivery
+                </p>
+              </div>
+            )}
+
+            {/* Sent state - read only */}
+            {report.approval?.status === 'sent' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">Report Delivered</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Report sent — no further edits allowed
                 </p>
               </div>
             )}
