@@ -33,6 +33,7 @@
  import { useScenarioWithIntelligence } from "@/hooks/useScenarios";
  import { useAssets, useEventAssets } from "@/hooks/useAssets";
  import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
+import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
  import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
  
  export default function EventDetails() {
@@ -224,6 +225,9 @@
  
                  {/* Copilot Explainer */}
                  <EtrRunwayExplainer event={event} />
+
+                  {/* ETR Movement History Explainer */}
+                  <EtrMovementExplainer event={event} />
                </CardContent>
              </Card>
  
