@@ -28,6 +28,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
+import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
 import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
 interface EventDetailDrawerProps {
@@ -176,6 +177,9 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                     
                     {/* Copilot Explainer Button */}
                     <EtrRunwayExplainer event={event} />
+                    
+                    {/* ETR Movement History Explainer */}
+                    <EtrMovementExplainer event={event} />
                   </div>
                 </section>
                 
