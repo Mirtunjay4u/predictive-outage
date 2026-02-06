@@ -69,7 +69,7 @@ export function EventTable({ scenarios, onRowClick, onDelete }: EventTableProps)
                 </TableCell>
                 <TableCell>
                   <StatusBadge variant={scenario.stage ? 'active' : 'inactive'}>
-                    {scenario.stage ? 'Activated' : 'Inactive'}
+                    {scenario.stage ? 'Active' : 'Inactive'}
                   </StatusBadge>
                 </TableCell>
                 <TableCell>

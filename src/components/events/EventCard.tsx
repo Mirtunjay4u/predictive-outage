@@ -69,7 +69,7 @@ export function EventCard({ scenario, onClick, onDelete }: EventCardProps) {
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-1.5 mb-3">
             <StatusBadge variant={scenario.stage ? 'active' : 'inactive'}>
-              {scenario.stage ? 'Activated' : 'Inactive'}
+              {scenario.stage ? 'Active' : 'Inactive'}
             </StatusBadge>
             <StatusBadge variant={lifecycleVariant}>
               {scenario.lifecycle_stage}
