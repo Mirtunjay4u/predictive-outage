@@ -6,11 +6,14 @@ import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
 import { format } from 'date-fns';
 import { FlippableKPICard } from '@/components/dashboard/FlippableKPICard';
-import { FlippableHighPriorityAlert } from '@/components/dashboard/FlippableHighPriorityAlert';
+import { ImmediateAttentionStrip } from '@/components/dashboard/ImmediateAttentionStrip';
+import { OperationalWorkQueue } from '@/components/dashboard/OperationalWorkQueue';
+import { SafetyRiskPanel } from '@/components/dashboard/SafetyRiskPanel';
+import { CrewWorkloadPanel } from '@/components/dashboard/CrewWorkloadPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 
-// KPI card configuration with industrial-grade terminology
+// KPI card configuration
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
   'Total Events': {
     title: 'All Tracked Events',
@@ -37,6 +40,11 @@ const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: str
     subtitle: 'Events pending review or reporting',
     tooltip: 'Completed events under review or analysis.',
   },
+  'Restoration': {
+    title: 'Restoration Readiness',
+    subtitle: 'Operational readiness metrics',
+    tooltip: 'Metrics tracking ETR validation, communications, and closure readiness.',
+  },
 };
 
 const OUTAGE_TYPE_TOOLTIPS: Record<string, string> = {
@@ -59,7 +67,6 @@ function getOutageBreakdown(scenarios: Scenario[]): { type: string; count: numbe
     const type = s.outage_type || 'Unknown';
     breakdown[type] = (breakdown[type] || 0) + 1;
   });
-  
   return Object.entries(breakdown)
     .filter(([_, count]) => count > 0)
     .sort((a, b) => b[1] - a[1])
@@ -70,13 +77,10 @@ function getOutageBreakdown(scenarios: Scenario[]): { type: string; count: numbe
     }));
 }
 
-const HIGH_PRIORITY_THRESHOLD = 3;
-
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [alertDismissed, setAlertDismissed] = useState(false);
-  const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({ 
-    refetchInterval: 30000
+  const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({
+    refetchInterval: 30000,
   });
 
   const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
@@ -102,128 +106,55 @@ export default function Dashboard() {
 
   const handleTypeClick = (lifecycle: string | null, outageType: string) => {
     const params = new URLSearchParams();
-    if (lifecycle) {
-      params.set('lifecycle', lifecycle);
-    }
+    if (lifecycle) params.set('lifecycle', lifecycle);
     params.set('outage_type', outageType);
     navigate(`/events?${params.toString()}`);
   };
 
   const getOperationalSummary = () => {
     if (stats.highPriority > 0) {
-      return {
-        emphasis: `${stats.highPriority} high priority event${stats.highPriority > 1 ? 's' : ''}`,
-        detail: 'require attention',
-      };
+      return { emphasis: `${stats.highPriority} high priority event${stats.highPriority > 1 ? 's' : ''}`, detail: 'require attention' };
     }
     if (stats.active > 0) {
-      return {
-        emphasis: `${stats.active} active event${stats.active > 1 ? 's' : ''}`,
-        detail: 'in progress',
-      };
+      return { emphasis: `${stats.active} active event${stats.active > 1 ? 's' : ''}`, detail: 'in progress' };
     }
     if (stats.preEvent > 0) {
-      return {
-        emphasis: `${stats.preEvent} event${stats.preEvent > 1 ? 's' : ''}`,
-        detail: 'under monitoring',
-      };
+      return { emphasis: `${stats.preEvent} event${stats.preEvent > 1 ? 's' : ''}`, detail: 'under monitoring' };
     }
-    return {
-      emphasis: 'No active events',
-      detail: 'at this time',
-    };
+    return { emphasis: 'No active events', detail: 'at this time' };
   };
 
   const summary = getOperationalSummary();
 
   const kpiCards = [
-    {
-      key: 'Total Events',
-      value: stats.total,
-      icon: FileText,
-      breakdown: undefined,
-      scenarios: scenarios,
-      filter: null,
-      emphasis: 'low' as const,
-    },
-    {
-      key: 'Pre-Event',
-      value: stats.preEvent,
-      icon: Clock,
-      breakdown: getOutageBreakdown(preEventScenarios),
-      scenarios: preEventScenarios,
-      filter: 'Pre-Event',
-      emphasis: 'medium' as const,
-    },
-    {
-      key: 'Active Events',
-      value: stats.active,
-      icon: Activity,
-      breakdown: getOutageBreakdown(activeScenarios),
-      scenarios: activeScenarios,
-      filter: 'Event',
-      emphasis: 'high' as const,
-    },
-    {
-      key: 'High Priority',
-      value: stats.highPriority,
-      icon: AlertTriangle,
-      breakdown: getOutageBreakdown(highPriorityScenarios),
-      scenarios: highPriorityScenarios,
-      filter: 'Event&priority=high',
-      emphasis: 'critical' as const,
-    },
-    {
-      key: 'Post-Event',
-      value: stats.postEvent,
-      icon: CheckCircle,
-      breakdown: getOutageBreakdown(postEventScenarios),
-      scenarios: postEventScenarios,
-      filter: 'Post-Event',
-      emphasis: 'low' as const,
-    },
+    { key: 'Total Events', value: stats.total, icon: FileText, breakdown: undefined, scenarios, filter: null, emphasis: 'low' as const },
+    { key: 'Pre-Event', value: stats.preEvent, icon: Clock, breakdown: getOutageBreakdown(preEventScenarios), scenarios: preEventScenarios, filter: 'Pre-Event', emphasis: 'medium' as const },
+    { key: 'Active Events', value: stats.active, icon: Activity, breakdown: getOutageBreakdown(activeScenarios), scenarios: activeScenarios, filter: 'Event', emphasis: 'high' as const },
+    { key: 'High Priority', value: stats.highPriority, icon: AlertTriangle, breakdown: getOutageBreakdown(highPriorityScenarios), scenarios: highPriorityScenarios, filter: 'Event&priority=high', emphasis: 'critical' as const },
+    { key: 'Post-Event', value: stats.postEvent, icon: CheckCircle, breakdown: getOutageBreakdown(postEventScenarios), scenarios: postEventScenarios, filter: 'Post-Event', emphasis: 'low' as const },
   ];
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
-      {/* Header Section */}
-      <header className="mb-8">
-        <div className="flex items-start justify-between gap-6">
-          <div className="space-y-1">
-            <p className="text-[10px] font-normal uppercase tracking-widest text-muted-foreground/40">
-              Welcome back
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              Operations Dashboard
+    <div className="p-4 max-w-[1600px] mx-auto">
+      {/* Header - Compact */}
+      <header className="mb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-0.5">
+            <h1 className="text-xl font-semibold tracking-tight text-foreground">
+              Grid Resilience Command Center
             </h1>
-            <p className="text-xs text-muted-foreground/70 font-normal">
-              Real-time visibility into grid events, risk, and restoration status
-            </p>
-            <p
-              className="text-sm leading-relaxed pt-2"
-              aria-live="polite"
-              aria-atomic="true"
-            >
+            <p className="text-[11px] text-muted-foreground/70">
               <span className="font-medium text-foreground">{summary.emphasis}</span>
               {' '}
-              <span className="text-muted-foreground">{summary.detail}</span>
-              <span className="mx-2 text-muted-foreground/40">•</span>
-              <span className="text-muted-foreground">
-                {stats.total} total event{stats.total !== 1 ? 's' : ''} tracked
-              </span>
+              <span>{summary.detail}</span>
+              <span className="mx-1.5 text-muted-foreground/40">•</span>
+              <span>{stats.total} total event{stats.total !== 1 ? 's' : ''} tracked</span>
             </p>
           </div>
 
-          <div
-            className="flex items-center gap-2 text-xs text-muted-foreground/60"
-            aria-live="polite"
-            aria-atomic="true"
-          >
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 shrink-0">
             {dataUpdatedAt > 0 && (
-              <span
-                className="tabular-nums mr-1"
-                aria-label={`Data last updated at ${format(new Date(dataUpdatedAt), 'h:mm a')}`}
-              >
+              <span className="tabular-nums">
                 Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
               </span>
             )}
@@ -231,15 +162,12 @@ export default function Dashboard() {
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn(
-                  'h-7 w-7 text-muted-foreground/60 hover:text-foreground',
-                  'hover:bg-muted/40 transition-colors'
-                )}
+                className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
                 onClick={() => refetch()}
                 disabled={isFetching}
                 aria-label="Refresh data"
               >
-                <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
+                <RefreshCw className={cn('h-3 w-3', isFetching && 'animate-spin')} />
               </Button>
               <ThemeToggle />
             </div>
@@ -247,39 +175,50 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* High Priority Alert Banner */}
-      {stats.highPriority >= HIGH_PRIORITY_THRESHOLD && !alertDismissed && (
-        <FlippableHighPriorityAlert
-          count={stats.highPriority}
-          scenarios={highPriorityScenarios}
-          onView={() => navigate('/events?lifecycle=Event&priority=high')}
-          onDismiss={() => setAlertDismissed(true)}
-        />
-      )}
+      {/* Immediate Attention Strip */}
+      <ImmediateAttentionStrip
+        scenarios={highPriorityScenarios}
+        onViewAll={() => navigate('/events?lifecycle=Event&priority=high')}
+        onEventClick={(id) => navigate(`/events/${id}`)}
+      />
 
-      {/* KPI Cards Grid */}
-      <section aria-label="Key Performance Indicators">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {kpiCards.map((card) => {
-            const config = KPI_CONFIG[card.key];
-            return (
-              <FlippableKPICard
-                key={card.key}
-                label={config.title}
-                subtitle={config.subtitle}
-                value={card.value}
-                icon={card.icon}
-                tooltip={config.tooltip}
-                breakdown={card.breakdown}
-                scenarios={card.scenarios}
-                emphasis={card.emphasis}
-                onClick={() => handleTileClick(card.filter)}
-                onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
-              />
-            );
-          })}
+      {/* 3-6-3 Grid Layout */}
+      <div className="grid grid-cols-12 gap-3">
+        {/* Left Column - 3 cols: Operational Work Queue */}
+        <div className="col-span-12 lg:col-span-3">
+          <OperationalWorkQueue scenarios={scenarios} />
         </div>
-      </section>
+
+        {/* Center Column - 6 cols: KPI Cards Grid */}
+        <div className="col-span-12 lg:col-span-6">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+            {kpiCards.map((card) => {
+              const config = KPI_CONFIG[card.key];
+              return (
+                <FlippableKPICard
+                  key={card.key}
+                  label={config.title}
+                  subtitle={config.subtitle}
+                  value={card.value}
+                  icon={card.icon}
+                  tooltip={config.tooltip}
+                  breakdown={card.breakdown}
+                  scenarios={card.scenarios}
+                  emphasis={card.emphasis}
+                  onClick={() => handleTileClick(card.filter)}
+                  onBreakdownClick={(type) => handleTypeClick(card.filter, type)}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Column - 3 cols: Safety & Risk + Crew & Workload stacked */}
+        <div className="col-span-12 lg:col-span-3 grid grid-rows-2 gap-3">
+          <SafetyRiskPanel scenarios={scenarios} />
+          <CrewWorkloadPanel scenarios={scenarios} />
+        </div>
+      </div>
     </div>
   );
 }
