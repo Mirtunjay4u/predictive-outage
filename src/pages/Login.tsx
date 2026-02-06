@@ -39,7 +39,7 @@ export default function Login() {
             className="flex flex-col"
           >
             {/* A) Brand Block - Top Left */}
-            <div className="flex items-center gap-3 mb-16">
+            <div className="flex items-center gap-3 mb-14">
               <div className="w-11 h-11 rounded-xl bg-primary-foreground/15 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/10">
                 <Bot className="w-6 h-6" />
               </div>
@@ -50,28 +50,28 @@ export default function Login() {
             </div>
             
             {/* B) Primary Headline */}
-            <h2 className="text-[2.75rem] xl:text-5xl font-bold leading-[1.1] tracking-tight mb-5 max-w-lg">
-              Grid Resilience<br />Command Center
+            <h2 className="text-[2.5rem] xl:text-[2.75rem] font-bold leading-[1.15] tracking-tight mb-4 max-w-lg">
+              AI Decision Support for Utility Outage Operations
             </h2>
             
-            {/* C) Value Statement */}
-            <p className="text-lg text-primary-foreground/90 font-medium mb-10 max-w-md leading-relaxed">
-              AI-assisted event prioritization, restoration decision support, and customer communications.
+            {/* C) Sub-headline */}
+            <p className="text-[17px] text-primary-foreground/90 font-medium mb-8 max-w-md leading-relaxed">
+              Prioritize restoration, validate ETR confidence, and protect critical loads — with operator-approved communications.
             </p>
             
             {/* D) Capabilities - 3 Bullets */}
-            <ul className="space-y-3 max-w-md">
+            <ul className="space-y-3.5 max-w-md">
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
-                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Track outage events and operational status</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Track outage events across lifecycle stages (Pre-Event, Active, Post-Event)</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
-                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway in real time (demo/synthetic)</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
-                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Generate operator-approved updates, reports, and escalation messages</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Generate operator-approved updates and reports for customers and stakeholders</span>
               </li>
             </ul>
           </motion.div>
@@ -83,7 +83,7 @@ export default function Login() {
             transition={{ delay: 0.5 }}
             className="text-[11px] text-primary-foreground/50 font-medium tracking-wide mt-auto pt-8"
           >
-            Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
+            Decision-support only. No autonomous actions. No live SCADA/OMS/ADMS access in demo mode.
           </motion.p>
         </div>
       </div>
