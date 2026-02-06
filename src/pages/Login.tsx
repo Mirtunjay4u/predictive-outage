@@ -87,11 +87,12 @@ export default function Login() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md"
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-[420px]"
         >
           {/* Mobile Logo */}
           <div className="lg:hidden flex flex-col items-center gap-2 mb-8">
@@ -104,38 +105,40 @@ export default function Login() {
             <span className="text-xs text-muted-foreground text-center">AI-assisted event prioritization, restoration decision support, and customer communications</span>
           </div>
 
-          <Card className="shadow-elevated border-border/50">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Welcome back</CardTitle>
-              <CardDescription>
+          <Card className="shadow-xl border-border/40 bg-card/95 backdrop-blur-sm">
+            <CardHeader className="text-center pb-2 pt-8 px-8">
+              <CardTitle className="text-[1.75rem] font-bold tracking-tight">Welcome back</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground/80 mt-1.5">
                 Sign in to access your scenario workspace
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="px-8 pb-8 pt-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-xs font-medium text-foreground/80 uppercase tracking-wide">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 px-4 text-base border-border/60 bg-background/50 placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-xs font-medium text-foreground/80 uppercase tracking-wide">Password</Label>
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 px-4 text-base border-border/60 bg-background/50 placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full gap-2" 
+                  className="w-full h-12 text-base font-semibold gap-2 mt-2 shadow-md hover:shadow-lg transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
@@ -143,32 +146,40 @@ export default function Login() {
                 </Button>
               </form>
 
-              <div className="relative my-6">
+              <div className="relative my-7">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
+                  <div className="w-full border-t border-border/50" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or</span>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-4 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">Or</span>
                 </div>
               </div>
 
               <Button 
                 type="button"
                 variant="outline" 
-                className="w-full gap-2"
+                className="w-full h-12 text-base font-medium gap-2 border-border/60 hover:bg-accent/50 hover:border-border transition-all"
                 onClick={loginDemo}
               >
                 <Sparkles className="w-4 h-4" />
                 Continue in Demo Mode
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                Explore the platform using synthetic demo events (no live system access).
+              <p className="text-xs text-center text-muted-foreground/70 mt-4 leading-relaxed">
+                Explore the platform using synthetic demo events<br className="hidden sm:block" /> (no live system access).
               </p>
               
-              <p className="text-[10px] text-center text-muted-foreground/70 mt-6 pt-4 border-t border-border">
-                Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
-              </p>
+              {/* Safety Disclaimer - Compliance Style */}
+              <div className="mt-6 pt-5 border-t border-border/40">
+                <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/30">
+                  <div className="w-4 h-4 mt-0.5 rounded-full bg-muted-foreground/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] text-muted-foreground/60 font-bold">i</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+                    Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
