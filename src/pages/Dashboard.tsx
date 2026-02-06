@@ -214,7 +214,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column - 3 cols: Safety & Risk + Crew & Workload stacked */}
-        <div className="col-span-12 lg:col-span-3 grid grid-rows-2 gap-3">
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
           <SafetyRiskPanel scenarios={scenarios} />
           <CrewWorkloadPanel scenarios={scenarios} />
         </div>
