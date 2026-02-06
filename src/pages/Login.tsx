@@ -25,36 +25,64 @@ export default function Login() {
     <div className="min-h-screen bg-background flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 gradient-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.1),transparent_50%)]" />
-        <div className="relative z-10 flex flex-col justify-center px-16 text-primary-foreground">
+        {/* Subtle dark overlay for improved text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.08),transparent_50%)]" />
+        
+        <div className="relative z-10 flex flex-col justify-between h-full py-12 px-12 xl:px-20 text-primary-foreground">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
+            className="flex flex-col"
           >
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
-                <Bot className="w-7 h-7" />
+            {/* A) Brand Block - Top Left */}
+            <div className="flex items-center gap-3 mb-16">
+              <div className="w-11 h-11 rounded-xl bg-primary-foreground/15 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/10">
+                <Bot className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Operator Copilot</h1>
-                <p className="text-sm text-primary-foreground/80">Predictive Outage Management</p>
+                <h1 className="text-lg font-semibold tracking-tight">Operator Copilot</h1>
+                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Predictive Outage Management</p>
               </div>
             </div>
             
-            <h2 className="text-4xl font-bold leading-tight mb-6">
-              Grid Resilience Command Center
+            {/* B) Primary Headline */}
+            <h2 className="text-[2.75rem] xl:text-5xl font-bold leading-[1.1] tracking-tight mb-5 max-w-lg">
+              Grid Resilience<br />Command Center
             </h2>
             
-            <p className="text-lg text-primary-foreground/80 max-w-md mb-4">
+            {/* C) Value Statement */}
+            <p className="text-lg text-primary-foreground/90 font-medium mb-10 max-w-md leading-relaxed">
               AI-assisted event prioritization, restoration decision support, and customer communications.
             </p>
             
-            <p className="text-base text-primary-foreground/70 max-w-md">
-              Track outage events, ETR confidence bands, and critical-load runway —<br />
-              and generate operator-approved updates, reports, and escalation messages.
-            </p>
+            {/* D) Capabilities - 3 Bullets */}
+            <ul className="space-y-3 max-w-md">
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
+                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Track outage events and operational status</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
+                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2.5 flex-shrink-0" />
+                <span className="text-primary-foreground/85 text-[15px] leading-relaxed">Generate operator-approved updates, reports, and escalation messages</span>
+              </li>
+            </ul>
           </motion.div>
+          
+          {/* E) Safety Footer */}
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-[11px] text-primary-foreground/50 font-medium tracking-wide mt-auto pt-8"
+          >
+            Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
+          </motion.p>
         </div>
       </div>
 
