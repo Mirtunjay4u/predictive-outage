@@ -1,4 +1,5 @@
 import { Shield, Zap, Droplets, ThermometerSun } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Scenario } from '@/types/scenario';
@@ -8,9 +9,9 @@ interface SafetyRiskPanelProps {
 }
 
 export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
+  const navigate = useNavigate();
   const activeEvents = scenarios.filter(s => s.lifecycle_stage === 'Event');
 
-  // Derive safety metrics
   const criticalLoadEvents = activeEvents.filter(s => s.has_critical_load).length;
   const runwayBreaches = activeEvents.filter(s =>
     s.has_critical_load &&
@@ -23,10 +24,10 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
   const highPriorityActive = activeEvents.filter(s => s.priority === 'high').length;
 
   const metrics = [
-    { label: 'Critical Load at Risk', value: criticalLoadEvents, icon: Shield, alert: criticalLoadEvents > 0 },
-    { label: 'Runway Breaches', value: runwayBreaches, icon: Zap, alert: runwayBreaches > 0 },
-    { label: 'Weather-Driven Events', value: weatherDriven, icon: Droplets, alert: false },
-    { label: 'High Priority Active', value: highPriorityActive, icon: ThermometerSun, alert: highPriorityActive > 2 },
+    { label: 'Critical Load at Risk', value: criticalLoadEvents, icon: Shield, alert: criticalLoadEvents > 0, path: '/events?lifecycle=Event&critical_load=true' },
+    { label: 'Runway Breaches', value: runwayBreaches, icon: Zap, alert: runwayBreaches > 0, path: '/events?lifecycle=Event&critical_load=true' },
+    { label: 'Weather-Driven Events', value: weatherDriven, icon: Droplets, alert: false, path: '/events?lifecycle=Event&outage_category=weather' },
+    { label: 'High Priority Active', value: highPriorityActive, icon: ThermometerSun, alert: highPriorityActive > 2, path: '/events?lifecycle=Event&priority=high' },
   ];
 
   return (
@@ -43,7 +44,8 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
             return (
               <div
                 key={m.label}
-                className="flex items-center justify-between px-3 py-1.5 rounded-md"
+                onClick={() => navigate(m.path)}
+                className="flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer hover:bg-muted/40 transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon className={cn(
