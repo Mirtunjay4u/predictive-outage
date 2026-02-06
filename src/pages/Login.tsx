@@ -45,25 +45,25 @@ export default function Login() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight">Operator Copilot</h1>
-                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Predictive Outage Management</p>
+                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Your AI Assistant for Decision Support</p>
               </div>
             </div>
             
             {/* B) Primary Headline */}
             <h2 className="text-[2.5rem] xl:text-[2.75rem] font-bold leading-[1.15] tracking-tight mb-4 max-w-lg">
-              AI Decision Support for Utility Outage Operations
+              Predictive Outage Management
             </h2>
             
             {/* C) Sub-headline */}
             <p className="text-[17px] text-primary-foreground/90 font-medium mb-8 max-w-md leading-relaxed">
-              Prioritize restoration, validate ETR confidence, and protect critical loads — with operator-approved communications.
+              AI Decision Support for Utility Outage Operations
             </p>
             
             {/* D) Capabilities - 3 Bullets */}
             <ul className="space-y-3.5 max-w-md">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Track outage events across lifecycle stages (Pre-Event, Active, Post-Event)</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Track outage events across lifecycle stages, prioritize restoration (Pre-Event, Active, Post-Event)</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
