@@ -30,14 +30,14 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
   ];
 
   return (
-    <Card className="h-full border-border/50">
-      <CardHeader className="pb-2 pt-3 px-4">
+    <Card className="border-border/50">
+      <CardHeader className="pb-1.5 pt-2.5 px-4">
         <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Safety & Risk Exposure
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 pb-3">
-        <div className="space-y-1.5">
+      <CardContent className="px-3 pb-2">
+        <div className="space-y-1">
           {metrics.map((m) => {
             const Icon = m.icon;
             return (

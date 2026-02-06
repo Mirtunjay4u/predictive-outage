@@ -20,12 +20,17 @@ export function CrewWorkloadPanel({ scenarios }: CrewWorkloadPanelProps) {
   const offDuty = crews.filter(c => c.shiftStatus === 'off_duty').length;
   const dispatched = crews.filter(c => c.status === 'dispatched' || c.status === 'en_route' || c.status === 'on_site').length;
 
+  const plannedEvents = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event').length;
+  const unplannedEvents = activeEvents.length;
+
   const metrics = [
     { label: 'On Shift', value: onShift, icon: Users, color: 'text-emerald-600 dark:text-emerald-400' },
     { label: 'Dispatched / En Route', value: dispatched, icon: Truck, color: 'text-primary' },
     { label: 'On Break', value: onBreak, icon: Coffee, color: 'text-amber-600 dark:text-amber-400' },
     { label: 'Off Duty', value: offDuty, icon: Moon, color: 'text-muted-foreground/60' },
     { label: 'Unassigned Backlog', value: unassignedBacklog, icon: Users, color: unassignedBacklog > 0 ? 'text-destructive' : 'text-muted-foreground/40' },
+    { label: 'Planned Events', value: plannedEvents, icon: Users, color: 'text-sky-500 dark:text-sky-400' },
+    { label: 'Unplanned Events', value: unplannedEvents, icon: Truck, color: 'text-orange-500 dark:text-orange-400' },
   ];
 
   return (
