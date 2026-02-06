@@ -1,4 +1,5 @@
-import { Users, Truck, Coffee, Moon } from 'lucide-react';
+import { Users, Truck, Coffee, Moon, CalendarClock, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useCrewsWithAvailability } from '@/hooks/useCrews';
@@ -9,6 +10,7 @@ interface CrewWorkloadPanelProps {
 }
 
 export function CrewWorkloadPanel({ scenarios }: CrewWorkloadPanelProps) {
+  const navigate = useNavigate();
   const { data: crews = [] } = useCrewsWithAvailability();
 
   const activeEvents = scenarios.filter(s => s.lifecycle_stage === 'Event');
@@ -24,13 +26,13 @@ export function CrewWorkloadPanel({ scenarios }: CrewWorkloadPanelProps) {
   const unplannedEvents = activeEvents.length;
 
   const metrics = [
-    { label: 'On Shift', value: onShift, icon: Users, color: 'text-emerald-600 dark:text-emerald-400' },
-    { label: 'Dispatched / En Route', value: dispatched, icon: Truck, color: 'text-primary' },
-    { label: 'On Break', value: onBreak, icon: Coffee, color: 'text-amber-600 dark:text-amber-400' },
-    { label: 'Off Duty', value: offDuty, icon: Moon, color: 'text-muted-foreground/60' },
-    { label: 'Unassigned Backlog', value: unassignedBacklog, icon: Users, color: unassignedBacklog > 0 ? 'text-destructive' : 'text-muted-foreground/40' },
-    { label: 'Planned Events', value: plannedEvents, icon: Users, color: 'text-sky-500 dark:text-sky-400' },
-    { label: 'Unplanned Events', value: unplannedEvents, icon: Truck, color: 'text-orange-500 dark:text-orange-400' },
+    { label: 'On Shift', value: onShift, icon: Users, color: 'text-emerald-600 dark:text-emerald-400', path: '/outage-map?crew_filter=on_shift' },
+    { label: 'Dispatched / En Route', value: dispatched, icon: Truck, color: 'text-primary', path: '/outage-map?crew_filter=dispatched' },
+    { label: 'On Break', value: onBreak, icon: Coffee, color: 'text-amber-600 dark:text-amber-400', path: '/outage-map?crew_filter=on_break' },
+    { label: 'Off Duty', value: offDuty, icon: Moon, color: 'text-muted-foreground/60', path: '/outage-map?crew_filter=off_duty' },
+    { label: 'Unassigned Backlog', value: unassignedBacklog, icon: AlertCircle, color: unassignedBacklog > 0 ? 'text-destructive' : 'text-muted-foreground/40', path: '/events?lifecycle=Event&assigned=unassigned' },
+    { label: 'Planned Events', value: plannedEvents, icon: CalendarClock, color: 'text-sky-500 dark:text-sky-400', path: '/events?lifecycle=Pre-Event' },
+    { label: 'Unplanned Events', value: unplannedEvents, icon: AlertCircle, color: 'text-orange-500 dark:text-orange-400', path: '/events?lifecycle=Event' },
   ];
 
   return (
@@ -47,7 +49,8 @@ export function CrewWorkloadPanel({ scenarios }: CrewWorkloadPanelProps) {
             return (
               <div
                 key={m.label}
-                className="flex items-center justify-between px-3 py-1.5 rounded-md"
+                onClick={() => navigate(m.path)}
+                className="flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer hover:bg-muted/40 transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon className={cn('w-3.5 h-3.5 shrink-0', m.color)} strokeWidth={1.75} />
