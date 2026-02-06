@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
@@ -12,6 +12,7 @@ import { SafetyRiskPanel } from '@/components/dashboard/SafetyRiskPanel';
 import { CrewWorkloadPanel } from '@/components/dashboard/CrewWorkloadPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { CustomerImpactKPICard } from '@/components/dashboard/CustomerImpactKPICard';
 
 // KPI card configuration
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
@@ -210,6 +211,11 @@ export default function Dashboard() {
                 />
               );
             })}
+            {/* Customer Impact Card in 6th slot */}
+            <CustomerImpactKPICard
+              scenarios={scenarios}
+              onClick={() => navigate('/events?lifecycle=Event')}
+            />
           </div>
         </div>
 
