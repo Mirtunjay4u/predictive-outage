@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import builderPhoto from '@/assets/builder-photo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -179,6 +181,17 @@ export default function Login() {
                     Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
                   </p>
                 </div>
+              </div>
+
+              {/* Builder Credit */}
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Avatar className="w-7 h-7">
+                  <AvatarImage src={builderPhoto} alt="Builder" />
+                  <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">MK</AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-muted-foreground/60">
+                  Solution prototype by Mirtunjay Kumar
+                </span>
               </div>
             </CardContent>
           </Card>
