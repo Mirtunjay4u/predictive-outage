@@ -10,6 +10,7 @@ import { ImmediateAttentionStrip } from '@/components/dashboard/ImmediateAttenti
 import { OperationalWorkQueue } from '@/components/dashboard/OperationalWorkQueue';
 import { SafetyRiskPanel } from '@/components/dashboard/SafetyRiskPanel';
 import { CrewWorkloadPanel } from '@/components/dashboard/CrewWorkloadPanel';
+import { OperationalTimeline } from '@/components/dashboard/OperationalTimeline';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { CustomerImpactKPICard } from '@/components/dashboard/CustomerImpactKPICard';
@@ -186,8 +187,9 @@ export default function Dashboard() {
       {/* 3-6-3 Grid Layout */}
       <div className="grid grid-cols-12 gap-3">
         {/* Left Column - 3 cols: Operational Work Queue */}
-        <div className="col-span-12 lg:col-span-3">
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
           <OperationalWorkQueue scenarios={scenarios} />
+          <OperationalTimeline scenarios={scenarios} />
         </div>
 
         {/* Center Column - 6 cols: KPI Cards Grid */}
