@@ -97,7 +97,7 @@ export function OperationalTimeline({ scenarios }: OperationalTimelineProps) {
               {items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => navigate(`/events/${item.id}`)}
+                  onClick={() => navigate(`/event/${item.id}`)}
                   className={cn(
                     'w-full flex items-center gap-2 px-3 py-2 rounded-md',
                     'hover:bg-muted/50 transition-colors text-left group cursor-pointer'
