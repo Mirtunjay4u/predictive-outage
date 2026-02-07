@@ -185,7 +185,7 @@ export default function Dashboard() {
       />
 
       {/* 3-6-3 Grid Layout */}
-      <div className="grid grid-cols-12 gap-3">
+      <div className="grid grid-cols-12 gap-3 items-start">
         {/* Left Column - 3 cols: Operational Work Queue */}
         <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
           <OperationalWorkQueue scenarios={scenarios} />
