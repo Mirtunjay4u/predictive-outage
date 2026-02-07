@@ -92,7 +92,7 @@ export function OperationalTimeline({ scenarios }: OperationalTimelineProps) {
             No urgent items in the next 6 hours.
           </p>
         ) : (
-          <ScrollArea className="max-h-[220px]">
+          <ScrollArea className="max-h-[180px]">
             <div className="space-y-0.5">
               {items.map((item) => (
                 <button
