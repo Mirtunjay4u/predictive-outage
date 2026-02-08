@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Bot,
   HelpCircle,
-  Map
+  Map,
+  CloudLightning
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const navItems = [
   { icon: Map, label: 'Outage Map', path: '/outage-map' },
   { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+  { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
