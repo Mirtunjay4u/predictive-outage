@@ -18,6 +18,7 @@ import CopilotStudio from "./pages/CopilotStudio";
 import OutageMap from "./pages/OutageMap";
 import EventDetails from "./pages/EventDetails";
 import SituationReport from "./pages/SituationReport";
+import WeatherAlerts from "./pages/WeatherAlerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="/event/:id" element={<EventDetails />} />
         <Route path="/event/:id/situation-report" element={<SituationReport />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/weather-alerts" element={<WeatherAlerts />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
