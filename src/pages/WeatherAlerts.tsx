@@ -84,24 +84,23 @@ export default function WeatherAlerts() {
         </div>
       </div>
 
-      {/* Zoom Earth embed */}
+      {/* Windy weather map embed */}
       <div className="flex-1 relative min-h-0">
         <iframe
-          src="https://zoom.earth/#view=29.76,-95.37,8z/map=live/overlays=wind,radar"
-          title="Zoom Earth – Live Weather Map"
+          src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=in&metricTemp=°F&metricWind=mph&zoom=8&overlay=radar&product=radar&level=surface&lat=29.76&lon=-95.37&detailLat=29.76&detailLon=-95.37&marker=true"
+          title="Windy – Live Weather Map"
           className="w-full h-full border-0"
           allow="geolocation"
-          referrerPolicy="no-referrer"
           loading="lazy"
         />
         <a
-          href="https://zoom.earth/#view=29.76,-95.37,8z/map=live/overlays=wind,radar"
+          href="https://www.windy.com/?29.76,-95.37,8"
           target="_blank"
           rel="noopener noreferrer"
           className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md bg-card/90 backdrop-blur border border-border/50 px-2.5 py-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors shadow-sm"
         >
           <ExternalLink className="w-3 h-3" />
-          Open in Zoom Earth
+          Open in Windy
         </a>
       </div>
     </div>
