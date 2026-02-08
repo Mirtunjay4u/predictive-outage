@@ -14,6 +14,7 @@ import { OperationalTimeline } from '@/components/dashboard/OperationalTimeline'
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { CustomerImpactKPICard } from '@/components/dashboard/CustomerImpactKPICard';
+import { ReadinessStrip } from '@/components/dashboard/ReadinessStrip';
 
 // KPI card configuration
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
@@ -219,6 +220,7 @@ export default function Dashboard() {
               onClick={() => navigate('/events?lifecycle=Event')}
             />
           </div>
+          <ReadinessStrip scenarios={scenarios} />
         </div>
 
         {/* Right Column - 3 cols: Safety & Risk + Crew & Workload stacked */}
