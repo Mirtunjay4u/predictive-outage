@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Activity } from 'lucide-react';
+import { BarChart3, TrendingUp, Activity, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
+import { useCrews } from '@/hooks/useCrews';
 import type { Scenario } from '@/types/scenario';
 import {
   BarChart,
@@ -114,6 +115,7 @@ function CustomBarTooltip({ active, payload, label }: any) {
 
 export default function Analytics() {
   const { data: scenarios = [] } = useScenarios();
+  const { data: crews = [] } = useCrews();
 
   const byLifecycle = {
     'Pre-Event': scenarios.filter(s => s.lifecycle_stage === 'Pre-Event'),
@@ -151,9 +153,41 @@ export default function Analytics() {
     { name: 'High Priority', count: byPriority.high.length, scenarios: byPriority.high, fill: SUMMARY_COLORS[3] },
   ];
 
+  // Crew metrics
+  const CREW_COLORS: Record<string, string> = {
+    'Available': 'hsl(142, 71%, 45%)',
+    'Dispatched': 'hsl(45, 93%, 47%)',
+    'En Route': 'hsl(199, 89%, 48%)',
+    'On Site': 'hsl(280, 67%, 55%)',
+    'Returning': 'hsl(215, 20%, 65%)',
+  };
+
+  const crewByStatus = {
+    'Available': crews.filter(c => c.status === 'available'),
+    'Dispatched': crews.filter(c => c.status === 'dispatched'),
+    'En Route': crews.filter(c => c.status === 'en_route'),
+    'On Site': crews.filter(c => c.status === 'on_site'),
+    'Returning': crews.filter(c => c.status === 'returning'),
+  };
+
+  const crewData = Object.entries(crewByStatus).map(([status, c]) => ({
+    name: status,
+    count: c.length,
+    fill: CREW_COLORS[status],
+  }));
+
+  const crewSummaryData = [
+    { name: 'Total Crews', count: crews.length, fill: 'hsl(199, 89%, 48%)' },
+    { name: 'Active', count: crews.filter(c => c.status !== 'available').length, fill: 'hsl(45, 93%, 47%)' },
+    { name: 'Avg Team Size', count: crews.length ? Math.round(crews.reduce((sum, c) => sum + c.team_size, 0) / crews.length) : 0, fill: 'hsl(160, 84%, 39%)' },
+    { name: 'Assigned', count: crews.filter(c => c.assigned_event_id).length, fill: 'hsl(280, 67%, 55%)' },
+  ];
+
   const maxLifecycle = Math.max(...lifecycleData.map(d => d.count), 1);
   const maxPriority = Math.max(...priorityData.map(d => d.count), 1);
   const maxSummary = Math.max(...summaryData.map(d => d.count), 1);
+  const maxCrewStatus = Math.max(...crewData.map(d => d.count), 1);
+  const maxCrewSummary = Math.max(...crewSummaryData.map(d => d.count), 1);
 
   return (
     <div className="p-6 lg:p-8">
@@ -293,7 +327,6 @@ export default function Analytics() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-2"
         >
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-2 pt-4 px-5">
@@ -304,9 +337,9 @@ export default function Analytics() {
               <CardDescription className="text-xs">Key operational indicators at a glance</CardDescription>
             </CardHeader>
             <CardContent className="px-5 pb-4">
-              <div className="h-[220px]">
+              <div className="h-[200px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={summaryData} barCategoryGap="20%">
+                  <BarChart data={summaryData} barCategoryGap="25%">
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
                     <XAxis
                       dataKey="name"
@@ -322,7 +355,7 @@ export default function Analytics() {
                       domain={[0, Math.ceil(maxSummary * 1.2)]}
                     />
                     <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={56}>
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
                       {summaryData.map((entry, i) => (
                         <Cell key={i} fill={entry.fill} />
                       ))}
@@ -330,7 +363,7 @@ export default function Analytics() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex items-center justify-center gap-6 mt-3 pt-2 border-t border-border/30">
+              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
                 {summaryData.map((item) => (
                   <Popover key={item.name}>
                     <PopoverTrigger asChild>
@@ -343,6 +376,113 @@ export default function Analytics() {
                       <ScenarioList scenarios={item.scenarios} title={item.name} />
                     </PopoverContent>
                   </Popover>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Crew Detail Metrics - Vertical Bar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                Crew Status Distribution
+              </CardTitle>
+              <CardDescription className="text-xs">Field crew deployment overview</CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={crewData} barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                      domain={[0, Math.ceil(maxCrewStatus * 1.2)]}
+                    />
+                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                      {crewData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border/30 flex-wrap">
+                {crewData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
+                    {item.name} ({item.count})
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Crew Summary Metrics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="lg:col-span-2"
+        >
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
+                <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                Crew Summary
+              </CardTitle>
+              <CardDescription className="text-xs">Aggregate crew operational indicators</CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={crewSummaryData} barCategoryGap="25%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                      domain={[0, Math.ceil(maxCrewSummary * 1.2)]}
+                    />
+                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                      {crewSummaryData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
+                {crewSummaryData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
+                    {item.name}: {item.count}
+                  </div>
                 ))}
               </div>
             </CardContent>
