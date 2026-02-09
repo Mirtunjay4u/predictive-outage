@@ -67,7 +67,7 @@ export default function Login() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway in real time (demo/synthetic)</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway in real time</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
