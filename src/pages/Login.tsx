@@ -168,7 +168,7 @@ export default function Login() {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground/70 mt-4 leading-relaxed">
-                Explore the platform using synthetic demo events<br className="hidden sm:block" /> (no live system access).
+                Explore the platform with pre-loaded events<br className="hidden sm:block" /> (no live system access).
               </p>
               
               {/* Safety Disclaimer - Compliance Style */}
@@ -178,7 +178,7 @@ export default function Login() {
                     <span className="text-[10px] text-muted-foreground/60 font-bold">i</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                    Decision-support only. No control actions. No live SCADA/OMS/ADMS integration in demo mode.
+                    Decision-support only. No control actions. No live SCADA/OMS/ADMS integration.
                   </p>
                 </div>
               </div>
