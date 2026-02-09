@@ -144,7 +144,7 @@ export default function Dashboard() {
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-0.5">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Grid Resilience Command Center
+              Predictive Outage Management
             </h1>
             <p className="text-[11px] text-muted-foreground/70">
               <span className="font-medium text-foreground">{summary.emphasis}</span>
