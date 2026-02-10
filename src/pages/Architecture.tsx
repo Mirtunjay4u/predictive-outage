@@ -93,15 +93,41 @@ function ArchBlock({ icon: Icon, title, items, accent, detail, className = '' }:
   );
 }
 
-function FlowArrow({ direction = 'down', label }: { direction?: 'down' | 'right'; label?: string }) {
+function FlowArrow({ label }: { direction?: 'down' | 'right'; label?: string }) {
   return (
-    <div className={`flex items-center justify-center gap-1 ${direction === 'right' ? 'flex-row' : 'flex-col'} py-1`}>
-      {direction === 'down' ? (
-        <ArrowDown className="w-4 h-4 text-muted-foreground/60" />
-      ) : (
-        <ArrowRight className="w-4 h-4 text-muted-foreground/60" />
+    <div className="flex flex-col items-center py-2 gap-1 relative">
+      {/* Animated flow line */}
+      <div className="relative w-px h-6 bg-border/40 overflow-hidden">
+        <motion.div
+          className="absolute left-0 w-full h-2 rounded-full bg-primary/60"
+          initial={{ top: '-8px' }}
+          animate={{ top: '24px' }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeIn', repeatDelay: 0.4 }}
+        />
+        <motion.div
+          className="absolute left-0 w-full h-1.5 rounded-full bg-primary/30"
+          initial={{ top: '-6px' }}
+          animate={{ top: '24px' }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeIn', repeatDelay: 0.4, delay: 0.6 }}
+        />
+      </div>
+      {/* Three animated dots */}
+      <div className="flex items-center gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-1 h-1 rounded-full bg-primary/70"
+            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+            transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
+      <ArrowDown className="w-3.5 h-3.5 text-primary/50" />
+      {label && (
+        <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-wider">
+          {label}
+        </span>
       )}
-      {label && <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-wider">{label}</span>}
     </div>
   );
 }
