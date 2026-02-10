@@ -25,6 +25,7 @@ const navItems = [
   { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
+  { icon: Network, label: 'Architecture', path: '/architecture' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
