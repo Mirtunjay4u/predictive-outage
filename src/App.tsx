@@ -20,6 +20,7 @@ import OutageMap from "./pages/OutageMap";
 import EventDetails from "./pages/EventDetails";
 import SituationReport from "./pages/SituationReport";
 import WeatherAlerts from "./pages/WeatherAlerts";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
