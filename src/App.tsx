@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Architecture from "./pages/Architecture";
 import AppPage from "./pages/AppPage";
 import CopilotStudio from "./pages/CopilotStudio";
 import OutageMap from "./pages/OutageMap";
@@ -59,6 +60,7 @@ function AppRoutes() {
         <Route path="/event/:id/situation-report" element={<SituationReport />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
+        <Route path="/architecture" element={<Architecture />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />

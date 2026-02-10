@@ -11,7 +11,8 @@ import {
   Bot,
   HelpCircle,
   Map,
-  CloudLightning
+  CloudLightning,
+  Network
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ const navItems = [
   { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
+  { icon: Network, label: 'Architecture', path: '/architecture' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
