@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Architecture from "./pages/Architecture";
 import AppPage from "./pages/AppPage";
 import CopilotStudio from "./pages/CopilotStudio";
 import OutageMap from "./pages/OutageMap";
