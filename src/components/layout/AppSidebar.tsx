@@ -11,7 +11,8 @@ import {
   Bot,
   HelpCircle,
   Map,
-  CloudLightning
+  CloudLightning,
+  Network
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
