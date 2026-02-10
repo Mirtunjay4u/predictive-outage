@@ -12,7 +12,8 @@ import {
   HelpCircle,
   Map,
   CloudLightning,
-  Network
+  Network,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const navItems = [
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
   { icon: Network, label: 'Architecture', path: '/architecture' },
+  { icon: BookOpen, label: 'About', path: '/about' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 

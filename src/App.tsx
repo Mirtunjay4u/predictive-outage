@@ -20,6 +20,7 @@ import OutageMap from "./pages/OutageMap";
 import EventDetails from "./pages/EventDetails";
 import SituationReport from "./pages/SituationReport";
 import WeatherAlerts from "./pages/WeatherAlerts";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function AppRoutes() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
         <Route path="/architecture" element={<Architecture />} />
+        <Route path="/about" element={<About />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
