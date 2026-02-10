@@ -62,6 +62,7 @@ function AppRoutes() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
         <Route path="/architecture" element={<Architecture />} />
+        <Route path="/about" element={<About />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />

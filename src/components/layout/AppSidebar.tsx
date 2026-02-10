@@ -27,6 +27,7 @@ const navItems = [
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
   { icon: Network, label: 'Architecture', path: '/architecture' },
+  { icon: BookOpen, label: 'About', path: '/about' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
