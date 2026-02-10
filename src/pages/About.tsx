@@ -22,7 +22,7 @@ const modules = [
   {
     icon: FileText, title: 'Events', path: '/events',
     desc: 'Comprehensive event registry with list and card views, advanced filtering by lifecycle stage, outage type, priority, and service area.',
-    tips: ['Use the lifecycle filter to isolate Pre-Event items for proactive planning', 'Click any event row to drill into its detail page with ETR timeline', 'Generate a Situation Report directly from an event's detail view'],
+    tips: ['Use the lifecycle filter to isolate Pre-Event items for proactive planning', 'Click any event row to drill into its detail page with ETR timeline', 'Generate a Situation Report directly from an event detail view'],
   },
   {
     icon: Map, title: 'Outage Map', path: '/outage-map',
