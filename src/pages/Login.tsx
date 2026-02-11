@@ -33,6 +33,14 @@ export default function Login() {
   const isFormValid = !emailError && !passwordError;
   const showEmailError = (emailTouched || submitAttempted) && !!emailError;
   const showPasswordError = (passwordTouched || submitAttempted) && !!passwordError;
+  const showValidationSummary = submitAttempted && !isFormValid;
+
+  const emailDescribedBy = [showEmailError ? 'email-error' : '', showValidationSummary ? 'form-validation-summary' : '']
+    .filter(Boolean)
+    .join(' ') || undefined;
+  const passwordDescribedBy = [showPasswordError ? 'password-error' : '', showValidationSummary ? 'form-validation-summary' : '']
+    .filter(Boolean)
+    .join(' ') || undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,11 +159,22 @@ export default function Login() {
             </CardHeader>
             <CardContent className="px-5 pt-4 pb-6 sm:px-8 sm:pb-8">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {showValidationSummary && (
+                  <div
+                    id="form-validation-summary"
+                    className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    Please correct the highlighted fields before signing in.
+                  </div>
+                )}
                 {formError && (
                   <div
+                    id="form-auth-error"
                     className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-                    role="status"
-                    aria-live="polite"
+                    role="alert"
+                    aria-live="assertive"
                   >
                     {formError}
                   </div>
@@ -175,7 +194,7 @@ export default function Login() {
                     }}
                     onBlur={() => setEmailTouched(true)}
                     aria-invalid={showEmailError}
-                    aria-describedby={showEmailError ? 'email-error' : undefined}
+                    aria-describedby={emailDescribedBy}
                     disabled={isLoading}
                     className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
@@ -200,7 +219,7 @@ export default function Login() {
                     }}
                     onBlur={() => setPasswordTouched(true)}
                     aria-invalid={showPasswordError}
-                    aria-describedby={showPasswordError ? 'password-error' : undefined}
+                    aria-describedby={passwordDescribedBy}
                     disabled={isLoading}
                     className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
@@ -212,8 +231,8 @@ export default function Login() {
                 </div>
                 <Button 
                   type="submit" 
-                  className="mt-2 h-11 w-full gap-2 text-sm font-semibold" 
-                  disabled={isLoading || !isFormValid}
+                  className="mt-2 h-11 w-full gap-2 text-sm font-semibold focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2" 
+                  disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
@@ -241,7 +260,7 @@ export default function Login() {
               <Button 
                 type="button"
                 variant="outline" 
-                className="h-11 w-full gap-2 border-border/60 text-sm font-semibold hover:bg-accent/50"
+                className="h-11 w-full gap-2 border-border/60 text-sm font-semibold hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2"
                 onClick={loginDemo}
                 disabled={isLoading}
               >
