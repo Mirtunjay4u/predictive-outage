@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.nemotron]
 verify_jwt = false
+
+[functions.dataverse]
+verify_jwt = false
