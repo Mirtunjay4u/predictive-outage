@@ -60,18 +60,21 @@ export default function Login() {
             </p>
             
             {/* D) Capabilities - 3 Bullets */}
-            <ul className="space-y-3.5 max-w-md">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground/70 mb-3">
+              Key capabilities
+            </p>
+            <ul className="space-y-3 max-w-md">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Track outage events across lifecycle stages, prioritize restoration (Pre-Event, Active, Post-Event)</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Monitor outages across pre-event, active, and post-event phases.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence bands and critical-load runway in real time</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence and critical-load runway in real time.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Generate operator-approved updates and reports for customers and stakeholders</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Generate operator-approved updates for customers and stakeholders.</span>
               </li>
             </ul>
           </motion.div>
@@ -108,39 +111,43 @@ export default function Login() {
           </div>
 
           <Card className="shadow-xl border-border/40 bg-card/95 backdrop-blur-sm">
-            <CardHeader className="text-center pb-2 pt-8 px-8">
+            <CardHeader className="px-8 pt-8 pb-2 text-center">
               <CardTitle className="text-[1.75rem] font-bold tracking-tight">Welcome back</CardTitle>
-              <CardDescription className="text-sm text-muted-foreground/80 mt-1.5">
+              <CardDescription className="mt-1.5 text-sm text-muted-foreground/80">
                 Sign in to access your scenario workspace
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-8 pb-8 pt-4">
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <CardContent className="px-8 pt-4 pb-8">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs font-medium text-foreground/80 uppercase tracking-wide">Email</Label>
+                  <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/75">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="you@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 px-4 text-base border-border/60 bg-background/50 placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-xs font-medium text-foreground/80 uppercase tracking-wide">Password</Label>
+                  <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/75">
+                    Password
+                  </Label>
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 px-4 text-base border-border/60 bg-background/50 placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-semibold gap-2 mt-2 shadow-md hover:shadow-lg transition-all" 
+                  className="mt-2 h-11 w-full gap-2 text-sm font-semibold" 
                   disabled={isLoading}
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
@@ -160,15 +167,15 @@ export default function Login() {
               <Button 
                 type="button"
                 variant="outline" 
-                className="w-full h-12 text-base font-medium gap-2 border-border/60 hover:bg-accent/50 hover:border-border transition-all"
+                className="h-11 w-full gap-2 border-border/60 text-sm font-semibold hover:bg-accent/50"
                 onClick={loginDemo}
               >
                 <Sparkles className="w-4 h-4" />
                 Continue in Demo Mode
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground/70 mt-4 leading-relaxed">
-                Explore the platform with pre-loaded events<br className="hidden sm:block" /> (no live system access).
+              <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground/70">
+                Uses pre-loaded sample outages; no live system access.
               </p>
               
               {/* Safety Disclaimer - Compliance Style */}
