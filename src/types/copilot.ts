@@ -1,6 +1,7 @@
 // Copilot I/O Contract Types
 
 export type CopilotMode = "DEMO" | "ACTIVE_EVENT" | "PLANNING" | "POST_EVENT_REVIEW";
+export type CopilotEngine = "lovable" | "nemotron";
 
 export interface CopilotContextPacket {
   scenario_id?: string;
