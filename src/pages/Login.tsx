@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, ArrowRight, Sparkles } from 'lucide-react';
+import { Bot, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,14 +13,46 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const { login, loginDemo } = useAuth();
+
+  const trimmedEmail = email.trim();
+  const trimmedPassword = password.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const emailError =
+    !trimmedEmail
+      ? 'Email is required.'
+      : !emailRegex.test(trimmedEmail)
+      ? 'Enter a valid email address.'
+      : '';
+  const passwordError = !trimmedPassword ? 'Password is required.' : '';
+  const isFormValid = !emailError && !passwordError;
+  const showEmailError = (emailTouched || submitAttempted) && !!emailError;
+  const showPasswordError = (passwordTouched || submitAttempted) && !!passwordError;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) return;
+    setSubmitAttempted(true);
+    setFormError('');
+
+    if (!isFormValid) {
+      setEmailTouched(true);
+      setPasswordTouched(true);
+      return;
+    }
+
     setIsLoading(true);
-    await login(email, password);
-    setIsLoading(false);
+    try {
+      await login(trimmedEmail, trimmedPassword);
+    } catch {
+      setFormError('Authentication failed. Please verify your credentials and try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -119,6 +151,15 @@ export default function Login() {
             </CardHeader>
             <CardContent className="px-8 pt-4 pb-8">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {formError && (
+                  <div
+                    className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {formError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/75">
                     Email
@@ -128,9 +169,21 @@ export default function Login() {
                     type="email"
                     placeholder="you@company.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (formError) setFormError('');
+                    }}
+                    onBlur={() => setEmailTouched(true)}
+                    aria-invalid={showEmailError}
+                    aria-describedby={showEmailError ? 'email-error' : undefined}
+                    disabled={isLoading}
                     className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
+                  {showEmailError && (
+                    <p id="email-error" className="text-xs text-destructive" aria-live="polite">
+                      {emailError}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground/75">
@@ -141,17 +194,38 @@ export default function Login() {
                     type="password"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (formError) setFormError('');
+                    }}
+                    onBlur={() => setPasswordTouched(true)}
+                    aria-invalid={showPasswordError}
+                    aria-describedby={showPasswordError ? 'password-error' : undefined}
+                    disabled={isLoading}
                     className="h-11 border-border/60 bg-background/60 px-4 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-primary/20"
                   />
+                  {showPasswordError && (
+                    <p id="password-error" className="text-xs text-destructive" aria-live="polite">
+                      {passwordError}
+                    </p>
+                  )}
                 </div>
                 <Button 
                   type="submit" 
                   className="mt-2 h-11 w-full gap-2 text-sm font-semibold" 
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid}
                 >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
-                  <ArrowRight className="w-4 h-4" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign in
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </Button>
               </form>
 
@@ -169,6 +243,7 @@ export default function Login() {
                 variant="outline" 
                 className="h-11 w-full gap-2 border-border/60 text-sm font-semibold hover:bg-accent/50"
                 onClick={loginDemo}
+                disabled={isLoading}
               >
                 <Sparkles className="w-4 h-4" />
                 Continue in Demo Mode
