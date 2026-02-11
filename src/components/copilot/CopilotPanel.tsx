@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, Send, Sparkles, ChevronRight, AlertCircle, Copy } from 'lucide-react';
+import { Bot, Send, Sparkles, ChevronRight, AlertCircle, Copy, Cpu, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import type { Scenario } from '@/types/scenario';
-import type { CopilotResponse, CopilotMode, CopilotRequest } from '@/types/copilot';
+import type { CopilotResponse, CopilotMode, CopilotRequest, CopilotEngine } from '@/types/copilot';
 
 interface CopilotPanelProps {
   scenario: Scenario | null;
@@ -45,6 +45,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [engine, setEngine] = useState<CopilotEngine>('lovable');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const copyResponseToClipboard = () => {
@@ -121,31 +122,65 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
     setIsLoading(true);
 
     try {
-      const requestBody: CopilotRequest = {
-        mode: mode,
-        user_message: prompt || `Analyze scenario in ${mode} mode`,
-        scenario_id: scenario?.id,
-        scenario: scenario ? {
-          scenario_name: scenario.name,
-          lifecycle_stage: scenario.lifecycle_stage,
-          stage: scenario.stage,
-          operator_role: scenario.operator_role,
-          scenario_time: scenario.scenario_time,
-          notes: scenario.notes,
-          description: scenario.description,
-          outage_type: scenario.outage_type,
-        } : {},
-        retrieved_knowledge: [],
-        constraints: [],
-      };
+      if (engine === 'nemotron') {
+        // Call Nemotron endpoint and wrap raw text into structured response
+        const context = scenario
+          ? `You are an expert utility operations analyst. Scenario: ${scenario.name}, Outage Type: ${scenario.outage_type || 'Unknown'}, Lifecycle: ${scenario.lifecycle_stage}, Description: ${scenario.description || 'N/A'}, Notes: ${scenario.notes || 'N/A'}`
+          : 'You are an expert utility operations analyst.';
 
-      const { data, error: fnError } = await supabase.functions.invoke('copilot', {
-        body: requestBody,
-      });
+        const { data, error: fnError } = await supabase.functions.invoke('nemotron', {
+          body: {
+            prompt: prompt || `Analyze scenario in ${mode} mode`,
+            context,
+          },
+        });
 
-      if (fnError) throw fnError;
+        if (fnError) throw fnError;
+        if (!data?.ok) throw new Error(data?.error || 'Nemotron request failed');
 
-      setResponse(data as CopilotResponse);
+        // Wrap raw text into CopilotResponse shape
+        const rawAnswer: string = data.answer || '';
+        const paragraphs = rawAnswer.split(/\n\n+/).filter(Boolean);
+
+        setResponse({
+          mode_banner: `NEMOTRON — ${mode ? mode.replace(/_/g, ' ') : 'ANALYSIS'}`,
+          framing_line: paragraphs[0] || 'Analysis complete.',
+          insights: paragraphs.slice(1).map((p, i) => ({
+            title: `Analysis Point ${i + 1}`,
+            bullets: p.split(/\n/).filter(Boolean).map(l => l.replace(/^[-•*]\s*/, '')),
+          })),
+          assumptions: ['Raw model output — not structured via tool-calling', 'Model: nvidia/nemotron-3-nano-30b-a3b'],
+          source_notes: ['Scenario record', 'User prompt', 'NVIDIA NIM API'],
+          disclaimer: 'Decision support only. This system does not access live SCADA, OMS, ADMS, or weather feeds. All decisions require explicit human approval.',
+        });
+      } else {
+        // Existing Lovable AI (structured) path
+        const requestBody: CopilotRequest = {
+          mode: mode,
+          user_message: prompt || `Analyze scenario in ${mode} mode`,
+          scenario_id: scenario?.id,
+          scenario: scenario ? {
+            scenario_name: scenario.name,
+            lifecycle_stage: scenario.lifecycle_stage,
+            stage: scenario.stage,
+            operator_role: scenario.operator_role,
+            scenario_time: scenario.scenario_time,
+            notes: scenario.notes,
+            description: scenario.description,
+            outage_type: scenario.outage_type,
+          } : {},
+          retrieved_knowledge: [],
+          constraints: [],
+        };
+
+        const { data, error: fnError } = await supabase.functions.invoke('copilot', {
+          body: requestBody,
+        });
+
+        if (fnError) throw fnError;
+        setResponse(data as CopilotResponse);
+      }
+
       setInput('');
     } catch (err) {
       console.error('Copilot error:', err);
@@ -218,6 +253,29 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
               </span>
             </div>
           )}
+
+          {/* Engine Selector */}
+          <div className="px-4 py-2 border-b border-border bg-muted/20 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground mr-1">Engine:</span>
+            <Button
+              variant={engine === 'lovable' ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setEngine('lovable')}
+            >
+              <Zap className="w-3 h-3" />
+              Lovable AI
+            </Button>
+            <Button
+              variant={engine === 'nemotron' ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setEngine('nemotron')}
+            >
+              <Cpu className="w-3 h-3" />
+              Nemotron
+            </Button>
+          </div>
 
           {/* Outage Type Header */}
           {scenario && (
