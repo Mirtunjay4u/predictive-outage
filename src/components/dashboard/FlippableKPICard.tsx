@@ -105,31 +105,32 @@ export function FlippableKPICard({
                 aria-label={`${label}: ${value} events. Click to flip for details.`}
               >
                 <CardContent className="p-5 h-full flex flex-col">
-                  {/* Icon positioned top-right, subtle */}
-                  <div className={cn(
-                    'absolute top-4 right-4 w-8 h-8 rounded-md flex items-center justify-center opacity-60',
-                    iconStyles[emphasis]
-                  )}>
-                    <Icon className="w-4 h-4" strokeWidth={1.5} />
-                  </div>
-
-                  <div className="flex-1 min-w-0 pr-10">
-                    {/* Title - Medium weight */}
-                    <p className="text-xs font-medium tracking-wide text-muted-foreground/80 mb-2 leading-tight">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
                       {label}
                     </p>
-                    
-                    {/* Metric Number - Bold, most prominent */}
-                    <p className={cn(
-                      'text-4xl font-bold tracking-tight tabular-nums leading-none',
-                      valueStyles[emphasis]
+                    <div className={cn(
+                      'w-8 h-8 rounded-md flex items-center justify-center shrink-0 opacity-65',
+                      iconStyles[emphasis]
                     )}>
-                      {value}
-                    </p>
+                      <Icon className="w-4 h-4" strokeWidth={1.5} />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    
+                    <div className="min-h-10 flex items-end">
+                      <p className={cn(
+                        'text-4xl font-semibold tracking-tight tabular-nums leading-[0.95]',
+                        valueStyles[emphasis]
+                      )}>
+                        {value}
+                      </p>
+                    </div>
                     
                     {/* Subtitle - Regular, muted */}
                     {subtitle && (
-                      <p className="text-[10px] text-muted-foreground/50 font-normal mt-2 leading-relaxed line-clamp-2">
+                      <p className="text-[10px] text-muted-foreground/55 font-normal mt-2.5 leading-relaxed line-clamp-2">
                         {subtitle}
                       </p>
                     )}

@@ -70,10 +70,15 @@ export function OperationalWorkQueue({ scenarios }: OperationalWorkQueueProps) {
 
   return (
     <Card className="h-full border-border/50">
-      <CardHeader className="pb-2 pt-3 px-4">
-        <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Operational Work Queue
-        </CardTitle>
+      <CardHeader className="pb-2.5 pt-4 px-4">
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
+            Operational Work Queue
+          </CardTitle>
+          <div className="w-7 h-7 rounded-md bg-primary/10 text-primary/70 flex items-center justify-center shrink-0">
+            <Inbox className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-3 pb-3">
         <ScrollArea className="h-[calc(100%-0.5rem)]">
