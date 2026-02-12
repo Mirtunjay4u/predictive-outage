@@ -27,10 +27,11 @@ export function ImmediateAttentionStrip({ scenarios, onViewAll, onEventClick }: 
   return (
     <div className="mb-4">
       <div className={cn(
-        'rounded-lg border border-amber-400/40 dark:border-amber-500/30',
+        'rounded-xl border border-amber-400/40 dark:border-amber-500/30',
         'bg-amber-500/[0.06] dark:bg-amber-950/20',
+        'shadow-[0_0_0_1px_rgba(251,191,36,0.08)] dark:shadow-[0_0_22px_rgba(251,191,36,0.12)]',
       )}>
-        <div className="flex items-center gap-3 px-4 h-[76px]">
+        <div className="flex items-center gap-3 px-5 py-4">
           {/* Label */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-7 h-7 rounded-md bg-amber-500/15 flex items-center justify-center">
@@ -101,7 +102,7 @@ export function ImmediateAttentionStrip({ scenarios, onViewAll, onEventClick }: 
           <Button
             variant="ghost"
             size="sm"
-            className="shrink-0 h-7 px-2.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+            className="shrink-0 h-8 px-3 text-[10px] font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-500/10 rounded-md"
             onClick={onViewAll}
           >
             View all

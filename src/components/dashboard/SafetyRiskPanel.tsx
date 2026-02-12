@@ -32,10 +32,15 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-1.5 pt-2.5 px-4">
-        <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-          Safety & Risk Exposure
-        </CardTitle>
+      <CardHeader className="pb-2.5 pt-4 px-4">
+        <div className="flex items-start justify-between gap-3">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
+            Safety & Risk Exposure
+          </CardTitle>
+          <div className="w-7 h-7 rounded-md bg-destructive/10 text-destructive/70 flex items-center justify-center shrink-0">
+            <Shield className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="px-3 pb-2">
         <div className="space-y-1">
