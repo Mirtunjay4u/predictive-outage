@@ -166,7 +166,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     } catch (err) {
-      console.error("Dataverse proxy error:", err.message);
+      console.error("Dataverse proxy error:", (err as Error).message);
       return new Response(
         JSON.stringify({ ok: false, error: "Internal proxy error." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
