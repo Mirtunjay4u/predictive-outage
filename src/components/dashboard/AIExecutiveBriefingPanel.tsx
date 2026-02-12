@@ -16,9 +16,12 @@ type BriefingData = {
   source: 'nemotron' | 'fallback';
 };
 
+export type { BriefingData, ConfidenceLevel };
+
 interface AIExecutiveBriefingPanelProps {
   scenarios: Scenario[];
   dataUpdatedAt: number;
+  onBriefingStateChange?: (payload: { briefing: BriefingData; isLoading: boolean; error: string | null }) => void;
 }
 
 const CONFIDENCE_BADGE_CLASS: Record<ConfidenceLevel, string> = {
@@ -26,6 +29,8 @@ const CONFIDENCE_BADGE_CLASS: Record<ConfidenceLevel, string> = {
   Med: 'bg-amber-100 text-amber-800 border-amber-300',
   Low: 'bg-rose-100 text-rose-800 border-rose-300',
 };
+
+export { CONFIDENCE_BADGE_CLASS };
 
 function toTitleCase(value: string) {
   return value
@@ -140,7 +145,7 @@ function buildDeterministicFallback(scenarios: Scenario[], dataUpdatedAt: number
   };
 }
 
-export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt }: AIExecutiveBriefingPanelProps) {
+export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, onBriefingStateChange }: AIExecutiveBriefingPanelProps) {
   const fallbackBriefing = useMemo(
     () => buildDeterministicFallback(scenarios, dataUpdatedAt),
     [dataUpdatedAt, scenarios],
@@ -152,6 +157,10 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt }: AIExecuti
   useEffect(() => {
     setBriefing(fallbackBriefing);
   }, [fallbackBriefing]);
+
+  useEffect(() => {
+    onBriefingStateChange?.({ briefing, isLoading, error });
+  }, [briefing, error, isLoading, onBriefingStateChange]);
 
   useEffect(() => {
     let isCancelled = false;

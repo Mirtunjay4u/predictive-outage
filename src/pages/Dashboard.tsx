@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, Users } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useScenarios } from '@/hooks/useScenarios';
 import type { Scenario } from '@/types/scenario';
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { CustomerImpactKPICard } from '@/components/dashboard/CustomerImpactKPICard';
 import { ReadinessStrip } from '@/components/dashboard/ReadinessStrip';
 import { AIExecutiveBriefingPanel } from '@/components/dashboard/AIExecutiveBriefingPanel';
+import type { BriefingData } from '@/components/dashboard/AIExecutiveBriefingPanel';
+import { ExecutiveSignalCard } from '@/components/dashboard/ExecutiveSignalCard';
 
 // KPI card configuration
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
@@ -85,6 +87,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { data: scenarios = [], dataUpdatedAt, refetch, isFetching } = useScenarios({
     refetchInterval: 30000,
+  });
+  const [briefingState, setBriefingState] = useState<{ briefing: BriefingData | null; isLoading: boolean; error: string | null }>({
+    briefing: null,
+    isLoading: false,
+    error: null,
   });
 
   const preEventScenarios = scenarios.filter(s => s.lifecycle_stage === 'Pre-Event');
@@ -186,7 +193,11 @@ export default function Dashboard() {
         onEventClick={(id) => navigate(`/events/${id}`)}
       />
 
-      <AIExecutiveBriefingPanel scenarios={scenarios} dataUpdatedAt={dataUpdatedAt} />
+      <AIExecutiveBriefingPanel
+        scenarios={scenarios}
+        dataUpdatedAt={dataUpdatedAt}
+        onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
+      />
 
       {/* 3-6-3 Grid Layout */}
       <div className="grid grid-cols-12 gap-3 items-start">
@@ -198,6 +209,13 @@ export default function Dashboard() {
 
         {/* Center Column - 6 cols: KPI Cards Grid */}
         <div className="col-span-12 lg:col-span-6">
+          <ExecutiveSignalCard
+            scenarios={scenarios}
+            dataUpdatedAt={dataUpdatedAt}
+            briefing={briefingState.briefing}
+            isLoading={briefingState.isLoading}
+            error={briefingState.error}
+          />
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
             {kpiCards.map((card) => {
               const config = KPI_CONFIG[card.key];
@@ -232,6 +250,7 @@ export default function Dashboard() {
           <CrewWorkloadPanel scenarios={scenarios} />
         </div>
       </div>
+
     </div>
   );
 }
