@@ -8,6 +8,27 @@ const corsHeaders = {
 
 const MODEL = "nvidia/nemotron-3-nano-30b-a3b";
 const BASE_URL = "https://integrate.api.nvidia.com/v1";
+const NIM_TIMEOUT_MS = 15000;
+
+type FallbackReason = "rate_limited" | "upstream_error" | "timeout";
+
+function buildFallbackResponse(reason: FallbackReason) {
+  return {
+    ok: true,
+    fallback: true,
+    reason,
+    data: {
+      insights: [
+        "Live AI analysis is temporarily unavailable. Showing fallback outage guidance.",
+      ],
+      actions: [
+        "Proceed with baseline runbook checks and retry AI insights shortly.",
+      ],
+      confidence: "Low",
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -73,6 +94,9 @@ serve(async (req) => {
 
     messages.push({ role: "user", content: prompt });
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), NIM_TIMEOUT_MS);
+
     const nimResponse = await fetch(`${BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
@@ -86,11 +110,24 @@ serve(async (req) => {
         top_p: 1,
         max_tokens: 800,
       }),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
 
     if (!nimResponse.ok) {
-      const errText = await nimResponse.text();
-      console.error(`[${requestId}] NVIDIA NIM error ${nimResponse.status}:`, errText);
+      const reason: FallbackReason = nimResponse.status === 429
+        ? "rate_limited"
+        : nimResponse.status >= 500
+        ? "upstream_error"
+        : "upstream_error";
+      console.warn(`[${requestId}] NIM fallback status=${nimResponse.status} reason=${reason}`);
+
+      if (nimResponse.status === 429 || nimResponse.status >= 500) {
+        return new Response(
+          JSON.stringify(buildFallbackResponse(reason)),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({ ok: false, error: `NVIDIA NIM error: ${nimResponse.status}` }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -114,7 +151,22 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error(`[${requestId}] Unexpected error:`, err);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      console.warn(`[${requestId}] NIM fallback status=timeout reason=timeout`);
+      return new Response(
+        JSON.stringify(buildFallbackResponse("timeout")),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.warn(`[${requestId}] NIM fallback status=network_error reason=upstream_error`);
+    if (err instanceof TypeError) {
+      return new Response(
+        JSON.stringify(buildFallbackResponse("upstream_error")),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ ok: false, error: err instanceof Error ? err.message : "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
