@@ -15,6 +15,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { CustomerImpactKPICard } from '@/components/dashboard/CustomerImpactKPICard';
 import { ReadinessStrip } from '@/components/dashboard/ReadinessStrip';
+import { AIExecutiveBriefingPanel } from '@/components/dashboard/AIExecutiveBriefingPanel';
 
 // KPI card configuration
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
@@ -184,6 +185,8 @@ export default function Dashboard() {
         onViewAll={() => navigate('/events?lifecycle=Event&priority=high')}
         onEventClick={(id) => navigate(`/events/${id}`)}
       />
+
+      <AIExecutiveBriefingPanel scenarios={scenarios} dataUpdatedAt={dataUpdatedAt} />
 
       {/* 3-6-3 Grid Layout */}
       <div className="grid grid-cols-12 gap-3 items-start">
