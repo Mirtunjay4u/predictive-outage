@@ -41,6 +41,7 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
   const trendUp = trendPercent > 0;
 
   const emphasisStyles = 'border-orange-300/40 bg-orange-50/50 dark:border-orange-500/30 dark:bg-orange-500/[0.03]';
+  const cardSurfaceClass = 'rounded-xl border shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
   const iconStyles = 'bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400';
   const valueStyles = 'text-orange-600 dark:text-orange-400 dark:drop-shadow-[0_0_12px_rgba(251,146,60,0.55)]';
 
@@ -81,9 +82,8 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
             <TooltipTrigger asChild>
               <Card
                 className={cn(
-                  'h-full cursor-pointer transition-all duration-200 ease-out',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  'hover:shadow-md hover:-translate-y-0.5',
+                  'h-full cursor-pointer',
+                  cardSurfaceClass,
                   emphasisStyles
                 )}
                 onClick={handleFlip}
@@ -92,9 +92,9 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
                 role="button"
                 aria-label={`Customer Impact: ${totalCustomersImpacted.toLocaleString()} customers affected. Click to flip for details.`}
               >
-                <CardContent className="p-5 h-full flex flex-col">
+                <CardContent className="flex h-full flex-col p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/75 leading-tight">
                       Customer Impact
                     </p>
                     <div className={cn(
@@ -107,9 +107,9 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
 
                   <div className="flex-1 min-w-0">
                     
-                    <div className="min-h-10 flex items-end">
+                    <div className="min-h-11 flex items-end">
                       <p className={cn(
-                        'text-4xl font-semibold tracking-tight tabular-nums leading-[0.95]',
+                        'text-4xl font-semibold tracking-tight tabular-nums leading-none',
                         valueStyles
                       )}>
                         {formatNumber(totalCustomersImpacted)}
@@ -176,8 +176,8 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
             transform: 'rotateY(180deg)'
           }}
         >
-          <Card className={cn('h-full transition-all duration-200', emphasisStyles)}>
-            <CardContent className="p-4 h-full flex flex-col">
+          <Card className={cn('h-full', cardSurfaceClass, emphasisStyles)}>
+            <CardContent className="flex h-full flex-col p-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-foreground flex items-center gap-2">
                   <Users className="w-3.5 h-3.5" />
@@ -185,7 +185,7 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
                 </h4>
                 <button
                   onClick={handleFlip}
-                  className="p-1 rounded hover:bg-muted/50 transition-colors"
+                  className="rounded p-1 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Flip back"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
@@ -249,8 +249,8 @@ export function CustomerImpactKPICard({ scenarios, onClick }: CustomerImpactKPIC
                 onClick={handleNavigate}
                 className={cn(
                   'mt-3 w-full flex items-center justify-center gap-1.5',
-                  'text-xs font-medium py-2 rounded-md',
-                  'bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
+                  'rounded-md border border-primary/30 py-2 text-xs font-medium',
+                  'bg-primary/10 text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                 )}
               >
                 View All Events

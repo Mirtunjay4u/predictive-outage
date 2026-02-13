@@ -48,6 +48,8 @@ export function FlippableKPICard({
     low: 'border-blue-200/40 bg-blue-50/30 dark:border-blue-500/30 dark:bg-blue-500/[0.03]',
   };
 
+  const cardSurfaceClass = 'rounded-xl border shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+
   const iconStyles = {
     critical: 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400',
     high: 'bg-sky-100 text-sky-600 dark:bg-cyan-500/20 dark:text-cyan-400',
@@ -93,9 +95,8 @@ export function FlippableKPICard({
             <TooltipTrigger asChild>
               <Card
                 className={cn(
-                  'h-full cursor-pointer transition-all duration-200 ease-out',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  'hover:shadow-md hover:-translate-y-0.5',
+                  'h-full cursor-pointer',
+                  cardSurfaceClass,
                   emphasisStyles[emphasis]
                 )}
                 onClick={handleFlip}
@@ -104,9 +105,9 @@ export function FlippableKPICard({
                 role="button"
                 aria-label={`${label}: ${value} events. Click to flip for details.`}
               >
-                <CardContent className="p-5 h-full flex flex-col">
+                <CardContent className="flex h-full flex-col p-4">
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/75 leading-tight">
                       {label}
                     </p>
                     <div className={cn(
@@ -119,9 +120,9 @@ export function FlippableKPICard({
 
                   <div className="flex-1 min-w-0">
                     
-                    <div className="min-h-10 flex items-end">
+                    <div className="min-h-11 flex items-end">
                       <p className={cn(
-                        'text-4xl font-semibold tracking-tight tabular-nums leading-[0.95]',
+                        'text-4xl font-semibold tracking-tight tabular-nums leading-none',
                         valueStyles[emphasis]
                       )}>
                         {value}
@@ -181,11 +182,12 @@ export function FlippableKPICard({
         >
           <Card
             className={cn(
-              'h-full transition-all duration-200',
+              'h-full',
+              cardSurfaceClass,
               emphasisStyles[emphasis]
             )}
           >
-            <CardContent className="p-4 h-full flex flex-col">
+            <CardContent className="flex h-full flex-col p-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-foreground flex items-center gap-2">
                   <Icon className="w-3.5 h-3.5" />
@@ -193,7 +195,7 @@ export function FlippableKPICard({
                 </h4>
                 <button
                   onClick={handleFlip}
-                  className="p-1 rounded hover:bg-muted/50 transition-colors"
+                  className="rounded p-1 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Flip back"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
@@ -249,7 +251,7 @@ export function FlippableKPICard({
                           'w-full flex items-center justify-between text-left',
                           'text-xs text-muted-foreground p-2 rounded-md',
                           'bg-muted/40 border border-border/40',
-                          'hover:bg-muted/60 transition-colors'
+                          'transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -273,8 +275,8 @@ export function FlippableKPICard({
                 onClick={handleNavigate}
                 className={cn(
                   'mt-3 w-full flex items-center justify-center gap-1.5',
-                  'text-xs font-medium py-2 rounded-md',
-                  'bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
+                  'rounded-md border border-primary/30 py-2 text-xs font-medium',
+                  'bg-primary/10 text-primary transition-colors hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                 )}
               >
                 View All
