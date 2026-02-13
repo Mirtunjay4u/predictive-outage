@@ -1,6 +1,7 @@
 import { Search, Bell, User, LogOut, FlaskConical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import builderPhoto from '@/assets/builder-photo.png';
 
 interface TopBarProps {
@@ -19,66 +21,53 @@ interface TopBarProps {
 
 export function TopBar({ onSearch }: TopBarProps) {
   const { user, logout } = useAuth();
+  const { boardroomMode, setBoardroomMode } = useDashboardUi();
 
   return (
-    <header 
-      className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6"
-      role="banner"
-      aria-label="Application header"
-    >
-      {/* Search */}
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card/50 px-6 backdrop-blur-sm" role="banner" aria-label="Application header">
       <search role="search" aria-label="Search scenarios" className="relative w-80">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search scenarios..."
-          className="pl-10 bg-background/50 transition-shadow focus:shadow-md"
+          className="bg-background/50 pl-10 transition-shadow focus:shadow-md"
           onChange={(e) => onSearch?.(e.target.value)}
           aria-label="Search scenarios"
         />
       </search>
 
-      {/* Right section */}
       <div className="flex items-center gap-4" role="group" aria-label="User actions">
-        {/* Demo Mode Badge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/15 border border-warning/30">
-          <FlaskConical className="w-3.5 h-3.5 text-warning" />
+        <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-1">
+          <span className="text-[11px] font-medium text-muted-foreground">Boardroom</span>
+          <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" />
+          {boardroomMode && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">ON</span>}
+        </div>
+
+        <div className="flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning/15 px-2.5 py-1">
+          <FlaskConical className="h-3.5 w-3.5 text-warning" />
           <span className="text-xs font-medium text-warning">Demo Mode</span>
         </div>
 
-        {/* Builder Identity */}
-        <div className="flex items-center gap-2 pl-3 border-l border-border/50">
-          <Avatar className="w-7 h-7">
+        <div className="flex items-center gap-2 border-l border-border/50 pl-3">
+          <Avatar className="h-7 w-7">
             <AvatarImage src={builderPhoto} alt="Mirtunjay Kumar" className="object-cover" />
-            <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-              MK
-            </AvatarFallback>
+            <AvatarFallback className="bg-muted text-xs font-medium text-muted-foreground">MK</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-foreground leading-tight">Mirtunjay Kumar</span>
-            <span className="text-[10px] text-muted-foreground leading-tight">Solution Builder (Demo)</span>
-          </div>
         </div>
 
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center animate-pulse">
-            3
-          </span>
+        <Button variant="ghost" size="icon" className="relative transition-colors hover:bg-primary/10" aria-label="Open notifications">
+          <Bell className="h-5 w-5" />
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">3</span>
         </Button>
 
-        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
                   {user?.email?.charAt(0).toUpperCase() || 'D'}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium max-w-32 truncate">
-                {user?.email || 'Demo User'}
-              </span>
+              <span className="max-w-32 truncate text-sm font-medium">{user?.email || 'Demo User'}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
