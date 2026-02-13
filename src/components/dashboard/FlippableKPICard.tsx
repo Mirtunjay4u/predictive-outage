@@ -204,9 +204,19 @@ export function FlippableKPICard({
                 {scenarios.length > 0 ? (
                   <div className="space-y-1.5">
                     {scenarios.slice(0, 5).map((scenario) => (
-                      <div
+                      <button
                         key={scenario.id}
-                        className="p-2 rounded-md bg-muted/40 border border-border/40"
+                        type="button"
+                        className="w-full text-left p-2 rounded-md bg-muted/40 border border-border/40"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Drilldown contract: the dashboard drilldown expects an `outage_type` identifier.
+                          // Pass the scenario.outage_type (not scenario.name). If missing/empty we pass
+                          // an empty string so the upstream handler can omit the `outage_type` filter
+                          // and navigate to `/events` (least-disruptive UX for demo).
+                          onBreakdownClick?.(scenario.outage_type || '');
+                        }}
+                        aria-label={`Drilldown to events for ${scenario.name}`}
                       >
                         <p className="text-xs font-medium text-foreground truncate">
                           {scenario.name}
@@ -231,7 +241,7 @@ export function FlippableKPICard({
                             </span>
                           )}
                         </div>
-                      </div>
+                      </button>
                     ))}
                     {scenarios.length > 5 && (
                       <p className="text-[10px] text-muted-foreground text-center pt-1">

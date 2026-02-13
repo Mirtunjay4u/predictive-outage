@@ -118,8 +118,11 @@ export default function Dashboard() {
   const handleTypeClick = (lifecycle: string | null, outageType: string) => {
     const params = new URLSearchParams();
     if (lifecycle) params.set('lifecycle', lifecycle);
-    params.set('outage_type', outageType);
-    navigate(`/events?${params.toString()}`);
+    // Only include outage_type when we actually have a value. Upstream callers may pass
+    // an empty string to indicate "no outage_type filter" (defensive handling).
+    if (outageType) params.set('outage_type', outageType);
+    const qs = params.toString();
+    navigate(qs ? `/events?${qs}` : '/events');
   };
 
   const getOperationalSummary = () => {
