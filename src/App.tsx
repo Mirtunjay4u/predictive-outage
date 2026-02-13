@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { DashboardUiProvider } from "./contexts/DashboardUiContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import { DemoScriptModal } from "./components/DemoScriptModal";
 import Index from "./pages/Index";
@@ -78,8 +79,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
-            <DemoScriptModal />
+            <DashboardUiProvider>
+              <AppRoutes />
+              <DemoScriptModal />
+            </DashboardUiProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
