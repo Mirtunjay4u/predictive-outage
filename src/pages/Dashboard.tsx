@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
@@ -21,15 +21,18 @@ import type { BriefingData } from '@/components/dashboard/AIExecutiveBriefingPan
 import { ExecutiveSignalCard } from '@/components/dashboard/ExecutiveSignalCard';
 import { SupportingSignalsSheet } from '@/components/dashboard/SupportingSignalsSheet';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
-import { DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
 
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
   'Total Events': { title: 'All Tracked Events', subtitle: 'All outage-related events currently monitored', tooltip: 'Complete inventory of events across all lifecycle stages.' },
-  'Pre-Event': { title: 'Upcoming Risk Events', subtitle: 'Forecasted events with outage potential', tooltip: 'Events under monitoring or preparedness before outages occur.' },
-  'Active Events': { title: 'Ongoing Outages', subtitle: 'Events currently impacting service', tooltip: 'Ongoing outage or incident events requiring operational attention.' },
-  'High Priority': { title: 'Immediate Attention', subtitle: 'Critical load, uncertainty, or elevated risk detected', tooltip: 'Critical active events impacting safety, hospitals, or large customer counts.' },
-  'Post-Event': { title: 'Recently Resolved', subtitle: 'Events pending review or reporting', tooltip: 'Completed events under review or analysis.' },
+  'Pre-Event': { title: 'Upcoming Risk Events', subtitle: 'Forecast events with outage potential', tooltip: 'Forecast events with outage potential and pre-positioning requirements.' },
+  'Active Events': { title: 'Ongoing Outages', subtitle: 'Events currently impacting service', tooltip: 'Outages actively impacting service restoration and dispatch sequencing.' },
+  'High Priority': { title: 'Immediate Attention', subtitle: 'Critical load, uncertainty, or elevated risk detected', tooltip: 'Critical events with elevated service risk and critical load exposure.' },
+  'Post-Event': { title: 'Recently Resolved', subtitle: 'Events pending review or reporting', tooltip: 'Completed events pending closeout validation and reporting.' },
 };
+
+type KpiFilterKey = 'Pre-Event' | 'Active Events' | 'High Priority' | 'Post-Event';
+const HAZARD_FALLBACK = 'heavy rain';
 
 function getOutageBreakdown(scenarios: Scenario[]) {
   const breakdown = scenarios.reduce<Record<string, number>>((acc, s) => {
@@ -40,6 +43,61 @@ function getOutageBreakdown(scenarios: Scenario[]) {
   return Object.entries(breakdown).map(([type, count]) => ({ type, count, tooltip: `${count} events for ${type}` })).sort((a, b) => b.count - a.count);
 }
 
+function getScenarioHazard(scenarios: Scenario[]) {
+  const outageType = scenarios.find((scenario) => scenario.outage_type)?.outage_type;
+  return outageType ? outageType.toLowerCase() : HAZARD_FALLBACK;
+}
+
+function getFilterMatcher(filter: KpiFilterKey) {
+  return (scenario: Scenario) => {
+    if (filter === 'Pre-Event') return scenario.lifecycle_stage === 'Pre-Event';
+    if (filter === 'Post-Event') return scenario.lifecycle_stage === 'Post-Event';
+    if (filter === 'Active Events') return scenario.lifecycle_stage === 'Event';
+    return scenario.lifecycle_stage === 'Event' && scenario.priority === 'high';
+  };
+}
+
+function deriveRiskSeverity(index: number) {
+  if (index >= 75) return 'Severe';
+  if (index >= 55) return 'Elevated';
+  if (index >= 30) return 'Moderate';
+  return 'Low';
+}
+
+function getRiskBadgeClass(severity: string) {
+  if (severity === 'Severe') return 'bg-destructive/10 text-destructive border-destructive/40';
+  if (severity === 'Elevated') return 'bg-orange-500/10 text-orange-700 border-orange-500/40 dark:text-orange-300';
+  if (severity === 'Moderate') return 'bg-amber-500/10 text-amber-700 border-amber-500/40 dark:text-amber-300';
+  return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/40 dark:text-emerald-300';
+}
+
+// Ensure percentile estimates remain ordered for deterministic uncertainty messaging.
+function normalizePercentiles(p50: Date, p90: Date) {
+  return p90.getTime() < p50.getTime() ? { p50, p90: p50 } : { p50, p90 };
+}
+
+function buildEtrPercentiles(scenarios: Scenario[]) {
+  const etrs = scenarios
+    .map((scenario) => scenario.etr_expected)
+    .filter((value): value is string => Boolean(value))
+    .map((value) => new Date(value))
+    .filter((value) => !Number.isNaN(value.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (etrs.length === 0) {
+    const now = new Date();
+    return normalizePercentiles(now, now);
+  }
+
+  if (etrs.length === 1) {
+    return normalizePercentiles(etrs[0], etrs[0]);
+  }
+
+  const p50 = etrs[Math.floor((etrs.length - 1) * 0.5)] ?? etrs[0];
+  const p90 = etrs[Math.floor((etrs.length - 1) * 0.9)] ?? p50;
+  return normalizePercentiles(p50, p90);
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { boardroomMode } = useDashboardUi();
@@ -48,6 +106,9 @@ export default function Dashboard() {
 
   const [briefingState, setBriefingState] = useState<{ briefing: BriefingData | null; isLoading: boolean; error: string | null }>({ briefing: null, isLoading: false, error: null });
   const [supportingOpen, setSupportingOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<'drivers' | 'assets' | 'uncertainty' | 'tradeoffs' | 'actions'>('drivers');
+  const [selectedFeeder, setSelectedFeeder] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<KpiFilterKey[]>([]);
 
   const preEventScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Event');
@@ -62,6 +123,12 @@ export default function Dashboard() {
     postEvent: postEventScenarios.length,
   };
 
+  const filteredScenarios = useMemo(() => {
+    if (activeFilters.length === 0) return scenarios;
+    const matchers = activeFilters.map((filter) => getFilterMatcher(filter));
+    return scenarios.filter((scenario) => matchers.some((matcher) => matcher(scenario)));
+  }, [activeFilters, scenarios]);
+
   const summary = useMemo(() => {
     if (stats.highPriority > 0) return `${stats.highPriority} high-priority events require attention`;
     if (stats.active > 0) return `${stats.active} active events currently in progress`;
@@ -69,12 +136,62 @@ export default function Dashboard() {
     return 'No active events at this time';
   }, [stats.active, stats.highPriority, stats.preEvent]);
 
+  const scenarioName = scenarios[0]?.name ?? 'Regional Preparedness Drill';
+  const hazard = getScenarioHazard(scenarios);
+
+  const riskDrivers = useMemo(() => {
+    const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
+    const activeHazards = Math.min(25, activeScenarios.length * 5 + highPriorityScenarios.length * 4);
+    const criticalLoadExposure = Math.min(25, activeScenarios.filter((scenario) => scenario.has_critical_load).length * 8);
+    const crewReadiness = Math.min(20, Math.max(0, 20 - postEventScenarios.length * 2));
+    const index = Math.min(100, weatherSeverity + activeHazards + criticalLoadExposure + crewReadiness);
+    return {
+      index,
+      severity: deriveRiskSeverity(index),
+      chips: [
+        { key: 'Weather severity', value: weatherSeverity },
+        { key: 'Active hazards', value: activeHazards },
+        { key: 'Critical load exposure', value: criticalLoadExposure },
+        { key: 'Crew readiness', value: crewReadiness },
+      ],
+    };
+  }, [activeScenarios, highPriorityScenarios.length, postEventScenarios.length, preEventScenarios.length]);
+
+  const topFeeders = useMemo(() => {
+    const feeders = new Map<string, { feederId: string; name: string; customers: number; critical: number; etr: Date[]; riskScore: number }>();
+    activeScenarios.forEach((scenario) => {
+      const feederId = scenario.feeder_id || scenario.fault_id || scenario.id.slice(0, 8);
+      const name = scenario.location_name || scenario.service_area || scenario.name;
+      const existing = feeders.get(feederId) ?? { feederId, name, customers: 0, critical: 0, etr: [], riskScore: 0 };
+      existing.customers += scenario.customers_impacted ?? 0;
+      existing.critical += scenario.has_critical_load ? 1 : 0;
+      if (scenario.etr_expected) {
+        const etrDate = new Date(scenario.etr_expected);
+        if (!Number.isNaN(etrDate.getTime())) existing.etr.push(etrDate);
+      }
+      existing.riskScore += (scenario.priority === 'high' ? 25 : 10) + (scenario.has_critical_load ? 20 : 0) + Math.min(20, (scenario.customers_impacted ?? 0) / 50);
+      feeders.set(feederId, existing);
+    });
+
+    return Array.from(feeders.values())
+      .sort((a, b) => b.riskScore - a.riskScore)
+      .slice(0, 5)
+      .map((feeder) => {
+        const confidence = feeder.etr.length > 2 ? 'High' : feeder.etr.length > 0 ? 'Med' : 'Low';
+        const etr = feeder.etr.length > 0 ? new Date(Math.max(...feeder.etr.map((value) => value.getTime()))) : null;
+        const risk = feeder.riskScore > 70 ? 'Severe' : feeder.riskScore > 45 ? 'Elevated' : feeder.riskScore > 25 ? 'Moderate' : 'Low';
+        return { ...feeder, confidence, etr, risk };
+      });
+  }, [activeScenarios]);
+
+  const pBand = useMemo(() => buildEtrPercentiles(topFeeders.flatMap((feeder) => activeScenarios.filter((scenario) => (scenario.feeder_id || scenario.fault_id || scenario.id.slice(0, 8)) === feeder.feederId))), [activeScenarios, topFeeders]);
+
   const kpiCards = [
-    { key: 'Total Events', value: stats.total, icon: FileText, breakdown: undefined, scenarios, filter: null, emphasis: 'low' as const },
-    { key: 'Pre-Event', value: stats.preEvent, icon: Clock, breakdown: getOutageBreakdown(preEventScenarios), scenarios: preEventScenarios, filter: 'Pre-Event', emphasis: 'medium' as const },
-    { key: 'Active Events', value: stats.active, icon: Activity, breakdown: getOutageBreakdown(activeScenarios), scenarios: activeScenarios, filter: 'Event', emphasis: 'high' as const },
-    { key: 'High Priority', value: stats.highPriority, icon: AlertTriangle, breakdown: getOutageBreakdown(highPriorityScenarios), scenarios: highPriorityScenarios, filter: 'Event&priority=high', emphasis: 'critical' as const },
-    { key: 'Post-Event', value: stats.postEvent, icon: CheckCircle, breakdown: getOutageBreakdown(postEventScenarios), scenarios: postEventScenarios, filter: 'Post-Event', emphasis: 'low' as const },
+    { key: 'Total Events', value: stats.total, icon: FileText, breakdown: undefined, scenarios, filterKey: null, emphasis: 'low' as const },
+    { key: 'Pre-Event', value: stats.preEvent, icon: Clock, breakdown: getOutageBreakdown(preEventScenarios), scenarios: preEventScenarios, filterKey: 'Pre-Event' as KpiFilterKey, emphasis: 'medium' as const },
+    { key: 'Active Events', value: stats.active, icon: Activity, breakdown: getOutageBreakdown(activeScenarios), scenarios: activeScenarios, filterKey: 'Active Events' as KpiFilterKey, emphasis: 'high' as const },
+    { key: 'High Priority', value: stats.highPriority, icon: AlertTriangle, breakdown: getOutageBreakdown(highPriorityScenarios), scenarios: highPriorityScenarios, filterKey: 'High Priority' as KpiFilterKey, emphasis: 'critical' as const },
+    { key: 'Post-Event', value: stats.postEvent, icon: CheckCircle, breakdown: getOutageBreakdown(postEventScenarios), scenarios: postEventScenarios, filterKey: 'Post-Event' as KpiFilterKey, emphasis: 'low' as const },
   ];
 
   const compactMetrics = [
@@ -83,6 +200,18 @@ export default function Dashboard() {
     { label: 'Critical Load', value: activeScenarios.filter((s) => s.has_critical_load).length.toString() },
     { label: 'Tracked Total', value: stats.total.toString() },
   ];
+
+  const toggleFilter = (filter: KpiFilterKey) => {
+    setActiveFilters((current) => (current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]));
+  };
+
+  const handleKpiAction = (filterKey: KpiFilterKey | null) => {
+    if (filterKey) {
+      toggleFilter(filterKey);
+      return;
+    }
+    navigate('/events');
+  };
 
   return (
     <motion.div
@@ -96,17 +225,46 @@ export default function Dashboard() {
       <header>
         <div className={cn('flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-card shadow-sm', boardroomMode ? 'px-5 py-4' : 'px-4 py-3')}>
           <div>
-            <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Predictive Outage Management</h1>
+            <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {scenarioName}</p>
+            <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
+            <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{scenarioName}</span> • Hazard: <span className="font-medium text-foreground capitalize">{hazard}</span></p>
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}><span className="font-medium text-foreground">{summary}</span> · {stats.total} total tracked</p>
           </div>
           <div className="flex items-center gap-2">
-            {boardroomMode && <Badge variant="outline" className="text-[10px]">Boardroom mode</Badge>}
+            <Badge variant="outline" className="text-[10px]">{activeScenarios.length > 0 ? 'Active Event' : 'Demo'}</Badge>
+            <Badge variant="outline" className="text-[10px]">{boardroomMode ? 'Boardroom Mode On' : 'Boardroom Mode Off'}</Badge>
             <span className={DASHBOARD_TIMESTAMP_CLASS}>Updated {formatDashboardTime(dataUpdatedAt)}</span>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh data"><RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} /></Button>
             <ThemeToggle />
           </div>
         </div>
       </header>
+
+      <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Gauge className="h-3.5 w-3.5" />System Risk Index</p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="text-3xl font-semibold tabular-nums">{riskDrivers.index}</span>
+              <Badge variant="outline" className={cn('text-[11px]', getRiskBadgeClass(riskDrivers.severity))}>{riskDrivers.severity}</Badge>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {riskDrivers.chips.map((chip) => (
+              <button
+                key={chip.key}
+                className={cn('rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
+                onClick={() => {
+                  setSelectedSection('drivers');
+                  setSupportingOpen(true);
+                }}
+              >
+                {chip.key}: {chip.value}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {!boardroomMode && <ImmediateAttentionStrip scenarios={highPriorityScenarios} onViewAll={() => navigate('/events?lifecycle=Event&priority=high')} onEventClick={(id) => navigate(`/events/${id}`)} />}
 
@@ -118,11 +276,49 @@ export default function Dashboard() {
         onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
       />
 
+      {topFeeders.length > 0 && (
+        <section className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+          <h2 className="text-sm font-semibold">Top Impacted Feeders / Circuits</h2>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[640px] text-xs">
+              <thead className="text-muted-foreground">
+                <tr className="border-b border-border/60 text-left">
+                  <th className="pb-2">Feeder / Circuit</th>
+                  <th className="pb-2">Risk</th>
+                  <th className="pb-2">Customers</th>
+                  <th className="pb-2">Critical Loads</th>
+                  <th className="pb-2">ETR + Confidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topFeeders.map((feeder) => (
+                  <tr
+                    key={feeder.feederId}
+                    className="cursor-pointer border-b border-border/40 hover:bg-muted/30"
+                    onClick={() => {
+                      setSelectedFeeder(feeder.feederId);
+                      setSelectedSection('assets');
+                      setSupportingOpen(true);
+                    }}
+                  >
+                    <td className="py-2.5 font-medium">{feeder.name} ({feeder.feederId})</td>
+                    <td className="py-2.5"><Badge variant="outline" className={cn('text-[10px]', getRiskBadgeClass(feeder.risk))}>{feeder.risk}</Badge></td>
+                    <td className="py-2.5 tabular-nums">{feeder.customers.toLocaleString()}</td>
+                    <td className="py-2.5 tabular-nums">{feeder.critical}</td>
+                    <td className="py-2.5">{feeder.etr ? formatDashboardTime(feeder.etr) : 'Pending'} · {feeder.confidence}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       <div className="grid grid-cols-12 items-start gap-5 lg:gap-6">
         {!boardroomMode && (
           <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
-            <OperationalWorkQueue scenarios={scenarios} />
-            <OperationalTimeline scenarios={scenarios} />
+            <OperationalWorkQueue scenarios={filteredScenarios} />
+            <OperationalTimeline scenarios={filteredScenarios} />
           </div>
         )}
 
@@ -136,6 +332,14 @@ export default function Dashboard() {
             boardroomMode={boardroomMode}
             onOpenSupportingSignals={() => setSupportingOpen(true)}
           />
+          {activeFilters.length > 0 && (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {activeFilters.map((filter) => (
+                <button key={filter} onClick={() => toggleFilter(filter)} className={cn('inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>{filter}<ArrowRight className="h-3 w-3" /></button>
+              ))}
+              <button onClick={() => setActiveFilters([])} className={cn('rounded-full border border-border/60 px-2.5 py-1 text-[11px] text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Clear filters</button>
+            </div>
+          )}
           <div className={cn('grid gap-4 lg:gap-5', boardroomMode ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 xl:grid-cols-3')}>
             {kpiCards.slice(0, boardroomMode ? 4 : 5).map((card) => {
               const config = KPI_CONFIG[card.key];
@@ -151,20 +355,22 @@ export default function Dashboard() {
                   scenarios={card.scenarios}
                   emphasis={card.emphasis}
                   boardroomMode={boardroomMode}
-                  onClick={() => navigate(card.filter ? `/events?lifecycle=${encodeURIComponent(card.filter)}` : '/events')}
+                  onClick={() => handleKpiAction(card.filterKey)}
+                  actionLabel={card.filterKey ? (activeFilters.includes(card.filterKey) ? 'Remove filter' : 'Apply filter') : 'View all events'}
+                  isActive={card.filterKey ? activeFilters.includes(card.filterKey) : false}
                   onBreakdownClick={(type) => navigate(`/events?outage_type=${encodeURIComponent(type)}`)}
                 />
               );
             })}
             <CustomerImpactKPICard scenarios={scenarios} onClick={() => navigate('/events?lifecycle=Event')} boardroomMode={boardroomMode} />
           </div>
-          {!boardroomMode && <ReadinessStrip scenarios={scenarios} />}
+          {!boardroomMode && <ReadinessStrip scenarios={filteredScenarios} />}
         </div>
 
         {!boardroomMode && (
           <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
-            <SafetyRiskPanel scenarios={scenarios} />
-            <CrewWorkloadPanel scenarios={scenarios} />
+            <SafetyRiskPanel scenarios={filteredScenarios} />
+            <CrewWorkloadPanel scenarios={filteredScenarios} />
           </div>
         )}
       </div>
@@ -177,9 +383,23 @@ export default function Dashboard() {
         highlights={briefingState.briefing?.insights ?? ['No highlights available']}
         actions={briefingState.briefing?.actions ?? ['No actions available']}
         confidence={briefingState.briefing?.confidence ?? 'Low'}
-        sourceLabel={briefingState.briefing?.source === 'nemotron' ? 'Derived from AI Briefing' : 'Deterministic fallback'}
+        sourceLabel={briefingState.briefing?.source === 'nemotron' ? 'Nemotron' : 'Deterministic fallback'}
         timestamp={briefingState.briefing?.updatedTime ?? dataUpdatedAt}
         compactMetrics={compactMetrics}
+        initialSection={selectedSection}
+        selectedFeeder={selectedFeeder}
+        uncertaintyBand={{ p50: pBand.p50, p90: pBand.p90 }}
+        rankedDrivers={riskDrivers.chips.map((chip, index) => ({ label: chip.key, score: chip.value, rationale: `Driver rank ${index + 1} based on active grid conditions.` }))}
+        taggedActions={[
+          { tag: 'Oper', text: 'Sequence switching plans for highest-risk circuits before crew reassignment.' },
+          { tag: 'Comms', text: 'Issue customer update cadence every 30 minutes for severe feeders.' },
+          { tag: 'Safety', text: 'Validate critical-load backup runway and field safety posture before escalation.' },
+        ]}
+        tradeoffs={[
+          'Aggressive switching can restore larger load blocks faster but increases crew exposure on constrained feeders.',
+          'Risk-hold posture preserves safety margin but may extend customer restoration windows in severe pockets.',
+        ]}
+        topAssets={topFeeders.map((feeder) => ({ id: feeder.feederId, name: feeder.name, customers: feeder.customers, criticalLoads: feeder.critical, risk: feeder.risk }))}
       />
       </div>
     </motion.div>
