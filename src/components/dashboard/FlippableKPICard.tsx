@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS } from '@/lib/dashboard';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
@@ -27,10 +26,12 @@ interface FlippableKPICardProps {
   scenarios?: Scenario[];
   boardroomMode?: boolean;
   onClick: () => void;
+  actionLabel?: string;
+  isActive?: boolean;
   onBreakdownClick?: (type: string) => void;
 }
 
-export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, onBreakdownClick }: FlippableKPICardProps) {
+export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, actionLabel = 'View All', isActive = false, onBreakdownClick }: FlippableKPICardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const animatedValue = useAnimatedNumber(value, 360);
 
@@ -108,7 +109,17 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
                   ))}
                 </div>
               </ScrollArea>
-              <button onClick={onClick} className={cn('mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>View All<ExternalLink className="h-3 w-3" /></button>
+              <button
+                onClick={onClick}
+                className={cn(
+                  'mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 py-2 text-xs font-medium text-primary',
+                  isActive ? 'bg-primary/20' : 'bg-primary/10',
+                  DASHBOARD_INTERACTIVE_BUTTON_CLASS,
+                )}
+              >
+                {actionLabel}
+                <ExternalLink className="h-3 w-3" />
+              </button>
             </CardContent>
           </Card>
         </div>
