@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS } from '@/lib/dashboard';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import type { Scenario } from '@/types/scenario';
 
@@ -40,7 +41,7 @@ export function CustomerImpactKPICard({ scenarios, onClick, boardroomMode = fals
         <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
-              <Card className="h-full cursor-pointer rounded-xl border border-orange-300/40 bg-orange-50/50 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:border-orange-500/30 dark:bg-orange-500/[0.03]" onClick={() => setIsFlipped((v) => !v)} tabIndex={0} role="button">
+              <Card className={cn('h-full cursor-pointer rounded-xl border border-orange-300/40 bg-orange-50/50 shadow-sm dark:border-orange-500/30 dark:bg-orange-500/[0.03]', DASHBOARD_INTERACTIVE_SURFACE_CLASS)} onClick={() => setIsFlipped((v) => !v)} tabIndex={0} role="button">
                 <CardContent className={boardroomMode ? 'flex h-full flex-col p-5' : 'flex h-full flex-col p-4'}>
                   <div className="mb-2 flex items-start justify-between"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/75">Customer Impact</p><div className="flex h-8 w-8 items-center justify-center rounded-md bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400"><Users className="h-4 w-4" /></div></div>
                   <div className="flex-1">
@@ -70,7 +71,7 @@ export function CustomerImpactKPICard({ scenarios, onClick, boardroomMode = fals
         <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
           <Card className="h-full rounded-xl border border-orange-300/40 bg-orange-50/50 shadow-sm dark:border-orange-500/30 dark:bg-orange-500/[0.03]">
             <CardContent className="flex h-full flex-col p-4">
-              <div className="mb-3 flex items-center justify-between"><h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"><Users className="h-3.5 w-3.5" />Impact by event</h4><button onClick={() => setIsFlipped(false)} className="rounded p-1 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /></button></div>
+              <div className="mb-3 flex items-center justify-between"><h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"><Users className="h-3.5 w-3.5" />Impact by event</h4><button onClick={() => setIsFlipped(false)} className={cn('rounded p-1', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}><RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /></button></div>
               <ScrollArea className="-mx-1 flex-1 px-1">
                 <div className="space-y-1.5">
                   {activeScenarios.sort((a, b) => (b.customers_impacted || 0) - (a.customers_impacted || 0)).slice(0, 5).map((scenario) => (
@@ -81,7 +82,7 @@ export function CustomerImpactKPICard({ scenarios, onClick, boardroomMode = fals
                   ))}
                 </div>
               </ScrollArea>
-              <button onClick={onClick} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View All Events<ExternalLink className="h-3 w-3" /></button>
+              <button onClick={onClick} className={cn('mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>View All Events<ExternalLink className="h-3 w-3" /></button>
             </CardContent>
           </Card>
         </div>

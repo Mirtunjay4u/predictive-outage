@@ -1,7 +1,8 @@
 import { X } from 'lucide-react';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { formatDashboardTime, safeTruncate } from '@/lib/dashboard';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime, safeTruncate } from '@/lib/dashboard';
+import { cn } from '@/lib/utils';
 
 interface SupportingSignalsSheetProps {
   open: boolean;
@@ -37,7 +38,7 @@ export function SupportingSignalsSheet({
               <SheetTitle className="text-base">Supporting Signals</SheetTitle>
               <SheetDescription className="mt-1 text-xs">Quick-scan supporting evidence for leadership review.</SheetDescription>
             </div>
-            <SheetClose className="rounded-md p-1.5 text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Close supporting signals panel">
+            <SheetClose className={cn('rounded-md p-1.5 text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)} aria-label="Close supporting signals panel">
               <X className="h-4 w-4" />
             </SheetClose>
           </div>
@@ -51,7 +52,7 @@ export function SupportingSignalsSheet({
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="outline">Confidence: {confidence}</Badge>
               <Badge variant="outline">{sourceLabel}</Badge>
-              <span className="text-muted-foreground">Updated {formatDashboardTime(timestamp)}</span>
+              <span className={DASHBOARD_TIMESTAMP_CLASS}>Updated {formatDashboardTime(timestamp)}</span>
             </div>
           </section>
 

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import type { Scenario } from '@/types/scenario';
 import type { BriefingData } from '@/components/dashboard/AIExecutiveBriefingPanel';
 import { CONFIDENCE_BADGE_CLASS } from '@/components/dashboard/AIExecutiveBriefingPanel';
-import { formatDashboardTime, safeTruncate } from '@/lib/dashboard';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime, safeTruncate } from '@/lib/dashboard';
+import { cn } from '@/lib/utils';
 
 interface ExecutiveSignalCardProps {
   scenarios: Scenario[];
@@ -52,16 +53,16 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
   const signal = briefing ? deriveSignalFromBriefing(briefing) : deriveFallbackSignal(scenarios, dataUpdatedAt);
 
   return (
-    <Card className="mb-4 rounded-xl border border-border/60 bg-card shadow-sm">
+    <Card className={cn('mb-4 rounded-xl border border-border/60 bg-card shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
       <CardHeader className={boardroomMode ? 'px-5 pb-2 pt-5' : 'px-4 pb-2 pt-4'}>
         <div className="flex flex-wrap items-start justify-between gap-2">
           <CardTitle className={boardroomMode ? 'flex items-center gap-2 text-base font-semibold' : 'flex items-center gap-2 text-sm font-semibold'}>
             <Sparkles className="h-4 w-4 text-primary" />
             Executive Signal
           </CardTitle>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
             <Badge variant="outline" className={CONFIDENCE_BADGE_CLASS[signal.confidence]}>Confidence: {signal.confidence}</Badge>
-            <span>Updated {formatDashboardTime(signal.updatedTime)}</span>
+            <span className={DASHBOARD_TIMESTAMP_CLASS}>Updated {formatDashboardTime(signal.updatedTime)}</span>
           </div>
         </div>
       </CardHeader>
@@ -77,7 +78,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
 
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-muted-foreground">Source: {signal.source === 'nemotron' ? 'Derived from AI Briefing' : 'Deterministic fallback'}.</p>
-          <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className="h-8 text-xs">Supporting Signals</Button>
+          <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Supporting Signals</Button>
         </div>
       </CardContent>
     </Card>

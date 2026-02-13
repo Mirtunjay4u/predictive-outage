@@ -2,6 +2,7 @@ import { Shield, Zap, Droplets, ThermometerSun } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS } from '@/lib/dashboard';
 import type { Scenario } from '@/types/scenario';
 
 interface SafetyRiskPanelProps {
@@ -47,10 +48,11 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
           {metrics.map((m) => {
             const Icon = m.icon;
             return (
-              <div
+              <button
                 key={m.label}
+                type="button"
                 onClick={() => navigate(m.path)}
-                className="flex items-center justify-between px-3 py-1.5 rounded-md cursor-pointer hover:bg-muted/40 transition-colors"
+                className={cn('flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon className={cn(
@@ -65,7 +67,7 @@ export function SafetyRiskPanel({ scenarios }: SafetyRiskPanelProps) {
                 )}>
                   {m.value}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>
