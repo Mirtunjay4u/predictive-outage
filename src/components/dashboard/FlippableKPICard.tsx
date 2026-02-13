@@ -28,9 +28,10 @@ interface FlippableKPICardProps {
   boardroomMode?: boolean;
   onClick: () => void;
   onBreakdownClick?: (type: string) => void;
+  selected?: boolean;
 }
 
-export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, onBreakdownClick }: FlippableKPICardProps) {
+export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, onBreakdownClick, selected = false }: FlippableKPICardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const animatedValue = useAnimatedNumber(value, 360);
 
@@ -55,7 +56,7 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
               <Card
-                className={cn('h-full cursor-pointer rounded-xl border shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS, emphasisStyles[emphasis])}
+                className={cn('h-full cursor-pointer rounded-xl border shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS, emphasisStyles[emphasis], selected && 'ring-2 ring-primary/60 ring-offset-2')}
                 onClick={() => setIsFlipped((v) => !v)}
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && setIsFlipped((v) => !v)}
@@ -108,7 +109,7 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
                   ))}
                 </div>
               </ScrollArea>
-              <button onClick={onClick} className={cn('mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>View All<ExternalLink className="h-3 w-3" /></button>
+              <button onClick={onClick} className={cn('mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>{selected ? 'Clear Filter' : 'Apply Filter'}<ExternalLink className="h-3 w-3" /></button>
             </CardContent>
           </Card>
         </div>
