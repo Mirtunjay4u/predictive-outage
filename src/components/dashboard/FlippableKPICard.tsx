@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS } from '@/lib/dashboard';
 import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import type { Scenario } from '@/types/scenario';
 
@@ -54,7 +55,7 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
               <Card
-                className={cn('h-full cursor-pointer rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2', emphasisStyles[emphasis])}
+                className={cn('h-full cursor-pointer rounded-xl border shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS, emphasisStyles[emphasis])}
                 onClick={() => setIsFlipped((v) => !v)}
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && setIsFlipped((v) => !v)}
@@ -96,18 +97,18 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
             <CardContent className="flex h-full flex-col p-4">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide"><Icon className="h-3.5 w-3.5" />{label} details</h4>
-                <button onClick={() => setIsFlipped(false)} className="rounded p-1 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Flip back"><RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                <button onClick={() => setIsFlipped(false)} className={cn('rounded p-1', DASHBOARD_INTERACTIVE_BUTTON_CLASS)} aria-label="Flip back"><RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /></button>
               </div>
               <ScrollArea className="-mx-1 flex-1 px-1">
                 <div className="space-y-1.5">
                   {(scenarios.length > 0 ? scenarios.slice(0, 5).map((scenario) => ({ key: scenario.id, label: scenario.name, value: scenario.customers_impacted ? `${scenario.customers_impacted.toLocaleString()} affected` : 'No impact count' })) : (breakdown || []).map((item) => ({ key: item.type, label: item.type, value: String(item.count) }))).map((row) => (
-                    <button key={row.key} onClick={(e) => { e.stopPropagation(); onBreakdownClick?.(row.label); }} className="flex w-full items-center justify-between rounded-md border border-border/40 bg-muted/40 p-2 text-left text-xs hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <button key={row.key} onClick={(e) => { e.stopPropagation(); onBreakdownClick?.(row.label); }} className={cn('flex w-full items-center justify-between rounded-md border border-border/40 bg-muted/40 p-2 text-left text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>
                       <span className="truncate">{row.label}</span><span className="ml-2 font-semibold tabular-nums">{row.value}</span>
                     </button>
                   ))}
                 </div>
               </ScrollArea>
-              <button onClick={onClick} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">View All<ExternalLink className="h-3 w-3" /></button>
+              <button onClick={onClick} className={cn('mt-3 flex w-full items-center justify-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 py-2 text-xs font-medium text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>View All<ExternalLink className="h-3 w-3" /></button>
             </CardContent>
           </Card>
         </div>
