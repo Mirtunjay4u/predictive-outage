@@ -237,10 +237,10 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, onBriefingS
   const isEmptyState = scenarios.length === 0;
 
   return (
-    <Card className="mb-3 border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card">
-      <CardHeader className="pb-3">
+    <Card className="mb-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-0 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+      <CardHeader className="px-4 pb-2 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
             <Sparkles className="h-4 w-4 text-primary" />
             AI Briefing (Last 6 hours)
           </CardTitle>
@@ -252,7 +252,7 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, onBriefingS
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 pb-4">
         {isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -264,6 +264,14 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, onBriefingS
           <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             <AlertCircle className="h-4 w-4" />
             Nemotron unavailable. Showing deterministic briefing fallback.
+          </div>
+        )}
+
+        {briefing.source === 'fallback' && (
+          <div className="flex items-center justify-start">
+            <Badge variant="outline" className="border-amber-300 bg-amber-100/70 text-amber-900">
+              Using fallback summary
+            </Badge>
           </div>
         )}
 

@@ -146,14 +146,19 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-4 max-w-[1600px] mx-auto">
+    <div className="mx-auto max-w-[1600px] px-4 py-5 lg:px-5">
       {/* Header - Compact */}
-      <header className="mb-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-0.5">
+      <header className="mb-3">
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-border/40 bg-card/60 px-4 py-3 shadow-sm">
+          <div className="space-y-0">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">
               Predictive Outage Management
             </h1>
+            {dataUpdatedAt > 0 && (
+              <p className="mt-0.5 text-[10px] text-muted-foreground/60 tabular-nums">
+                Last updated {format(new Date(dataUpdatedAt), 'h:mm a')}
+              </p>
+            )}
             <p className="text-[11px] text-muted-foreground/70">
               <span className="font-medium text-foreground">{summary.emphasis}</span>
               {' '}
@@ -163,17 +168,12 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 shrink-0">
-            {dataUpdatedAt > 0 && (
-              <span className="tabular-nums">
-                Updated {format(new Date(dataUpdatedAt), 'h:mm a')}
-              </span>
-            )}
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 shrink-0">
             <div className="flex items-center gap-1 border-l border-border/40 pl-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-muted/40"
+                className="h-6 w-6 text-muted-foreground/60 hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 onClick={() => refetch()}
                 disabled={isFetching}
                 aria-label="Refresh data"
@@ -200,9 +200,9 @@ export default function Dashboard() {
       />
 
       {/* 3-6-3 Grid Layout */}
-      <div className="grid grid-cols-12 gap-3 items-start">
+      <div className="grid grid-cols-12 items-start gap-4">
         {/* Left Column - 3 cols: Operational Work Queue */}
-        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
+        <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
           <OperationalWorkQueue scenarios={scenarios} />
           <OperationalTimeline scenarios={scenarios} />
         </div>
@@ -216,7 +216,7 @@ export default function Dashboard() {
             isLoading={briefingState.isLoading}
             error={briefingState.error}
           />
-          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
             {kpiCards.map((card) => {
               const config = KPI_CONFIG[card.key];
               return (
@@ -245,7 +245,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column - 3 cols: Safety & Risk + Crew & Workload stacked */}
-        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
+        <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
           <SafetyRiskPanel scenarios={scenarios} />
           <CrewWorkloadPanel scenarios={scenarios} />
         </div>

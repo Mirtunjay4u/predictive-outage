@@ -71,11 +71,11 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
   const signal = briefing ? deriveSignalFromBriefing(briefing) : fallbackSignal;
 
   return (
-    <Card className="mb-3 border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="mb-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-0 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+      <CardHeader className="px-4 pb-2 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <Sparkles className="h-4 w-4 text-primary" />
               Executive Signal
             </CardTitle>
@@ -91,7 +91,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-2 pt-1">
+      <CardContent className="space-y-2 px-4 pb-4 pt-1">
         {isLoading && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -106,7 +106,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
           </div>
         )}
 
-        <div className="relative overflow-hidden rounded-lg border border-border/40 bg-card/60 px-3 py-3">
+        <div className="relative overflow-hidden rounded-lg border border-border/40 bg-card/60 px-3 py-3 transition-colors hover:border-primary/30">
           <div
             className={cn(
               'pointer-events-none absolute inset-0 rounded-lg opacity-60',
