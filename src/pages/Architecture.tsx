@@ -25,6 +25,8 @@ type NodeId =
   | 'sql_tools_store' | 'retriever_lane'
   | 'audit_logs' | 'prompt_versioning' | 'telemetry' | 'rbac_rls';
 
+type NodeTier = 'nim' | 'core' | 'data' | 'input' | 'governance';
+
 interface NodeDef {
   id: NodeId;
   x: number; y: number; w: number; h: number;
@@ -33,6 +35,7 @@ interface NodeDef {
   nim?: boolean;
   optional?: boolean;
   icon?: string;
+  tier?: NodeTier;
 }
 
 interface EdgeDef {
@@ -155,33 +158,33 @@ type Rect = { x: number; y: number; w: number; h: number };
 /* ─── NODES ─── */
 const NODES: NodeDef[] = [
   // Band 1 – Ingest
-  { id: 'structured_data', x: 40, y: 60, w: 200, h: 72, label: 'STRUCTURED DATA', sub: 'OMS · SCADA · Asset · Crew · Customer', icon: 'db' },
-  { id: 'sql_postgres', x: 270, y: 60, w: 160, h: 72, label: 'SQL / POSTGRES', icon: 'db' },
-  { id: 'unstructured_data', x: 460, y: 60, w: 160, h: 72, label: 'UNSTRUCTURED DATA', icon: 'doc' },
-  { id: 'text_retriever', x: 650, y: 60, w: 140, h: 72, label: 'TEXT RETRIEVER', icon: 'agent' },
-  { id: 'vector_db', x: 820, y: 60, w: 110, h: 72, label: 'VECTOR DB', icon: 'db' },
-  { id: 'embedding_nim', x: 960, y: 42, w: 150, h: 44, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim' },
-  { id: 'reranking_nim', x: 960, y: 108, w: 150, h: 44, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim' },
+  { id: 'structured_data', x: 40, y: 60, w: 200, h: 72, label: 'STRUCTURED DATA', sub: 'OMS · SCADA · Asset · Crew · Customer', icon: 'db', tier: 'input' },
+  { id: 'sql_postgres', x: 270, y: 60, w: 160, h: 72, label: 'SQL / POSTGRES', icon: 'db', tier: 'data' },
+  { id: 'unstructured_data', x: 460, y: 60, w: 160, h: 72, label: 'UNSTRUCTURED DATA', icon: 'doc', tier: 'input' },
+  { id: 'text_retriever', x: 650, y: 60, w: 140, h: 72, label: 'TEXT RETRIEVER', icon: 'agent', tier: 'core' },
+  { id: 'vector_db', x: 820, y: 60, w: 110, h: 72, label: 'VECTOR DB', icon: 'db', tier: 'data' },
+  { id: 'embedding_nim', x: 960, y: 42, w: 150, h: 44, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  { id: 'reranking_nim', x: 960, y: 108, w: 150, h: 44, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
 
   // Band 2 – Operator Copilot Runtime (above trust boundary)
-  { id: 'authenticated_operator', x: 80, y: 230, w: 240, h: 62, label: 'AUTHENTICATED OPERATOR', icon: 'user' },
-  { id: 'copilot_ui', x: 400, y: 230, w: 240, h: 62, label: 'COPILOT UI', icon: 'app' },
+  { id: 'authenticated_operator', x: 80, y: 230, w: 240, h: 62, label: 'AUTHENTICATED OPERATOR', icon: 'user', tier: 'input' },
+  { id: 'copilot_ui', x: 400, y: 230, w: 240, h: 62, label: 'COPILOT UI', icon: 'app', tier: 'core' },
 
   // Band 2 – Below trust boundary
-  { id: 'orchestrator', x: 40, y: 410, w: 220, h: 64, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent' },
-  { id: 'guardrails', x: 300, y: 410, w: 200, h: 64, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent' },
-  { id: 'nemotron_nim', x: 540, y: 410, w: 220, h: 64, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim' },
-  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'LOVABLE AI', sub: 'Secondary hybrid AI path', icon: 'nim' },
+  { id: 'orchestrator', x: 40, y: 410, w: 220, h: 64, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent', tier: 'core' },
+  { id: 'guardrails', x: 300, y: 410, w: 200, h: 64, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent', tier: 'core' },
+  { id: 'nemotron_nim', x: 540, y: 410, w: 220, h: 64, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim', tier: 'nim' },
+  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'LOVABLE AI', sub: 'Secondary hybrid AI path', icon: 'nim', tier: 'nim' },
 
   // Band 2 – Bottom row
-  { id: 'sql_tools_store', x: 40, y: 520, w: 240, h: 54, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db' },
-  { id: 'retriever_lane', x: 320, y: 520, w: 320, h: 54, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db' },
+  { id: 'sql_tools_store', x: 40, y: 520, w: 240, h: 54, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db', tier: 'data' },
+  { id: 'retriever_lane', x: 320, y: 520, w: 320, h: 54, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db', tier: 'data' },
 
   // Band 3 – Memory / Observability / Governance
-  { id: 'audit_logs', x: 40, y: 680, w: 220, h: 52, label: 'AUDIT LOGS', icon: 'doc' },
-  { id: 'prompt_versioning', x: 290, y: 680, w: 240, h: 52, label: 'PROMPT & MODEL VERSIONING', icon: 'agent' },
-  { id: 'telemetry', x: 560, y: 680, w: 230, h: 52, label: 'TELEMETRY / MONITORING', icon: 'analytics' },
-  { id: 'rbac_rls', x: 820, y: 680, w: 280, h: 52, label: 'RBAC + RLS', icon: 'admin' },
+  { id: 'audit_logs', x: 40, y: 680, w: 220, h: 52, label: 'AUDIT LOGS', icon: 'doc', tier: 'governance' },
+  { id: 'prompt_versioning', x: 290, y: 680, w: 240, h: 52, label: 'PROMPT & MODEL VERSIONING', icon: 'agent', tier: 'governance' },
+  { id: 'telemetry', x: 560, y: 680, w: 230, h: 52, label: 'TELEMETRY / MONITORING', icon: 'analytics', tier: 'governance' },
+  { id: 'rbac_rls', x: 820, y: 680, w: 280, h: 52, label: 'RBAC + RLS', icon: 'admin', tier: 'governance' },
 ];
 
 /* ─── EDGES ─── */
@@ -313,9 +316,15 @@ function NodeTooltipBody({ nodeId }: { nodeId: NodeId }) {
 
 /* ─── node card ─── */
 function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
-  const borderColor = node.nim ? 'border-emerald-400 border-2' : 'border-cyan-300/35';
-  const textColor = node.nim ? 'text-emerald-100' : 'text-slate-100';
-  const iconColor = node.nim ? 'text-emerald-300' : 'text-cyan-300/80';
+  const tier = node.tier ?? (node.nim ? 'nim' : 'input');
+  const tierStyles: Record<NodeTier, { border: string; text: string; icon: string }> = {
+    nim:        { border: 'border-2 border-emerald-400', text: 'text-emerald-100', icon: 'text-emerald-300' },
+    core:       { border: 'border-2 border-cyan-400/70', text: 'text-cyan-50', icon: 'text-cyan-300' },
+    data:       { border: 'border-[1.5px] border-sky-400/50', text: 'text-slate-100', icon: 'text-sky-300/80' },
+    input:      { border: 'border border-slate-400/50', text: 'text-slate-200', icon: 'text-slate-300/80' },
+    governance: { border: 'border border-amber-400/45', text: 'text-slate-200', icon: 'text-amber-300/70' },
+  };
+  const s = tierStyles[tier];
   return (
     <Tooltip delayDuration={200}>
       <TooltipTrigger asChild>
@@ -325,12 +334,12 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
-          className={`absolute rounded-lg border bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${borderColor} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:border-cyan-300/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-default`}
+          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-default`}
           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
         >
           <div className="flex h-full w-full flex-col items-center justify-center">
-            <span className={iconColor}><NodeIcon icon={node.icon} /></span>
-            <p className={`text-[9px] font-semibold tracking-[0.06em] leading-tight ${textColor}`}>{node.label}</p>
+            <span className={s.icon}><NodeIcon icon={node.icon} /></span>
+            <p className={`text-[9px] font-semibold tracking-[0.06em] leading-tight ${s.text}`}>{node.label}</p>
             {node.sub && <p className="mt-0.5 text-[7px] font-medium tracking-[0.03em] text-slate-400/90 leading-tight">{node.sub}</p>}
           </div>
         </div>
@@ -555,13 +564,31 @@ function DiagramLegend() {
       {/* NIM node */}
       <div className="flex items-center gap-1.5">
         <div className="h-3.5 w-5 rounded border-2 border-emerald-400 bg-slate-900/80" />
-        <span className="text-[9px] font-semibold text-muted-foreground">NVIDIA NIM service</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">NVIDIA NIM</span>
       </div>
 
-      {/* Standard node */}
+      {/* Core runtime */}
       <div className="flex items-center gap-1.5">
-        <div className="h-3.5 w-5 rounded border border-cyan-300/35 bg-slate-900/80" />
-        <span className="text-[9px] font-semibold text-muted-foreground">Platform component</span>
+        <div className="h-3.5 w-5 rounded border-2 border-cyan-400/70 bg-slate-900/80" />
+        <span className="text-[9px] font-semibold text-muted-foreground">Core runtime</span>
+      </div>
+
+      {/* Data store */}
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-5 rounded border-[1.5px] border-sky-400/50 bg-slate-900/80" />
+        <span className="text-[9px] font-semibold text-muted-foreground">Data store</span>
+      </div>
+
+      {/* Input */}
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-5 rounded border border-slate-400/50 bg-slate-900/80" />
+        <span className="text-[9px] font-semibold text-muted-foreground">Input / source</span>
+      </div>
+
+      {/* Governance */}
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-5 rounded border border-amber-400/45 bg-slate-900/80" />
+        <span className="text-[9px] font-semibold text-muted-foreground">Governance</span>
       </div>
 
       {/* Particle */}
