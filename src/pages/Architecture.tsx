@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Layers } from 'lucide-react';
 
 const fadeUp = {
@@ -326,15 +326,15 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
   };
   const s = tierStyles[tier];
   return (
-    <Tooltip delayDuration={200}>
-      <TooltipTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <div
           ref={setNodeRef(node.id)}
           data-node={node.id}
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
-          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-default`}
+          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer`}
           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
         >
           <div className="flex h-full w-full flex-col items-center justify-center">
@@ -343,11 +343,11 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
             {node.sub && <p className="mt-0.5 text-[7px] font-medium tracking-[0.03em] text-slate-400/90 leading-tight">{node.sub}</p>}
           </div>
         </div>
-      </TooltipTrigger>
-      <TooltipContent side={node.y < 150 ? "bottom" : "top"} className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-[9999]" sideOffset={8}>
+      </PopoverTrigger>
+      <PopoverContent side={node.y < 150 ? "bottom" : "top"} className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-[9999] w-auto" sideOffset={8}>
         <NodeTooltipBody nodeId={node.id} />
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -443,7 +443,6 @@ function ArchitectureDiagram() {
   const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : style === 'optional' ? 'rgba(160,220,205,0.45)' : 'rgba(160,220,205,0.55)');
 
   return (
-    <TooltipProvider>
     <ResponsiveScaler>
       <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
@@ -524,7 +523,6 @@ function ArchitectureDiagram() {
         </svg>
       </div>
     </ResponsiveScaler>
-    </TooltipProvider>
   );
 }
 
