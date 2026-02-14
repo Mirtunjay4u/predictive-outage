@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +54,7 @@ function parseNemotronBriefing(answer: string): Omit<BriefingData, 'updatedTime'
 
     const confidenceText = typeof parsed.confidence === 'string' ? parsed.confidence.toLowerCase() : 'low';
     const confidence: ConfidenceLevel = confidenceText === 'high' ? 'High' : confidenceText.includes('med') ? 'Med' : 'Low';
-    if (insights.length < 3 || actions.length < 2) return null;
+    if (insights.length === 0) return null;
     return { insights, actions, confidence };
   } catch {
     return null;
@@ -87,95 +87,106 @@ function buildDeterministicFallback(scenarios: Scenario[], dataUpdatedAt: number
   };
 }
 
+// ── Module-level cache (survives remounts, shared across instances) ──
+const nimCache = {
+  briefing: null as BriefingData | null,
+  fetchedAt: 0,
+  backoff: 0,
+  inflight: false,
+};
+const CACHE_TTL_MS = 60 * 1000;       // 1 minute
+const BASE_BACKOFF_MS = 10_000;        // 10s
+const MAX_BACKOFF_MS = 60 * 1000;      // 1 min
+
 export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMode = false, onOpenSupportingSignals, onBriefingStateChange }: AIExecutiveBriefingPanelProps) {
   const fallbackBriefing = useMemo(() => buildDeterministicFallback(scenarios, dataUpdatedAt), [dataUpdatedAt, scenarios]);
-  const [briefing, setBriefing] = useState<BriefingData>(fallbackBriefing);
+  const [briefing, setBriefing] = useState<BriefingData>(() => nimCache.briefing ?? fallbackBriefing);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep fallback in sync but don't overwrite a cached NIM result
   useEffect(() => {
-    setBriefing(fallbackBriefing);
+    if (!nimCache.briefing) setBriefing(fallbackBriefing);
   }, [fallbackBriefing]);
 
   useEffect(() => {
     onBriefingStateChange?.({ briefing, isLoading, error });
   }, [briefing, error, isLoading, onBriefingStateChange]);
 
-  // Throttle NIM calls: cache successful responses for 5 minutes, back off on failures
-  const lastFetchRef = useRef<number>(0);
-  const backoffRef = useRef<number>(0);
-  const cachedBriefingRef = useRef<BriefingData | null>(null);
-
-  const CACHE_TTL_MS = 60 * 1000; // 1 minute
-  const BASE_BACKOFF_MS = 10_000; // 10s initial backoff
-  const MAX_BACKOFF_MS = 60 * 1000; // 1 min max backoff
+  // Stable scenario key to avoid re-fetching when reference changes but data hasn't
+  const scenarioKey = useMemo(() => {
+    const active = scenarios.filter((s) => s.lifecycle_stage === 'Event');
+    return `${active.length}-${active.map((s) => s.id).sort().join(',')}`;
+  }, [scenarios]);
 
   useEffect(() => {
-    let cancelled = false;
     const now = Date.now();
 
-    // If we have a cached NIM response that's still fresh, reuse it
-    if (cachedBriefingRef.current && now - lastFetchRef.current < CACHE_TTL_MS) {
-      setBriefing(cachedBriefingRef.current);
-      return;
-    }
+    // If already in-flight from another mount, don't start another call
+    if (nimCache.inflight) return;
 
-    // If in backoff window after a failure, skip
-    if (backoffRef.current > 0 && now - lastFetchRef.current < backoffRef.current) {
-      return;
-    }
-
-    const load = async () => {
-      setIsLoading(true);
+    // If cached and fresh, reuse without loading state
+    if (nimCache.briefing && now - nimCache.fetchedAt < CACHE_TTL_MS) {
+      setBriefing(nimCache.briefing);
       setError(null);
-      try {
-        const { data, error: fnError } = await supabase.functions.invoke('nemotron', {
-          body: {
-            prompt:
-              'Generate an executive outage briefing for the last six hours in strict JSON only with schema {"insights":["...","...","..."],"actions":["...","..."],"confidence":"High|Med|Low"}.',
-            context: JSON.stringify({ active_events: scenarios.filter((s) => s.lifecycle_stage === 'Event').slice(0, 20) }),
-          },
-        });
+      setIsLoading(false);
+      return;
+    }
 
-        if (fnError) throw fnError;
+    // If in backoff window, skip
+    if (nimCache.backoff > 0 && now - nimCache.fetchedAt < nimCache.backoff) {
+      return;
+    }
 
-        // Handle graceful fallback responses from the edge function (429/timeout)
-        if (data?.fallback) {
-          throw new Error(`NIM ${data.reason || 'unavailable'}`);
-        }
+    nimCache.inflight = true;
+    let active = true;
 
-        if (!data?.ok || typeof data.answer !== 'string') throw new Error('Nemotron response unavailable');
+    setIsLoading(true);
+    setError(null);
 
-        const parsed = parseNemotronBriefing(data.answer);
-        if (!parsed) throw new Error('Nemotron returned non-structured briefing content');
-        if (!cancelled) {
-          const nimBriefing = { ...parsed, updatedTime: new Date(), source: 'nemotron' as const };
-          setBriefing(nimBriefing);
-          cachedBriefingRef.current = nimBriefing;
-          lastFetchRef.current = Date.now();
-          backoffRef.current = 0; // reset backoff on success
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Unable to load AI briefing');
-          setBriefing(fallbackBriefing);
-          lastFetchRef.current = Date.now();
-          // Exponential backoff: 30s → 60s → 120s → … capped at 5min
-          backoffRef.current = Math.min(
-            backoffRef.current > 0 ? backoffRef.current * 2 : BASE_BACKOFF_MS,
-            MAX_BACKOFF_MS
-          );
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
+    supabase.functions.invoke('nemotron', {
+      body: {
+        prompt:
+          'Generate an executive outage briefing for the last six hours in strict JSON only with schema {"insights":["...","...","..."],"actions":["...","..."],"confidence":"High|Med|Low"}.',
+        context: JSON.stringify({ active_events: scenarios.filter((s) => s.lifecycle_stage === 'Event').slice(0, 20) }),
+      },
+    }).then(({ data, error: fnError }) => {
+      if (fnError) throw fnError;
+      if (data?.fallback) throw new Error(`NIM ${data.reason || 'unavailable'}`);
+      if (!data?.ok || typeof data.answer !== 'string') throw new Error('Nemotron response unavailable');
+
+      const parsed = parseNemotronBriefing(data.answer);
+      if (!parsed) throw new Error('Nemotron returned non-structured briefing content');
+
+      const nimBriefing = { ...parsed, updatedTime: new Date(), source: 'nemotron' as const };
+      nimCache.briefing = nimBriefing;
+      nimCache.fetchedAt = Date.now();
+      nimCache.backoff = 0;
+      nimCache.inflight = false;
+
+      // Always update state — even if "cancelled", this component instance is still mounted
+      // React StrictMode double-invokes effects but the component itself stays mounted
+      setBriefing(nimBriefing);
+      setIsLoading(false);
+      setError(null);
+    }).catch((err: unknown) => {
+      nimCache.fetchedAt = Date.now();
+      nimCache.backoff = Math.min(
+        nimCache.backoff > 0 ? nimCache.backoff * 2 : BASE_BACKOFF_MS,
+        MAX_BACKOFF_MS
+      );
+      nimCache.inflight = false;
+
+      if (active) {
+        setError(err instanceof Error ? err.message : 'Unable to load AI briefing');
+        setBriefing(fallbackBriefing);
+        setIsLoading(false);
       }
-    };
+    });
 
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [fallbackBriefing, scenarios]);
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenarioKey]);
 
   return (
     <Card className={cn('mb-4 rounded-xl border border-border/60 bg-card shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
