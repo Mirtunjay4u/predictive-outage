@@ -296,6 +296,7 @@ function NodeTooltipBody({ nodeId, label }: { nodeId: NodeId; label: string }) {
         <X className="h-3 w-3" />
       </PopoverClose>
       <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">{label}</p>
+      <div className="h-px bg-slate-600/50" />
       <p className="text-[11px] leading-snug text-slate-200">{info.description}</p>
       <div>
         <p className="text-[9px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-0.5">Tech Stack</p>
