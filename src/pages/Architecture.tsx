@@ -8,46 +8,33 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
-const SHOW_DEBUG_ANCHORS = false;
-const CANVAS = { width: 1120, height: 720 };
+/* ─── canvas ─── */
+const CANVAS = { width: 1160, height: 960 };
 const STEP_OUT = 14;
 const END_PAD = 8;
 
+/* ─── types ─── */
 type Anchor = 'left' | 'right' | 'top' | 'bottom' | 'center';
 type EdgeStyle = 'primary' | 'secondary' | 'optional';
 type RouteMode = 'horizontal-first' | 'vertical-first';
 
 type NodeId =
-  | 'structured_data'
-  | 'sql_postgres'
-  | 'unstructured_data'
-  | 'text_retriever'
-  | 'vector_db'
-  | 'embedding_nim'
-  | 'reranking_nim'
-  | 'authenticated_operator'
-  | 'copilot_ui'
-  | 'orchestrator'
-  | 'guardrails'
-  | 'nemotron_nim'
-  | 'lovable_ai'
-  | 'sql_tools_store'
-  | 'retriever_lane'
-  | 'audit_logs'
-  | 'prompt_versioning'
-  | 'telemetry'
-  | 'rbac_rls';
+  | 'structured_data' | 'sql_db_ingest'
+  | 'unstructured_data' | 'text_retriever' | 'milvus_vector_db'
+  | 'embedding_nim' | 'reranking_nim'
+  | 'authenticated_user' | 'ai_va_ui' | 'agent' | 'sql_retriever_vanna'
+  | 'redis_cache' | 'sql_db_checkpoint' | 'sql_db_persistent'
+  | 'llm_nim'
+  | 'authenticated_admin' | 'admin_console' | 'analytics_microservices';
 
 interface NodeDef {
   id: NodeId;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  x: number; y: number; w: number; h: number;
   label: string;
   sub?: string;
   nim?: boolean;
   optional?: boolean;
+  icon?: 'db' | 'doc' | 'user' | 'app' | 'agent' | 'cache' | 'nim' | 'admin' | 'analytics';
 }
 
 interface EdgeDef {
@@ -63,56 +50,71 @@ interface EdgeDef {
 type Pt = { x: number; y: number };
 type Rect = { x: number; y: number; w: number; h: number };
 
+/* ─── node definitions ─── */
 const NODES: NodeDef[] = [
-  { id: 'structured_data', x: 40, y: 82, w: 290, h: 84, label: 'STRUCTURED DATA', sub: 'OMS/SCADA events · asset registry · crew · customer' },
-  { id: 'sql_postgres', x: 346, y: 82, w: 290, h: 84, label: 'SQL/POSTGRES' },
-  { id: 'unstructured_data', x: 656, y: 82, w: 130, h: 84, label: 'UNSTRUCTURED DATA' },
-  { id: 'text_retriever', x: 800, y: 82, w: 130, h: 84, label: 'TEXT RETRIEVER' },
-  { id: 'vector_db', x: 944, y: 82, w: 80, h: 84, label: 'VECTOR DB' },
-  { id: 'embedding_nim', x: 1036, y: 38, w: 72, h: 40, label: 'EMBEDDING NIM', nim: true, optional: true },
-  { id: 'reranking_nim', x: 1036, y: 170, w: 72, h: 40, label: 'RERANKING NIM', nim: true, optional: true },
+  // Band 1 – Ingest (row 1: structured)
+  { id: 'structured_data', x: 50, y: 72, w: 200, h: 80, label: 'STRUCTURED DATA', sub: 'Load, Customer Profiles, Order History', icon: 'db' },
+  { id: 'sql_db_ingest', x: 340, y: 72, w: 180, h: 80, label: 'SQL DATABASE', icon: 'db' },
 
-  { id: 'authenticated_operator', x: 198, y: 278, w: 250, h: 72, label: 'AUTHENTICATED OPERATOR' },
-  { id: 'copilot_ui', x: 468, y: 278, w: 250, h: 72, label: 'COPILOT UI' },
+  // Band 1 – Ingest (row 2: unstructured)
+  { id: 'unstructured_data', x: 50, y: 178, w: 200, h: 80, label: 'UNSTRUCTURED DATA', sub: 'Product Manuals, Catalog, FAQ', icon: 'doc' },
+  { id: 'text_retriever', x: 340, y: 178, w: 200, h: 80, label: 'TEXT RETRIEVER MICROSERVICE', icon: 'agent' },
+  { id: 'milvus_vector_db', x: 600, y: 178, w: 200, h: 80, label: 'MILVUS VECTOR DB', sub: 'cuVS', icon: 'db' },
 
-  { id: 'orchestrator', x: 60, y: 414, w: 230, h: 78, label: 'COPILOT ORCHESTRATOR / EDGE FUNCTIONS' },
-  { id: 'guardrails', x: 315, y: 414, w: 220, h: 78, label: 'GUARDRAILS / POLICY BOUNDARY' },
-  { id: 'nemotron_nim', x: 570, y: 414, w: 220, h: 78, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true },
-  { id: 'lovable_ai', x: 808, y: 414, w: 280, h: 164, label: 'LOVABLE AI', sub: 'Thin routing indicates a secondary hybrid path.' },
+  // Band 1 – NIMs
+  { id: 'embedding_nim', x: 880, y: 72, w: 180, h: 64, label: 'RETRIEVER EMBEDDING NIM', nim: true, icon: 'nim' },
+  { id: 'reranking_nim', x: 880, y: 198, w: 180, h: 64, label: 'RETRIEVER RERANKING NIM', nim: true, icon: 'nim' },
 
-  { id: 'sql_tools_store', x: 60, y: 514, w: 300, h: 64, label: 'SQL TOOLS / SCENARIO STORE' },
-  { id: 'retriever_lane', x: 380, y: 514, w: 410, h: 64, label: 'RETRIEVER LANE (VECTOR DB)' },
+  // Band 2 – Customer Service Operations (row 1)
+  { id: 'authenticated_user', x: 50, y: 370, w: 180, h: 80, label: 'AUTHENTICATED USER', sub: 'Conversation, User Feedback', icon: 'user' },
+  { id: 'ai_va_ui', x: 280, y: 370, w: 200, h: 80, label: 'AI VIRTUAL ASSISTANT', sub: 'User Interface', icon: 'app' },
+  { id: 'agent', x: 530, y: 370, w: 160, h: 80, label: 'AGENT', icon: 'agent' },
+  { id: 'sql_retriever_vanna', x: 740, y: 370, w: 200, h: 80, label: 'SQL DATABASE RETRIEVER', sub: 'Vanna.AI Microservice', icon: 'db' },
 
-  { id: 'audit_logs', x: 65, y: 642, w: 220, h: 46, label: 'AUDIT LOGS' },
-  { id: 'prompt_versioning', x: 300, y: 642, w: 250, h: 46, label: 'PROMPT & MODEL VERSIONING' },
-  { id: 'telemetry', x: 560, y: 642, w: 240, h: 46, label: 'TELEMETRY / MONITORING' },
-  { id: 'rbac_rls', x: 830, y: 642, w: 260, h: 46, label: 'RBAC + RLS' },
+  // Band 2 – Row 2 (support services)
+  { id: 'redis_cache', x: 280, y: 510, w: 160, h: 72, label: 'REDIS CACHE', sub: 'Active Conversation, Feedback', icon: 'cache' },
+  { id: 'sql_db_checkpoint', x: 470, y: 510, w: 160, h: 72, label: 'SQL DATABASE', sub: 'Checkpointer Memory', icon: 'db' },
+  { id: 'sql_db_persistent', x: 660, y: 510, w: 160, h: 72, label: 'SQL DATABASE', sub: 'Persistent (Historical) Conversation', icon: 'db' },
+
+  // Band 2 – LLM NIM
+  { id: 'llm_nim', x: 880, y: 440, w: 180, h: 100, label: 'LLM NIM', nim: true, icon: 'nim' },
+
+  // Band 3 – Admin
+  { id: 'authenticated_admin', x: 50, y: 700, w: 180, h: 80, label: 'AUTHENTICATED ADMIN', sub: 'Sentiment, Summary, Chat History, Feedback', icon: 'admin' },
+  { id: 'admin_console', x: 320, y: 700, w: 200, h: 80, label: 'ADMIN CONSOLE', icon: 'app' },
+  { id: 'analytics_microservices', x: 600, y: 700, w: 260, h: 80, label: 'ANALYTICS MICROSERVICES', sub: 'Summary Generation', icon: 'analytics' },
 ];
 
+/* ─── edge definitions ─── */
 const EDGES: EdgeDef[] = [
-  { from: { nodeId: 'structured_data', anchor: 'right' }, to: { nodeId: 'sql_postgres', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'unstructured_data', anchor: 'right' }, to: { nodeId: 'text_retriever', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'embedding_nim', anchor: 'left' }, style: 'optional', label: 'optional', mode: 'horizontal-first' },
-  { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'reranking_nim', anchor: 'left' }, style: 'optional', label: 'optional', mode: 'horizontal-first' },
+  // Ingest row 1
+  { from: { nodeId: 'structured_data', anchor: 'right' }, to: { nodeId: 'sql_db_ingest', anchor: 'left' }, style: 'primary', label: 'Load, Customer Profiles, Order History', mode: 'horizontal-first' },
+  // Ingest row 2
+  { from: { nodeId: 'unstructured_data', anchor: 'right' }, to: { nodeId: 'text_retriever', anchor: 'left' }, style: 'primary', label: 'Ingest, Product Manuals, FAQ', mode: 'horizontal-first' },
+  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'milvus_vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  // NIMs
+  { from: { nodeId: 'milvus_vector_db', anchor: 'right' }, to: { nodeId: 'embedding_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
+  { from: { nodeId: 'milvus_vector_db', anchor: 'right' }, to: { nodeId: 'reranking_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
 
-  { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  // Band 2 top row
+  { from: { nodeId: 'authenticated_user', anchor: 'right' }, to: { nodeId: 'ai_va_ui', anchor: 'left' }, style: 'primary', label: 'Conversation, User Feedback', mode: 'horizontal-first' },
+  { from: { nodeId: 'ai_va_ui', anchor: 'right' }, to: { nodeId: 'agent', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'agent', anchor: 'right' }, to: { nodeId: 'sql_retriever_vanna', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
 
-  { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'Structured Insights (JSON)', mode: 'vertical-first', laneY: 402 },
+  // Agent to support services
+  { from: { nodeId: 'ai_va_ui', anchor: 'bottom' }, to: { nodeId: 'redis_cache', anchor: 'top' }, style: 'secondary', label: 'Active Conversation, Feedback', mode: 'vertical-first' },
+  { from: { nodeId: 'agent', anchor: 'bottom' }, to: { nodeId: 'sql_db_checkpoint', anchor: 'top' }, style: 'secondary', label: 'Checkpointer Memory', mode: 'vertical-first' },
+  { from: { nodeId: 'sql_retriever_vanna', anchor: 'bottom' }, to: { nodeId: 'sql_db_persistent', anchor: 'top' }, style: 'secondary', label: 'Persistent Conversation', mode: 'vertical-first' },
 
-  { from: { nodeId: 'sql_tools_store', anchor: 'right' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'horizontal-first', laneX: 300 },
-  { from: { nodeId: 'retriever_lane', anchor: 'right' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'horizontal-first', laneX: 730 },
-  { from: { nodeId: 'guardrails', anchor: 'bottom' }, to: { nodeId: 'retriever_lane', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 500 },
-  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'left' }, style: 'secondary', mode: 'horizontal-first' },
+  // LLM NIM connections
+  { from: { nodeId: 'sql_retriever_vanna', anchor: 'right' }, to: { nodeId: 'llm_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
 
-  { from: { nodeId: 'orchestrator', anchor: 'bottom' }, to: { nodeId: 'audit_logs', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
-  { from: { nodeId: 'guardrails', anchor: 'bottom' }, to: { nodeId: 'prompt_versioning', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
-  { from: { nodeId: 'nemotron_nim', anchor: 'bottom' }, to: { nodeId: 'telemetry', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
-  { from: { nodeId: 'lovable_ai', anchor: 'bottom' }, to: { nodeId: 'rbac_rls', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
+  // Admin
+  { from: { nodeId: 'authenticated_admin', anchor: 'right' }, to: { nodeId: 'admin_console', anchor: 'left' }, style: 'primary', label: 'Admin Query', mode: 'horizontal-first' },
+  { from: { nodeId: 'admin_console', anchor: 'right' }, to: { nodeId: 'analytics_microservices', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
 ];
 
+/* ─── geometry helpers ─── */
 function getAnchorPoint(rect: Rect, anchor: Anchor): Pt {
   if (anchor === 'left') return { x: rect.x, y: rect.y + rect.h / 2 };
   if (anchor === 'right') return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
@@ -140,12 +142,10 @@ function stepIn(pt: Pt, anchor: Anchor, distance: number): Pt {
 function routeOrthogonal(start: Pt, end: Pt, edge: EdgeDef): Pt[] {
   const out = stepOut(start, edge.from.anchor, STEP_OUT);
   const inPt = stepIn(end, edge.to.anchor, END_PAD);
-
   if (edge.mode === 'vertical-first') {
     const midY = edge.laneY ?? (out.y + inPt.y) / 2;
     return [start, out, { x: out.x, y: midY }, { x: inPt.x, y: midY }, inPt, end];
   }
-
   const midX = edge.laneX ?? (out.x + inPt.x) / 2;
   return [start, out, { x: midX, y: out.y }, { x: midX, y: inPt.y }, inPt, end];
 }
@@ -161,32 +161,83 @@ function pathFromPoints(points: Pt[]) {
   return d;
 }
 
-function labelPoint(points: Pt): Pt {
-  return { x: points.x + 4, y: points.y - 6 };
+function labelPoint(pt: Pt): Pt {
+  return { x: pt.x + 4, y: pt.y - 6 };
 }
 
+/* ─── icon SVGs (inline, small) ─── */
+function NodeIcon({ icon }: { icon?: string }) {
+  const cls = 'w-5 h-5 mb-1';
+  if (icon === 'db') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6" /><path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+    </svg>
+  );
+  if (icon === 'doc') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" />
+    </svg>
+  );
+  if (icon === 'user' || icon === 'admin') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  );
+  if (icon === 'app') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><circle cx="7" cy="6" r="0.8" fill="currentColor" /><circle cx="10" cy="6" r="0.8" fill="currentColor" />
+    </svg>
+  );
+  if (icon === 'agent') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="4" y="4" width="16" height="16" rx="2" /><path d="M9 9h6M9 12h4M9 15h5" />
+    </svg>
+  );
+  if (icon === 'cache') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="6" width="20" height="12" rx="2" /><path d="M6 10h4v4H6z" /><path d="M14 10h4" /><path d="M14 14h4" />
+    </svg>
+  );
+  if (icon === 'nim') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" /><polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5" />
+    </svg>
+  );
+  if (icon === 'analytics') return (
+    <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 17V13M12 17V7M17 17V11" />
+    </svg>
+  );
+  return null;
+}
+
+/* ─── node card ─── */
 function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
+  const borderColor = node.nim ? 'border-emerald-400/70' : 'border-cyan-300/35';
+  const textColor = node.nim ? 'text-emerald-100' : 'text-slate-100';
+  const iconColor = node.nim ? 'text-emerald-300' : 'text-cyan-300/80';
   return (
     <div
       ref={setNodeRef(node.id)}
       data-node={node.id}
-      className={`absolute rounded-xl border bg-slate-900/90 px-2 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${node.nim ? 'border-emerald-400/70' : 'border-cyan-300/35'} ${node.optional ? 'border-dashed' : ''}`}
+      className={`absolute rounded-xl border bg-slate-900/90 px-3 py-2 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${borderColor} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:border-cyan-300/60`}
       style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
     >
-      <div className="flex h-full w-full flex-col items-center justify-center">
-        <p className={`text-[11px] font-semibold tracking-[0.07em] ${node.nim ? 'text-emerald-100' : 'text-slate-100'}`}>{node.label}</p>
-        {node.sub && <p className="mt-1 text-[9px] font-semibold tracking-[0.04em] text-slate-300/95">{node.sub}</p>}
+      <div className="flex h-full w-full flex-col items-center justify-center gap-0.5">
+        <span className={iconColor}><NodeIcon icon={node.icon} /></span>
+        <p className={`text-[10px] font-semibold tracking-[0.07em] leading-tight ${textColor}`}>{node.label}</p>
+        {node.sub && <p className="mt-0.5 text-[8px] font-medium tracking-[0.04em] text-slate-400/95 leading-tight">{node.sub}</p>}
       </div>
     </div>
   );
 }
 
-function NvidiaStyleArchitectureDiagram() {
+/* ─── main diagram ─── */
+function ArchitectureDiagram() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const nodeRefs = useRef(new Map<NodeId, HTMLDivElement>());
   const rafRef = useRef<number | null>(null);
   const [edgePaths, setEdgePaths] = useState<Array<{ d: string; style: EdgeStyle; label?: string; lx?: number; ly?: number }>>([]);
-  const [debugPts, setDebugPts] = useState<Pt[]>([]);
 
   const setNodeRef = useCallback(
     (id: NodeId) => (el: HTMLDivElement | null) => {
@@ -199,7 +250,6 @@ function NvidiaStyleArchitectureDiagram() {
   const recompute = useCallback(() => {
     if (!canvasRef.current) return;
     const canvasRect = canvasRef.current.getBoundingClientRect();
-
     const rects = new Map<NodeId, Rect>();
     nodeRefs.current.forEach((el, id) => {
       const r = el.getBoundingClientRect();
@@ -210,27 +260,15 @@ function NvidiaStyleArchitectureDiagram() {
       const fromRect = rects.get(edge.from.nodeId);
       const toRect = rects.get(edge.to.nodeId);
       if (!fromRect || !toRect) return [];
-
       const start = getAnchorPoint(fromRect, edge.from.anchor);
       const end = getAnchorPoint(toRect, edge.to.anchor);
       const points = routeOrthogonal(start, end, edge);
       const mid = points[Math.max(1, Math.floor(points.length / 2))];
       const lp = edge.label ? labelPoint(mid) : undefined;
-
       return [{ d: pathFromPoints(points), style: edge.style, label: edge.label, lx: lp?.x, ly: lp?.y }];
     });
 
-    const debug = SHOW_DEBUG_ANCHORS
-      ? EDGES.flatMap((edge) => {
-          const fromRect = rects.get(edge.from.nodeId);
-          const toRect = rects.get(edge.to.nodeId);
-          if (!fromRect || !toRect) return [];
-          return [getAnchorPoint(fromRect, edge.from.anchor), getAnchorPoint(toRect, edge.to.anchor)];
-        })
-      : [];
-
     setEdgePaths(nextPaths);
-    setDebugPts(debug);
   }, []);
 
   const schedule = useCallback(() => {
@@ -243,46 +281,46 @@ function NvidiaStyleArchitectureDiagram() {
     const observer = new ResizeObserver(() => schedule());
     if (canvasRef.current) observer.observe(canvasRef.current);
     nodeRefs.current.forEach((el) => observer.observe(el));
-
-    const onResize = () => schedule();
-    window.addEventListener('resize', onResize);
-
+    window.addEventListener('resize', schedule);
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', schedule);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [schedule]);
 
-  const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : 'rgba(160,220,205,0.55)');
+  const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : style === 'optional' ? 'rgba(160,220,205,0.45)' : 'rgba(160,220,205,0.55)');
 
   return (
-    <div className="relative w-[1120px] max-w-full mx-auto overflow-x-auto">
-      <div ref={canvasRef} className="relative w-[1120px] h-[720px]">
+    <div className="relative w-[1160px] max-w-full mx-auto overflow-x-auto">
+      <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
+        {/* Background */}
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
-        <div className="absolute left-[20px] top-[28px] h-[196px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <div className="absolute left-[20px] top-[238px] h-[368px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <div className="absolute left-[20px] top-[616px] h-[92px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
 
-        <p className="absolute left-[34px] top-[40px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 - INGEST</p>
-        <p className="absolute left-[34px] top-[250px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 - OPERATOR COPILOT RUNTIME</p>
-        <p className="absolute left-[34px] top-[628px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 - MEMORY / OBSERVABILITY / GOVERNANCE</p>
+        {/* Band 1 – Ingest */}
+        <div className="absolute left-[20px] top-[28px] w-[1120px] h-[262px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[38px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">INGEST</p>
 
-        <div className="absolute left-[54px] top-[395px] h-px w-[1014px] border-t border-dashed border-slate-400/70" />
-        <p className="absolute left-1/2 top-[380px] -translate-x-1/2 text-[9px] font-semibold tracking-[0.06em] text-slate-300/90">
-          TRUST BOUNDARY (CLIENT UI VS BACKEND/AI SERVICES)
-        </p>
+        {/* Band 2 – Customer Service Operations */}
+        <div className="absolute left-[20px] top-[310px] w-[1120px] h-[300px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[320px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">CUSTOMER SERVICE OPERATIONS</p>
 
+        {/* Band 3 – Admin */}
+        <div className="absolute left-[20px] top-[640px] w-[1120px] h-[130px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[656px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">ADMIN</p>
+
+        {/* Nodes */}
         {NODES.map((node) => (
           <NodeCard key={node.id} node={node} setNodeRef={setNodeRef} />
         ))}
 
-        <svg className="absolute inset-0 pointer-events-none" width="1120" height="720" viewBox="0 0 1120 720" aria-hidden>
+        {/* Edges */}
+        <svg className="absolute inset-0 pointer-events-none" width={CANVAS.width} height={CANVAS.height} viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`} aria-hidden>
           <defs>
-            <marker id="arrowHeadPrimary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+            <marker id="arrowPrimary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
               <path d="M0,0 L9,4.5 L0,9 Z" fill="rgba(160,220,205,0.88)" />
             </marker>
-            <marker id="arrowHeadSecondary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+            <marker id="arrowSecondary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
               <path d="M0,0 L9,4.5 L0,9 Z" fill="rgba(160,220,205,0.58)" />
             </marker>
           </defs>
@@ -298,24 +336,23 @@ function NvidiaStyleArchitectureDiagram() {
                   strokeDasharray={p.style === 'optional' || p.style === 'secondary' ? '6 6' : undefined}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  markerEnd={`url(#${dim ? 'arrowHeadSecondary' : 'arrowHeadPrimary'})`}
+                  markerEnd={`url(#${dim ? 'arrowSecondary' : 'arrowPrimary'})`}
                 />
                 {p.label && (
-                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.95)" fontSize="8.5" fontWeight={700} letterSpacing="0.06em">
+                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.85)" fontSize="7.5" fontWeight={600} letterSpacing="0.04em">
                     {p.label}
                   </text>
                 )}
               </g>
             );
           })}
-          {SHOW_DEBUG_ANCHORS &&
-            debugPts.map((pt, i) => <circle key={`dbg-${i}`} cx={pt.x} cy={pt.y} r={3} fill="rgba(244,114,182,0.9)" />)}
         </svg>
       </div>
     </div>
   );
 }
 
+/* ─── page wrapper ─── */
 export default function Architecture() {
   return (
     <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6">
@@ -333,11 +370,11 @@ export default function Architecture() {
           <CardHeader className="px-4 pb-2 pt-4 md:px-5">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <Layers className="h-4 w-4 text-primary" />
-              Solution Architecture Overview
+              Architecture Diagram
             </CardTitle>
           </CardHeader>
           <CardContent className="w-full px-3 pb-3 md:px-4 md:pb-4">
-            <NvidiaStyleArchitectureDiagram />
+            <ArchitectureDiagram />
           </CardContent>
         </Card>
       </motion.div>
