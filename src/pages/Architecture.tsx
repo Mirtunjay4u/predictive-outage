@@ -2,7 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Layers } from 'lucide-react';
+import { Layers, X } from 'lucide-react';
+import { PopoverClose } from '@radix-ui/react-popover';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -290,7 +291,10 @@ function NodeTooltipBody({ nodeId }: { nodeId: NodeId }) {
   const info = NODE_TOOLTIPS[nodeId];
   if (!info) return null;
   return (
-    <div className="max-w-[260px] space-y-2 text-left">
+    <div className="max-w-[260px] space-y-2 text-left relative">
+      <PopoverClose className="absolute -top-1 -right-1 rounded-sm p-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-700/60 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60" aria-label="Close">
+        <X className="h-3 w-3" />
+      </PopoverClose>
       <p className="text-[11px] leading-snug text-slate-200">{info.description}</p>
       <div>
         <p className="text-[9px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-0.5">Tech Stack</p>
