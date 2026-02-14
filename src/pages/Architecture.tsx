@@ -531,7 +531,7 @@ function DiagramLegend() {
           <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.85)" strokeWidth="1.5" />
           <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.88)" />
         </svg>
-        <span className="text-[9px] text-muted-foreground">Primary data flow</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Primary data flow</span>
       </div>
 
       {/* Secondary / dashed */}
@@ -540,7 +540,7 @@ function DiagramLegend() {
           <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.55)" strokeWidth="1.5" strokeDasharray="4 3" />
           <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.58)" />
         </svg>
-        <span className="text-[9px] text-muted-foreground">Secondary / governance</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Secondary / governance</span>
       </div>
 
       {/* Optional */}
@@ -549,19 +549,19 @@ function DiagramLegend() {
           <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.45)" strokeWidth="1.5" strokeDasharray="4 3" />
           <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.45)" />
         </svg>
-        <span className="text-[9px] text-muted-foreground">Optional path</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Optional path</span>
       </div>
 
       {/* NIM node */}
       <div className="flex items-center gap-1.5">
         <div className="h-3.5 w-5 rounded border border-emerald-400/70 bg-slate-900/80" />
-        <span className="text-[9px] text-muted-foreground">NVIDIA NIM service</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">NVIDIA NIM service</span>
       </div>
 
       {/* Standard node */}
       <div className="flex items-center gap-1.5">
         <div className="h-3.5 w-5 rounded border border-cyan-300/35 bg-slate-900/80" />
-        <span className="text-[9px] text-muted-foreground">Platform component</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Platform component</span>
       </div>
 
       {/* Particle */}
@@ -570,7 +570,7 @@ function DiagramLegend() {
           <circle cx="9" cy="5" r="2.5" fill="rgba(160,220,205,0.65)" />
           <circle cx="9" cy="5" r="5" fill="rgba(160,220,205,0.15)" />
         </svg>
-        <span className="text-[9px] text-muted-foreground">Animated data particle</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Animated data particle</span>
       </div>
     </div>
   );
