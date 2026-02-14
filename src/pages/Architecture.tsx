@@ -287,14 +287,15 @@ function NodeIcon({ icon }: { icon?: string }) {
 }
 
 /* ─── tooltip content ─── */
-function NodeTooltipBody({ nodeId }: { nodeId: NodeId }) {
+function NodeTooltipBody({ nodeId, label }: { nodeId: NodeId; label: string }) {
   const info = NODE_TOOLTIPS[nodeId];
   if (!info) return null;
   return (
-    <div className="max-w-[260px] space-y-2 text-left relative">
+    <div className="max-w-[260px] space-y-2 text-left relative pr-4">
       <PopoverClose className="absolute -top-1 -right-1 rounded-sm p-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-700/60 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60" aria-label="Close">
         <X className="h-3 w-3" />
       </PopoverClose>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">{label}</p>
       <p className="text-[11px] leading-snug text-slate-200">{info.description}</p>
       <div>
         <p className="text-[9px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-0.5">Tech Stack</p>
@@ -349,7 +350,7 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
         </div>
       </PopoverTrigger>
       <PopoverContent side={node.y < 150 ? "bottom" : "top"} className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-[9999] w-auto" sideOffset={8}>
-        <NodeTooltipBody nodeId={node.id} />
+        <NodeTooltipBody nodeId={node.id} label={node.label} />
       </PopoverContent>
     </Popover>
   );
