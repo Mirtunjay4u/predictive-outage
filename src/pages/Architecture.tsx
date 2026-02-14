@@ -276,21 +276,42 @@ function ArchitectureDiagram() {
             <marker id="arrowSecondary" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
               <path d="M0,0 L8,4 L0,8 Z" fill="rgba(160,220,205,0.58)" />
             </marker>
+            <radialGradient id="particleGlow">
+              <stop offset="0%" stopColor="rgba(160,220,205,0.9)" />
+              <stop offset="100%" stopColor="rgba(160,220,205,0)" />
+            </radialGradient>
           </defs>
           {edgePaths.map((p, i) => {
             const dim = p.style !== 'primary';
+            const particleR = dim ? 2.5 : 3;
+            const dur = dim ? '4s' : '3s';
+            const fill = dim ? 'rgba(160,220,205,0.4)' : 'rgba(160,220,205,0.7)';
             return (
-              <path
-                key={i}
-                d={p.d}
-                fill="none"
-                stroke={stroke(p.style)}
-                strokeWidth={1.5}
-                strokeDasharray={p.style === 'optional' || p.style === 'secondary' ? '5 5' : undefined}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                markerEnd={`url(#${dim ? 'arrowSecondary' : 'arrowPrimary'})`}
-              />
+              <g key={i}>
+                <path
+                  d={p.d}
+                  fill="none"
+                  stroke={stroke(p.style)}
+                  strokeWidth={1.5}
+                  strokeDasharray={p.style === 'optional' || p.style === 'secondary' ? '5 5' : undefined}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  markerEnd={`url(#${dim ? 'arrowSecondary' : 'arrowPrimary'})`}
+                />
+                {/* Data flow particle */}
+                <circle r={particleR} fill={fill} opacity={0.8}>
+                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.4}s`}>
+                    <mpath xlinkHref={`#flow-path-${i}`} />
+                  </animateMotion>
+                </circle>
+                <circle r={particleR * 2.5} fill="url(#particleGlow)" opacity={0.25}>
+                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.4}s`}>
+                    <mpath xlinkHref={`#flow-path-${i}`} />
+                  </animateMotion>
+                </circle>
+                {/* Hidden path for animateMotion reference */}
+                <path id={`flow-path-${i}`} d={p.d} fill="none" stroke="none" />
+              </g>
             );
           })}
         </svg>
