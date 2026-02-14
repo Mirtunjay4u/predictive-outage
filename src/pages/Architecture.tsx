@@ -1,283 +1,343 @@
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import {
-  Cloud,
-  Database,
-  Monitor,
-  Bot,
-  Map,
-  Shield,
-  Zap,
-  ArrowDown,
-  ArrowRight,
-  Layers,
-  Radio,
-  Users,
-  BarChart3,
-  FileText,
-  Info,
-} from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
 };
 
-interface ArchBlockProps {
-  icon: React.ElementType;
-  title: string;
-  items: string[];
-  accent: string;
-  detail?: { summary: string; techStack: string[]; protocols?: string[] };
-  className?: string;
+const SHOW_DEBUG_ANCHORS = false;
+const CANVAS = { width: 1120, height: 720 };
+const STEP_OUT = 14;
+const END_PAD = 8;
+
+type Anchor = 'left' | 'right' | 'top' | 'bottom' | 'center';
+type EdgeStyle = 'primary' | 'secondary' | 'optional';
+type RouteMode = 'horizontal-first' | 'vertical-first';
+
+type NodeId =
+  | 'structured_data'
+  | 'sql_postgres'
+  | 'unstructured_data'
+  | 'text_retriever'
+  | 'vector_db'
+  | 'embedding_nim'
+  | 'reranking_nim'
+  | 'authenticated_operator'
+  | 'copilot_ui'
+  | 'orchestrator'
+  | 'guardrails'
+  | 'nemotron_nim'
+  | 'lovable_ai'
+  | 'sql_tools_store'
+  | 'retriever_lane'
+  | 'audit_logs'
+  | 'prompt_versioning'
+  | 'telemetry'
+  | 'rbac_rls';
+
+interface NodeDef {
+  id: NodeId;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string;
+  sub?: string;
+  nim?: boolean;
+  optional?: boolean;
 }
 
-function ArchBlock({ icon: Icon, title, items, accent, detail, className = '' }: ArchBlockProps) {
-  const content = (
-    <div className={`rounded-lg border border-border/60 bg-card p-4 flex flex-col gap-2 transition-colors ${detail ? 'hover:border-primary/40 cursor-pointer' : ''} ${className}`}>
-      <div className="flex items-center gap-2">
-        <div
-          className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: accent + '22', color: accent }}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
-        <span className="text-xs font-semibold text-foreground flex-1">{title}</span>
-        {detail && <Info className="w-3 h-3 text-muted-foreground/40" />}
+interface EdgeDef {
+  from: { nodeId: NodeId; anchor: Anchor };
+  to: { nodeId: NodeId; anchor: Anchor };
+  style: EdgeStyle;
+  label?: string;
+  mode?: RouteMode;
+  laneX?: number;
+  laneY?: number;
+}
+
+type Pt = { x: number; y: number };
+type Rect = { x: number; y: number; w: number; h: number };
+
+const NODES: NodeDef[] = [
+  { id: 'structured_data', x: 40, y: 82, w: 290, h: 84, label: 'STRUCTURED DATA', sub: 'OMS/SCADA events · asset registry · crew · customer' },
+  { id: 'sql_postgres', x: 346, y: 82, w: 290, h: 84, label: 'SQL/POSTGRES' },
+  { id: 'unstructured_data', x: 656, y: 82, w: 130, h: 84, label: 'UNSTRUCTURED DATA' },
+  { id: 'text_retriever', x: 800, y: 82, w: 130, h: 84, label: 'TEXT RETRIEVER' },
+  { id: 'vector_db', x: 944, y: 82, w: 80, h: 84, label: 'VECTOR DB' },
+  { id: 'embedding_nim', x: 1036, y: 38, w: 72, h: 40, label: 'EMBEDDING NIM', nim: true, optional: true },
+  { id: 'reranking_nim', x: 1036, y: 170, w: 72, h: 40, label: 'RERANKING NIM', nim: true, optional: true },
+
+  { id: 'authenticated_operator', x: 198, y: 278, w: 250, h: 72, label: 'AUTHENTICATED OPERATOR' },
+  { id: 'copilot_ui', x: 468, y: 278, w: 250, h: 72, label: 'COPILOT UI' },
+
+  { id: 'orchestrator', x: 60, y: 414, w: 230, h: 78, label: 'COPILOT ORCHESTRATOR / EDGE FUNCTIONS' },
+  { id: 'guardrails', x: 315, y: 414, w: 220, h: 78, label: 'GUARDRAILS / POLICY BOUNDARY' },
+  { id: 'nemotron_nim', x: 570, y: 414, w: 220, h: 78, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true },
+  { id: 'lovable_ai', x: 808, y: 414, w: 280, h: 164, label: 'LOVABLE AI', sub: 'Thin routing indicates a secondary hybrid path.' },
+
+  { id: 'sql_tools_store', x: 60, y: 514, w: 300, h: 64, label: 'SQL TOOLS / SCENARIO STORE' },
+  { id: 'retriever_lane', x: 380, y: 514, w: 410, h: 64, label: 'RETRIEVER LANE (VECTOR DB)' },
+
+  { id: 'audit_logs', x: 65, y: 642, w: 220, h: 46, label: 'AUDIT LOGS' },
+  { id: 'prompt_versioning', x: 300, y: 642, w: 250, h: 46, label: 'PROMPT & MODEL VERSIONING' },
+  { id: 'telemetry', x: 560, y: 642, w: 240, h: 46, label: 'TELEMETRY / MONITORING' },
+  { id: 'rbac_rls', x: 830, y: 642, w: 260, h: 46, label: 'RBAC + RLS' },
+];
+
+const EDGES: EdgeDef[] = [
+  { from: { nodeId: 'structured_data', anchor: 'right' }, to: { nodeId: 'sql_postgres', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'unstructured_data', anchor: 'right' }, to: { nodeId: 'text_retriever', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'embedding_nim', anchor: 'left' }, style: 'optional', label: 'optional', mode: 'horizontal-first' },
+  { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'reranking_nim', anchor: 'left' }, style: 'optional', label: 'optional', mode: 'horizontal-first' },
+
+  { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+
+  { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'Structured Insights (JSON)', mode: 'vertical-first', laneY: 402 },
+
+  { from: { nodeId: 'sql_tools_store', anchor: 'right' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'horizontal-first', laneX: 300 },
+  { from: { nodeId: 'retriever_lane', anchor: 'right' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'horizontal-first', laneX: 730 },
+  { from: { nodeId: 'guardrails', anchor: 'bottom' }, to: { nodeId: 'retriever_lane', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 500 },
+  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'left' }, style: 'secondary', mode: 'horizontal-first' },
+
+  { from: { nodeId: 'orchestrator', anchor: 'bottom' }, to: { nodeId: 'audit_logs', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
+  { from: { nodeId: 'guardrails', anchor: 'bottom' }, to: { nodeId: 'prompt_versioning', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
+  { from: { nodeId: 'nemotron_nim', anchor: 'bottom' }, to: { nodeId: 'telemetry', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
+  { from: { nodeId: 'lovable_ai', anchor: 'bottom' }, to: { nodeId: 'rbac_rls', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 626 },
+];
+
+function getAnchorPoint(rect: Rect, anchor: Anchor): Pt {
+  if (anchor === 'left') return { x: rect.x, y: rect.y + rect.h / 2 };
+  if (anchor === 'right') return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+  if (anchor === 'top') return { x: rect.x + rect.w / 2, y: rect.y };
+  if (anchor === 'bottom') return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+  return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+}
+
+function stepOut(pt: Pt, anchor: Anchor, distance: number): Pt {
+  if (anchor === 'left') return { x: pt.x - distance, y: pt.y };
+  if (anchor === 'right') return { x: pt.x + distance, y: pt.y };
+  if (anchor === 'top') return { x: pt.x, y: pt.y - distance };
+  if (anchor === 'bottom') return { x: pt.x, y: pt.y + distance };
+  return pt;
+}
+
+function stepIn(pt: Pt, anchor: Anchor, distance: number): Pt {
+  if (anchor === 'left') return { x: pt.x - distance, y: pt.y };
+  if (anchor === 'right') return { x: pt.x + distance, y: pt.y };
+  if (anchor === 'top') return { x: pt.x, y: pt.y - distance };
+  if (anchor === 'bottom') return { x: pt.x, y: pt.y + distance };
+  return pt;
+}
+
+function routeOrthogonal(start: Pt, end: Pt, edge: EdgeDef): Pt[] {
+  const out = stepOut(start, edge.from.anchor, STEP_OUT);
+  const inPt = stepIn(end, edge.to.anchor, END_PAD);
+
+  if (edge.mode === 'vertical-first') {
+    const midY = edge.laneY ?? (out.y + inPt.y) / 2;
+    return [start, out, { x: out.x, y: midY }, { x: inPt.x, y: midY }, inPt, end];
+  }
+
+  const midX = edge.laneX ?? (out.x + inPt.x) / 2;
+  return [start, out, { x: midX, y: out.y }, { x: midX, y: inPt.y }, inPt, end];
+}
+
+function pathFromPoints(points: Pt[]) {
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const prev = points[i - 1];
+    const cur = points[i];
+    if (prev.x === cur.x) d += ` V ${cur.y}`;
+    else d += ` H ${cur.x}`;
+  }
+  return d;
+}
+
+function labelPoint(points: Pt): Pt {
+  return { x: points.x + 4, y: points.y - 6 };
+}
+
+function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
+  return (
+    <div
+      ref={setNodeRef(node.id)}
+      data-node={node.id}
+      className={`absolute rounded-xl border bg-slate-900/90 px-2 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${node.nim ? 'border-emerald-400/70' : 'border-cyan-300/35'} ${node.optional ? 'border-dashed' : ''}`}
+      style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+    >
+      <div className="flex h-full w-full flex-col items-center justify-center">
+        <p className={`text-[11px] font-semibold tracking-[0.07em] ${node.nim ? 'text-emerald-100' : 'text-slate-100'}`}>{node.label}</p>
+        {node.sub && <p className="mt-1 text-[9px] font-semibold tracking-[0.04em] text-slate-300/95">{node.sub}</p>}
       </div>
-      <ul className="space-y-0.5 pl-1">
-        {items.map((item) => (
-          <li key={item} className="text-[11px] text-muted-foreground leading-snug flex items-start gap-1.5">
-            <span className="mt-1 w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
-            {item}
-          </li>
-        ))}
-      </ul>
     </div>
   );
-
-  if (!detail) return content;
-
-  return (
-    <HoverCard openDelay={200} closeDelay={100}>
-      <HoverCardTrigger asChild>{content}</HoverCardTrigger>
-      <HoverCardContent side="top" align="center" className="w-72 p-3 space-y-2">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: accent + '22', color: accent }}>
-            <Icon className="w-3 h-3" />
-          </div>
-          <span className="text-xs font-semibold text-foreground">{title}</span>
-        </div>
-        <p className="text-[11px] text-muted-foreground leading-relaxed">{detail.summary}</p>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Tech Stack</p>
-          <div className="flex flex-wrap gap-1">
-            {detail.techStack.map((t) => (
-              <span key={t} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t}</span>
-            ))}
-          </div>
-        </div>
-        {detail.protocols && detail.protocols.length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Protocols</p>
-            <div className="flex flex-wrap gap-1">
-              {detail.protocols.map((p) => (
-                <span key={p} className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">{p}</span>
-              ))}
-            </div>
-          </div>
-        )}
-      </HoverCardContent>
-    </HoverCard>
-  );
 }
 
-function FlowArrow({ label }: { direction?: 'down' | 'right'; label?: string }) {
+function NvidiaStyleArchitectureDiagram() {
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const nodeRefs = useRef(new Map<NodeId, HTMLDivElement>());
+  const rafRef = useRef<number | null>(null);
+  const [edgePaths, setEdgePaths] = useState<Array<{ d: string; style: EdgeStyle; label?: string; lx?: number; ly?: number }>>([]);
+  const [debugPts, setDebugPts] = useState<Pt[]>([]);
+
+  const setNodeRef = useCallback(
+    (id: NodeId) => (el: HTMLDivElement | null) => {
+      if (el) nodeRefs.current.set(id, el);
+      else nodeRefs.current.delete(id);
+    },
+    [],
+  );
+
+  const recompute = useCallback(() => {
+    if (!canvasRef.current) return;
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+
+    const rects = new Map<NodeId, Rect>();
+    nodeRefs.current.forEach((el, id) => {
+      const r = el.getBoundingClientRect();
+      rects.set(id, { x: r.left - canvasRect.left, y: r.top - canvasRect.top, w: r.width, h: r.height });
+    });
+
+    const nextPaths = EDGES.flatMap((edge) => {
+      const fromRect = rects.get(edge.from.nodeId);
+      const toRect = rects.get(edge.to.nodeId);
+      if (!fromRect || !toRect) return [];
+
+      const start = getAnchorPoint(fromRect, edge.from.anchor);
+      const end = getAnchorPoint(toRect, edge.to.anchor);
+      const points = routeOrthogonal(start, end, edge);
+      const mid = points[Math.max(1, Math.floor(points.length / 2))];
+      const lp = edge.label ? labelPoint(mid) : undefined;
+
+      return [{ d: pathFromPoints(points), style: edge.style, label: edge.label, lx: lp?.x, ly: lp?.y }];
+    });
+
+    const debug = SHOW_DEBUG_ANCHORS
+      ? EDGES.flatMap((edge) => {
+          const fromRect = rects.get(edge.from.nodeId);
+          const toRect = rects.get(edge.to.nodeId);
+          if (!fromRect || !toRect) return [];
+          return [getAnchorPoint(fromRect, edge.from.anchor), getAnchorPoint(toRect, edge.to.anchor)];
+        })
+      : [];
+
+    setEdgePaths(nextPaths);
+    setDebugPts(debug);
+  }, []);
+
+  const schedule = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => recompute());
+  }, [recompute]);
+
+  useLayoutEffect(() => {
+    schedule();
+    const observer = new ResizeObserver(() => schedule());
+    if (canvasRef.current) observer.observe(canvasRef.current);
+    nodeRefs.current.forEach((el) => observer.observe(el));
+
+    const onResize = () => schedule();
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', onResize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [schedule]);
+
+  const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : 'rgba(160,220,205,0.55)');
+
   return (
-    <div className="flex flex-col items-center py-2 gap-1 relative">
-      {/* Animated flow line */}
-      <div className="relative w-px h-6 bg-border/40 overflow-hidden">
-        <motion.div
-          className="absolute left-0 w-full h-2 rounded-full bg-primary/60"
-          initial={{ top: '-8px' }}
-          animate={{ top: '24px' }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeIn', repeatDelay: 0.4 }}
-        />
-        <motion.div
-          className="absolute left-0 w-full h-1.5 rounded-full bg-primary/30"
-          initial={{ top: '-6px' }}
-          animate={{ top: '24px' }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeIn', repeatDelay: 0.4, delay: 0.6 }}
-        />
-      </div>
-      {/* Three animated dots */}
-      <div className="flex items-center gap-1.5">
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            className="w-1 h-1 rounded-full bg-primary/70"
-            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-            transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.25, ease: 'easeInOut' }}
-          />
+    <div className="relative w-[1120px] max-w-full mx-auto overflow-x-auto">
+      <div ref={canvasRef} className="relative w-[1120px] h-[720px]">
+        <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
+        <div className="absolute left-[20px] top-[28px] h-[196px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <div className="absolute left-[20px] top-[238px] h-[368px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <div className="absolute left-[20px] top-[616px] h-[92px] w-[1080px] rounded-[18px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+
+        <p className="absolute left-[34px] top-[40px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 - INGEST</p>
+        <p className="absolute left-[34px] top-[250px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 - OPERATOR COPILOT RUNTIME</p>
+        <p className="absolute left-[34px] top-[628px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 - MEMORY / OBSERVABILITY / GOVERNANCE</p>
+
+        <div className="absolute left-[54px] top-[395px] h-px w-[1014px] border-t border-dashed border-slate-400/70" />
+        <p className="absolute left-1/2 top-[380px] -translate-x-1/2 text-[9px] font-semibold tracking-[0.06em] text-slate-300/90">
+          TRUST BOUNDARY (CLIENT UI VS BACKEND/AI SERVICES)
+        </p>
+
+        {NODES.map((node) => (
+          <NodeCard key={node.id} node={node} setNodeRef={setNodeRef} />
         ))}
+
+        <svg className="absolute inset-0 pointer-events-none" width="1120" height="720" viewBox="0 0 1120 720" aria-hidden>
+          <defs>
+            <marker id="arrowHeadPrimary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="rgba(160,220,205,0.88)" />
+            </marker>
+            <marker id="arrowHeadSecondary" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L9,4.5 L0,9 Z" fill="rgba(160,220,205,0.58)" />
+            </marker>
+          </defs>
+          {edgePaths.map((p, i) => {
+            const dim = p.style !== 'primary';
+            return (
+              <g key={i}>
+                <path
+                  d={p.d}
+                  fill="none"
+                  stroke={stroke(p.style)}
+                  strokeWidth={2}
+                  strokeDasharray={p.style === 'optional' || p.style === 'secondary' ? '6 6' : undefined}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  markerEnd={`url(#${dim ? 'arrowHeadSecondary' : 'arrowHeadPrimary'})`}
+                />
+                {p.label && (
+                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.95)" fontSize="8.5" fontWeight={700} letterSpacing="0.06em">
+                    {p.label}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+          {SHOW_DEBUG_ANCHORS &&
+            debugPts.map((pt, i) => <circle key={`dbg-${i}`} cx={pt.x} cy={pt.y} r={3} fill="rgba(244,114,182,0.9)" />)}
+        </svg>
       </div>
-      <ArrowDown className="w-3.5 h-3.5 text-primary/50" />
-      {label && (
-        <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-wider">
-          {label}
-        </span>
-      )}
     </div>
   );
 }
-
-// --- Block definitions with detail tooltips ---
-
-const dataSources: ArchBlockProps[] = [
-  {
-    icon: Zap, title: 'OMS / SCADA', accent: '#f59e0b',
-    items: ['Outage events & fault signals', 'Real-time telemetry feeds', 'Equipment status updates'],
-    detail: { summary: 'Ingests outage management and supervisory control data to establish the real-time operational picture. Fault signals trigger event creation and asset correlation.', techStack: ['DNP3', 'IEC 61850', 'OPC-UA', 'REST API'], protocols: ['Polling', 'Push/Webhook'] },
-  },
-  {
-    icon: Cloud, title: 'Weather Services', accent: '#3b82f6',
-    items: ['NWS alerts & forecasts', 'Storm track predictions', 'Severity classifications'],
-    detail: { summary: 'Correlates National Weather Service alerts with service territories to enable pre-event staging and predictive crew positioning.', techStack: ['NWS CAP/ATOM', 'GeoJSON', 'REST'], protocols: ['HTTP Pull', 'WebSocket'] },
-  },
-  {
-    icon: Map, title: 'GIS / Asset Registry', accent: '#10b981',
-    items: ['Feeder zone geometry', 'Asset locations & topology', 'Critical load mapping'],
-    detail: { summary: 'Provides geospatial context for all grid assets. Feeder polygons define outage boundaries; critical-load flags drive prioritization logic.', techStack: ['ArcGIS', 'PostGIS', 'GeoJSON', 'Leaflet'], protocols: ['WFS', 'REST'] },
-  },
-  {
-    icon: Users, title: 'Workforce / CRM', accent: '#8b5cf6',
-    items: ['Crew availability & shifts', 'Skill & vehicle inventory', 'Customer account data'],
-    detail: { summary: 'Supplies crew roster, shift windows, and vehicle capabilities for dispatch optimization. Customer data enables impact scoring and proactive communications.', techStack: ['Dataverse', 'REST API', 'OAuth 2.0'], protocols: ['Batch Sync', 'Delta Query'] },
-  },
-];
-
-const backendBlocks: ArchBlockProps[] = [
-  {
-    icon: Database, title: 'Data Layer', accent: '#f97316',
-    items: ['PostgreSQL relational store', 'Scenarios & event tables', 'Event status history tracking', 'Crew & asset registries'],
-    detail: { summary: 'Core relational store hosting all operational entities. The events_intelligence view enriches raw scenario data with computed fields like ETR risk levels and copilot signals.', techStack: ['PostgreSQL 15', 'PostgREST', 'Realtime'], protocols: ['SQL', 'REST', 'WebSocket'] },
-  },
-  {
-    icon: Shield, title: 'Security & Auth', accent: '#ef4444',
-    items: ['Row-Level Security policies', 'Role-based access control', 'Session management', 'Encrypted credentials'],
-    detail: { summary: 'Every table enforces Row-Level Security. Authentication uses JWT tokens with automatic refresh. Secrets are vault-encrypted and never exposed client-side.', techStack: ['RLS', 'JWT', 'bcrypt', 'Vault'], protocols: ['OAuth 2.0', 'PKCE'] },
-  },
-  {
-    icon: Radio, title: 'Edge Functions', accent: '#06b6d4',
-    items: ['Copilot AI orchestration', 'ETR confidence computation', 'Real-time event processing', 'External API integration'],
-    detail: { summary: 'Serverless Deno-based functions handle AI prompt orchestration, structured JSON response contracts, and external API mediation without exposing credentials to the client.', techStack: ['Deno', 'TypeScript', 'OpenAI SDK'], protocols: ['HTTPS', 'JSON-RPC'] },
-  },
-];
-
-const aiBlocks: ArchBlockProps[] = [
-  {
-    icon: Bot, title: 'Operator Copilot', accent: '#a855f7',
-    items: ['Natural language Q&A', 'Contextual scenario analysis', 'Structured JSON response contract', 'Multi-mode reasoning'],
-    detail: { summary: 'Accepts scenario context and operator queries, returning structured insights (mode_banner, framing_line, insights array, assumptions, source_notes). Includes fallback logic for resilient responses.', techStack: ['LLM', 'Prompt Engineering', 'JSON Schema'], protocols: ['Chat Completion API'] },
-  },
-  {
-    icon: Zap, title: 'Predictive Engine', accent: '#eab308',
-    items: ['ETR band estimation', 'Uncertainty driver analysis', 'Critical runway forecasting', 'Escalation risk scoring'],
-    detail: { summary: 'Computes ETR confidence bands (earliest/expected/latest) and identifies uncertainty drivers. Monitors backup runtime against critical escalation thresholds to flag runway risks.', techStack: ['Statistical Models', 'PostgreSQL Views', 'Edge Compute'], protocols: ['Computed Columns', 'Triggers'] },
-  },
-  {
-    icon: FileText, title: 'Report Generation', accent: '#14b8a6',
-    items: ['Situation report synthesis', 'Customer communications', 'Post-event analysis packs', 'Regulatory compliance docs'],
-    detail: { summary: 'Generates structured situation reports and customer-facing communications from event data. Templates follow utility regulatory standards for outage disclosure.', techStack: ['Template Engine', 'PDF Export', 'Markdown'], protocols: ['REST', 'Batch'] },
-  },
-];
-
-const presentationBlocks: ArchBlockProps[] = [
-  { icon: Monitor, title: 'Dashboard', accent: '#6366f1', items: ['KPI cards & work queue', 'Safety & crew panels'], detail: { summary: 'Command-center view optimized for 1366×768 control-room displays. Flippable KPI cards provide progressive disclosure of outage breakdowns without leaving the main view.', techStack: ['React', 'Framer Motion', 'Recharts'], protocols: ['REST', 'Realtime'] } },
-  { icon: FileText, title: 'Events', accent: '#f59e0b', items: ['List / card views', 'Advanced filtering'], detail: { summary: 'Dual-view event management with lifecycle, priority, and outage-type filters. Event detail drawers provide ETR timeline, crew dispatch, and situation report access.', techStack: ['React Table', 'shadcn/ui', 'Zod'], protocols: ['REST Query'] } },
-  { icon: Map, title: 'Outage Map', accent: '#10b981', items: ['Leaflet map layers', 'Asset & crew overlays'], detail: { summary: 'Interactive geospatial view with feeder zone polygons, asset markers, crew positions, and heat-map overlays. Supports playback for post-event analysis.', techStack: ['Leaflet', 'React-Leaflet', 'GeoJSON'], protocols: ['Tile Server', 'WMS'] } },
-  { icon: Bot, title: 'Copilot Studio', accent: '#a855f7', items: ['Interactive AI chat', 'Scenario deep-dives'], detail: { summary: 'Conversational interface for querying the Operator Copilot. Supports multiple reasoning modes and displays structured insight cards inline with the chat.', techStack: ['React', 'Edge Functions', 'Streaming'], protocols: ['HTTPS', 'SSE'] } },
-  { icon: BarChart3, title: 'Analytics', accent: '#3b82f6', items: ['Distribution charts', 'Crew & ops metrics'], detail: { summary: 'Interactive bar charts for lifecycle, priority, and crew distributions with click-through drill-down popovers listing individual events and their details.', techStack: ['Recharts', 'Popover', 'React Query'], protocols: ['REST'] } },
-];
 
 export default function Architecture() {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <motion.div {...fadeUp} className="mb-6">
-        <p className="text-[11px] font-medium uppercase tracking-widest text-primary/80 mb-1">
-          System Design
-        </p>
+    <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6">
+      <motion.div {...fadeUp} className="mb-5">
+        <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-primary/80">System Design</p>
         <h1 className="text-xl font-semibold text-foreground">Technical Architecture</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="mt-1 text-sm text-muted-foreground">
           End-to-end solution architecture for predictive outage management
-          <span className="text-[10px] text-muted-foreground/50 ml-2">— hover blocks for technical detail</span>
+          <span className="ml-2 text-[10px] text-muted-foreground/60">— hover or tab through nodes for details</span>
         </p>
       </motion.div>
 
       <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
-        <Card className="border-border/50">
-          <CardHeader className="pb-3 pt-5 px-5">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary" />
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Layers className="h-4 w-4 text-primary" />
               Solution Architecture Overview
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-5 pb-5 space-y-3">
-
-            {/* Layer 1 — Data Sources */}
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
-                External Data Sources
-              </p>
-              <div className="grid grid-cols-4 gap-3">
-                {dataSources.map((b) => <ArchBlock key={b.title} {...b} />)}
-              </div>
-            </div>
-
-            <FlowArrow label="Ingest & Normalize" />
-
-            {/* Layer 2 — Backend Platform */}
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
-                Backend Platform (Lovable Cloud)
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {backendBlocks.map((b) => <ArchBlock key={b.title} {...b} />)}
-              </div>
-            </div>
-
-            <FlowArrow label="API / Real-time" />
-
-            {/* Layer 3 — AI & Intelligence */}
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
-                AI & Intelligence Layer
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {aiBlocks.map((b) => <ArchBlock key={b.title} {...b} />)}
-              </div>
-            </div>
-
-            <FlowArrow label="Serve" />
-
-            {/* Layer 4 — Presentation */}
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-2">
-                Presentation Layer (React SPA)
-              </p>
-              <div className="grid grid-cols-5 gap-3">
-                {presentationBlocks.map((b) => <ArchBlock key={b.title} {...b} />)}
-              </div>
-            </div>
-
-            {/* Footer note */}
-            <div className="pt-2 border-t border-border/30">
-              <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                All insights are advisory. The system provides structured context, visualization, and decision-support only — it does not execute autonomous control actions. Detailed outage reasoning and prioritization logic are delegated to the Operator Copilot AI layer.
-              </p>
-            </div>
-
+          <CardContent className="w-full px-3 pb-3 md:px-4 md:pb-4">
+            <NvidiaStyleArchitectureDiagram />
           </CardContent>
         </Card>
       </motion.div>

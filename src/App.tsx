@@ -40,6 +40,7 @@ function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/copilot-studio" element={<CopilotStudio />} />
+      <Route path="/architecture" element={<Architecture />} />
       <Route
         path="/app"
         element={
@@ -62,7 +63,6 @@ function AppRoutes() {
         <Route path="/event/:id/situation-report" element={<SituationReport />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
-        <Route path="/architecture" element={<Architecture />} />
         <Route path="/about" element={<About />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
