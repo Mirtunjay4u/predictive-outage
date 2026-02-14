@@ -519,6 +519,63 @@ function ArchitectureDiagram() {
   );
 }
 
+/* ─── legend ─── */
+function DiagramLegend() {
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-border/40 bg-muted/30 px-4 py-2.5">
+      <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70 mr-1">Legend</p>
+
+      {/* Primary flow */}
+      <div className="flex items-center gap-1.5">
+        <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.85)" strokeWidth="1.5" />
+          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.88)" />
+        </svg>
+        <span className="text-[9px] text-muted-foreground">Primary data flow</span>
+      </div>
+
+      {/* Secondary / dashed */}
+      <div className="flex items-center gap-1.5">
+        <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.55)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.58)" />
+        </svg>
+        <span className="text-[9px] text-muted-foreground">Secondary / governance</span>
+      </div>
+
+      {/* Optional */}
+      <div className="flex items-center gap-1.5">
+        <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.45)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.45)" />
+        </svg>
+        <span className="text-[9px] text-muted-foreground">Optional path</span>
+      </div>
+
+      {/* NIM node */}
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-5 rounded border border-emerald-400/70 bg-slate-900/80" />
+        <span className="text-[9px] text-muted-foreground">NVIDIA NIM service</span>
+      </div>
+
+      {/* Standard node */}
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-5 rounded border border-cyan-300/35 bg-slate-900/80" />
+        <span className="text-[9px] text-muted-foreground">Platform component</span>
+      </div>
+
+      {/* Particle */}
+      <div className="flex items-center gap-1.5">
+        <svg width="18" height="10" viewBox="0 0 18 10" className="shrink-0">
+          <circle cx="9" cy="5" r="2.5" fill="rgba(160,220,205,0.65)" />
+          <circle cx="9" cy="5" r="5" fill="rgba(160,220,205,0.15)" />
+        </svg>
+        <span className="text-[9px] text-muted-foreground">Animated data particle</span>
+      </div>
+    </div>
+  );
+}
+
 /* ─── page ─── */
 export default function Architecture() {
   return (
@@ -542,6 +599,7 @@ export default function Architecture() {
           </CardHeader>
           <CardContent className="w-full px-3 pb-3 md:px-4 md:pb-4">
             <ArchitectureDiagram />
+            <DiagramLegend />
           </CardContent>
         </Card>
       </motion.div>
