@@ -344,7 +344,7 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-50" sideOffset={8}>
+      <TooltipContent side={node.y < 150 ? "bottom" : "top"} className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-[9999]" sideOffset={8}>
         <NodeTooltipBody nodeId={node.id} />
       </TooltipContent>
     </Tooltip>
