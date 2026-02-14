@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -341,6 +341,40 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
   );
 }
 
+/* ─── responsive wrapper ─── */
+function ResponsiveScaler({ children }: { children: React.ReactNode }) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const update = () => {
+      const available = el.clientWidth;
+      setScale(Math.min(1, available / CANVAS.width));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className="w-full overflow-hidden">
+      <div
+        style={{
+          width: CANVAS.width,
+          height: CANVAS.height * scale,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ─── main diagram ─── */
 function ArchitectureDiagram() {
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -400,7 +434,7 @@ function ArchitectureDiagram() {
 
   return (
     <TooltipProvider>
-    <div className="relative w-[1140px] max-w-full mx-auto overflow-x-auto">
+    <ResponsiveScaler>
       <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
 
@@ -479,7 +513,7 @@ function ArchitectureDiagram() {
           })}
         </svg>
       </div>
-    </div>
+    </ResponsiveScaler>
     </TooltipProvider>
   );
 }
