@@ -313,7 +313,7 @@ function NodeTooltipBody({ nodeId }: { nodeId: NodeId }) {
 
 /* ─── node card ─── */
 function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
-  const borderColor = node.nim ? 'border-emerald-400/70' : 'border-cyan-300/35';
+  const borderColor = node.nim ? 'border-emerald-400 border-2' : 'border-cyan-300/35';
   const textColor = node.nim ? 'text-emerald-100' : 'text-slate-100';
   const iconColor = node.nim ? 'text-emerald-300' : 'text-cyan-300/80';
   return (
@@ -554,7 +554,7 @@ function DiagramLegend() {
 
       {/* NIM node */}
       <div className="flex items-center gap-1.5">
-        <div className="h-3.5 w-5 rounded border border-emerald-400/70 bg-slate-900/80" />
+        <div className="h-3.5 w-5 rounded border-2 border-emerald-400 bg-slate-900/80" />
         <span className="text-[9px] font-semibold text-muted-foreground">NVIDIA NIM service</span>
       </div>
 
