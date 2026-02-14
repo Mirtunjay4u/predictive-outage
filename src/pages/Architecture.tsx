@@ -9,7 +9,7 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
-const CANVAS = { width: 1140, height: 780 };
+const CANVAS = { width: 1140, height: 820 };
 const STEP_OUT = 14;
 const END_PAD = 8;
 
@@ -155,33 +155,33 @@ type Rect = { x: number; y: number; w: number; h: number };
 /* ─── NODES ─── */
 const NODES: NodeDef[] = [
   // Band 1 – Ingest
-  { id: 'structured_data', x: 40, y: 70, w: 240, h: 72, label: 'STRUCTURED DATA', sub: 'OMS/SCADA events · asset registry · crew · customer', icon: 'db' },
-  { id: 'sql_postgres', x: 320, y: 70, w: 180, h: 72, label: 'SQL / POSTGRES', icon: 'db' },
-  { id: 'unstructured_data', x: 540, y: 70, w: 160, h: 72, label: 'UNSTRUCTURED DATA', icon: 'doc' },
-  { id: 'text_retriever', x: 740, y: 70, w: 150, h: 72, label: 'TEXT RETRIEVER', icon: 'agent' },
-  { id: 'vector_db', x: 930, y: 70, w: 100, h: 72, label: 'VECTOR DB', icon: 'db' },
-  { id: 'embedding_nim', x: 1040, y: 46, w: 80, h: 44, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim' },
-  { id: 'reranking_nim', x: 1040, y: 118, w: 80, h: 44, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim' },
+  { id: 'structured_data', x: 40, y: 60, w: 200, h: 72, label: 'STRUCTURED DATA', sub: 'OMS · SCADA · Asset · Crew · Customer', icon: 'db' },
+  { id: 'sql_postgres', x: 270, y: 60, w: 160, h: 72, label: 'SQL / POSTGRES', icon: 'db' },
+  { id: 'unstructured_data', x: 460, y: 60, w: 160, h: 72, label: 'UNSTRUCTURED DATA', icon: 'doc' },
+  { id: 'text_retriever', x: 650, y: 60, w: 140, h: 72, label: 'TEXT RETRIEVER', icon: 'agent' },
+  { id: 'vector_db', x: 820, y: 60, w: 110, h: 72, label: 'VECTOR DB', icon: 'db' },
+  { id: 'embedding_nim', x: 960, y: 42, w: 150, h: 44, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim' },
+  { id: 'reranking_nim', x: 960, y: 108, w: 150, h: 44, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim' },
 
   // Band 2 – Operator Copilot Runtime (above trust boundary)
-  { id: 'authenticated_operator', x: 120, y: 240, w: 220, h: 66, label: 'AUTHENTICATED OPERATOR', icon: 'user' },
-  { id: 'copilot_ui', x: 400, y: 240, w: 220, h: 66, label: 'COPILOT UI', icon: 'app' },
+  { id: 'authenticated_operator', x: 80, y: 230, w: 240, h: 62, label: 'AUTHENTICATED OPERATOR', icon: 'user' },
+  { id: 'copilot_ui', x: 400, y: 230, w: 240, h: 62, label: 'COPILOT UI', icon: 'app' },
 
   // Band 2 – Below trust boundary
-  { id: 'orchestrator', x: 50, y: 398, w: 220, h: 68, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent' },
-  { id: 'guardrails', x: 310, y: 398, w: 210, h: 68, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent' },
-  { id: 'nemotron_nim', x: 560, y: 398, w: 220, h: 68, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim' },
-  { id: 'lovable_ai', x: 830, y: 380, w: 260, h: 106, label: 'LOVABLE AI', sub: 'Thin routing indicates a secondary hybrid path.', icon: 'nim' },
+  { id: 'orchestrator', x: 40, y: 410, w: 220, h: 64, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent' },
+  { id: 'guardrails', x: 300, y: 410, w: 200, h: 64, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent' },
+  { id: 'nemotron_nim', x: 540, y: 410, w: 220, h: 64, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim' },
+  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'LOVABLE AI', sub: 'Secondary hybrid AI path', icon: 'nim' },
 
   // Band 2 – Bottom row
-  { id: 'sql_tools_store', x: 50, y: 504, w: 280, h: 58, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db' },
-  { id: 'retriever_lane', x: 370, y: 504, w: 360, h: 58, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db' },
+  { id: 'sql_tools_store', x: 40, y: 520, w: 240, h: 54, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db' },
+  { id: 'retriever_lane', x: 320, y: 520, w: 320, h: 54, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db' },
 
   // Band 3 – Memory / Observability / Governance
-  { id: 'audit_logs', x: 40, y: 650, w: 220, h: 50, label: 'AUDIT LOGS', icon: 'doc' },
-  { id: 'prompt_versioning', x: 290, y: 650, w: 240, h: 50, label: 'PROMPT & MODEL VERSIONING', icon: 'agent' },
-  { id: 'telemetry', x: 560, y: 650, w: 230, h: 50, label: 'TELEMETRY / MONITORING', icon: 'analytics' },
-  { id: 'rbac_rls', x: 830, y: 650, w: 260, h: 50, label: 'RBAC + RLS', icon: 'admin' },
+  { id: 'audit_logs', x: 40, y: 680, w: 220, h: 52, label: 'AUDIT LOGS', icon: 'doc' },
+  { id: 'prompt_versioning', x: 290, y: 680, w: 240, h: 52, label: 'PROMPT & MODEL VERSIONING', icon: 'agent' },
+  { id: 'telemetry', x: 560, y: 680, w: 230, h: 52, label: 'TELEMETRY / MONITORING', icon: 'analytics' },
+  { id: 'rbac_rls', x: 820, y: 680, w: 280, h: 52, label: 'RBAC + RLS', icon: 'admin' },
 ];
 
 /* ─── EDGES ─── */
@@ -196,27 +196,25 @@ const EDGES: EdgeDef[] = [
 
   // Operator → Copilot UI
   { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  // Copilot UI → Lovable AI (dashed, secondary)
-  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 700 },
+  // Copilot UI → Lovable AI (dashed, secondary – routed right then down)
+  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 770 },
 
   // Backend row
   { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   // Nemotron → Copilot UI (Structured Insights JSON, upward)
-  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'Structured Insights (JSON)', mode: 'vertical-first' },
+  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'Structured Insights (JSON)', mode: 'vertical-first', laneY: 370 },
 
-  // SQL Tools ↔ Orchestrator
+  // SQL Tools → Orchestrator (straight up)
   { from: { nodeId: 'sql_tools_store', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first' },
-  // Retriever Lane ↔ Guardrails
+  // Retriever Lane → Guardrails (straight up)
   { from: { nodeId: 'retriever_lane', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first' },
-  // Retriever Lane ↔ Orchestrator
-  { from: { nodeId: 'retriever_lane', anchor: 'left' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'horizontal-first', laneX: 340 },
 
-  // Band 3 connections
-  { from: { nodeId: 'orchestrator', anchor: 'bottom' }, to: { nodeId: 'audit_logs', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 630 },
-  { from: { nodeId: 'guardrails', anchor: 'bottom' }, to: { nodeId: 'prompt_versioning', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 630 },
-  { from: { nodeId: 'nemotron_nim', anchor: 'bottom' }, to: { nodeId: 'telemetry', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 630 },
-  { from: { nodeId: 'lovable_ai', anchor: 'bottom' }, to: { nodeId: 'rbac_rls', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 630 },
+  // Band 3 connections – routed via distinct lane Y values to avoid overlap
+  { from: { nodeId: 'audit_logs', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
+  { from: { nodeId: 'prompt_versioning', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
+  { from: { nodeId: 'telemetry', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
+  { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'lovable_ai', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
 ];
 
 /* ─── geometry helpers ─── */
@@ -407,22 +405,22 @@ function ArchitectureDiagram() {
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
 
         {/* Band 1 – Ingest */}
-        <div className="absolute left-[20px] top-[24px] w-[1100px] h-[152px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <p className="absolute left-[34px] top-[32px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 — INGEST</p>
+        <div className="absolute left-[20px] top-[20px] w-[1100px] h-[158px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[28px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 — INGEST</p>
 
         {/* Band 2 – Operator Copilot Runtime */}
-        <div className="absolute left-[20px] top-[196px] w-[1100px] h-[400px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <p className="absolute left-[34px] top-[206px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 — OPERATOR COPILOT RUNTIME</p>
+        <div className="absolute left-[20px] top-[196px] w-[1100px] h-[410px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[204px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 — OPERATOR COPILOT RUNTIME</p>
 
         {/* Trust boundary */}
-        <div className="absolute left-[40px] top-[350px] h-px w-[1060px] border-t border-dashed border-slate-400/60" />
-        <p className="absolute left-1/2 top-[336px] -translate-x-1/2 whitespace-nowrap text-[8px] font-semibold tracking-[0.06em] text-slate-300/80">
-          TRUST BOUNDARY (CLIENT UI VS BACKEND / AI SERVICES)
+        <div className="absolute left-[40px] top-[355px] h-px w-[1060px] border-t border-dashed border-slate-400/60" />
+        <p className="absolute left-[50px] top-[340px] whitespace-nowrap text-[8px] font-semibold tracking-[0.06em] text-slate-400/70">
+          TRUST BOUNDARY — CLIENT UI vs BACKEND / AI SERVICES
         </p>
 
         {/* Band 3 – Memory / Observability / Governance */}
-        <div className="absolute left-[20px] top-[620px] w-[1100px] h-[106px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <p className="absolute left-[34px] top-[628px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 — MEMORY / OBSERVABILITY / GOVERNANCE</p>
+        <div className="absolute left-[20px] top-[640px] w-[1100px] h-[110px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[648px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 — MEMORY / OBSERVABILITY / GOVERNANCE</p>
 
         {/* Nodes */}
         {NODES.map((node) => (
