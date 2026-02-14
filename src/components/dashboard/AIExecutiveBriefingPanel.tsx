@@ -106,9 +106,9 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
   const backoffRef = useRef<number>(0);
   const cachedBriefingRef = useRef<BriefingData | null>(null);
 
-  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-  const BASE_BACKOFF_MS = 30_000; // 30s initial backoff
-  const MAX_BACKOFF_MS = 5 * 60 * 1000; // 5 min max backoff
+  const CACHE_TTL_MS = 60 * 1000; // 1 minute
+  const BASE_BACKOFF_MS = 10_000; // 10s initial backoff
+  const MAX_BACKOFF_MS = 60 * 1000; // 1 min max backoff
 
   useEffect(() => {
     let cancelled = false;
