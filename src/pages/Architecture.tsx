@@ -331,8 +331,9 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
     governance: { border: 'border border-amber-400/45', text: 'text-slate-200', icon: 'text-amber-300/70' },
   };
   const s = tierStyles[tier];
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <Popover>
+    <Popover onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <div
           ref={setNodeRef(node.id)}
@@ -340,7 +341,7 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
-          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer`}
+          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer ${isOpen ? 'ring-1 ring-cyan-400/70 shadow-[0_0_24px_rgba(56,189,248,0.25)] brightness-125' : ''}`}
           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
         >
           <div className="flex h-full w-full flex-col items-center justify-center">
