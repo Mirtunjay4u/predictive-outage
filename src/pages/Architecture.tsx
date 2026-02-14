@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Layers } from 'lucide-react';
 
 const fadeUp = {
@@ -34,6 +35,105 @@ interface NodeDef {
   optional?: boolean;
   icon?: 'db' | 'doc' | 'user' | 'app' | 'agent' | 'cache' | 'nim' | 'admin' | 'analytics';
 }
+
+interface NodeTooltipInfo {
+  description: string;
+  techStack: string[];
+  protocols?: string[];
+}
+
+const NODE_TOOLTIPS: Record<NodeId, NodeTooltipInfo> = {
+  structured_data: {
+    description: 'Ingests structured operational data from OMS, SCADA, asset registries, crew dispatch, and customer records.',
+    techStack: ['PostgreSQL', 'ETL Pipelines', 'CSV/JSON'],
+    protocols: ['REST API', 'Batch Import'],
+  },
+  sql_db_ingest: {
+    description: 'Primary relational store for structured ingestion. Serves as the system of record for tabular operational data.',
+    techStack: ['PostgreSQL 15', 'Supabase'],
+    protocols: ['SQL', 'PostgREST'],
+  },
+  unstructured_data: {
+    description: 'Ingests unstructured content such as product manuals, catalogs, FAQs, and knowledge-base articles.',
+    techStack: ['PDF/DOCX Parsers', 'Text Extractors'],
+    protocols: ['File Upload', 'S3-compatible'],
+  },
+  text_retriever: {
+    description: 'Microservice that chunks, embeds, and indexes unstructured text for semantic retrieval.',
+    techStack: ['Python', 'LangChain', 'Sentence Transformers'],
+    protocols: ['gRPC', 'REST'],
+  },
+  milvus_vector_db: {
+    description: 'High-performance vector database for similarity search over embedded document chunks.',
+    techStack: ['Milvus', 'cuVS (GPU-accelerated)'],
+    protocols: ['gRPC', 'REST API'],
+  },
+  embedding_nim: {
+    description: 'NVIDIA NIM microservice for generating dense vector embeddings from text. Optional enhancement path.',
+    techStack: ['NVIDIA NIM', 'NeMo Retriever'],
+    protocols: ['NIM API', 'HTTP/2'],
+  },
+  reranking_nim: {
+    description: 'NVIDIA NIM microservice for re-ranking retrieved results by semantic relevance. Optional enhancement path.',
+    techStack: ['NVIDIA NIM', 'NeMo Retriever'],
+    protocols: ['NIM API', 'HTTP/2'],
+  },
+  authenticated_user: {
+    description: 'End-user authenticated via SSO/RBAC who interacts with the AI Virtual Assistant for customer service queries.',
+    techStack: ['Supabase Auth', 'JWT', 'RBAC'],
+    protocols: ['OAuth 2.0', 'Session Tokens'],
+  },
+  ai_va_ui: {
+    description: 'Frontend conversational interface for operator interaction. Renders structured insights and manages session state.',
+    techStack: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+    protocols: ['WebSocket', 'REST'],
+  },
+  agent: {
+    description: 'Orchestration agent that routes queries, manages tool calls, and coordinates between retrieval and generation.',
+    techStack: ['LangGraph', 'LangChain', 'Python'],
+    protocols: ['Tool Calling', 'JSON-RPC'],
+  },
+  sql_retriever_vanna: {
+    description: 'Converts natural language queries into SQL using Vanna.AI, then executes against the operational database.',
+    techStack: ['Vanna.AI', 'PostgreSQL', 'Python'],
+    protocols: ['Text-to-SQL', 'REST API'],
+  },
+  redis_cache: {
+    description: 'In-memory cache for active conversation state, user feedback, and session context for low-latency retrieval.',
+    techStack: ['Redis', 'Redis Stack'],
+    protocols: ['RESP Protocol', 'Pub/Sub'],
+  },
+  sql_db_checkpoint: {
+    description: 'Persistent store for LangGraph checkpointer memory, enabling agent state recovery and conversation continuity.',
+    techStack: ['PostgreSQL', 'LangGraph Checkpointer'],
+    protocols: ['SQL', 'JSONB'],
+  },
+  sql_db_persistent: {
+    description: 'Long-term storage for historical conversations, enabling analytics, audit trails, and training data extraction.',
+    techStack: ['PostgreSQL', 'Supabase'],
+    protocols: ['SQL', 'PostgREST'],
+  },
+  llm_nim: {
+    description: 'NVIDIA NIM-hosted large language model for generating responses, reasoning, and structured insight extraction.',
+    techStack: ['NVIDIA NIM', 'Nemotron', 'TensorRT-LLM'],
+    protocols: ['NIM API', 'OpenAI-compatible'],
+  },
+  authenticated_admin: {
+    description: 'Administrative user with elevated privileges for reviewing analytics, conversation histories, and system health.',
+    techStack: ['Supabase Auth', 'RBAC', 'RLS'],
+    protocols: ['OAuth 2.0', 'JWT'],
+  },
+  admin_console: {
+    description: 'Administrative dashboard for monitoring system health, reviewing conversations, and managing configurations.',
+    techStack: ['React', 'TypeScript', 'Recharts'],
+    protocols: ['REST API', 'WebSocket'],
+  },
+  analytics_microservices: {
+    description: 'Backend services for generating conversation summaries, sentiment analysis, and operational analytics reports.',
+    techStack: ['Python', 'FastAPI', 'Pandas'],
+    protocols: ['REST API', 'Async Workers'],
+  },
+};
 
 interface EdgeDef {
   from: { nodeId: NodeId; anchor: Anchor };
@@ -169,24 +269,63 @@ function NodeIcon({ icon }: { icon?: string }) {
   return null;
 }
 
+/* ─── tooltip content ─── */
+function NodeTooltipContent({ nodeId }: { nodeId: NodeId }) {
+  const info = NODE_TOOLTIPS[nodeId];
+  if (!info) return null;
+  return (
+    <div className="max-w-[260px] space-y-2 text-left">
+      <p className="text-[11px] leading-snug text-slate-200">{info.description}</p>
+      <div>
+        <p className="text-[9px] font-semibold uppercase tracking-wider text-emerald-300/90 mb-0.5">Tech Stack</p>
+        <div className="flex flex-wrap gap-1">
+          {info.techStack.map((t) => (
+            <span key={t} className="inline-block rounded bg-slate-700/80 px-1.5 py-0.5 text-[8.5px] font-medium text-slate-200">{t}</span>
+          ))}
+        </div>
+      </div>
+      {info.protocols && info.protocols.length > 0 && (
+        <div>
+          <p className="text-[9px] font-semibold uppercase tracking-wider text-cyan-300/80 mb-0.5">Protocols</p>
+          <div className="flex flex-wrap gap-1">
+            {info.protocols.map((p) => (
+              <span key={p} className="inline-block rounded bg-slate-700/60 px-1.5 py-0.5 text-[8.5px] font-medium text-slate-300">{p}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── node card ─── */
 function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
   const borderColor = node.nim ? 'border-emerald-400/70' : 'border-cyan-300/35';
   const textColor = node.nim ? 'text-emerald-100' : 'text-slate-100';
   const iconColor = node.nim ? 'text-emerald-300' : 'text-cyan-300/80';
   return (
-    <div
-      ref={setNodeRef(node.id)}
-      data-node={node.id}
-      className={`absolute rounded-lg border bg-slate-900/90 px-2 py-1.5 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${borderColor} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:border-cyan-300/60`}
-      style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
-    >
-      <div className="flex h-full w-full flex-col items-center justify-center">
-        <span className={iconColor}><NodeIcon icon={node.icon} /></span>
-        <p className={`text-[9px] font-semibold tracking-[0.06em] leading-tight ${textColor}`}>{node.label}</p>
-        {node.sub && <p className="mt-0.5 text-[7.5px] font-medium tracking-[0.03em] text-slate-400/90 leading-tight">{node.sub}</p>}
-      </div>
-    </div>
+    <Tooltip delayDuration={200}>
+      <TooltipTrigger asChild>
+        <div
+          ref={setNodeRef(node.id)}
+          data-node={node.id}
+          tabIndex={0}
+          role="button"
+          aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
+          className={`absolute rounded-lg border bg-slate-900/90 px-2 py-1.5 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${borderColor} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:border-cyan-300/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-default`}
+          style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+        >
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <span className={iconColor}><NodeIcon icon={node.icon} /></span>
+            <p className={`text-[9px] font-semibold tracking-[0.06em] leading-tight ${textColor}`}>{node.label}</p>
+            {node.sub && <p className="mt-0.5 text-[7.5px] font-medium tracking-[0.03em] text-slate-400/90 leading-tight">{node.sub}</p>}
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="border-slate-600/80 bg-slate-800/95 backdrop-blur-sm shadow-xl p-3 z-50" sideOffset={8}>
+        <NodeTooltipContent nodeId={node.id} />
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -248,6 +387,7 @@ function ArchitectureDiagram() {
   const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : style === 'optional' ? 'rgba(160,220,205,0.45)' : 'rgba(160,220,205,0.55)');
 
   return (
+    <TooltipProvider>
     <div className="relative w-[1160px] max-w-full mx-auto overflow-x-auto">
       <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
@@ -317,6 +457,7 @@ function ArchitectureDiagram() {
         </svg>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 
