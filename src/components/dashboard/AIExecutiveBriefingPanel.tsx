@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -101,8 +101,30 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
     onBriefingStateChange?.({ briefing, isLoading, error });
   }, [briefing, error, isLoading, onBriefingStateChange]);
 
+  // Throttle NIM calls: cache successful responses for 5 minutes, back off on failures
+  const lastFetchRef = useRef<number>(0);
+  const backoffRef = useRef<number>(0);
+  const cachedBriefingRef = useRef<BriefingData | null>(null);
+
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const BASE_BACKOFF_MS = 30_000; // 30s initial backoff
+  const MAX_BACKOFF_MS = 5 * 60 * 1000; // 5 min max backoff
+
   useEffect(() => {
     let cancelled = false;
+    const now = Date.now();
+
+    // If we have a cached NIM response that's still fresh, reuse it
+    if (cachedBriefingRef.current && now - lastFetchRef.current < CACHE_TTL_MS) {
+      setBriefing(cachedBriefingRef.current);
+      return;
+    }
+
+    // If in backoff window after a failure, skip
+    if (backoffRef.current > 0 && now - lastFetchRef.current < backoffRef.current) {
+      return;
+    }
+
     const load = async () => {
       setIsLoading(true);
       setError(null);
@@ -116,15 +138,33 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
         });
 
         if (fnError) throw fnError;
+
+        // Handle graceful fallback responses from the edge function (429/timeout)
+        if (data?.fallback) {
+          throw new Error(`NIM ${data.reason || 'unavailable'}`);
+        }
+
         if (!data?.ok || typeof data.answer !== 'string') throw new Error('Nemotron response unavailable');
 
         const parsed = parseNemotronBriefing(data.answer);
         if (!parsed) throw new Error('Nemotron returned non-structured briefing content');
-        if (!cancelled) setBriefing({ ...parsed, updatedTime: new Date(), source: 'nemotron' });
+        if (!cancelled) {
+          const nimBriefing = { ...parsed, updatedTime: new Date(), source: 'nemotron' as const };
+          setBriefing(nimBriefing);
+          cachedBriefingRef.current = nimBriefing;
+          lastFetchRef.current = Date.now();
+          backoffRef.current = 0; // reset backoff on success
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Unable to load AI briefing');
           setBriefing(fallbackBriefing);
+          lastFetchRef.current = Date.now();
+          // Exponential backoff: 30s → 60s → 120s → … capped at 5min
+          backoffRef.current = Math.min(
+            backoffRef.current > 0 ? backoffRef.current * 2 : BASE_BACKOFF_MS,
+            MAX_BACKOFF_MS
+          );
         }
       } finally {
         if (!cancelled) setIsLoading(false);
