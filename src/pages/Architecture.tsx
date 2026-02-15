@@ -117,8 +117,8 @@ const NODE_TOOLTIPS: Record<NodeId, NodeTooltipInfo> = {
     protocols: ['NIM API', 'OpenAI-compatible'],
   },
   lovable_ai: {
-    description: 'Secondary hybrid AI path via Lovable AI Gateway. Provides fallback and supplementary reasoning capabilities.',
-    techStack: ['Lovable AI Gateway', 'Gemini', 'GPT-5'],
+    description: 'Secondary hybrid AI path via multi-model gateway. Provides fallback and supplementary reasoning capabilities.',
+    techStack: ['Multi-Model Gateway', 'Gemini', 'GPT-5'],
     protocols: ['OpenAI-compatible API', 'REST'],
   },
   sql_tools_store: {
@@ -175,7 +175,7 @@ const NODES: NodeDef[] = [
   { id: 'orchestrator', x: 40, y: 410, w: 220, h: 64, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent', tier: 'core' },
   { id: 'guardrails', x: 300, y: 410, w: 200, h: 64, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent', tier: 'core' },
   { id: 'nemotron_nim', x: 540, y: 410, w: 220, h: 64, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim', tier: 'nim' },
-  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'LOVABLE AI', sub: 'Secondary hybrid AI path', icon: 'nim', tier: 'nim' },
+  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'HYBRID AI GATEWAY', sub: 'Multi-Model Reasoning', icon: 'nim', tier: 'nim' },
 
   // Band 2 – Bottom row
   { id: 'sql_tools_store', x: 40, y: 520, w: 240, h: 54, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db', tier: 'data' },
@@ -200,7 +200,7 @@ const EDGES: EdgeDef[] = [
 
   // Operator → Copilot UI
   { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  // Copilot UI → Lovable AI (dashed, secondary – routed right then down)
+  // Copilot UI → Hybrid AI Gateway (dashed, secondary – routed right then down)
   { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 770 },
 
   // Backend row
