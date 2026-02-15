@@ -142,8 +142,7 @@ export function AppSidebar() {
         )}
 
         <div className={cn("flex items-center", collapsed ? "justify-center" : "px-1")}>
-          <div className="group/tcs relative rounded-lg border border-[#76B900]/60 px-3 py-2 transition-all duration-500 hover:border-[#76B900]/90 hover:shadow-[0_0_12px_rgba(118,185,0,0.25)]"
-               style={{ boxShadow: '0 0 8px rgba(118,185,0,0.12), inset 0 0 6px rgba(118,185,0,0.06)' }}>
+          <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-3 py-2 transition-all duration-500">
             <img
               src={tcsLogo}
               alt="Tata Consultancy Services (TCS)"
