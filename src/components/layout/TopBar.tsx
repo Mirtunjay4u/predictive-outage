@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import builderPhoto from '@/assets/builder-photo.png';
-import TCSBrandMark from '@/components/brand/TCSBrandMark';
+
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -88,9 +88,6 @@ export function TopBar({ onSearch }: TopBarProps) {
           </DropdownMenu>
         </div>
 
-        <div className="flex shrink-0 items-center">
-          <TCSBrandMark />
-        </div>
       </div>
     </header>
   );
