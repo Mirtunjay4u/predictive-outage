@@ -53,6 +53,8 @@ interface EdgeDef {
   to: { nodeId: NodeId; anchor: Anchor };
   style: EdgeStyle;
   label?: string;
+  /** When set, center the label on this node instead of the edge midpoint */
+  labelOnNode?: NodeId;
   mode?: RouteMode;
   laneX?: number;
   laneY?: number;
@@ -234,7 +236,7 @@ const EDGES: EdgeDef[] = [
   { from: { nodeId: 'structured_data', anchor: 'right' }, to: { nodeId: 'sql_postgres', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   { from: { nodeId: 'sql_postgres', anchor: 'right' }, to: { nodeId: 'unstructured_data', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   { from: { nodeId: 'unstructured_data', anchor: 'right' }, to: { nodeId: 'text_retriever', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'RETRIEVE' },
+  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'RETRIEVE', labelOnNode: 'vector_db' },
   { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'embedding_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
   { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'reranking_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
   // New ingest connections
@@ -557,12 +559,24 @@ function ArchitectureDiagram() {
       const start = getAnchorPoint(fromRect, edge.from.anchor);
       const end = getAnchorPoint(toRect, edge.to.anchor);
       const points = routeOrthogonal(start, end, edge);
-      const midIdx = Math.floor(points.length / 2);
-      const mid = {
-        x: (points[midIdx - 1].x + points[midIdx].x) / 2,
-        y: (points[midIdx - 1].y + points[midIdx].y) / 2,
-      };
-      const lp = edge.label ? labelPoint(mid) : undefined;
+      let lp: Pt | undefined;
+      if (edge.label) {
+        if (edge.labelOnNode) {
+          const targetRect = rects.get(edge.labelOnNode);
+          if (targetRect) {
+            // Center label on the target node
+            lp = { x: targetRect.x + targetRect.w / 2, y: targetRect.y - 10 };
+          }
+        }
+        if (!lp) {
+          const midIdx = Math.floor(points.length / 2);
+          const mid = {
+            x: (points[midIdx - 1].x + points[midIdx].x) / 2,
+            y: (points[midIdx - 1].y + points[midIdx].y) / 2,
+          };
+          lp = labelPoint(mid);
+        }
+      }
       return [{ d: pathFromPoints(points), style: edge.style, label: edge.label, lx: lp?.x, ly: lp?.y }];
     });
     setEdgePaths(nextPaths);
@@ -666,19 +680,28 @@ function ArchitectureDiagram() {
                 />
                 {p.label && (
                   <g>
-                    <rect
-                      x={(p.lx ?? 0) - 3}
-                      y={(p.ly ?? 0) - 8}
-                      width={p.label.length * 4.2 + 6}
-                      height={12}
-                      rx={3}
-                      fill="rgba(15,23,42,0.92)"
-                      stroke="rgba(160,220,205,0.12)"
-                      strokeWidth={0.5}
-                    />
-                    <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.92)" fontSize="7" fontWeight={600} letterSpacing="0.05em" fontFamily="monospace">
-                      {p.label}
-                    </text>
+                    {(() => {
+                      const textW = p.label.length * 4.2 + 6;
+                      const lx = p.lx ?? 0;
+                      const ly = p.ly ?? 0;
+                      return (
+                        <>
+                          <rect
+                            x={lx - textW / 2}
+                            y={ly - 8}
+                            width={textW}
+                            height={12}
+                            rx={3}
+                            fill="rgba(15,23,42,0.92)"
+                            stroke="rgba(160,220,205,0.12)"
+                            strokeWidth={0.5}
+                          />
+                          <text x={lx} y={ly} fill="rgba(160,220,205,0.92)" fontSize="7" fontWeight={600} letterSpacing="0.05em" fontFamily="monospace" textAnchor="middle">
+                            {p.label}
+                          </text>
+                        </>
+                      );
+                    })()}
                   </g>
                 )}
                 <circle r={particleR} fill={fill} opacity={0.8}>
