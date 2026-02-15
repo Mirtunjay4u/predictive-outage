@@ -488,7 +488,7 @@ function DeploymentZonesOverlay({ width, zones }: { width: number; zones: typeof
               fontSize: '8.5px',
               fontWeight: 700,
               letterSpacing: '0.22em',
-              color: 'rgba(148,163,184,0.55)',
+              color: 'rgba(148,163,184,0.68)',
               textTransform: 'uppercase' as const,
               fontFamily: 'Inter, system-ui, sans-serif',
             }}
@@ -514,7 +514,7 @@ function DeploymentZonesOverlay({ width, zones }: { width: number; zones: typeof
                 left: zone.x0,
                 width: '1px',
                 height: '100%',
-                background: 'rgba(148,163,184,0.10)',
+                background: 'rgba(148,163,184,0.07)',
               }}
             />
           )}
