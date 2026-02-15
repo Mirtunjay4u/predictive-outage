@@ -1,0 +1,8 @@
+<svg width="192" height="64" viewBox="0 0 192 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>TCS</title>
+  <g fill="currentColor">
+    <path d="M8 14H76V22H46V50H38V22H8V14Z" />
+    <path d="M90 14H144V22H98V28H134V36H98V42H144V50H90V14Z" />
+    <path d="M156 14H188V22H156V28H180C186.627 28 192 33.373 192 40C192 46.627 186.627 52 180 52H148V44H180C182.209 44 184 42.209 184 40C184 37.791 182.209 36 180 36H156V14Z" />
+  </g>
+</svg>
