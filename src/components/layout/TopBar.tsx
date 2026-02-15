@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import builderPhoto from '@/assets/builder-photo.png';
-
+import tcsLogo from '@/assets/tcs-logo.png';
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -86,6 +86,16 @@ export function TopBar({ onSearch }: TopBarProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <div className="flex shrink-0 items-center border-l border-border/50 pl-3">
+            <div className="rounded-md border border-[hsl(120,100%,40%)] px-2.5 py-1.5">
+              <img
+                src={tcsLogo}
+                alt="Tata Consultancy Services (TCS)"
+                className="h-5 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>
         </div>
 
       </div>

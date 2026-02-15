@@ -142,11 +142,13 @@ export function AppSidebar() {
         )}
 
         <div className={cn("flex items-center", collapsed ? "justify-center" : "px-1")}>
-          <img
-            src={tcsLogo}
-            alt="Tata Consultancy Services (TCS)"
-            className="h-5 w-auto opacity-70 hover:opacity-90 transition-opacity invert"
-          />
+          <div className="rounded-md border border-[hsl(120,100%,40%)] px-2.5 py-1.5">
+            <img
+              src={tcsLogo}
+              alt="Tata Consultancy Services (TCS)"
+              className="h-5 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
         </div>
       </div>
 
