@@ -328,7 +328,7 @@ function pathFromPoints(points: Pt[]) {
 }
 
 function labelPoint(pt: Pt): Pt {
-  return { x: pt.x + 4, y: pt.y - 6 };
+  return { x: pt.x + 6, y: pt.y - 10 };
 }
 
 /* ─── icons ─── */
@@ -391,11 +391,11 @@ function NodeTooltipBody({ nodeId, label }: { nodeId: NodeId; label: string }) {
 function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
   const tier = node.tier ?? (node.nim ? 'nim' : 'input');
   const tierStyles: Record<NodeTier, { border: string; text: string; icon: string }> = {
-    nim:        { border: 'border-2 border-emerald-400', text: 'text-emerald-100', icon: 'text-emerald-300' },
-    core:       { border: 'border-2 border-cyan-400/70', text: 'text-cyan-50', icon: 'text-cyan-300' },
-    data:       { border: 'border-[1.5px] border-sky-400/50', text: 'text-slate-100', icon: 'text-sky-300/80' },
-    input:      { border: 'border border-slate-400/50', text: 'text-slate-200', icon: 'text-slate-300/80' },
-    governance: { border: 'border border-amber-400/45', text: 'text-slate-200', icon: 'text-amber-300/70' },
+    nim:        { border: 'border-2 border-emerald-400/90', text: 'text-emerald-100', icon: 'text-emerald-300' },
+    core:       { border: 'border-2 border-cyan-400/80', text: 'text-cyan-50', icon: 'text-cyan-300' },
+    data:       { border: 'border-[1.5px] border-sky-400/60', text: 'text-slate-100', icon: 'text-sky-300/80' },
+    input:      { border: 'border border-slate-400/60', text: 'text-slate-200', icon: 'text-slate-300/80' },
+    governance: { border: 'border border-amber-400/55', text: 'text-slate-200', icon: 'text-amber-300/70' },
   };
   const s = tierStyles[tier];
   const [isOpen, setIsOpen] = useState(false);
@@ -408,7 +408,7 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
-          className={`absolute rounded-lg bg-slate-900/90 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer ${isOpen ? 'ring-1 ring-cyan-400/70 shadow-[0_0_24px_rgba(56,189,248,0.25)] brightness-125' : ''}`}
+          className={`absolute rounded-lg bg-slate-900/95 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer ${isOpen ? 'ring-1 ring-cyan-400/70 shadow-[0_0_24px_rgba(56,189,248,0.25)] brightness-125' : ''}`}
           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
         >
           <div className="flex h-full w-full flex-col items-center justify-center">
@@ -620,9 +620,21 @@ function ArchitectureDiagram() {
                   markerEnd={`url(#${dim ? 'arrowSecondary' : 'arrowPrimary'})`}
                 />
                 {p.label && (
-                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.80)" fontSize="7" fontWeight={600} letterSpacing="0.05em" fontFamily="monospace">
-                    {p.label}
-                  </text>
+                  <g>
+                    <rect
+                      x={(p.lx ?? 0) - 3}
+                      y={(p.ly ?? 0) - 8}
+                      width={p.label.length * 4.2 + 6}
+                      height={12}
+                      rx={3}
+                      fill="rgba(15,23,42,0.92)"
+                      stroke="rgba(160,220,205,0.12)"
+                      strokeWidth={0.5}
+                    />
+                    <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.92)" fontSize="7" fontWeight={600} letterSpacing="0.05em" fontFamily="monospace">
+                      {p.label}
+                    </text>
+                  </g>
                 )}
                 <circle r={particleR} fill={fill} opacity={0.8}>
                   <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.3}s`}>
