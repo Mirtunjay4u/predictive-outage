@@ -250,7 +250,7 @@ const EDGES: EdgeDef[] = [
 
   // Runtime row
   { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'GENERATE' },
+  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'GENERATE', labelOnNode: 'nemotron_nim' },
   // Nemotron → Copilot UI (Structured Output)
   { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'STRUCTURE OUTPUT (JSON)', mode: 'vertical-first', laneY: 370 },
 
