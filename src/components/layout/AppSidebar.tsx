@@ -145,7 +145,7 @@ export function AppSidebar() {
           <img
             src={tcsLogo}
             alt="Tata Consultancy Services (TCS)"
-            className="h-5 w-auto opacity-70 hover:opacity-90 transition-opacity invert dark:invert-0"
+            className="h-5 w-auto opacity-70 hover:opacity-90 transition-opacity invert"
           />
         </div>
       </div>
