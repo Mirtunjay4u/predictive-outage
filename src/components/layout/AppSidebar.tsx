@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import tcsLogo from '@/assets/tcs-logo.png';
 
 const navGroups = [
   {
@@ -119,7 +120,7 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 space-y-3">
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -139,6 +140,14 @@ export function AppSidebar() {
             <span className="text-sm font-medium">Demo Script</span>
           </Button>
         )}
+
+        <div className={cn("flex items-center", collapsed ? "justify-center" : "px-1")}>
+          <img
+            src={tcsLogo}
+            alt="Tata Consultancy Services (TCS)"
+            className="h-5 w-auto opacity-70 hover:opacity-90 transition-opacity invert dark:invert-0"
+          />
+        </div>
       </div>
 
       <Button
