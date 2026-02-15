@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import builderPhoto from '@/assets/builder-photo.png';
-import TCSBrandMark from '@/components/brand/TCSBrandMark';
+import tcsLogo from '@/assets/tcs-logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -122,8 +122,12 @@ export default function Login() {
           
           {/* E) Safety Footer + TCS Branding */}
           <div className="mt-8 md:mt-auto pt-8 space-y-6">
-            <div className="flex items-center">
-              <TCSBrandMark />
+            <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-4 py-3 transition-all duration-500 inline-flex">
+              <img
+                src={tcsLogo}
+                alt="Tata Consultancy Services (TCS)"
+                className="h-7 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
+              />
             </div>
             <motion.p 
               initial={{ opacity: 0 }}
