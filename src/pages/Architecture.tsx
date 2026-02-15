@@ -280,6 +280,15 @@ const EDGES: EdgeDef[] = [
   { from: { nodeId: 'prompt_versioning', anchor: 'bottom' }, to: { nodeId: 'compliance_packs', anchor: 'bottom' }, style: 'optional', mode: 'vertical-first', laneY: 745 },
 ];
 
+/* ─── adjacency map for hover highlighting ─── */
+const ADJACENCY = new Map<NodeId, Set<NodeId>>();
+EDGES.forEach(e => {
+  if (!ADJACENCY.has(e.from.nodeId)) ADJACENCY.set(e.from.nodeId, new Set());
+  if (!ADJACENCY.has(e.to.nodeId)) ADJACENCY.set(e.to.nodeId, new Set());
+  ADJACENCY.get(e.from.nodeId)!.add(e.to.nodeId);
+  ADJACENCY.get(e.to.nodeId)!.add(e.from.nodeId);
+});
+
 /* ─── geometry helpers ─── */
 function getAnchorPoint(rect: Rect, anchor: Anchor): Pt {
   if (anchor === 'left') return { x: rect.x, y: rect.y + rect.h / 2 };
@@ -388,7 +397,19 @@ function NodeTooltipBody({ nodeId, label }: { nodeId: NodeId; label: string }) {
 }
 
 /* ─── node card ─── */
-function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void }) {
+function NodeCard({
+  node,
+  setNodeRef,
+  dimmed,
+  onHoverStart,
+  onHoverEnd,
+}: {
+  node: NodeDef;
+  setNodeRef: (id: NodeId) => (el: HTMLDivElement | null) => void;
+  dimmed: boolean;
+  onHoverStart: (id: NodeId) => void;
+  onHoverEnd: () => void;
+}) {
   const tier = node.tier ?? (node.nim ? 'nim' : 'input');
   const tierStyles: Record<NodeTier, { border: string; text: string; icon: string }> = {
     nim:        { border: 'border-2 border-emerald-400/90', text: 'text-emerald-100', icon: 'text-emerald-300' },
@@ -408,8 +429,17 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}
-          className={`absolute rounded-lg bg-slate-900/95 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer ${isOpen ? 'ring-1 ring-cyan-400/70 shadow-[0_0_24px_rgba(56,189,248,0.25)] brightness-125' : ''}`}
-          style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+          className={`absolute rounded-lg bg-slate-900/95 px-2 py-1 text-center shadow-[0_0_12px_rgba(15,23,42,0.5)] ${s.border} ${node.optional ? 'border-dashed' : ''} transition-all duration-200 hover:shadow-[0_0_20px_rgba(56,189,248,0.15)] hover:brightness-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60 cursor-pointer ${isOpen ? 'ring-1 ring-cyan-400/70 shadow-[0_0_24px_rgba(56,189,248,0.25)] brightness-125' : ''}`}
+          style={{
+            left: node.x,
+            top: node.y,
+            width: node.w,
+            height: node.h,
+            opacity: dimmed ? 0.2 : 1,
+            filter: dimmed ? 'grayscale(0.6)' : 'none',
+          }}
+          onMouseEnter={() => onHoverStart(node.id)}
+          onMouseLeave={onHoverEnd}
         >
           <div className="flex h-full w-full flex-col items-center justify-center">
             <span className={s.icon}><NodeIcon icon={node.icon} /></span>
@@ -499,7 +529,11 @@ function ArchitectureDiagram() {
   const nodeRefs = useRef(new Map<NodeId, HTMLDivElement>());
   const rafRef = useRef<number | null>(null);
   const [edgePaths, setEdgePaths] = useState<Array<{ d: string; style: EdgeStyle; label?: string; lx?: number; ly?: number }>>([]);
+  const [hoveredNode, setHoveredNode] = useState<NodeId | null>(null);
 
+  const connectedNodes = hoveredNode
+    ? new Set([hoveredNode, ...(ADJACENCY.get(hoveredNode) ?? [])])
+    : null;
   const setNodeRef = useCallback(
     (id: NodeId) => (el: HTMLDivElement | null) => {
       if (el) nodeRefs.current.set(id, el);
@@ -523,7 +557,11 @@ function ArchitectureDiagram() {
       const start = getAnchorPoint(fromRect, edge.from.anchor);
       const end = getAnchorPoint(toRect, edge.to.anchor);
       const points = routeOrthogonal(start, end, edge);
-      const mid = points[Math.max(1, Math.floor(points.length / 2))];
+      const midIdx = Math.floor(points.length / 2);
+      const mid = {
+        x: (points[midIdx - 1].x + points[midIdx].x) / 2,
+        y: (points[midIdx - 1].y + points[midIdx].y) / 2,
+      };
       const lp = edge.label ? labelPoint(mid) : undefined;
       return [{ d: pathFromPoints(points), style: edge.style, label: edge.label, lx: lp?.x, ly: lp?.y }];
     });
@@ -585,7 +623,14 @@ function ArchitectureDiagram() {
 
         {/* Nodes */}
         {NODES.map((node) => (
-          <NodeCard key={node.id} node={node} setNodeRef={setNodeRef} />
+          <NodeCard
+            key={node.id}
+            node={node}
+            setNodeRef={setNodeRef}
+            dimmed={connectedNodes !== null && !connectedNodes.has(node.id)}
+            onHoverStart={setHoveredNode}
+            onHoverEnd={() => setHoveredNode(null)}
+          />
         ))}
 
         {/* Edges + particles */}
