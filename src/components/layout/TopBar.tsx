@@ -88,7 +88,7 @@ export function TopBar({ onSearch }: TopBarProps) {
           </DropdownMenu>
 
           <div className="flex shrink-0 items-center border-l border-border/50 pl-3">
-            <div className="rounded-md border border-[hsl(120,100%,40%)] px-2.5 py-1.5">
+            <div className="rounded-md border-2 border-[#76B900] px-2.5 py-1.5">
               <img
                 src={tcsLogo}
                 alt="Tata Consultancy Services (TCS)"
