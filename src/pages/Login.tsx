@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import builderPhoto from '@/assets/builder-photo.png';
+import TCSBrandMark from '@/components/brand/TCSBrandMark';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -119,15 +120,20 @@ export default function Login() {
             </ul>
           </motion.div>
           
-          {/* E) Safety Footer */}
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-[11px] text-primary-foreground/50 font-medium tracking-wide mt-8 md:mt-auto pt-8"
-          >
-            Decision-support only. No autonomous actions. No live SCADA/OMS/ADMS access in demo mode.
-          </motion.p>
+          {/* E) Safety Footer + TCS Branding */}
+          <div className="mt-8 md:mt-auto pt-8 space-y-6">
+            <div className="flex items-center">
+              <TCSBrandMark />
+            </div>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-[11px] text-primary-foreground/50 font-medium tracking-wide"
+            >
+              Decision-support only. No autonomous actions. No live SCADA/OMS/ADMS access in demo mode.
+            </motion.p>
+          </div>
         </div>
       </div>
 
