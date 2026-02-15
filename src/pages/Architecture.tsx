@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Layers, X } from 'lucide-react';
+import { Layers, Lock, X } from 'lucide-react';
 import { PopoverClose } from '@radix-ui/react-popover';
 
 const fadeUp = {
@@ -10,7 +10,7 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
-const CANVAS = { width: 1140, height: 820 };
+const CANVAS = { width: 1300, height: 800 };
 const STEP_OUT = 14;
 const END_PAD = 8;
 
@@ -21,10 +21,12 @@ type RouteMode = 'horizontal-first' | 'vertical-first';
 type NodeId =
   | 'structured_data' | 'sql_postgres' | 'unstructured_data' | 'text_retriever' | 'vector_db'
   | 'embedding_nim' | 'reranking_nim'
+  | 'dataverse' | 'signal_store'
   | 'authenticated_operator' | 'copilot_ui'
   | 'orchestrator' | 'guardrails' | 'nemotron_nim' | 'lovable_ai'
+  | 'streaming_bus'
   | 'sql_tools_store' | 'retriever_lane'
-  | 'audit_logs' | 'prompt_versioning' | 'telemetry' | 'rbac_rls';
+  | 'audit_logs' | 'prompt_versioning' | 'observability_bus' | 'telemetry' | 'compliance_packs' | 'rbac_rls';
 
 type NodeTier = 'nim' | 'core' | 'data' | 'input' | 'governance';
 
@@ -91,6 +93,16 @@ const NODE_TOOLTIPS: Record<NodeId, NodeTooltipInfo> = {
     techStack: ['NVIDIA NIM', 'NeMo Retriever'],
     protocols: ['NIM API', 'HTTP/2'],
   },
+  dataverse: {
+    description: 'Governed enterprise data source integrating Dataverse, CRM, and work order systems for operational context.',
+    techStack: ['Microsoft Dataverse', 'Dynamics 365', 'Power Platform'],
+    protocols: ['OData', 'REST API', 'Batch Sync'],
+  },
+  signal_store: {
+    description: 'Feature store for pre-computed KPIs, risk scores, and ETR features. Feeds the orchestrator and analytics dashboards.',
+    techStack: ['PostgreSQL', 'Materialized Views', 'Edge Functions'],
+    protocols: ['SQL', 'REST API'],
+  },
   authenticated_operator: {
     description: 'Utility operator authenticated via SSO/RBAC who interacts with the Copilot for outage decision support.',
     techStack: ['Supabase Auth', 'JWT', 'RBAC'],
@@ -117,9 +129,14 @@ const NODE_TOOLTIPS: Record<NodeId, NodeTooltipInfo> = {
     protocols: ['NIM API', 'OpenAI-compatible'],
   },
   lovable_ai: {
-    description: 'Secondary hybrid AI path via multi-model gateway. Provides fallback and supplementary reasoning capabilities.',
-    techStack: ['Multi-Model Gateway', 'Gemini', 'GPT-5'],
+    description: 'Multi-model routing gateway with automatic fallback. Routes requests across available LLM providers for resilience.',
+    techStack: ['Model Router', 'Gemini', 'GPT-5', 'Fallback Logic'],
     protocols: ['OpenAI-compatible API', 'REST'],
+  },
+  streaming_bus: {
+    description: 'Real-time streaming event bus ingesting OMS, SCADA, and weather events for live situational awareness.',
+    techStack: ['Event Streaming', 'WebSocket', 'Edge Functions'],
+    protocols: ['WebSocket', 'SSE', 'Pub/Sub'],
   },
   sql_tools_store: {
     description: 'SQL tool execution layer and scenario store. Provides structured data retrieval for orchestrator tool calls.',
@@ -141,10 +158,20 @@ const NODE_TOOLTIPS: Record<NodeId, NodeTooltipInfo> = {
     techStack: ['PostgreSQL', 'Git-style Versioning'],
     protocols: ['SQL', 'REST API'],
   },
+  observability_bus: {
+    description: 'Central observability hub collecting traces, metrics, and logs from all runtime components for monitoring and alerting.',
+    techStack: ['OpenTelemetry', 'Structured Logging', 'Metrics Pipeline'],
+    protocols: ['OTLP', 'REST API', 'gRPC'],
+  },
   telemetry: {
     description: 'Operational telemetry and monitoring for AI response quality, latency, and system health metrics.',
     techStack: ['Supabase Analytics', 'Edge Function Logs'],
     protocols: ['REST API', 'Metrics'],
+  },
+  compliance_packs: {
+    description: 'Regulatory reporting packs assembling audit trails and model versioning data for compliance reviews.',
+    techStack: ['Report Generator', 'PDF Export', 'Compliance Templates'],
+    protocols: ['REST API', 'Batch Export'],
   },
   rbac_rls: {
     description: 'Role-Based Access Control and Row-Level Security ensuring data isolation and permission enforcement.',
@@ -158,68 +185,92 @@ type Rect = { x: number; y: number; w: number; h: number };
 
 /* ─── NODES ─── */
 const NODES: NodeDef[] = [
-  // Band 1 – Ingest
-  { id: 'structured_data', x: 40, y: 60, w: 200, h: 72, label: 'STRUCTURED DATA', sub: 'OMS · SCADA · Asset · Crew · Customer', icon: 'db', tier: 'input' },
-  { id: 'sql_postgres', x: 270, y: 60, w: 160, h: 72, label: 'SQL / POSTGRES', icon: 'db', tier: 'data' },
-  { id: 'unstructured_data', x: 460, y: 60, w: 160, h: 72, label: 'UNSTRUCTURED DATA', icon: 'doc', tier: 'input' },
-  { id: 'text_retriever', x: 650, y: 60, w: 140, h: 72, label: 'TEXT RETRIEVER', icon: 'agent', tier: 'core' },
-  { id: 'vector_db', x: 820, y: 60, w: 110, h: 72, label: 'VECTOR DB', icon: 'db', tier: 'data' },
-  { id: 'embedding_nim', x: 960, y: 42, w: 150, h: 44, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
-  { id: 'reranking_nim', x: 960, y: 108, w: 150, h: 44, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  // Band 1 – Ingest (row 1)
+  { id: 'structured_data', x: 40, y: 52, w: 185, h: 62, label: 'STRUCTURED DATA', sub: 'OMS · SCADA · Asset · Crew · Customer', icon: 'db', tier: 'input' },
+  { id: 'sql_postgres', x: 255, y: 52, w: 155, h: 62, label: 'SQL / POSTGRES', icon: 'db', tier: 'data' },
+  { id: 'unstructured_data', x: 440, y: 52, w: 155, h: 62, label: 'UNSTRUCTURED DATA', icon: 'doc', tier: 'input' },
+  { id: 'text_retriever', x: 625, y: 52, w: 138, h: 62, label: 'TEXT RETRIEVER', icon: 'agent', tier: 'core' },
+  { id: 'vector_db', x: 793, y: 52, w: 110, h: 62, label: 'VECTOR DB', icon: 'db', tier: 'data' },
+  { id: 'embedding_nim', x: 933, y: 40, w: 145, h: 36, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  { id: 'reranking_nim', x: 933, y: 92, w: 145, h: 36, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  // Band 1 – Ingest (row 2)
+  { id: 'dataverse', x: 40, y: 126, w: 185, h: 46, label: 'DATAVERSE / CRM / WORK ORDERS', sub: 'Governed enterprise data', icon: 'db', tier: 'input' },
+  { id: 'signal_store', x: 255, y: 126, w: 170, h: 46, label: 'SIGNAL / FEATURE STORE', sub: 'KPIs, risk scores, ETR features', icon: 'analytics', tier: 'data' },
 
   // Band 2 – Operator Copilot Runtime (above trust boundary)
-  { id: 'authenticated_operator', x: 80, y: 230, w: 240, h: 62, label: 'AUTHENTICATED OPERATOR', icon: 'user', tier: 'input' },
-  { id: 'copilot_ui', x: 400, y: 230, w: 240, h: 62, label: 'COPILOT UI', icon: 'app', tier: 'core' },
+  { id: 'authenticated_operator', x: 80, y: 244, w: 235, h: 56, label: 'AUTHENTICATED OPERATOR', icon: 'user', tier: 'input' },
+  { id: 'copilot_ui', x: 395, y: 244, w: 235, h: 56, label: 'COPILOT UI', icon: 'app', tier: 'core' },
 
-  // Band 2 – Below trust boundary
-  { id: 'orchestrator', x: 40, y: 410, w: 220, h: 64, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent', tier: 'core' },
-  { id: 'guardrails', x: 300, y: 410, w: 200, h: 64, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent', tier: 'core' },
-  { id: 'nemotron_nim', x: 540, y: 410, w: 220, h: 64, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim', tier: 'nim' },
-  { id: 'lovable_ai', x: 810, y: 395, w: 290, h: 95, label: 'HYBRID AI GATEWAY', sub: 'Multi-Model Reasoning', icon: 'nim', tier: 'nim' },
+  // Band 2 – Below trust boundary (runtime row)
+  { id: 'orchestrator', x: 40, y: 405, w: 215, h: 58, label: 'COPILOT ORCHESTRATOR', sub: 'Edge Functions', icon: 'agent', tier: 'core' },
+  { id: 'guardrails', x: 295, y: 405, w: 195, h: 58, label: 'GUARDRAILS', sub: 'Policy Boundary', icon: 'agent', tier: 'core' },
+  { id: 'nemotron_nim', x: 530, y: 405, w: 215, h: 58, label: 'NEMOTRON LLM NIM', sub: 'NVIDIA NIM', nim: true, icon: 'nim', tier: 'nim' },
+  { id: 'lovable_ai', x: 790, y: 392, w: 245, h: 82, label: 'MODEL ROUTER', sub: 'Multi-model + fallback', icon: 'nim', tier: 'nim' },
 
   // Band 2 – Bottom row
-  { id: 'sql_tools_store', x: 40, y: 520, w: 240, h: 54, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db', tier: 'data' },
-  { id: 'retriever_lane', x: 320, y: 520, w: 320, h: 54, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db', tier: 'data' },
+  { id: 'sql_tools_store', x: 40, y: 520, w: 230, h: 48, label: 'SQL TOOLS / SCENARIO STORE', icon: 'db', tier: 'data' },
+  { id: 'retriever_lane', x: 310, y: 520, w: 310, h: 48, label: 'RETRIEVER LANE (VECTOR DB)', icon: 'db', tier: 'data' },
+  { id: 'streaming_bus', x: 670, y: 520, w: 200, h: 48, label: 'STREAMING EVENT BUS', sub: 'OMS / SCADA / Weather events', icon: 'analytics', tier: 'core' },
 
   // Band 3 – Memory / Observability / Governance
-  { id: 'audit_logs', x: 40, y: 680, w: 220, h: 52, label: 'AUDIT LOGS', icon: 'doc', tier: 'governance' },
-  { id: 'prompt_versioning', x: 290, y: 680, w: 240, h: 52, label: 'PROMPT & MODEL VERSIONING', icon: 'agent', tier: 'governance' },
-  { id: 'telemetry', x: 560, y: 680, w: 230, h: 52, label: 'TELEMETRY / MONITORING', icon: 'analytics', tier: 'governance' },
-  { id: 'rbac_rls', x: 820, y: 680, w: 280, h: 52, label: 'RBAC + RLS', icon: 'admin', tier: 'governance' },
+  { id: 'audit_logs', x: 40, y: 685, w: 160, h: 46, label: 'AUDIT LOGS', icon: 'doc', tier: 'governance' },
+  { id: 'prompt_versioning', x: 220, y: 685, w: 190, h: 46, label: 'PROMPT & MODEL VERSIONING', icon: 'agent', tier: 'governance' },
+  { id: 'compliance_packs', x: 430, y: 685, w: 160, h: 46, label: 'COMPLIANCE PACKS', sub: 'Regulatory reporting', icon: 'doc', tier: 'governance' },
+  { id: 'observability_bus', x: 620, y: 685, w: 190, h: 46, label: 'OBSERVABILITY BUS', sub: 'Tracing, metrics, logs', icon: 'analytics', tier: 'governance' },
+  { id: 'telemetry', x: 840, y: 685, w: 165, h: 46, label: 'TELEMETRY / MONITORING', icon: 'analytics', tier: 'governance' },
+  { id: 'rbac_rls', x: 1035, y: 685, w: 220, h: 46, label: 'RBAC + RLS', icon: 'admin', tier: 'governance' },
 ];
 
 /* ─── EDGES ─── */
 const EDGES: EdgeDef[] = [
-  // Ingest row
+  // Band 1 – Ingest row
   { from: { nodeId: 'structured_data', anchor: 'right' }, to: { nodeId: 'sql_postgres', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   { from: { nodeId: 'sql_postgres', anchor: 'right' }, to: { nodeId: 'unstructured_data', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
   { from: { nodeId: 'unstructured_data', anchor: 'right' }, to: { nodeId: 'text_retriever', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
+  { from: { nodeId: 'text_retriever', anchor: 'right' }, to: { nodeId: 'vector_db', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'RETRIEVE' },
   { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'embedding_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
   { from: { nodeId: 'vector_db', anchor: 'right' }, to: { nodeId: 'reranking_nim', anchor: 'left' }, style: 'optional', mode: 'horizontal-first' },
+  // New ingest connections
+  { from: { nodeId: 'dataverse', anchor: 'top' }, to: { nodeId: 'structured_data', anchor: 'bottom' }, style: 'primary', mode: 'vertical-first' },
+  { from: { nodeId: 'sql_postgres', anchor: 'bottom' }, to: { nodeId: 'signal_store', anchor: 'top' }, style: 'primary', mode: 'vertical-first' },
 
   // Operator → Copilot UI
   { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  // Copilot UI → Hybrid AI Gateway (dashed, secondary – routed right then down)
-  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 770 },
+  // Copilot UI → Model Router (dashed, secondary – fallback path)
+  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 760 },
 
-  // Backend row
+  // Runtime row
   { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  // Nemotron → Copilot UI (Structured Insights JSON, upward)
-  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'Structured Insights (JSON)', mode: 'vertical-first', laneY: 370 },
+  { from: { nodeId: 'guardrails', anchor: 'right' }, to: { nodeId: 'nemotron_nim', anchor: 'left' }, style: 'primary', mode: 'horizontal-first', label: 'GENERATE' },
+  // Nemotron → Copilot UI (Structured Output)
+  { from: { nodeId: 'nemotron_nim', anchor: 'top' }, to: { nodeId: 'copilot_ui', anchor: 'bottom' }, style: 'primary', label: 'STRUCTURE OUTPUT (JSON)', mode: 'vertical-first', laneY: 370 },
 
-  // SQL Tools → Orchestrator (straight up)
+  // Signal store → Orchestrator (feature feed)
+  { from: { nodeId: 'signal_store', anchor: 'bottom' }, to: { nodeId: 'orchestrator', anchor: 'top' }, style: 'secondary', mode: 'vertical-first', laneY: 340 },
+
+  // Streaming event bus → NIM (event data feed)
+  { from: { nodeId: 'streaming_bus', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'primary', mode: 'vertical-first', laneY: 490 },
+  // Streaming event bus → Telemetry (monitoring, dotted)
+  { from: { nodeId: 'streaming_bus', anchor: 'bottom' }, to: { nodeId: 'telemetry', anchor: 'top' }, style: 'optional', mode: 'vertical-first', laneY: 630 },
+
+  // Bottom row
   { from: { nodeId: 'sql_tools_store', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first' },
-  // Retriever Lane → Guardrails (straight up)
-  { from: { nodeId: 'retriever_lane', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first' },
+  { from: { nodeId: 'retriever_lane', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', label: 'RERANK' },
 
-  // Band 3 connections – routed via distinct lane Y values to avoid overlap
+  // Band 3 governance connections (upward to runtime)
   { from: { nodeId: 'audit_logs', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'prompt_versioning', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'telemetry', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'lovable_ai', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'primary', mode: 'vertical-first', laneY: 640 },
+
+  // Observability bus telemetry (dotted, from runtime down)
+  { from: { nodeId: 'nemotron_nim', anchor: 'bottom' }, to: { nodeId: 'observability_bus', anchor: 'top' }, style: 'optional', mode: 'vertical-first', laneY: 580 },
+  { from: { nodeId: 'lovable_ai', anchor: 'bottom' }, to: { nodeId: 'observability_bus', anchor: 'top' }, style: 'optional', mode: 'vertical-first', laneY: 590 },
+
+  // Compliance packs (dotted, from audit + versioning)
+  { from: { nodeId: 'audit_logs', anchor: 'top' }, to: { nodeId: 'compliance_packs', anchor: 'top' }, style: 'optional', mode: 'vertical-first', laneY: 670 },
+  { from: { nodeId: 'prompt_versioning', anchor: 'bottom' }, to: { nodeId: 'compliance_packs', anchor: 'bottom' }, style: 'optional', mode: 'vertical-first', laneY: 745 },
 ];
 
 /* ─── geometry helpers ─── */
@@ -284,6 +335,15 @@ function NodeIcon({ icon }: { icon?: string }) {
   if (icon === 'nim') return (<svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" /><polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5" /></svg>);
   if (icon === 'analytics') return (<svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 17V13M12 17V7M17 17V11" /></svg>);
   return null;
+}
+
+/* ─── lock badge ─── */
+function LockBadge({ x, y }: { x: number; y: number }) {
+  return (
+    <div className="absolute pointer-events-none" style={{ left: x, top: y }}>
+      <Lock className="h-2.5 w-2.5 text-cyan-400/50" />
+    </div>
+  );
 }
 
 /* ─── tooltip content ─── */
@@ -358,34 +418,11 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
   );
 }
 
-/* ─── responsive wrapper ─── */
-function ResponsiveScaler({ children }: { children: React.ReactNode }) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const update = () => {
-      const available = el.clientWidth;
-      setScale(Math.min(1, available / CANVAS.width));
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
+/* ─── scrollable canvas wrapper (fixed width, horizontal scroll on small screens) ─── */
+function ScrollableCanvas({ children }: { children: React.ReactNode }) {
   return (
-    <div ref={wrapperRef} className="w-full overflow-hidden">
-      <div
-        style={{
-          width: CANVAS.width,
-          height: CANVAS.height * scale,
-          transform: `scale(${scale})`,
-          transformOrigin: 'top left',
-        }}
-      >
+    <div className="w-full overflow-x-auto">
+      <div style={{ width: CANVAS.width, minWidth: CANVAS.width }}>
         {children}
       </div>
     </div>
@@ -447,30 +484,42 @@ function ArchitectureDiagram() {
     };
   }, [schedule]);
 
-  const stroke = (style: EdgeStyle) => (style === 'primary' ? 'rgba(160,220,205,0.85)' : style === 'optional' ? 'rgba(160,220,205,0.45)' : 'rgba(160,220,205,0.55)');
+  const strokeColor = (style: EdgeStyle) =>
+    style === 'primary' ? 'rgba(160,220,205,0.85)' : style === 'optional' ? 'rgba(160,220,205,0.40)' : 'rgba(160,220,205,0.55)';
+  const strokeWidth = (style: EdgeStyle) => style === 'primary' ? 2 : 1.2;
 
   return (
-    <ResponsiveScaler>
+    <ScrollableCanvas>
       <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
 
+        {/* ─── Deployment zone labels (faint right-edge) ─── */}
+        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 86, writingMode: 'vertical-rl' }}>CLOUD / SAAS</p>
+        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 260, writingMode: 'vertical-rl' }}>EDGE</p>
+        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 430, writingMode: 'vertical-rl' }}>CUSTOMER VPC</p>
+
         {/* Band 1 – Ingest */}
-        <div className="absolute left-[20px] top-[20px] w-[1100px] h-[158px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <div className="absolute left-[20px] top-[20px] w-[1260px] h-[168px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
         <p className="absolute left-[34px] top-[28px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 — INGEST</p>
 
         {/* Band 2 – Operator Copilot Runtime */}
-        <div className="absolute left-[20px] top-[196px] w-[1100px] h-[410px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <p className="absolute left-[34px] top-[204px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 — OPERATOR COPILOT RUNTIME</p>
+        <div className="absolute left-[20px] top-[202px] w-[1260px] h-[430px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[210px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 — OPERATOR COPILOT RUNTIME</p>
 
         {/* Trust boundary */}
-        <div className="absolute left-[40px] top-[355px] h-px w-[1060px] border-t border-dashed border-slate-400/60" />
+        <div className="absolute left-[40px] top-[355px] h-px w-[1220px] border-t border-dashed border-slate-400/60" />
         <p className="absolute left-[50px] top-[340px] whitespace-nowrap text-[8px] font-semibold tracking-[0.06em] text-slate-400/70">
-          TRUST BOUNDARY — CLIENT UI vs BACKEND / AI SERVICES
+          ZERO-TRUST API BOUNDARY — CLIENT UI vs BACKEND / AI SERVICES
         </p>
 
         {/* Band 3 – Memory / Observability / Governance */}
-        <div className="absolute left-[20px] top-[640px] w-[1100px] h-[110px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
-        <p className="absolute left-[34px] top-[648px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 — MEMORY / OBSERVABILITY / GOVERNANCE</p>
+        <div className="absolute left-[20px] top-[650px] w-[1260px] h-[115px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
+        <p className="absolute left-[34px] top-[658px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 — MEMORY / OBSERVABILITY / GOVERNANCE</p>
+
+        {/* Lock badges (security indicators) */}
+        <LockBadge x={622} y={246} />
+        <LockBadge x={482} y={407} />
+        <LockBadge x={1247} y={687} />
 
         {/* Nodes */}
         {NODES.map((node) => (
@@ -484,7 +533,7 @@ function ArchitectureDiagram() {
               <path d="M0,0 L8,4 L0,8 Z" fill="rgba(160,220,205,0.88)" />
             </marker>
             <marker id="arrowSecondary" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L8,4 L0,8 Z" fill="rgba(160,220,205,0.58)" />
+              <path d="M0,0 L8,4 L0,8 Z" fill="rgba(160,220,205,0.50)" />
             </marker>
             <radialGradient id="particleGlow">
               <stop offset="0%" stopColor="rgba(160,220,205,0.9)" />
@@ -493,33 +542,33 @@ function ArchitectureDiagram() {
           </defs>
           {edgePaths.map((p, i) => {
             const dim = p.style !== 'primary';
-            const particleR = dim ? 2 : 2.5;
+            const particleR = dim ? 1.8 : 2.5;
             const dur = dim ? '4s' : '3s';
-            const fill = dim ? 'rgba(160,220,205,0.35)' : 'rgba(160,220,205,0.65)';
+            const fill = dim ? 'rgba(160,220,205,0.30)' : 'rgba(160,220,205,0.65)';
             return (
               <g key={i}>
                 <path
                   d={p.d}
                   fill="none"
-                  stroke={stroke(p.style)}
-                  strokeWidth={1.5}
-                  strokeDasharray={p.style === 'optional' || p.style === 'secondary' ? '5 5' : undefined}
+                  stroke={strokeColor(p.style)}
+                  strokeWidth={strokeWidth(p.style)}
+                  strokeDasharray={dim ? '5 4' : undefined}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   markerEnd={`url(#${dim ? 'arrowSecondary' : 'arrowPrimary'})`}
                 />
                 {p.label && (
-                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.85)" fontSize="7.5" fontWeight={600} letterSpacing="0.04em">
+                  <text x={p.lx} y={p.ly} fill="rgba(160,220,205,0.80)" fontSize="7" fontWeight={600} letterSpacing="0.05em" fontFamily="monospace">
                     {p.label}
                   </text>
                 )}
                 <circle r={particleR} fill={fill} opacity={0.8}>
-                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.35}s`}>
+                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.3}s`}>
                     <mpath xlinkHref={`#flow-${i}`} />
                   </animateMotion>
                 </circle>
-                <circle r={particleR * 2.5} fill="url(#particleGlow)" opacity={0.2}>
-                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.35}s`}>
+                <circle r={particleR * 2.5} fill="url(#particleGlow)" opacity={0.15}>
+                  <animateMotion dur={dur} repeatCount="indefinite" begin={`${i * 0.3}s`}>
                     <mpath xlinkHref={`#flow-${i}`} />
                   </animateMotion>
                 </circle>
@@ -529,7 +578,7 @@ function ArchitectureDiagram() {
           })}
         </svg>
       </div>
-    </ResponsiveScaler>
+    </ScrollableCanvas>
   );
 }
 
@@ -542,7 +591,7 @@ function DiagramLegend() {
       {/* Primary flow */}
       <div className="flex items-center gap-1.5">
         <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
-          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.85)" strokeWidth="1.5" />
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.85)" strokeWidth="2" />
           <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.88)" />
         </svg>
         <span className="text-[9px] font-semibold text-muted-foreground">Primary data flow</span>
@@ -551,8 +600,8 @@ function DiagramLegend() {
       {/* Secondary / dashed */}
       <div className="flex items-center gap-1.5">
         <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
-          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.55)" strokeWidth="1.5" strokeDasharray="4 3" />
-          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.58)" />
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.55)" strokeWidth="1.2" strokeDasharray="5 4" />
+          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.50)" />
         </svg>
         <span className="text-[9px] font-semibold text-muted-foreground">Secondary / governance</span>
       </div>
@@ -560,10 +609,10 @@ function DiagramLegend() {
       {/* Optional */}
       <div className="flex items-center gap-1.5">
         <svg width="28" height="10" viewBox="0 0 28 10" className="shrink-0">
-          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.45)" strokeWidth="1.5" strokeDasharray="4 3" />
-          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.45)" />
+          <line x1="0" y1="5" x2="22" y2="5" stroke="rgba(160,220,205,0.40)" strokeWidth="1.2" strokeDasharray="5 4" />
+          <polygon points="22,1.5 28,5 22,8.5" fill="rgba(160,220,205,0.40)" />
         </svg>
-        <span className="text-[9px] font-semibold text-muted-foreground">Optional path</span>
+        <span className="text-[9px] font-semibold text-muted-foreground">Optional / telemetry</span>
       </div>
 
       {/* NIM node */}
@@ -594,6 +643,12 @@ function DiagramLegend() {
       <div className="flex items-center gap-1.5">
         <div className="h-3.5 w-5 rounded border border-amber-400/45 bg-slate-900/80" />
         <span className="text-[9px] font-semibold text-muted-foreground">Governance</span>
+      </div>
+
+      {/* Lock */}
+      <div className="flex items-center gap-1.5">
+        <Lock className="h-3 w-3 text-cyan-400/50" />
+        <span className="text-[9px] font-semibold text-muted-foreground">Secured node</span>
       </div>
 
       {/* Particle */}
