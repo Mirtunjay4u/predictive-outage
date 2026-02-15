@@ -314,12 +314,12 @@
 
 @keyframes nvidiaGlowBreath {
   0%, 100% {
-    box-shadow: 0 0 6px rgba(118,185,0,0.10), inset 0 0 4px rgba(118,185,0,0.04);
-    border-color: rgba(118,185,0,0.45);
+    box-shadow: 0 0 10px rgba(118,185,0,0.18), inset 0 0 6px rgba(118,185,0,0.08);
+    border-color: rgba(118,185,0,0.55);
   }
   50% {
-    box-shadow: 0 0 14px rgba(118,185,0,0.22), inset 0 0 8px rgba(118,185,0,0.08);
-    border-color: rgba(118,185,0,0.70);
+    box-shadow: 0 0 22px rgba(118,185,0,0.38), inset 0 0 12px rgba(118,185,0,0.14);
+    border-color: rgba(118,185,0,0.85);
   }
 }
 
@@ -329,8 +329,8 @@
 
 .tcs-logo-glow:hover {
   animation: none;
-  box-shadow: 0 0 18px rgba(118,185,0,0.30), inset 0 0 10px rgba(118,185,0,0.10);
-  border-color: rgba(118,185,0,0.90);
+  box-shadow: 0 0 26px rgba(118,185,0,0.45), inset 0 0 14px rgba(118,185,0,0.16);
+  border-color: rgba(118,185,0,0.95);
 }
 
 @media (prefers-reduced-motion: reduce) {
