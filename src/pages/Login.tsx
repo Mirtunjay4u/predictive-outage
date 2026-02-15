@@ -122,7 +122,7 @@ export default function Login() {
           
           {/* E) Safety Footer + TCS Branding */}
           <div className="mt-8 md:mt-auto pt-8 space-y-6">
-            <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-6 py-4 transition-all duration-500 inline-flex">
+            <div className="group/tcs relative rounded-lg border-2 border-white/60 px-6 py-4 transition-all duration-500 inline-flex hover:border-white/80 hover:shadow-[0_0_18px_rgba(255,255,255,0.12)]">
               <img
                 src={tcsLogo}
                 alt="Tata Consultancy Services (TCS)"
