@@ -88,11 +88,12 @@ export function TopBar({ onSearch }: TopBarProps) {
           </DropdownMenu>
 
           <div className="flex shrink-0 items-center border-l border-border/50 pl-3">
-            <div className="rounded-md border-2 border-[#76B900] px-2.5 py-1.5">
+            <div className="group/tcs relative rounded-lg border border-[#76B900]/60 px-3 py-2 transition-all duration-500 hover:border-[#76B900]/90 hover:shadow-[0_0_12px_rgba(118,185,0,0.25)]"
+                 style={{ boxShadow: '0 0 8px rgba(118,185,0,0.12), inset 0 0 6px rgba(118,185,0,0.06)' }}>
               <img
                 src={tcsLogo}
                 alt="Tata Consultancy Services (TCS)"
-                className="h-5 w-auto brightness-0 invert opacity-90 hover:opacity-100 transition-opacity"
+                className="h-5 w-auto brightness-0 invert opacity-85 transition-opacity duration-300 group-hover/tcs:opacity-100"
               />
             </div>
           </div>
