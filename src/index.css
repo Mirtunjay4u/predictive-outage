@@ -311,3 +311,30 @@
     cursor: not-allowed !important;
   }
 }
+
+@keyframes nvidiaGlowBreath {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(118,185,0,0.10), inset 0 0 4px rgba(118,185,0,0.04);
+    border-color: rgba(118,185,0,0.45);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(118,185,0,0.22), inset 0 0 8px rgba(118,185,0,0.08);
+    border-color: rgba(118,185,0,0.70);
+  }
+}
+
+.tcs-logo-glow {
+  animation: nvidiaGlowBreath 4s ease-in-out infinite;
+}
+
+.tcs-logo-glow:hover {
+  animation: none;
+  box-shadow: 0 0 18px rgba(118,185,0,0.30), inset 0 0 10px rgba(118,185,0,0.10);
+  border-color: rgba(118,185,0,0.90);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcs-logo-glow {
+    animation: none;
+  }
+}
