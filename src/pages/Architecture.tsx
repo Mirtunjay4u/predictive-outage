@@ -495,19 +495,37 @@ function DeploymentZonesOverlay({ width, zones }: { width: number; zones: typeof
           >
             {zone.label}
           </p>
-          {/* vertical divider line (skip first boundary at x=0) */}
+          {/* vertical divider line with soft gradient fade at top/bottom */}
           {zone.x0 > 0 && (
             <div
-              className="absolute top-[20px]"
+              className="absolute top-[16px]"
               style={{
                 left: zone.x0,
                 width: '1px',
-                height: 'calc(100% - 40px)',
-                background: 'linear-gradient(180deg, rgba(148,163,184,0.12) 0%, rgba(148,163,184,0.06) 50%, rgba(148,163,184,0.12) 100%)',
-                boxShadow: '0 0 6px rgba(148,163,184,0.06)',
+                height: 'calc(100% - 32px)',
+                background: 'linear-gradient(180deg, transparent 0%, rgba(148,163,184,0.14) 8%, rgba(148,163,184,0.08) 50%, rgba(148,163,184,0.14) 92%, transparent 100%)',
+                boxShadow: '0 0 4px rgba(148,163,184,0.04)',
               }}
             />
           )}
+          {/* faint vertical watermark label (very subtle) */}
+          <p
+            className="absolute pointer-events-none select-none"
+            style={{
+              left: zone.x0 + (zone.x1 - zone.x0) / 2,
+              top: '50%',
+              transform: 'translate(-50%, -50%) rotate(-90deg)',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.35em',
+              color: 'rgba(148,163,184,0.06)',
+              textTransform: 'uppercase',
+              fontFamily: 'Inter, system-ui, sans-serif',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {zone.label}
+          </p>
         </div>
       ))}
     </div>
@@ -611,6 +629,24 @@ function ArchitectureDiagram() {
 
         {/* ─── Vertical deployment zone overlays (GTC-style) ─── */}
         <DeploymentZonesOverlay width={CANVAS.width} zones={DEPLOY_ZONES} />
+
+        {/* DEPLOYMENT caption – top-left inside canvas */}
+        <p
+          className="absolute pointer-events-none select-none"
+          style={{
+            left: 24,
+            top: 4,
+            fontSize: '7px',
+            fontWeight: 700,
+            letterSpacing: '0.28em',
+            color: 'rgba(148,163,184,0.22)',
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, system-ui, sans-serif',
+            zIndex: 2,
+          }}
+        >
+          Deployment
+        </p>
 
         {/* Band 1 – Ingest */}
         <div className="absolute left-[20px] top-[20px] w-[1260px] h-[168px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
@@ -791,6 +827,28 @@ function DiagramLegend() {
       <div className="flex items-center gap-1.5">
         <Lock className="h-3 w-3 text-cyan-400/50" />
         <span className="text-[9px] font-semibold text-muted-foreground">Secured node</span>
+      </div>
+
+      {/* Zone legend separator */}
+      <div className="h-3 w-px bg-border/30 mx-1" />
+      <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50 mr-0.5">Zones</p>
+
+      {/* Edge zone */}
+      <div className="flex items-center gap-1">
+        <div className="h-3 w-4 rounded-[3px] border border-sky-400/20" style={{ background: 'rgba(56,189,248,0.06)' }} />
+        <span className="text-[8px] font-semibold text-muted-foreground/80">Edge</span>
+      </div>
+
+      {/* Control Plane zone */}
+      <div className="flex items-center gap-1">
+        <div className="h-3 w-4 rounded-[3px] border border-emerald-400/20" style={{ background: 'rgba(16,185,129,0.06)' }} />
+        <span className="text-[8px] font-semibold text-muted-foreground/80">Control Plane</span>
+      </div>
+
+      {/* AI Inference Plane zone */}
+      <div className="flex items-center gap-1">
+        <div className="h-3 w-4 rounded-[3px] border border-purple-400/20" style={{ background: 'rgba(168,85,247,0.06)' }} />
+        <span className="text-[8px] font-semibold text-muted-foreground/80">AI Inference</span>
       </div>
 
       {/* Particle */}
