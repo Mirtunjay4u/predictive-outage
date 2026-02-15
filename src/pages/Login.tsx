@@ -122,11 +122,11 @@ export default function Login() {
           
           {/* E) Safety Footer + TCS Branding */}
           <div className="mt-8 md:mt-auto pt-8 space-y-6">
-            <div className="group/tcs relative rounded-lg border border-primary-foreground/25 px-5 py-3.5 transition-all duration-500 inline-flex hover:border-primary-foreground/45 hover:shadow-[0_0_16px_rgba(255,255,255,0.08)]">
+            <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-6 py-4 transition-all duration-500 inline-flex">
               <img
                 src={tcsLogo}
                 alt="Tata Consultancy Services (TCS)"
-                className="h-9 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
+                className="h-12 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
               />
             </div>
             <motion.p 
