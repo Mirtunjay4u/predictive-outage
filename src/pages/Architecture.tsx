@@ -421,8 +421,8 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
 /* ─── scrollable canvas wrapper (fixed width, horizontal scroll on small screens) ─── */
 function ScrollableCanvas({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full overflow-x-auto">
-      <div style={{ width: CANVAS.width, minWidth: CANVAS.width }}>
+    <div className="w-full" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ width: `${CANVAS.width}px`, minWidth: `${CANVAS.width}px`, display: 'inline-block' }}>
         {children}
       </div>
     </div>
@@ -490,7 +490,7 @@ function ArchitectureDiagram() {
 
   return (
     <ScrollableCanvas>
-      <div ref={canvasRef} className="relative" style={{ width: CANVAS.width, height: CANVAS.height }}>
+      <div ref={canvasRef} className="relative shrink-0" style={{ width: CANVAS.width, minWidth: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
 
         {/* ─── Deployment zone labels (faint right-edge) ─── */}
@@ -684,7 +684,7 @@ export default function Architecture() {
               Solution Architecture Overview
             </CardTitle>
           </CardHeader>
-          <CardContent className="w-full px-3 pb-3 md:px-4 md:pb-4">
+          <CardContent className="w-full overflow-x-auto px-3 pb-3 md:px-4 md:pb-4">
             <ArchitectureDiagram />
             <DiagramLegend />
           </CardContent>
