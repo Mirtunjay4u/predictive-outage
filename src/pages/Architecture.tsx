@@ -200,8 +200,8 @@ const NODES: NodeDef[] = [
   { id: 'unstructured_data', x: 440, y: 52, w: 155, h: 62, label: 'UNSTRUCTURED DATA', icon: 'doc', tier: 'input' },
   { id: 'text_retriever', x: 625, y: 52, w: 138, h: 62, label: 'TEXT RETRIEVER', icon: 'agent', tier: 'core' },
   { id: 'vector_db', x: 793, y: 52, w: 110, h: 62, label: 'VECTOR DB', icon: 'db', tier: 'data' },
-  { id: 'embedding_nim', x: 933, y: 40, w: 145, h: 36, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
-  { id: 'reranking_nim', x: 933, y: 92, w: 145, h: 36, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  { id: 'embedding_nim', x: 933, y: 46, w: 145, h: 36, label: 'EMBEDDING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
+  { id: 'reranking_nim', x: 933, y: 98, w: 145, h: 36, label: 'RERANKING NIM', nim: true, optional: true, icon: 'nim', tier: 'nim' },
   // Band 1 – Ingest (row 2)
   { id: 'dataverse', x: 40, y: 126, w: 185, h: 46, label: 'DATAVERSE / CRM / WORK ORDERS', sub: 'Governed enterprise data', icon: 'db', tier: 'input' },
   { id: 'signal_store', x: 255, y: 126, w: 170, h: 46, label: 'SIGNAL / FEATURE STORE', sub: 'KPIs, risk scores, ETR features', icon: 'analytics', tier: 'data' },
@@ -245,8 +245,8 @@ const EDGES: EdgeDef[] = [
 
   // Operator → Copilot UI
   { from: { nodeId: 'authenticated_operator', anchor: 'right' }, to: { nodeId: 'copilot_ui', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
-  // Copilot UI → Model Router (dashed, secondary – fallback path)
-  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'secondary', mode: 'horizontal-first', laneX: 760 },
+  // Copilot UI → Model Router (dashed, optional – fallback path)
+  { from: { nodeId: 'copilot_ui', anchor: 'right' }, to: { nodeId: 'lovable_ai', anchor: 'top' }, style: 'optional', mode: 'horizontal-first', laneX: 760 },
 
   // Runtime row
   { from: { nodeId: 'orchestrator', anchor: 'right' }, to: { nodeId: 'guardrails', anchor: 'left' }, style: 'primary', mode: 'horizontal-first' },
@@ -266,12 +266,12 @@ const EDGES: EdgeDef[] = [
   { from: { nodeId: 'sql_tools_store', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first' },
   { from: { nodeId: 'retriever_lane', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', label: 'RERANK' },
 
-  // Band 3 governance connections (upward to runtime)
+  // Band 3 governance connections (upward to runtime – vertical taps from bus)
   { from: { nodeId: 'audit_logs', anchor: 'top' }, to: { nodeId: 'orchestrator', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'prompt_versioning', anchor: 'top' }, to: { nodeId: 'guardrails', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'telemetry', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
   { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'lovable_ai', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 650 },
-  { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'primary', mode: 'vertical-first', laneY: 640 },
+  { from: { nodeId: 'rbac_rls', anchor: 'top' }, to: { nodeId: 'nemotron_nim', anchor: 'bottom' }, style: 'secondary', mode: 'vertical-first', laneY: 640 },
 
   // Observability bus telemetry (dotted, from runtime down)
   { from: { nodeId: 'nemotron_nim', anchor: 'bottom' }, to: { nodeId: 'observability_bus', anchor: 'top' }, style: 'optional', mode: 'vertical-first', laneY: 580 },
@@ -484,48 +484,40 @@ function DeploymentZonesOverlay({ width, zones }: { width: number; zones: typeof
             className="absolute"
             style={{
               left: zone.x0 + 30,
-              top: 6,
-              fontSize: '8px',
-              fontWeight: 600,
+              top: 5,
+              fontSize: '8.5px',
+              fontWeight: 700,
               letterSpacing: '0.22em',
-              color: 'rgba(148,163,184,0.35)',
+              color: 'rgba(148,163,184,0.55)',
               textTransform: 'uppercase' as const,
               fontFamily: 'Inter, system-ui, sans-serif',
             }}
           >
             {zone.label}
           </p>
-          {/* vertical divider line with soft gradient fade at top/bottom */}
+          {/* faint rail line under label */}
+          <div
+            className="absolute"
+            style={{
+              left: zone.x0 + 28,
+              top: 18,
+              width: Math.min(zone.label.length * 7.5 + 16, zone.x1 - zone.x0 - 56),
+              height: '1px',
+              background: 'linear-gradient(90deg, rgba(148,163,184,0.25) 0%, transparent 100%)',
+            }}
+          />
+          {/* vertical divider line – full-height, consistent opacity */}
           {zone.x0 > 0 && (
             <div
-              className="absolute top-[16px]"
+              className="absolute top-0"
               style={{
                 left: zone.x0,
                 width: '1px',
-                height: 'calc(100% - 32px)',
-                background: 'linear-gradient(180deg, transparent 0%, rgba(148,163,184,0.14) 8%, rgba(148,163,184,0.08) 50%, rgba(148,163,184,0.14) 92%, transparent 100%)',
-                boxShadow: '0 0 4px rgba(148,163,184,0.04)',
+                height: '100%',
+                background: 'rgba(148,163,184,0.10)',
               }}
             />
           )}
-          {/* faint vertical watermark label (very subtle) */}
-          <p
-            className="absolute pointer-events-none select-none"
-            style={{
-              left: zone.x0 + (zone.x1 - zone.x0) / 2,
-              top: '50%',
-              transform: 'translate(-50%, -50%) rotate(-90deg)',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.35em',
-              color: 'rgba(148,163,184,0.06)',
-              textTransform: 'uppercase',
-              fontFamily: 'Inter, system-ui, sans-serif',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {zone.label}
-          </p>
         </div>
       ))}
     </div>
@@ -652,6 +644,9 @@ function ArchitectureDiagram() {
         <div className="absolute left-[20px] top-[20px] w-[1260px] h-[168px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
         <p className="absolute left-[34px] top-[28px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 1 — INGEST</p>
 
+        {/* NIM SERVICES sub-label above Embedding/Reranking NIMs */}
+        <p className="absolute pointer-events-none select-none" style={{ left: 965, top: 32, fontSize: '7px', fontWeight: 600, letterSpacing: '0.10em', color: 'rgba(160,220,205,0.55)', fontFamily: 'monospace', textTransform: 'uppercase' as const }}>NIM SERVICES</p>
+
         {/* Band 2 – Operator Copilot Runtime */}
         <div className="absolute left-[20px] top-[202px] w-[1260px] h-[430px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
         <p className="absolute left-[34px] top-[210px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 2 — OPERATOR COPILOT RUNTIME</p>
@@ -665,6 +660,18 @@ function ArchitectureDiagram() {
         {/* Band 3 – Memory / Observability / Governance */}
         <div className="absolute left-[20px] top-[650px] w-[1260px] h-[115px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
         <p className="absolute left-[34px] top-[658px] text-[10px] font-semibold tracking-[0.16em] text-emerald-200/95">BAND 3 — MEMORY / OBSERVABILITY / GOVERNANCE</p>
+
+        {/* Governance bus – horizontal line across Band 3 */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: 40,
+            top: 680,
+            width: 1220,
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.18) 5%, rgba(251,191,36,0.18) 95%, transparent 100%)',
+          }}
+        />
 
         {/* Lock badges (security indicators) */}
         <LockBadge x={622} y={246} />
