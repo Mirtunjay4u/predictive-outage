@@ -14,6 +14,13 @@ const CANVAS = { width: 1300, height: 800 };
 const STEP_OUT = 14;
 const END_PAD = 8;
 
+/* ─── vertical deployment zone boundaries (NVIDIA GTC style) ─── */
+const DEPLOY_ZONES = [
+  { id: 'edge', label: 'EDGE', x0: 0, x1: 380 },
+  { id: 'control', label: 'CONTROL PLANE', x0: 380, x1: 830 },
+  { id: 'inference', label: 'AI INFERENCE PLANE', x0: 830, x1: CANVAS.width },
+] as const;
+
 type Anchor = 'left' | 'right' | 'top' | 'bottom' | 'center';
 type EdgeStyle = 'primary' | 'secondary' | 'optional';
 type RouteMode = 'horizontal-first' | 'vertical-first';
@@ -418,6 +425,63 @@ function NodeCard({ node, setNodeRef }: { node: NodeDef; setNodeRef: (id: NodeId
   );
 }
 
+/* ─── vertical deployment zones overlay (pointer-events: none, behind nodes) ─── */
+function DeploymentZonesOverlay({ width, zones }: { width: number; zones: typeof DEPLOY_ZONES }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+      {zones.map((zone, i) => (
+        <div key={zone.id}>
+          {/* faint tint wash */}
+          <div
+            className="absolute top-0"
+            style={{
+              left: zone.x0,
+              width: zone.x1 - zone.x0,
+              height: '100%',
+              background:
+                i === 0
+                  ? 'linear-gradient(180deg, rgba(56,189,248,0.02) 0%, transparent 60%)'
+                  : i === 1
+                  ? 'linear-gradient(180deg, rgba(16,185,129,0.02) 0%, transparent 60%)'
+                  : 'linear-gradient(180deg, rgba(168,85,247,0.02) 0%, transparent 60%)',
+              borderRadius: '16px',
+            }}
+          />
+          {/* top label */}
+          <p
+            className="absolute"
+            style={{
+              left: zone.x0 + 30,
+              top: 6,
+              fontSize: '8px',
+              fontWeight: 600,
+              letterSpacing: '0.22em',
+              color: 'rgba(148,163,184,0.35)',
+              textTransform: 'uppercase' as const,
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}
+          >
+            {zone.label}
+          </p>
+          {/* vertical divider line (skip first boundary at x=0) */}
+          {zone.x0 > 0 && (
+            <div
+              className="absolute top-[20px]"
+              style={{
+                left: zone.x0,
+                width: '1px',
+                height: 'calc(100% - 40px)',
+                background: 'linear-gradient(180deg, rgba(148,163,184,0.12) 0%, rgba(148,163,184,0.06) 50%, rgba(148,163,184,0.12) 100%)',
+                boxShadow: '0 0 6px rgba(148,163,184,0.06)',
+              }}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ─── scrollable canvas wrapper (fixed width, horizontal scroll on small screens) ─── */
 function ScrollableCanvas({ children }: { children: React.ReactNode }) {
   return (
@@ -493,10 +557,8 @@ function ArchitectureDiagram() {
       <div ref={canvasRef} className="relative shrink-0" style={{ width: CANVAS.width, minWidth: CANVAS.width, height: CANVAS.height }}>
         <div className="absolute inset-0 rounded-2xl border border-slate-700/70 bg-slate-950 shadow-[0_0_60px_rgba(15,23,42,0.8)]" />
 
-        {/* ─── Deployment zone labels (faint right-edge) ─── */}
-        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 86, writingMode: 'vertical-rl' }}>CLOUD / SAAS</p>
-        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 260, writingMode: 'vertical-rl' }}>EDGE</p>
-        <p className="absolute text-[7px] font-medium tracking-[0.18em] text-slate-600/30 uppercase" style={{ right: 18, top: 430, writingMode: 'vertical-rl' }}>CUSTOMER VPC</p>
+        {/* ─── Vertical deployment zone overlays (GTC-style) ─── */}
+        <DeploymentZonesOverlay width={CANVAS.width} zones={DEPLOY_ZONES} />
 
         {/* Band 1 – Ingest */}
         <div className="absolute left-[20px] top-[20px] w-[1260px] h-[168px] rounded-[16px] border border-emerald-500/30 bg-gradient-to-r from-slate-900/95 to-emerald-950/25" />
