@@ -1,0 +1,82 @@
+@keyframes tcsGlowBreath {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.38;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes tcsShimmerSweep {
+  0% {
+    transform: translateX(-30%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(30%) skewX(-12deg);
+  }
+}
+
+.tcs-brand {
+  color: hsl(var(--foreground));
+  isolation: isolate;
+}
+
+.tcs-brand__glow {
+  background: radial-gradient(circle at center, rgba(52, 211, 153, 0.24) 0%, rgba(52, 211, 153, 0) 70%);
+  animation: tcsGlowBreath 6s ease-in-out infinite;
+}
+
+.tcs-brand__edge {
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: inset 0 0 0.5px rgba(255, 255, 255, 0.22), 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.tcs-brand__logo {
+  filter: drop-shadow(0 0 0.35rem rgba(16, 185, 129, 0.14));
+}
+
+.tcs-brand__shimmer {
+  overflow: hidden;
+}
+
+.tcs-brand__shimmer::before {
+  content: '';
+  position: absolute;
+  inset: -20% -45%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(52, 211, 153, 0.22) 45%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(52, 211, 153, 0.18) 55%,
+    transparent 100%
+  );
+  opacity: 0;
+}
+
+.tcs-brand:hover .tcs-brand__shimmer::before {
+  opacity: 1;
+  animation: tcsShimmerSweep 900ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcs-brand__glow,
+  .tcs-brand__shimmer::before,
+  .tcs-brand__logo {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .tcs-brand__glow {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+
+  .tcs-brand:hover .tcs-brand__shimmer::before {
+    animation: none;
+    opacity: 0;
+  }
+}

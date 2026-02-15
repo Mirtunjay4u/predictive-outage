@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import builderPhoto from '@/assets/builder-photo.png';
-import TCSLogo from '@/assets/tcs-logo.svg';
+import TCSBrandMark from '@/components/brand/TCSBrandMark';
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -89,7 +89,7 @@ export function TopBar({ onSearch }: TopBarProps) {
         </div>
 
         <div className="flex shrink-0 items-center">
-          <img src={TCSLogo} alt="TCS" className="h-8 w-auto text-white opacity-80 transition duration-200 hover:opacity-100" />
+          <TCSBrandMark />
         </div>
       </div>
     </header>
