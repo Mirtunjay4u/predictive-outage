@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
@@ -118,6 +118,31 @@ function buildEtrPercentiles(scenarios: Scenario[]) {
   return normalizePercentiles(p50, p90);
 }
 
+function toTitleCase(value?: string) {
+  if (!value) return 'Action';
+  return value
+    .replace(/[_-]+/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeFlag(flag: EscalationFlag, index: number) {
+  return (typeof flag === 'string' ? flag : (flag?.flag ?? flag?.label ?? `Flag ${index + 1}`)).trim();
+}
+
+function summarizePolicy(result: PolicyResult) {
+  const escalationFlags = (result.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
+  const blocked = result.blockedActions?.[0];
+  const allowed = result.allowedActions?.[0];
+  const etrBand = result.etrBand?.band ?? 'Unknown band';
+  const etrConfidence = result.etrBand?.confidence ?? 'Unknown';
+  const escalationText = escalationFlags.length > 0 ? `Escalation flags detected: ${escalationFlags.join(', ')}.` : 'No escalation flags detected.';
+  const blockedText = blocked ? `Primary blocked action is ${toTitleCase(blocked.action)} due to ${blocked.reason ?? 'policy constraints'}.` : 'No blocked actions were returned.';
+  const etrText = `ETR guidance is ${etrBand} with ${etrConfidence} confidence.`;
+  const allowedText = allowed ? `Top allowed action is ${toTitleCase(allowed.action)}${allowed.reason ? ` (${allowed.reason})` : ''}.` : 'No allowed action recommendation was returned.';
+  return `${escalationText} ${blockedText} ${etrText} ${allowedText}`;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { boardroomMode } = useDashboardUi();
@@ -133,6 +158,10 @@ export default function Dashboard() {
   const [policyResult, setPolicyResult] = useState<PolicyResult | null>(null);
   const [policyError, setPolicyError] = useState<string | null>(null);
   const [lastGoodPolicyResult, setLastGoodPolicyResult] = useState<PolicyResult | null>(null);
+  const [policyLatencyMs, setPolicyLatencyMs] = useState<number | null>(null);
+  const [lastEvaluatedAt, setLastEvaluatedAt] = useState<string | null>(null);
+  const [autoRunEnabled, setAutoRunEnabled] = useState(true);
+  const [policySummary, setPolicySummary] = useState<string | null>(null);
 
   const preEventScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Event');
@@ -171,10 +200,14 @@ export default function Dashboard() {
 
   const scenarioName = scenarios[0]?.name ?? 'Regional Preparedness Drill';
   const hazard = getScenarioHazard(scenarios);
+  // No explicit active scenario selector exists yet, so default to first scenario.
   const scenarioPayload = scenarios[0] ?? null;
 
-  const runPolicyCheck = async () => {
+  const runPolicyCheck = useCallback(async () => {
+    const start = Date.now();
+
     if (!scenarioPayload) {
+      setPolicyLatencyMs(Date.now() - start);
       setPolicyStatus('error');
       setPolicyError('Policy check is unavailable until a scenario is loaded.');
       return;
@@ -193,14 +226,37 @@ export default function Dashboard() {
       const nextResult = (data ?? {}) as PolicyResult;
       setPolicyResult(nextResult);
       setLastGoodPolicyResult(nextResult);
+      setPolicySummary(summarizePolicy(nextResult));
+      setPolicyLatencyMs(Date.now() - start);
+      setLastEvaluatedAt(new Date().toISOString());
       setPolicyStatus('success');
     } catch {
+      setPolicyLatencyMs(Date.now() - start);
       setPolicyStatus('error');
       setPolicyError('Policy service unavailable — showing last evaluation');
     }
-  };
+  }, [scenarioPayload]);
+
+  useEffect(() => {
+    if (!autoRunEnabled) return;
+    const timer = window.setTimeout(() => {
+      void runPolicyCheck();
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [autoRunEnabled, runPolicyCheck, scenarioPayload?.id, scenarioPayload?.name, scenarioPayload?.outage_type]);
 
   const effectivePolicyResult = policyResult ?? lastGoodPolicyResult;
+  const policyStatusLabel = policyStatus === 'evaluating'
+    ? 'Evaluating'
+    : policyStatus === 'error' && lastGoodPolicyResult
+      ? 'Degraded'
+      : policyStatus === 'error'
+        ? 'Error'
+        : policyStatus === 'success'
+          ? 'OK'
+          : 'Idle';
+  const compactEvaluationTimestamp = lastEvaluatedAt ? lastEvaluatedAt.slice(5, 16).replace('T', ' ') : '—';
 
   const riskDrivers = useMemo(() => {
     const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
@@ -340,22 +396,40 @@ export default function Dashboard() {
       />
 
       <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">Operational Policy Evaluation</h2>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={runPolicyCheck}
-            disabled={policyStatus === 'evaluating' || !scenarioPayload}
-            className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
-          >
-            {policyStatus === 'evaluating' ? 'Evaluating…' : 'Run Policy Check'}
-          </Button>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Operational Policy Evaluation</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+              <span>Status: <span className={cn('font-medium', policyStatusLabel === 'Error' ? 'text-destructive' : policyStatusLabel === 'Degraded' ? 'text-amber-700 dark:text-amber-300' : 'text-foreground')}>{policyStatusLabel}</span></span>
+              <span>Latency: <span className="font-medium text-foreground">{policyLatencyMs !== null ? `${policyLatencyMs}ms` : '—'}</span></span>
+              <span>Last evaluated: <span className="font-medium text-foreground">{compactEvaluationTimestamp}</span></span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5 rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={autoRunEnabled}
+                onChange={(event) => setAutoRunEnabled(event.target.checked)}
+                className="h-3.5 w-3.5 rounded border-border"
+              />
+              Auto-run
+            </label>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={runPolicyCheck}
+              disabled={policyStatus === 'evaluating' || !scenarioPayload}
+              className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
+            >
+              {policyStatus === 'evaluating' ? 'Evaluating…' : 'Run Policy Check'}
+            </Button>
+          </div>
         </div>
 
         {policyStatus === 'error' && (
           <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            {lastGoodPolicyResult ? 'Policy service unavailable — showing last evaluation' : (policyError ?? 'Policy check failed. Please try again.')}
+            {lastGoodPolicyResult ? 'Policy service unavailable — showing last evaluation.' : (policyError ?? 'Policy service unavailable — no prior evaluation available.')}
           </p>
         )}
 
@@ -363,17 +437,42 @@ export default function Dashboard() {
 
         {effectivePolicyResult && (
           <div className="mt-3 space-y-3 text-sm">
+            <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3.5 w-3.5" />Executive Policy Summary</p>
+              <p className="mt-1 text-xs text-foreground">{policySummary ?? summarizePolicy(effectivePolicyResult)}</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
+              {(effectivePolicyResult.escalationFlags?.length ?? 0) > 0 ? (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {effectivePolicyResult.escalationFlags?.map((flag: EscalationFlag, index: number) => {
+                    const label = normalizeFlag(flag, index);
+                    const isCritical = label.includes('critical_load_at_risk') || label.includes('critical_backup_window_short');
+                    return (
+                      <Badge key={`flag-${index}`} variant="outline" className={cn('text-[10px]', isCritical && 'border-destructive/50 bg-destructive/10 text-destructive')}>
+                        {label}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No escalation flags.</p>
+              )}
+            </div>
+
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Allowed Actions</p>
               {(effectivePolicyResult.allowedActions?.length ?? 0) > 0 ? (
-                <ul className="mt-1 list-disc space-y-1 pl-5">
+                <div className="mt-1 grid gap-2 md:grid-cols-2">
                   {effectivePolicyResult.allowedActions?.map((item: PolicyAction, index: number) => (
-                    <li key={`allowed-${index}`}>
-                      <span className="font-medium">{item?.action ?? 'Action'}</span>
-                      {item?.reason ? ` — ${item.reason}` : ''}
-                    </li>
+                    <div key={`allowed-${index}`} className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><CheckCircle className="h-3.5 w-3.5" />{toTitleCase(item?.action)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item?.reason ?? 'No reason returned.'}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">Constraints: 0</p>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p className="mt-1 text-muted-foreground">No allowed actions returned.</p>
               )}
@@ -382,32 +481,17 @@ export default function Dashboard() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Blocked Actions</p>
               {(effectivePolicyResult.blockedActions?.length ?? 0) > 0 ? (
-                <ul className="mt-1 list-disc space-y-1 pl-5">
+                <div className="mt-1 grid gap-2 md:grid-cols-2">
                   {effectivePolicyResult.blockedActions?.map((item: PolicyAction, index: number) => (
-                    <li key={`blocked-${index}`}>
-                      <span className="font-medium">{item?.action ?? 'Action'}</span>
-                      {item?.reason ? ` — ${item.reason}` : ''}
-                      {item?.remediation ? ` (Remediation: ${item.remediation})` : ''}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-1 text-muted-foreground">No blocked actions returned.</p>
-              )}
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
-              {(effectivePolicyResult.escalationFlags?.length ?? 0) > 0 ? (
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {effectivePolicyResult.escalationFlags?.map((flag: EscalationFlag, index: number) => (
-                    <Badge key={`flag-${index}`} variant="outline" className="text-[10px]">
-                      {typeof flag === 'string' ? flag : (flag?.flag ?? flag?.label ?? `Flag ${index + 1}`)}
-                    </Badge>
+                    <div key={`blocked-${index}`} className="rounded-md border border-muted-foreground/30 bg-muted/30 p-2.5 opacity-80">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"><Ban className="h-3.5 w-3.5" />{toTitleCase(item?.action)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{item?.reason ?? 'No reason returned.'}</p>
+                      {item?.remediation && <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">Remediation: {item.remediation}</p>}
+                    </div>
                   ))}
                 </div>
               ) : (
-                <p className="mt-1 text-muted-foreground">No escalation flags.</p>
+                <p className="mt-1 text-muted-foreground">No blocked actions returned.</p>
               )}
             </div>
 
