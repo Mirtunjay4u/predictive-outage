@@ -180,9 +180,12 @@ function buildPolicyContext(policyViewOrNull: PolicyResult | null): string {
   const blockedSummary = blockedActions.length > 0
     ? blockedActions
       .map((item) => {
-        const remediationHint = item?.remediation
-          ? item.remediation.split(/[\n•;-]/).map((part) => part.trim()).find(Boolean)
-          : null;
+        const remediationRaw = item?.remediation;
+        const remediationHint = Array.isArray(remediationRaw)
+          ? remediationRaw[0] ?? null
+          : typeof remediationRaw === 'string'
+            ? remediationRaw.split(/[\n•;-]/).map((part: string) => part.trim()).find(Boolean) ?? null
+            : null;
         return `- ${toTitleCase(item?.action)}: ${item?.reason ?? 'No reason provided'}${remediationHint ? ` (remediation: ${remediationHint})` : ''}`;
       })
       .join('\n')
