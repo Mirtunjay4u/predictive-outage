@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles } from 'lucide-react';
@@ -47,10 +47,13 @@ type EtrBand = {
 };
 
 type PolicyResult = {
+  policyGate?: 'PASS' | 'WARN' | 'BLOCK';
+  gateReason?: string;
   allowedActions?: PolicyAction[];
   blockedActions?: PolicyAction[];
   escalationFlags?: EscalationFlag[];
   etrBand?: EtrBand;
+  safetyConstraints?: Array<{ severity?: string; triggered?: boolean }>;
 };
 const HAZARD_FALLBACK = 'heavy rain';
 
@@ -147,6 +150,91 @@ function summarizePolicy(result: PolicyResult) {
   return `${escalationText} ${blockedText} ${etrText} ${allowedText}`;
 }
 
+function buildPolicyContext(policyViewOrNull: PolicyResult | null): string {
+  if (!policyViewOrNull) return 'No policy evaluation available yet.';
+
+  const blockedActions = policyViewOrNull.blockedActions ?? [];
+  const allowedActions = policyViewOrNull.allowedActions ?? [];
+  const escalationFlags = (policyViewOrNull.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
+  const hasHighSafetyConstraint = (policyViewOrNull.safetyConstraints ?? []).some((constraint) => constraint?.triggered && constraint?.severity === 'HIGH');
+  const inferredGate: 'PASS' | 'WARN' | 'BLOCK' = policyViewOrNull.policyGate
+    ?? (blockedActions.length > 0
+      ? 'BLOCK'
+      : (escalationFlags.includes('low_confidence_etr') || hasHighSafetyConstraint)
+        ? 'WARN'
+        : 'PASS');
+
+  const blockedSummary = blockedActions.length > 0
+    ? blockedActions
+      .map((item) => {
+        const remediationHint = item?.remediation
+          ? item.remediation.split(/[\n•;-]/).map((part) => part.trim()).find(Boolean)
+          : null;
+        return `- ${toTitleCase(item?.action)}: ${item?.reason ?? 'No reason provided'}${remediationHint ? ` (remediation: ${remediationHint})` : ''}`;
+      })
+      .join('\n')
+    : '- None';
+  const allowedSummary = allowedActions.length > 0
+    ? allowedActions
+      .slice(0, 3)
+      .map((item) => `- ${toTitleCase(item?.action)}: ${item?.reason ?? 'No reason provided'}`)
+      .join('\n')
+    : '- None';
+
+  return [
+    `Gate: ${inferredGate}`,
+    `Reason: ${policyViewOrNull.gateReason ?? 'No gate reason provided.'}`,
+    `Escalation Flags: ${escalationFlags.length > 0 ? escalationFlags.join(', ') : 'None'}`,
+    `ETR Band: ${policyViewOrNull.etrBand?.band ?? 'Unknown'}${policyViewOrNull.etrBand?.confidence ? ` (${policyViewOrNull.etrBand.confidence})` : ''}`,
+    `Blocked Actions:\n${blockedSummary}`,
+    `Allowed Actions (Top 3):\n${allowedSummary}`,
+  ].join('\n');
+}
+
+function buildExecutiveBriefingPrompt(args: {
+  scenario: Scenario | null;
+  policyGate: 'PASS' | 'WARN' | 'BLOCK';
+  policyView: PolicyResult | null;
+  gateReason: string;
+}): string {
+  const { scenario, policyGate, policyView, gateReason } = args;
+  const blockedActions = policyView?.blockedActions ?? [];
+  const scenarioData = (scenario ?? {}) as Record<string, unknown>;
+  const hardGuardrail = policyGate === 'BLOCK' || blockedActions.length > 0
+    ? 'Do NOT recommend any blocked action; recommend mitigations and allowed actions only.'
+    : 'Only recommend actions that remain operationally safe and policy-aligned.';
+
+  return [
+    'SYSTEM STYLE',
+    '- You are an Operator Copilot for electric T&D outage response.',
+    '- Speak with calm, executive incident-command tone.',
+    '- Be concise, factual, and operationally safe.',
+    '- If policyGate is BLOCK, do not propose blocked actions; propose mitigations and safe alternatives.',
+    '- Always state confidence and assumptions.',
+    `- ${hardGuardrail}`,
+    '',
+    'CONTEXT',
+    `- scenarioId: ${scenario?.id ?? 'unknown'}`,
+    `- hazard: ${scenario?.outage_type ?? 'unknown'}`,
+    `- assets count: ${String(scenarioData.assets_count ?? scenarioData.assetsCount ?? 'unknown')}`,
+    `- critical loads count: ${String(scenarioData.critical_loads_count ?? scenarioData.criticalLoadsCount ?? (scenario?.has_critical_load ? '>=1 flagged' : '0 flagged'))}`,
+    `- crews available/enRoute: ${String(scenarioData.crews_available ?? scenarioData.crewsAvailable ?? 'unknown')}/${String(scenarioData.crews_enroute ?? scenarioData.crewsEnRoute ?? 'unknown')}`,
+    `- dataQuality: ${String(scenarioData.data_quality ?? scenarioData.dataQuality ?? 'unknown')}`,
+    '',
+    'POLICY EVALUATION (DETERMINISTIC)',
+    buildPolicyContext(policyView),
+    `Gate reason: ${gateReason}`,
+    '',
+    'EXECUTIVE BRIEFING FORMAT (FOLLOW EXACTLY)',
+    '- Situation (2–3 bullets)',
+    '- Operational Risks (bullets; include critical load backup risk if flagged)',
+    '- Recommended Actions (numbered; each must be allowed by policy; add constraints notes if present)',
+    '- Blocked / Restricted Actions (if any; explain why + mitigation)',
+    '- ETR Outlook (band + confidence + what would increase confidence)',
+    '- Compliance / Audit Note (1 line referencing policy-based governance)',
+  ].join('\n');
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { boardroomMode } = useDashboardUi();
@@ -166,6 +254,7 @@ export default function Dashboard() {
   const [lastEvaluatedAt, setLastEvaluatedAt] = useState<string | null>(null);
   const [autoRunEnabled, setAutoRunEnabled] = useState(true);
   const [policySummary, setPolicySummary] = useState<string | null>(null);
+  const baseNemotronInvokeRef = useRef(supabase.functions.invoke.bind(supabase.functions));
 
   const preEventScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Event');
@@ -278,6 +367,42 @@ export default function Dashboard() {
           ? 'OK'
           : 'Idle';
   const compactEvaluationTimestamp = lastEvaluatedAt ? lastEvaluatedAt.slice(5, 16).replace('T', ' ') : '—';
+  const executiveBriefingPrompt = useMemo(() => buildExecutiveBriefingPrompt({
+    scenario: scenarioPayload,
+    policyGate,
+    policyView,
+    gateReason,
+  }), [gateReason, policyGate, policyView, scenarioPayload]);
+
+  useEffect(() => {
+    const baseInvoke = baseNemotronInvokeRef.current;
+    const invokeWithExecutivePrompt = ((fnName: string, options?: { body?: Record<string, unknown> }) => {
+      if (fnName !== 'nemotron') {
+        return baseInvoke(fnName, options as never);
+      }
+
+      return baseInvoke(fnName, {
+        ...(options ?? {}),
+        body: {
+          ...(options?.body ?? {}),
+          prompt: executiveBriefingPrompt,
+          context: JSON.stringify({
+            scenario: scenarioPayload,
+            policyGate,
+            gateReason,
+            policyView,
+            policyContext: buildPolicyContext(policyView),
+          }),
+        },
+      } as never);
+    }) as typeof supabase.functions.invoke;
+
+    supabase.functions.invoke = invokeWithExecutivePrompt;
+
+    return () => {
+      supabase.functions.invoke = baseInvoke;
+    };
+  }, [executiveBriefingPrompt, gateReason, policyGate, policyView, scenarioPayload]);
 
   const riskDrivers = useMemo(() => {
     const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
