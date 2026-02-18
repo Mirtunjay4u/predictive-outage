@@ -130,6 +130,10 @@ function normalizeFlag(flag: EscalationFlag, index: number) {
   return (typeof flag === 'string' ? flag : (flag?.flag ?? flag?.label ?? `Flag ${index + 1}`)).trim();
 }
 
+function humanizePolicyFlag(flag: string) {
+  return toTitleCase(flag).replace(/\bEtr\b/g, 'ETR');
+}
+
 function summarizePolicy(result: PolicyResult) {
   const escalationFlags = (result.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
   const blocked = result.blockedActions?.[0];
@@ -246,7 +250,24 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer);
   }, [autoRunEnabled, runPolicyCheck, scenarioPayload?.id, scenarioPayload?.name, scenarioPayload?.outage_type]);
 
-  const effectivePolicyResult = policyResult ?? lastGoodPolicyResult;
+  const policyView = policyResult ?? lastGoodPolicyResult;
+  const policyEscalationFlags = (policyView?.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
+  const policyBlockedActions = policyView?.blockedActions ?? [];
+  const policyEtrBand = policyView?.etrBand ?? null;
+  const hasBlockingEscalation = policyEscalationFlags.some((flag) => ['critical_load_at_risk', 'critical_backup_window_short', 'safety_block', 'hard_block'].includes(flag));
+  const policyGate: 'PASS' | 'WARN' | 'BLOCK' = (policyBlockedActions.length > 0 || hasBlockingEscalation)
+    ? 'BLOCK'
+    : (policyEscalationFlags.length > 0 || policyEtrBand?.band === 'LOW')
+      ? 'WARN'
+      : 'PASS';
+  const gateReason = policyEscalationFlags.length > 0
+    ? `${humanizePolicyFlag(policyEscalationFlags[0])}${policyEtrBand?.band ? ` · ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${policyEtrBand.confidence})` : ''}` : ''}`
+    : policyView
+      ? policyEtrBand?.band
+        ? `ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${policyEtrBand.confidence})` : ''}`
+        : 'No active escalation flags.'
+      : 'No policy evaluation yet.';
+  const isAIBriefingAllowed = policyGate !== 'BLOCK';
   const policyStatusLabel = policyStatus === 'evaluating'
     ? 'Evaluating'
     : policyStatus === 'error' && lastGoodPolicyResult
@@ -387,18 +408,47 @@ export default function Dashboard() {
 
       {!boardroomMode && <ImmediateAttentionStrip scenarios={highPriorityScenarios} onViewAll={() => navigate('/events?lifecycle=Event&priority=high')} onEventClick={(id) => navigate(`/events/${id}`)} />}
 
-      <AIExecutiveBriefingPanel
-        scenarios={scenarios}
-        dataUpdatedAt={dataUpdatedAt}
-        boardroomMode={boardroomMode}
-        onOpenSupportingSignals={() => setSupportingOpen(true)}
-        onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
-      />
+      {isAIBriefingAllowed ? (
+        <AIExecutiveBriefingPanel
+          scenarios={scenarios}
+          dataUpdatedAt={dataUpdatedAt}
+          boardroomMode={boardroomMode}
+          onOpenSupportingSignals={() => setSupportingOpen(true)}
+          onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
+        />
+      ) : (
+        <section className={cn('mb-4 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-destructive">AI Briefing</p>
+            <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-[10px] text-destructive">LOCKED</Badge>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">AI briefing locked by policy: {gateReason}</p>
+          <Button size="sm" variant="outline" className={cn('mt-3 h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)} disabled title={`AI briefing locked by policy: ${gateReason}`}>
+            Supporting Signals
+          </Button>
+        </section>
+      )}
 
       <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold">Operational Policy Evaluation</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-[10px]',
+                  policyGate === 'PASS'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : policyGate === 'WARN'
+                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                      : 'border-destructive/40 bg-destructive/10 text-destructive',
+                )}
+              >
+                Policy Gate: {policyGate}
+              </Badge>
+              <p className="text-[11px] text-muted-foreground">{gateReason}</p>
+            </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span>Status: <span className={cn('font-medium', policyStatusLabel === 'Error' ? 'text-destructive' : policyStatusLabel === 'Degraded' ? 'text-amber-700 dark:text-amber-300' : 'text-foreground')}>{policyStatusLabel}</span></span>
               <span>Latency: <span className="font-medium text-foreground">{policyLatencyMs !== null ? `${policyLatencyMs}ms` : '—'}</span></span>
@@ -433,20 +483,20 @@ export default function Dashboard() {
           </p>
         )}
 
-        {!effectivePolicyResult && <p className="mt-3 text-sm text-muted-foreground">No evaluation run yet.</p>}
+        {!policyView && <p className="mt-3 text-sm text-muted-foreground">No evaluation run yet.</p>}
 
-        {effectivePolicyResult && (
+        {policyView && (
           <div className="mt-3 space-y-3 text-sm">
             <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Sparkles className="h-3.5 w-3.5" />Executive Policy Summary</p>
-              <p className="mt-1 text-xs text-foreground">{policySummary ?? summarizePolicy(effectivePolicyResult)}</p>
+              <p className="mt-1 text-xs text-foreground">{policySummary ?? summarizePolicy(policyView)}</p>
             </div>
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
-              {(effectivePolicyResult.escalationFlags?.length ?? 0) > 0 ? (
+              {(policyView.escalationFlags?.length ?? 0) > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {effectivePolicyResult.escalationFlags?.map((flag: EscalationFlag, index: number) => {
+                  {policyView.escalationFlags?.map((flag: EscalationFlag, index: number) => {
                     const label = normalizeFlag(flag, index);
                     const isCritical = label.includes('critical_load_at_risk') || label.includes('critical_backup_window_short');
                     return (
@@ -463,9 +513,9 @@ export default function Dashboard() {
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Allowed Actions</p>
-              {(effectivePolicyResult.allowedActions?.length ?? 0) > 0 ? (
+              {(policyView.allowedActions?.length ?? 0) > 0 ? (
                 <div className="mt-1 grid gap-2 md:grid-cols-2">
-                  {effectivePolicyResult.allowedActions?.map((item: PolicyAction, index: number) => (
+                  {policyView.allowedActions?.map((item: PolicyAction, index: number) => (
                     <div key={`allowed-${index}`} className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5">
                       <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"><CheckCircle className="h-3.5 w-3.5" />{toTitleCase(item?.action)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{item?.reason ?? 'No reason returned.'}</p>
@@ -480,9 +530,9 @@ export default function Dashboard() {
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Blocked Actions</p>
-              {(effectivePolicyResult.blockedActions?.length ?? 0) > 0 ? (
+              {(policyView.blockedActions?.length ?? 0) > 0 ? (
                 <div className="mt-1 grid gap-2 md:grid-cols-2">
-                  {effectivePolicyResult.blockedActions?.map((item: PolicyAction, index: number) => (
+                  {policyView.blockedActions?.map((item: PolicyAction, index: number) => (
                     <div key={`blocked-${index}`} className="rounded-md border border-muted-foreground/30 bg-muted/30 p-2.5 opacity-80">
                       <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"><Ban className="h-3.5 w-3.5" />{toTitleCase(item?.action)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{item?.reason ?? 'No reason returned.'}</p>
@@ -497,10 +547,10 @@ export default function Dashboard() {
 
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ETR Band</p>
-              {effectivePolicyResult.etrBand ? (
+              {policyView.etrBand ? (
                 <p className="mt-1">
-                  <Badge variant="outline" className="mr-2 text-[10px]">{effectivePolicyResult.etrBand?.band ?? 'Unknown band'}</Badge>
-                  <span className="text-muted-foreground">Confidence: {effectivePolicyResult.etrBand?.confidence ?? 'Unknown'}</span>
+                  <Badge variant="outline" className="mr-2 text-[10px]">{policyView.etrBand?.band ?? 'Unknown band'}</Badge>
+                  <span className="text-muted-foreground">Confidence: {policyView.etrBand?.confidence ?? 'Unknown'}</span>
                 </p>
               ) : (
                 <p className="mt-1 text-muted-foreground">No ETR band returned.</p>
