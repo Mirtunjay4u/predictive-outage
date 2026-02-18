@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.dataverse]
 verify_jwt = false
+
+[functions.copilot-evaluate]
+verify_jwt = false

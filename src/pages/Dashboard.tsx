@@ -379,8 +379,8 @@ export default function Dashboard() {
         customersAffected: 2140,
         customers_impacted: 2140,
         assets: [
-          { id: 'FEEDER-A12', vegetationExposure: 'high', loadCriticality: 'high', ageYears: 37 },
-          { id: 'FEEDER-B07', vegetationExposure: 'med', loadCriticality: 'high', ageYears: 28 },
+          { id: 'FEEDER-A12', type: 'Feeder', vegetationExposure: 0.9, loadCriticality: 0.9, ageYears: 37 },
+          { id: 'FEEDER-B07', type: 'Feeder', vegetationExposure: 0.6, loadCriticality: 0.9, ageYears: 28 },
         ],
         criticalLoads: [
           { name: 'Regional Hospital', backupHoursRemaining: 3.5 },
@@ -408,9 +408,9 @@ export default function Dashboard() {
         customersAffected: 3025,
         customers_impacted: 3025,
         assets: [
-          { id: 'FEEDER-A12', vegetationExposure: 'high', loadCriticality: 'high', ageYears: 37 },
-          { id: 'FEEDER-C19', vegetationExposure: 'high', loadCriticality: 'med', ageYears: 41 },
-          { id: 'FEEDER-D03', vegetationExposure: 'med', loadCriticality: 'high', ageYears: 24 },
+          { id: 'FEEDER-A12', type: 'Feeder', vegetationExposure: 0.9, loadCriticality: 0.9, ageYears: 37 },
+          { id: 'FEEDER-C19', type: 'Feeder', vegetationExposure: 0.9, loadCriticality: 0.6, ageYears: 41 },
+          { id: 'FEEDER-D03', type: 'Feeder', vegetationExposure: 0.6, loadCriticality: 0.9, ageYears: 24 },
         ],
         criticalLoads: [
           { name: 'Regional Hospital', backupHoursRemaining: 2.2 },
@@ -447,15 +447,36 @@ export default function Dashboard() {
     },
   ], []);
 
-  /** Maps a DB Scenario to the ScenarioInput shape expected by the copilot-evaluate edge function. */
+  /**
+   * Maps a Scenario to the ScenarioInput shape expected by the copilot-evaluate edge function.
+   *
+   * Priority rules for demo vs. production paths:
+   *  - severity:      explicit numeric patch field wins; otherwise derived from priority + customers
+   *  - assets:        scenario.assets (array with required `type` field) wins over DB join query
+   *  - crews:         scenario.crews  (object with `available`/`enRoute`) wins over DB query
+   *  - criticalLoads: scenario.criticalLoads (name-based patch) wins over scenario DB fields
+   *
+   * This ensures demo playback reflects the intended risk escalation at each step without
+   * re-fetching stale DB data that doesn't reflect the patched scenario state.
+   */
   const buildPolicyPayload = useCallback(async (scenario: Scenario) => {
-    // ── Severity: blend priority rank + customers_impacted bracket ──────────
-    const priorityScore = scenario.priority === 'high' ? 5 : scenario.priority === 'low' ? 1 : 3;
-    const customers = scenario.customers_impacted ?? 0;
-    const customerScore = customers > 5000 ? 5 : customers > 1000 ? 4 : customers > 500 ? 3 : customers > 100 ? 2 : 1;
-    const severity = Math.round((priorityScore + customerScore) / 2);
+    // Cast once — Scenario is a DB row type; demo patches bolt on extra fields at runtime.
+    const sr = scenario as unknown as Record<string, unknown>;
 
-    // ── Phase: map lifecycle_stage to edge function enum ───────────────────
+    // ── Severity ───────────────────────────────────────────────────────────
+    // Honour an explicit numeric severity from a demo patch (1–5 clamped).
+    // Fall back to blending priority rank + customers_impacted bracket.
+    let severity: number;
+    if (typeof sr.severity === 'number' && isFinite(sr.severity)) {
+      severity = Math.min(5, Math.max(1, Math.round(sr.severity)));
+    } else {
+      const priorityScore = scenario.priority === 'high' ? 5 : scenario.priority === 'low' ? 1 : 3;
+      const customers = scenario.customers_impacted ?? 0;
+      const customerScore = customers > 5000 ? 5 : customers > 1000 ? 4 : customers > 500 ? 3 : customers > 100 ? 2 : 1;
+      severity = Math.round((priorityScore + customerScore) / 2);
+    }
+
+    // ── Phase ──────────────────────────────────────────────────────────────
     const phaseMap: Record<string, 'PRE_EVENT' | 'ACTIVE' | 'POST_EVENT' | 'UNKNOWN'> = {
       'Pre-Event': 'PRE_EVENT',
       'Event': 'ACTIVE',
@@ -463,7 +484,7 @@ export default function Dashboard() {
     };
     const phase = phaseMap[scenario.lifecycle_stage] ?? 'UNKNOWN';
 
-    // ── Hazard type: map outage_type to edge function enum ─────────────────
+    // ── Hazard type ────────────────────────────────────────────────────────
     const hazardMap: Record<string, 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN'> = {
       Storm: 'STORM', 'Snow Storm': 'STORM', 'High Wind': 'STORM', Lightning: 'STORM',
       'Ice/Snow': 'STORM', Heatwave: 'STORM',
@@ -472,79 +493,148 @@ export default function Dashboard() {
     };
     const hazardType = scenario.outage_type ? (hazardMap[scenario.outage_type] ?? 'UNKNOWN') : 'UNKNOWN';
 
-    // ── Assets: fetch from event_assets join table ─────────────────────────
-    let assets: Array<{ id: string; type: string; ageYears?: number; vegetationExposure?: number; loadCriticality?: number }> = [];
-    try {
-      const { data: eventAssets } = await supabase
-        .from('event_assets')
-        .select('asset_id, assets(id, name, asset_type, meta)')
-        .eq('event_id', scenario.id);
+    // ── Assets ─────────────────────────────────────────────────────────────
+    // Demo path: scenario.assets is set by applyDemoPatch. Every entry must have a string
+    // `id` and `type`; the edge function normalizeScenario filters out anything that doesn't.
+    // Production path: fetch from the event_assets join table keyed by scenario.id.
+    type AssetShape = { id: string; type: string; ageYears?: number; vegetationExposure?: number; loadCriticality?: number };
+    let assets: AssetShape[] = [];
 
-      if (eventAssets && eventAssets.length > 0) {
-        assets = eventAssets.map((ea) => {
-          const asset = ea.assets as { id: string; name: string; asset_type: string; meta: Record<string, unknown> | null } | null;
-          const meta = (asset?.meta ?? {}) as Record<string, unknown>;
-          return {
-            id: asset?.id ?? ea.asset_id,
-            type: asset?.asset_type ?? 'Transformer',
-            ageYears: typeof meta.age_years === 'number' ? meta.age_years : undefined,
-            vegetationExposure: typeof meta.vegetation_exposure === 'number' ? meta.vegetation_exposure : undefined,
-            loadCriticality: scenario.has_critical_load ? 0.9 : 0.4,
-          };
-        });
-      } else {
-        // Synthetic stubs from ID fields when no event_assets rows exist
-        const stubs = [
-          scenario.fault_id && { id: scenario.fault_id, type: 'Fault' },
-          scenario.feeder_id && { id: scenario.feeder_id, type: 'Feeder' },
-          scenario.transformer_id && { id: scenario.transformer_id, type: 'Transformer' },
-        ].filter(Boolean) as Array<{ id: string; type: string }>;
-        assets = stubs.map((s) => ({
-          ...s,
-          ageYears: 10,
-          vegetationExposure: 0.5,
-          loadCriticality: scenario.has_critical_load ? 0.85 : 0.5,
-        }));
+    const rawPatchedAssets = Array.isArray(sr.assets)
+      ? (sr.assets as Array<Record<string, unknown>>).filter(
+          (a) => a && typeof a.id === 'string' && typeof a.type === 'string',
+        )
+      : [];
+
+    if (rawPatchedAssets.length > 0) {
+      // Demo path — all numeric fields already validated by the demo step definitions.
+      assets = rawPatchedAssets.map((a) => ({
+        id: a.id as string,
+        type: a.type as string,
+        ageYears: typeof a.ageYears === 'number' ? (a.ageYears as number) : undefined,
+        vegetationExposure: typeof a.vegetationExposure === 'number' ? (a.vegetationExposure as number) : undefined,
+        loadCriticality: typeof a.loadCriticality === 'number' ? (a.loadCriticality as number) : undefined,
+      }));
+    } else {
+      // Production path — DB join query.
+      try {
+        const { data: eventAssets } = await supabase
+          .from('event_assets')
+          .select('asset_id, assets(id, name, asset_type, meta)')
+          .eq('event_id', scenario.id);
+
+        if (eventAssets && eventAssets.length > 0) {
+          assets = eventAssets.map((ea) => {
+            const asset = ea.assets as { id: string; name: string; asset_type: string; meta: Record<string, unknown> | null } | null;
+            const meta = (asset?.meta ?? {}) as Record<string, unknown>;
+            return {
+              id: asset?.id ?? ea.asset_id,
+              type: asset?.asset_type ?? 'Transformer',
+              ageYears: typeof meta.age_years === 'number' ? meta.age_years : undefined,
+              vegetationExposure: typeof meta.vegetation_exposure === 'number' ? meta.vegetation_exposure : undefined,
+              loadCriticality: scenario.has_critical_load ? 0.9 : 0.4,
+            };
+          });
+        } else {
+          // Synthetic stubs from ID fields when no event_assets rows exist.
+          const stubs = [
+            scenario.fault_id && { id: scenario.fault_id, type: 'Fault' },
+            scenario.feeder_id && { id: scenario.feeder_id, type: 'Feeder' },
+            scenario.transformer_id && { id: scenario.transformer_id, type: 'Transformer' },
+          ].filter(Boolean) as Array<{ id: string; type: string }>;
+          assets = stubs.map((s) => ({
+            ...s,
+            ageYears: 10,
+            vegetationExposure: 0.5,
+            loadCriticality: scenario.has_critical_load ? 0.85 : 0.5,
+          }));
+        }
+      } catch {
+        // Non-fatal — edge function normalises missing assets gracefully.
       }
-    } catch {
-      // Non-fatal — function normalizes missing assets gracefully
     }
 
-    // ── Crews: fetch assigned crews + available pool ───────────────────────
+    // ── Crews ──────────────────────────────────────────────────────────────
+    // Demo path: scenario.crews is set by applyDemoPatch with { available, enRoute } numbers.
+    // Production path: query the crews table by assigned_event_id + status.
     let crewsAvailable = 0;
     let crewsEnRoute = 0;
-    try {
-      const { data: assignedCrews } = await supabase
-        .from('crews')
-        .select('status')
-        .eq('assigned_event_id', scenario.id);
 
-      const { data: availableCrews } = await supabase
-        .from('crews')
-        .select('id')
-        .eq('status', 'available')
-        .is('assigned_event_id', null);
+    const patchedCrews = sr.crews as { available?: unknown; enRoute?: unknown } | undefined;
+    const hasPatchedCrews =
+      patchedCrews != null &&
+      (typeof patchedCrews.available === 'number' || typeof patchedCrews.enRoute === 'number');
 
-      crewsEnRoute = (assignedCrews ?? []).filter((c) => c.status === 'en_route' || c.status === 'on_site').length;
-      crewsAvailable = (availableCrews ?? []).length;
-    } catch {
-      // Non-fatal — function defaults crew counts to 0
+    if (hasPatchedCrews && patchedCrews) {
+      // Demo path — use the explicitly patched crew counts.
+      crewsAvailable = typeof patchedCrews.available === 'number' ? patchedCrews.available : 0;
+      crewsEnRoute   = typeof patchedCrews.enRoute   === 'number' ? patchedCrews.enRoute   : 0;
+    } else {
+      // Production path — live DB query.
+      try {
+        const { data: assignedCrews } = await supabase
+          .from('crews')
+          .select('status')
+          .eq('assigned_event_id', scenario.id);
+
+        const { data: availableCrews } = await supabase
+          .from('crews')
+          .select('id')
+          .eq('status', 'available')
+          .is('assigned_event_id', null);
+
+        crewsEnRoute   = (assignedCrews  ?? []).filter((c) => c.status === 'en_route' || c.status === 'on_site').length;
+        crewsAvailable = (availableCrews ?? []).length;
+      } catch {
+        // Non-fatal — edge function defaults crew counts to 0.
+      }
     }
 
-    // ── Critical loads: map from scenario fields ───────────────────────────
-    const criticalLoadTypes = Array.isArray(scenario.critical_load_types)
-      ? (scenario.critical_load_types as string[])
-      : [];
+    // ── Critical loads ─────────────────────────────────────────────────────
+    // Demo path: scenario.criticalLoads is set by applyDemoPatch with name + backupHoursRemaining.
+    //   Names are matched to HOSPITAL | WATER | TELECOM | SHELTER | OTHER via substring lookup.
+    // Production path: derive from scenario.critical_load_types string array.
     const criticalLoadTypeMap: Record<string, 'HOSPITAL' | 'WATER' | 'TELECOM' | 'SHELTER' | 'OTHER'> = {
       Hospital: 'HOSPITAL', Water: 'WATER', Telecom: 'TELECOM', Shelter: 'SHELTER',
     };
-    const criticalLoads = scenario.has_critical_load
-      ? criticalLoadTypes.map((t) => ({
-          type: criticalLoadTypeMap[t] ?? ('OTHER' as const),
-          name: t,
-          backupHoursRemaining: scenario.backup_runtime_remaining_hours ?? undefined,
-        }))
+
+    type CriticalLoadShape = { type: 'HOSPITAL' | 'WATER' | 'TELECOM' | 'SHELTER' | 'OTHER'; name?: string; backupHoursRemaining?: number };
+    let criticalLoads: CriticalLoadShape[] = [];
+
+    const rawPatchedLoads = Array.isArray(sr.criticalLoads)
+      ? (sr.criticalLoads as Array<Record<string, unknown>>)
       : [];
+
+    if (rawPatchedLoads.length > 0) {
+      // Demo path — infer type from name substring.
+      const nameToType: Array<[string, CriticalLoadShape['type']]> = [
+        ['hospital', 'HOSPITAL'],
+        ['water',    'WATER'],
+        ['telecom',  'TELECOM'],
+        ['shelter',  'SHELTER'],
+      ];
+      criticalLoads = rawPatchedLoads.map((cl) => {
+        const nameLower = String(cl.name ?? '').toLowerCase();
+        const matchedType = nameToType.find(([key]) => nameLower.includes(key))?.[1] ?? 'OTHER';
+        return {
+          type: matchedType,
+          name: typeof cl.name === 'string' ? cl.name : undefined,
+          backupHoursRemaining: typeof cl.backupHoursRemaining === 'number' ? cl.backupHoursRemaining : undefined,
+        };
+      });
+    } else {
+      // Production path — derive from DB scenario fields.
+      const criticalLoadTypes = Array.isArray(scenario.critical_load_types)
+        ? (scenario.critical_load_types as string[])
+        : [];
+      criticalLoads = scenario.has_critical_load
+        ? criticalLoadTypes.map((t) => ({
+            type: criticalLoadTypeMap[t] ?? ('OTHER' as const),
+            name: t,
+            backupHoursRemaining: scenario.backup_runtime_remaining_hours ?? undefined,
+          }))
+        : [];
+    }
 
     return {
       scenarioId: scenario.id,
@@ -596,10 +686,40 @@ export default function Dashboard() {
       setPolicyLatencyMs(Date.now() - start);
       setLastEvaluatedAt(new Date().toISOString());
       setPolicyStatus('success');
-    } catch {
+    } catch (err: unknown) {
       setPolicyLatencyMs(Date.now() - start);
       setPolicyStatus('error');
-      setPolicyError('Policy service unavailable — showing last evaluation');
+
+      // Discriminate error type so operators see a meaningful message rather than a
+      // generic catch-all. supabase.functions.invoke throws a FunctionsHttpError-like
+      // object with a numeric `status` field when the edge function returns a non-2xx.
+      let errorMsg = 'Policy service unavailable';
+      if (err != null && typeof err === 'object') {
+        const e = err as Record<string, unknown>;
+        // status may be directly on the error or nested under .context (SDK version-dependent)
+        const status =
+          (typeof e.status === 'number' || typeof e.status === 'string')
+            ? String(e.status)
+            : typeof (e.context as Record<string, unknown> | undefined)?.status !== 'undefined'
+              ? String((e.context as Record<string, unknown>).status)
+              : null;
+        const msg = typeof e.message === 'string' ? e.message.toLowerCase() : '';
+
+        if (status === '401') {
+          errorMsg = 'Policy service unavailable — auth error (401): JWT config missing for function';
+        } else if (status === '403') {
+          errorMsg = 'Policy service unavailable — forbidden (403): insufficient permissions';
+        } else if (status === '400') {
+          errorMsg = 'Policy service unavailable — bad request (400): payload schema mismatch';
+        } else if (status === '500' || status === '503') {
+          errorMsg = `Policy service unavailable — server error (${status}): edge function crashed`;
+        } else if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch')) {
+          errorMsg = 'Policy service unavailable — network error: check connectivity';
+        } else if (status) {
+          errorMsg = `Policy service unavailable — HTTP ${status}`;
+        }
+      }
+      setPolicyError(errorMsg);
     }
   }, [buildPolicyPayload, getScenarioPayload]);
 
