@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatConfidenceFull } from '@/lib/etr-format';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles } from 'lucide-react';
+import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles, ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
@@ -278,6 +278,8 @@ export default function Dashboard() {
   const [demoLog, setDemoLog] = useState<DemoLogEntry[]>([]);
   const [demoScenarioOverride, setDemoScenarioOverride] = useState<Scenario | null>(null);
   const [demoBriefingTick, setDemoBriefingTick] = useState(0);
+  const [briefingPulse, setBriefingPulse] = useState(false);
+  const briefingPulseTimerRef = useRef<number | null>(null);
   const baseNemotronInvokeRef = useRef(supabase.functions.invoke.bind(supabase.functions));
   const demoTimerRef = useRef<number | null>(null);
   const demoRunNonceRef = useRef(0);
@@ -732,6 +734,19 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer);
   }, [autoRunEnabled, runPolicyCheck, scenarioPayload?.id, scenarioPayload?.name, scenarioPayload?.outage_type]);
 
+  // Briefing pulse: fires whenever policy result changes or demo step advances.
+  useEffect(() => {
+    if (briefingPulseTimerRef.current !== null) window.clearTimeout(briefingPulseTimerRef.current);
+    setBriefingPulse(true);
+    briefingPulseTimerRef.current = window.setTimeout(() => {
+      setBriefingPulse(false);
+      briefingPulseTimerRef.current = null;
+    }, 2400);
+    return () => {
+      if (briefingPulseTimerRef.current !== null) window.clearTimeout(briefingPulseTimerRef.current);
+    };
+  }, [policyResult, demoStepIndex]);
+
   const policyView = policyResult ?? lastGoodPolicyResult;
   const policyEscalationFlags = (policyView?.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
   const policyBlockedActions = policyView?.blockedActions ?? [];
@@ -1028,7 +1043,39 @@ export default function Dashboard() {
         <div className={cn('flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-card shadow-sm', boardroomMode ? 'px-5 py-4' : 'px-4 py-3')}>
           <div>
             <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {scenarioName}</p>
-            <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
+              {/* ── Policy Status Badge ──────────────────────────────── */}
+              {policyView && (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all duration-300',
+                    policyGate === 'BLOCK'
+                      ? 'border-destructive/50 bg-destructive/10 text-destructive'
+                      : policyGate === 'WARN'
+                        ? 'border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                        : 'border-success/40 bg-success/10 text-success',
+                  )}
+                  aria-label={`Policy gate: ${policyGate}`}
+                >
+                  {policyGate === 'BLOCK' && <ShieldX className="h-2.5 w-2.5" />}
+                  {policyGate === 'WARN' && <ShieldAlert className="h-2.5 w-2.5" />}
+                  {policyGate === 'PASS' && <ShieldCheck className="h-2.5 w-2.5" />}
+                  {policyGate === 'BLOCK' ? 'POLICY BLOCKED' : policyGate === 'WARN' ? 'POLICY WARN' : 'POLICY CLEAR'}
+                </span>
+              )}
+              {/* ── Briefing Updated pulse ───────────────────────────── */}
+              {briefingPulse && policyView && (
+                <span
+                  key={`pulse-${demoStepIndex}-${lastEvaluatedAt}`}
+                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary animate-pulse"
+                  aria-live="polite"
+                >
+                  <Sparkles className="h-2.5 w-2.5" />
+                  Briefing Updated
+                </span>
+              )}
+            </div>
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{scenarioName}</span> • Hazard: <span className="font-medium text-foreground capitalize">{hazard}</span></p>
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}><span className="font-medium text-foreground">{summary}</span> · {stats.total} total tracked</p>
           </div>
@@ -1319,6 +1366,111 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+
+      {/* ── Operational Timeline Strip ─────────────────────────────────────────
+           Shows the six response phases as a horizontal track.
+           Current demo step is highlighted; completed steps show success tint;
+           blocked (POLICY BLOCK) shows destructive tint.
+           Uses only div-based layout — no extra libraries.
+      ────────────────────────────────────────────────────────────────────────── */}
+      {(() => {
+        const PHASES = [
+          { id: 'detection',    label: 'Detection',    step: 0 },
+          { id: 'risk-scoring', label: 'Risk Scoring', step: 1 },
+          { id: 'policy-check', label: 'Policy Check', step: 2 },
+          { id: 'ai-briefing',  label: 'AI Briefing',  step: 3 },
+          { id: 'dispatch',     label: 'Dispatch',     step: 4 },
+          { id: 'recovery',     label: 'Recovery',     step: 5 },
+        ] as const;
+
+        // Map the 6 demo steps (0-indexed) → phases (0-indexed), clamped to 5.
+        const activePhaseIndex = demoRunning && demoStepIndex >= 0
+          ? Math.min(Math.floor((demoStepIndex / Math.max(1, demoSteps.length - 1)) * 5), 5)
+          : -1;
+
+        const isBlocked = policyGate === 'BLOCK';
+
+        return (
+          <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm" role="region" aria-label="Operational phase timeline">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                Operational Phase
+              </p>
+              {demoRunning && demoStepIndex >= 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  Step {demoStepIndex + 1} / {demoSteps.length} — {demoSteps[demoStepIndex]?.label ?? ''}
+                </span>
+              )}
+            </div>
+            <div className="flex items-stretch gap-0 overflow-x-auto">
+              {PHASES.map((phase, idx) => {
+                const isActive  = activePhaseIndex === idx;
+                const isDone    = activePhaseIndex > idx;
+                const isBlockedPhase = isBlocked && (isActive || isDone);
+
+                return (
+                  <div key={phase.id} className="flex min-w-0 flex-1 items-center">
+                    {/* Phase pill */}
+                    <div
+                      className={cn(
+                        'flex flex-1 flex-col items-center justify-center rounded-md px-2 py-2 transition-all duration-300',
+                        isBlockedPhase
+                          ? 'border border-destructive/40 bg-destructive/10'
+                          : isDone
+                            ? 'border border-success/30 bg-success/10'
+                            : isActive
+                              ? 'border border-primary/40 bg-primary/10'
+                              : 'border border-border/40 bg-muted/20',
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'text-[10px] font-semibold leading-tight text-center whitespace-nowrap',
+                          isBlockedPhase
+                            ? 'text-destructive'
+                            : isDone
+                              ? 'text-success'
+                              : isActive
+                                ? 'text-primary'
+                                : 'text-muted-foreground',
+                        )}
+                      >
+                        {phase.label}
+                      </span>
+                      {/* Status dot */}
+                      <span
+                        className={cn(
+                          'mt-1 h-1 w-1 rounded-full',
+                          isBlockedPhase
+                            ? 'bg-destructive'
+                            : isDone
+                              ? 'bg-success'
+                              : isActive
+                                ? 'bg-primary animate-pulse'
+                                : 'bg-border',
+                        )}
+                      />
+                    </div>
+                    {/* Connector arrow (not after last) */}
+                    {idx < PHASES.length - 1 && (
+                      <div
+                        className={cn(
+                          'mx-0.5 h-px w-3 shrink-0 transition-all duration-300',
+                          isBlockedPhase
+                            ? 'bg-destructive/40'
+                            : isDone
+                              ? 'bg-success/40'
+                              : 'bg-border/60',
+                        )}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-12 items-start gap-5 lg:gap-6">
         {!boardroomMode && (
