@@ -2,6 +2,13 @@
  import { useParams, useNavigate, Link } from "react-router-dom";
  import { format } from "date-fns";
 import {
+  formatEtrBand,
+  formatBandWidth,
+  formatConfidenceFull,
+  confidenceBadgeClass,
+  formatRuntimeHours,
+} from "@/lib/etr-format";
+import {
   ArrowLeft,
   Bot,
   MapPin,
@@ -381,79 +388,63 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
      );
    }
  
-   const formatEtrTime = (dateStr: string | null) => {
-     if (!dateStr) return "—";
-     return format(new Date(dateStr), "h:mm a");
-   };
- 
-   const getConfidenceBadgeStyle = (confidence: EtrConfidence | null) => {
-     switch (confidence) {
-       case "HIGH":
-         return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
-       case "MEDIUM":
-         return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30";
-       case "LOW":
-         return "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30";
-       default:
-         return "bg-muted text-muted-foreground border-border";
-     }
-   };
- 
-   const getRiskBadgeStyle = (risk: EtrRiskLevel | null) => {
-     switch (risk) {
-       case "LOW":
-         return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
-       case "MEDIUM":
-         return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30";
-       case "HIGH":
-         return "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30";
-       default:
-         return "bg-muted text-muted-foreground border-border";
-     }
-   };
+  // ETR formatting via shared utility
+  const etrBand = formatEtrBand(event.etr_earliest, event.etr_latest);
+  const etrBandWidth = formatBandWidth(event.etr_band_hours);
+  const confidenceLabel = formatConfidenceFull(event.etr_confidence);
+  const confidenceClass = confidenceBadgeClass(event.etr_confidence);
+
+  const getRiskBadgeStyle = (risk: EtrRiskLevel | null) => {
+    switch (risk) {
+      case "LOW":
+        return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
+      case "MEDIUM":
+        return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30";
+      case "HIGH":
+        return "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30";
+      default:
+        return "bg-muted text-muted-foreground border-border";
+    }
+  };
  
    const uncertaintyDrivers = event.etr_uncertainty_drivers || [];
  
    return (
-     <div className="space-y-4">
+   <div className="space-y-4">
        <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">ETR Confidence</h4>
- 
+
        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
          {/* Restoration Window */}
-         {(event.etr_earliest || event.etr_latest) && (
+         {etrBand && (
            <div className="p-4 rounded-lg bg-muted/40 border border-border">
-             <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-2">Restoration Window</span>
-             <div className="flex items-center gap-2 text-lg font-semibold">
-               <span className="font-mono text-foreground">{formatEtrTime(event.etr_earliest)}</span>
-               <span className="text-muted-foreground">→</span>
-               <span className="font-mono text-foreground">{formatEtrTime(event.etr_latest)}</span>
-             </div>
-             {event.etr_band_hours !== null && (
-               <p className="text-xs text-muted-foreground mt-2">
-                 Band width: {event.etr_band_hours.toFixed(1)} hours
+             <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">ETR</span>
+             <p className="text-lg font-semibold font-mono text-foreground">{etrBand}</p>
+             {etrBandWidth && (
+               <p className="text-xs text-muted-foreground mt-1.5">
+                 Band width: {etrBandWidth}
                </p>
              )}
            </div>
          )}
- 
+
          {/* Confidence & Risk */}
          <div className="p-4 rounded-lg bg-muted/40 border border-border">
            <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-2">Assessment</span>
            <div className="flex items-center gap-2 flex-wrap">
              {event.etr_confidence && (
-               <Badge variant="outline" className={`${getConfidenceBadgeStyle(event.etr_confidence)}`}>
-                 Confidence: {event.etr_confidence}
+               <Badge variant="outline" className={confidenceClass}>
+                 Confidence: {confidenceLabel}
                </Badge>
              )}
              {event.etr_risk_level && (
-               <Badge variant="outline" className={`${getRiskBadgeStyle(event.etr_risk_level)}`}>
+               <Badge variant="outline" className={getRiskBadgeStyle(event.etr_risk_level)}>
                  Risk: {event.etr_risk_level}
                </Badge>
              )}
            </div>
          </div>
        </div>
- 
+
        {/* Uncertainty Drivers */}
        {uncertaintyDrivers.length > 0 && (
          <div>
@@ -525,28 +516,28 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
              {event.backup_runtime_remaining_hours !== null && (
                <div className="p-4 rounded-lg bg-muted/40 border border-border">
-                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Hours Remaining</span>
-                 <span className="text-2xl font-bold text-foreground">
-                   {event.backup_runtime_remaining_hours.toFixed(1)}
-                 </span>
-               </div>
-             )}
-             {event.critical_escalation_threshold_hours !== null && (
-               <div className="p-4 rounded-lg bg-muted/40 border border-border">
-                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Escalation Threshold</span>
-                 <span className="text-2xl font-bold text-foreground">
-                   {event.critical_escalation_threshold_hours.toFixed(1)}
-                 </span>
-               </div>
-             )}
-             {event.backup_runtime_hours !== null && (
-               <div className="p-4 rounded-lg bg-muted/40 border border-border">
-                 <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Total Backup Runtime</span>
-                 <span className="text-2xl font-bold text-foreground">
-                   {event.backup_runtime_hours.toFixed(1)}
-                 </span>
-               </div>
-             )}
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Hours Remaining</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {formatRuntimeHours(event.backup_runtime_remaining_hours)}
+                  </span>
+                </div>
+              )}
+              {event.critical_escalation_threshold_hours !== null && (
+                <div className="p-4 rounded-lg bg-muted/40 border border-border">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Escalation Threshold</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {formatRuntimeHours(event.critical_escalation_threshold_hours)}
+                  </span>
+                </div>
+              )}
+              {event.backup_runtime_hours !== null && (
+                <div className="p-4 rounded-lg bg-muted/40 border border-border">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Total Backup Runtime</span>
+                  <span className="text-2xl font-bold text-foreground">
+                    {formatRuntimeHours(event.backup_runtime_hours)}
+                  </span>
+                </div>
+              )}
            </div>
  
            {/* Progress Bar */}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { formatConfidenceFull } from '@/lib/etr-format';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles } from 'lucide-react';
@@ -622,10 +623,10 @@ export default function Dashboard() {
       ? 'WARN'
       : 'PASS';
   const gateReason = policyEscalationFlags.length > 0
-    ? `${humanizePolicyFlag(policyEscalationFlags[0])}${policyEtrBand?.band ? ` · ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${policyEtrBand.confidence})` : ''}` : ''}`
+    ? `${humanizePolicyFlag(policyEscalationFlags[0])}${policyEtrBand?.band ? ` · ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${formatConfidenceFull(policyEtrBand.confidence)})` : ''}` : ''}`
     : policyView
       ? policyEtrBand?.band
-        ? `ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${policyEtrBand.confidence})` : ''}`
+        ? `ETR ${policyEtrBand.band}${policyEtrBand?.confidence ? ` (${formatConfidenceFull(policyEtrBand.confidence)})` : ''}`
         : 'No active escalation flags.'
       : 'No policy evaluation yet.';
   const isAIBriefingAllowed = policyGate !== 'BLOCK';
@@ -1151,7 +1152,7 @@ export default function Dashboard() {
               {policyView.etrBand ? (
                 <p className="mt-1">
                   <Badge variant="outline" className="mr-2 text-[10px]">{policyView.etrBand?.band ?? 'Unknown band'}</Badge>
-                  <span className="text-muted-foreground">Confidence: {policyView.etrBand?.confidence ?? 'Unknown'}</span>
+                  <span className="text-muted-foreground">Confidence: {formatConfidenceFull(policyView.etrBand?.confidence)}</span>
                 </p>
               ) : (
                 <p className="mt-1 text-muted-foreground">No ETR band returned.</p>
