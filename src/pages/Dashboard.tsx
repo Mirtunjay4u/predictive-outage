@@ -1191,27 +1191,38 @@ export default function Dashboard() {
 
       {!boardroomMode && <ImmediateAttentionStrip scenarios={highPriorityScenarios} onViewAll={() => navigate('/events?lifecycle=Event&priority=high')} onEventClick={(id) => navigate(`/events/${id}`)} />}
 
-      {isAIBriefingAllowed ? (
-        <AIExecutiveBriefingPanel
-          key={`ai-briefing-${demoBriefingTick}`}
-          scenarios={scenarios}
-          dataUpdatedAt={dataUpdatedAt}
-          boardroomMode={boardroomMode}
-          onOpenSupportingSignals={() => setSupportingOpen(true)}
-          onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
-        />
-      ) : (
-        <section className={cn('mb-4 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold text-destructive">AI Briefing</p>
-            <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-[10px] text-destructive">LOCKED</Badge>
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground">AI briefing locked by policy: {gateReason}</p>
-          <Button size="sm" variant="outline" className={cn('mt-3 h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)} disabled title={`AI briefing locked by policy: ${gateReason}`}>
-            Supporting Signals
-          </Button>
-        </section>
-      )}
+      {/* ── Executive Focus Frame: AI Briefing ───────────────────────────────
+           Boardroom mode wraps the AI Briefing section in a subtle elevated
+           glow container. Standard mode renders it flush as before.
+      ────────────────────────────────────────────────────────────────────── */}
+      <div className={cn(
+        boardroomMode && (
+          'rounded-xl border border-primary/20 p-1 shadow-[0_0_0_1px_hsl(var(--primary)/0.06),0_8px_32px_-8px_hsl(var(--primary)/0.10)]'
+        ),
+        boardroomMode && !prefersReducedMotion && 'transition-shadow duration-500',
+      )}>
+        {isAIBriefingAllowed ? (
+          <AIExecutiveBriefingPanel
+            key={`ai-briefing-${demoBriefingTick}`}
+            scenarios={scenarios}
+            dataUpdatedAt={dataUpdatedAt}
+            boardroomMode={boardroomMode}
+            onOpenSupportingSignals={() => setSupportingOpen(true)}
+            onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
+          />
+        ) : (
+          <section className={cn('mb-4 rounded-xl border border-destructive/40 bg-destructive/5 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-destructive">AI Briefing</p>
+              <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-[10px] text-destructive">LOCKED</Badge>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">AI briefing locked by policy: {gateReason}</p>
+            <Button size="sm" variant="outline" className={cn('mt-3 h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)} disabled title={`AI briefing locked by policy: ${gateReason}`}>
+              Supporting Signals
+            </Button>
+          </section>
+        )}
+      </div>
 
       <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1568,66 +1579,176 @@ export default function Dashboard() {
         );
       })()}
 
-      <div className="grid grid-cols-12 items-start gap-5 lg:gap-6">
-        {!boardroomMode && (
+      {/* ── Boardroom KPI Compression ───────────────────────────────────────
+           In boardroom mode, replace the standard KPI grid with 5 focused
+           executive stat tiles. Each tile surfaces a single, high-signal
+           metric. Standard mode renders the original 3-6-3 grid unchanged.
+      ────────────────────────────────────────────────────────────────────── */}
+      {boardroomMode ? (() => {
+        // ── Derived values for the 5 boardroom KPI tiles ─────────────────
+        const criticalLoadCount = activeScenarios.filter((s) => s.has_critical_load).length;
+        const etrBandLabel = policyView?.etrBand?.band ?? '—';
+        const etrConfLabel = policyView?.etrBand?.confidence ? formatConfidenceFull(policyView.etrBand.confidence) : '—';
+        const activeHazardLabel = hazard ? hazard.charAt(0).toUpperCase() + hazard.slice(1) : '—';
+        const policyStatusLabel2 = !policyView ? 'Unknown' : policyGate === 'BLOCK' ? 'Blocked' : policyGate === 'WARN' ? 'Warn' : 'Clear';
+        const policyTileColor = !policyView
+          ? 'border-border/50 text-muted-foreground'
+          : policyGate === 'BLOCK'
+            ? 'border-destructive/40 text-destructive'
+            : policyGate === 'WARN'
+              ? 'border-amber-500/40 text-amber-600 dark:text-amber-400'
+              : 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400';
+        const policyTileBg = !policyView
+          ? 'bg-muted/20'
+          : policyGate === 'BLOCK'
+            ? 'bg-destructive/5'
+            : policyGate === 'WARN'
+              ? 'bg-amber-500/5'
+              : 'bg-emerald-500/5';
+
+        const boardroomTiles = [
+          {
+            id: 'risk',
+            label: 'System Risk Index',
+            value: String(riskDrivers.index),
+            sub: riskDrivers.severity,
+            subColor: getRiskBadgeClass(riskDrivers.severity),
+            tileColor: 'border-border/50 text-foreground',
+            tileBg: 'bg-card',
+            icon: Gauge,
+          },
+          {
+            id: 'etr',
+            label: 'ETR Confidence Band',
+            value: etrBandLabel,
+            sub: etrConfLabel !== '—' ? `${etrConfLabel} confidence` : 'Awaiting evaluation',
+            subColor: 'text-muted-foreground',
+            tileColor: 'border-border/50 text-foreground',
+            tileBg: 'bg-card',
+            icon: Clock,
+          },
+          {
+            id: 'critical',
+            label: 'Critical Load at Risk',
+            value: String(criticalLoadCount),
+            sub: criticalLoadCount > 0 ? 'Active exposure' : 'No exposure',
+            subColor: criticalLoadCount > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
+            tileColor: criticalLoadCount > 0 ? 'border-destructive/40 text-destructive' : 'border-border/50 text-foreground',
+            tileBg: criticalLoadCount > 0 ? 'bg-destructive/5' : 'bg-card',
+            icon: AlertTriangle,
+          },
+          {
+            id: 'policy',
+            label: 'Policy Status',
+            value: policyStatusLabel2,
+            sub: gateReason.length > 52 ? gateReason.slice(0, 52) + '…' : gateReason,
+            subColor: 'text-muted-foreground',
+            tileColor: policyTileColor,
+            tileBg: policyTileBg,
+            icon: policyGate === 'BLOCK' ? ShieldX : policyGate === 'WARN' ? ShieldAlert : ShieldCheck,
+          },
+          {
+            id: 'hazard',
+            label: 'Active Hazard',
+            value: activeHazardLabel,
+            sub: `${stats.active} active · ${stats.highPriority} high-priority`,
+            subColor: 'text-muted-foreground',
+            tileColor: 'border-border/50 text-foreground',
+            tileBg: 'bg-card',
+            icon: Activity,
+          },
+        ];
+
+        return (
+          <div
+            className={cn(
+              'rounded-xl border p-1',
+              // Subtle glow frame around the KPI band in boardroom mode
+              'border-primary/20 shadow-[0_0_0_1px_hsl(var(--primary)/0.08),0_4px_24px_-4px_hsl(var(--primary)/0.12)]',
+              prefersReducedMotion ? '' : 'transition-shadow duration-500',
+            )}
+          >
+            <div className="grid grid-cols-5 gap-1">
+              {boardroomTiles.map(({ id, label, value, sub, subColor, tileColor, tileBg, icon: TileIcon }) => (
+                <div
+                  key={id}
+                  className={cn(
+                    'flex flex-col justify-between rounded-lg border px-4 py-4',
+                    tileColor,
+                    tileBg,
+                  )}
+                >
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                    <TileIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                    {label}
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-[2rem] font-semibold leading-none tabular-nums tracking-tight">{value}</p>
+                    <p className={cn('mt-1.5 text-[11px] leading-snug', subColor)}>{sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })() : (
+        <div className="grid grid-cols-12 items-start gap-5 lg:gap-6">
           <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
             <OperationalWorkQueue scenarios={filteredScenarios} />
             <OperationalTimeline scenarios={filteredScenarios} />
           </div>
-        )}
 
-        <div className={cn('col-span-12', boardroomMode ? 'lg:col-span-12' : 'lg:col-span-6')}>
-          <ExecutiveSignalCard
-            scenarios={scenarios}
-            dataUpdatedAt={dataUpdatedAt}
-            briefing={briefingState.briefing}
-            isLoading={briefingState.isLoading}
-            error={briefingState.error}
-            boardroomMode={boardroomMode}
-            onOpenSupportingSignals={() => setSupportingOpen(true)}
-          />
-          {activeFilters.length > 0 && (
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              {activeFilters.map((filter) => (
-                <button key={filter} onClick={() => toggleFilter(filter)} className={cn('inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>{filter}<ArrowRight className="h-3 w-3" /></button>
-              ))}
-              <button onClick={() => setActiveFilters([])} className={cn('rounded-full border border-border/60 px-2.5 py-1 text-[11px] text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Clear filters</button>
-            </div>
-          )}
-          <div className={cn('grid gap-4 lg:gap-5', boardroomMode ? 'grid-cols-2 xl:grid-cols-3' : 'grid-cols-2 xl:grid-cols-3')}>
-            {kpiCards.slice(0, boardroomMode ? 4 : 5).map((card) => {
-              const config = KPI_CONFIG[card.key];
-              return (
+          <div className="col-span-12 lg:col-span-6">
+            <ExecutiveSignalCard
+              scenarios={scenarios}
+              dataUpdatedAt={dataUpdatedAt}
+              briefing={briefingState.briefing}
+              isLoading={briefingState.isLoading}
+              error={briefingState.error}
+              boardroomMode={boardroomMode}
+              onOpenSupportingSignals={() => setSupportingOpen(true)}
+            />
+            {activeFilters.length > 0 && (
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                {activeFilters.map((filter) => (
+                  <button key={filter} onClick={() => toggleFilter(filter)} className={cn('inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] text-primary', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>{filter}<ArrowRight className="h-3 w-3" /></button>
+                ))}
+                <button onClick={() => setActiveFilters([])} className={cn('rounded-full border border-border/60 px-2.5 py-1 text-[11px] text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Clear filters</button>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-4 lg:gap-5 xl:grid-cols-3">
+              {kpiCards.slice(0, 5).map((card) => {
+                const config = KPI_CONFIG[card.key];
+                return (
                   <FlippableKPICard
-                  key={card.key}
-                  label={config.title}
-                  subtitle={config.subtitle}
-                  value={card.value}
-                  icon={card.icon}
-                  tooltip={config.tooltip}
-                  breakdown={card.breakdown}
-                  scenarios={card.scenarios}
-                  emphasis={card.emphasis}
-                  boardroomMode={boardroomMode}
-                  onClick={() => handleKpiAction(card.filterKey)}
-                  actionLabel={card.filterKey ? (activeFilters.includes(card.filterKey) ? 'Remove filter' : 'Apply filter') : 'View all events'}
-                  isActive={card.filterKey ? activeFilters.includes(card.filterKey) : false}
-                  onBreakdownClick={(type) => handleTypeClick(null, type)}
-                />
-              );
-            })}
-            <CustomerImpactKPICard scenarios={scenarios} onClick={() => navigate('/events?lifecycle=Event')} boardroomMode={boardroomMode} />
+                    key={card.key}
+                    label={config.title}
+                    subtitle={config.subtitle}
+                    value={card.value}
+                    icon={card.icon}
+                    tooltip={config.tooltip}
+                    breakdown={card.breakdown}
+                    scenarios={card.scenarios}
+                    emphasis={card.emphasis}
+                    boardroomMode={boardroomMode}
+                    onClick={() => handleKpiAction(card.filterKey)}
+                    actionLabel={card.filterKey ? (activeFilters.includes(card.filterKey) ? 'Remove filter' : 'Apply filter') : 'View all events'}
+                    isActive={card.filterKey ? activeFilters.includes(card.filterKey) : false}
+                    onBreakdownClick={(type) => handleTypeClick(null, type)}
+                  />
+                );
+              })}
+              <CustomerImpactKPICard scenarios={scenarios} onClick={() => navigate('/events?lifecycle=Event')} boardroomMode={boardroomMode} />
+            </div>
+            <ReadinessStrip scenarios={filteredScenarios} />
           </div>
-          {!boardroomMode && <ReadinessStrip scenarios={filteredScenarios} />}
-        </div>
 
-        {!boardroomMode && (
           <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
             <SafetyRiskPanel scenarios={filteredScenarios} />
             <CrewWorkloadPanel scenarios={filteredScenarios} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <SupportingSignalsSheet
         open={supportingOpen}
