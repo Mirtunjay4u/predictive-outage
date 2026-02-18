@@ -22,6 +22,7 @@ import { ExecutiveSignalCard } from '@/components/dashboard/ExecutiveSignalCard'
 import { SupportingSignalsSheet } from '@/components/dashboard/SupportingSignalsSheet';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
+import { supabase } from '@/integrations/supabase/client';
 
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
   'Total Events': { title: 'All Tracked Events', subtitle: 'All outage-related events currently monitored', tooltip: 'Complete inventory of events across all lifecycle stages.' },
@@ -32,6 +33,25 @@ const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: str
 };
 
 type KpiFilterKey = 'Pre-Event' | 'Active Events' | 'High Priority' | 'Post-Event';
+type PolicyAction = {
+  action?: string;
+  reason?: string;
+  remediation?: string;
+};
+
+type EscalationFlag = string | { flag?: string; label?: string };
+
+type EtrBand = {
+  band?: string;
+  confidence?: string;
+};
+
+type PolicyResult = {
+  allowedActions?: PolicyAction[];
+  blockedActions?: PolicyAction[];
+  escalationFlags?: EscalationFlag[];
+  etrBand?: EtrBand;
+};
 const HAZARD_FALLBACK = 'heavy rain';
 
 function getOutageBreakdown(scenarios: Scenario[]) {
@@ -109,6 +129,10 @@ export default function Dashboard() {
   const [selectedSection, setSelectedSection] = useState<'drivers' | 'assets' | 'uncertainty' | 'tradeoffs' | 'actions'>('drivers');
   const [selectedFeeder, setSelectedFeeder] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<KpiFilterKey[]>([]);
+  const [policyStatus, setPolicyStatus] = useState<'idle' | 'evaluating' | 'success' | 'error'>('idle');
+  const [policyResult, setPolicyResult] = useState<PolicyResult | null>(null);
+  const [policyError, setPolicyError] = useState<string | null>(null);
+  const [lastGoodPolicyResult, setLastGoodPolicyResult] = useState<PolicyResult | null>(null);
 
   const preEventScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Event');
@@ -147,6 +171,36 @@ export default function Dashboard() {
 
   const scenarioName = scenarios[0]?.name ?? 'Regional Preparedness Drill';
   const hazard = getScenarioHazard(scenarios);
+  const scenarioPayload = scenarios[0] ?? null;
+
+  const runPolicyCheck = async () => {
+    if (!scenarioPayload) {
+      setPolicyStatus('error');
+      setPolicyError('Policy check is unavailable until a scenario is loaded.');
+      return;
+    }
+
+    setPolicyStatus('evaluating');
+    setPolicyError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('copilot-evaluate', {
+        body: scenarioPayload,
+      });
+
+      if (error) throw error;
+
+      const nextResult = (data ?? {}) as PolicyResult;
+      setPolicyResult(nextResult);
+      setLastGoodPolicyResult(nextResult);
+      setPolicyStatus('success');
+    } catch {
+      setPolicyStatus('error');
+      setPolicyError('Policy service unavailable — showing last evaluation');
+    }
+  };
+
+  const effectivePolicyResult = policyResult ?? lastGoodPolicyResult;
 
   const riskDrivers = useMemo(() => {
     const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
@@ -284,6 +338,93 @@ export default function Dashboard() {
         onOpenSupportingSignals={() => setSupportingOpen(true)}
         onBriefingStateChange={({ briefing, isLoading, error }) => setBriefingState({ briefing, isLoading, error })}
       />
+
+      <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold">Operational Policy Evaluation</h2>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runPolicyCheck}
+            disabled={policyStatus === 'evaluating' || !scenarioPayload}
+            className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
+          >
+            {policyStatus === 'evaluating' ? 'Evaluating…' : 'Run Policy Check'}
+          </Button>
+        </div>
+
+        {policyStatus === 'error' && (
+          <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {lastGoodPolicyResult ? 'Policy service unavailable — showing last evaluation' : (policyError ?? 'Policy check failed. Please try again.')}
+          </p>
+        )}
+
+        {!effectivePolicyResult && <p className="mt-3 text-sm text-muted-foreground">No evaluation run yet.</p>}
+
+        {effectivePolicyResult && (
+          <div className="mt-3 space-y-3 text-sm">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Allowed Actions</p>
+              {(effectivePolicyResult.allowedActions?.length ?? 0) > 0 ? (
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {effectivePolicyResult.allowedActions?.map((item: PolicyAction, index: number) => (
+                    <li key={`allowed-${index}`}>
+                      <span className="font-medium">{item?.action ?? 'Action'}</span>
+                      {item?.reason ? ` — ${item.reason}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No allowed actions returned.</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Blocked Actions</p>
+              {(effectivePolicyResult.blockedActions?.length ?? 0) > 0 ? (
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {effectivePolicyResult.blockedActions?.map((item: PolicyAction, index: number) => (
+                    <li key={`blocked-${index}`}>
+                      <span className="font-medium">{item?.action ?? 'Action'}</span>
+                      {item?.reason ? ` — ${item.reason}` : ''}
+                      {item?.remediation ? ` (Remediation: ${item.remediation})` : ''}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No blocked actions returned.</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
+              {(effectivePolicyResult.escalationFlags?.length ?? 0) > 0 ? (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {effectivePolicyResult.escalationFlags?.map((flag: EscalationFlag, index: number) => (
+                    <Badge key={`flag-${index}`} variant="outline" className="text-[10px]">
+                      {typeof flag === 'string' ? flag : (flag?.flag ?? flag?.label ?? `Flag ${index + 1}`)}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No escalation flags.</p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">ETR Band</p>
+              {effectivePolicyResult.etrBand ? (
+                <p className="mt-1">
+                  <Badge variant="outline" className="mr-2 text-[10px]">{effectivePolicyResult.etrBand?.band ?? 'Unknown band'}</Badge>
+                  <span className="text-muted-foreground">Confidence: {effectivePolicyResult.etrBand?.confidence ?? 'Unknown'}</span>
+                </p>
+              ) : (
+                <p className="mt-1 text-muted-foreground">No ETR band returned.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
 
       {topFeeders.length > 0 && (
         <section className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
