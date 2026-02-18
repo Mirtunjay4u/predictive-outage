@@ -433,16 +433,17 @@ export default function Dashboard() {
     {
       label: 'Stabilization update',
       patch: {
-        severity: 3,
-        customersAffected: 1880,
-        customers_impacted: 1880,
-        crews: { available: 8, enRoute: 2 },
-        crews_available: 8,
-        crews_enroute: 2,
+        severity: 2,
+        customersAffected: 980,
+        customers_impacted: 980,
+        crews: { available: 14, enRoute: 1 },
+        crews_available: 14,
+        crews_enroute: 1,
         criticalLoads: [
           { name: 'Regional Hospital', backupHoursRemaining: 5.4 },
           { name: 'Water Treatment Plant', backupHoursRemaining: 7.1 },
         ],
+        dataQuality: { freshnessMinutes: 1 },
       },
       waitMs: 1400,
       after: 'policy',
