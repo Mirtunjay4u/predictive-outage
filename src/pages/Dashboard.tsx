@@ -751,9 +751,12 @@ export default function Dashboard() {
   const policyView = policyResult ?? lastGoodPolicyResult;
   const policyEscalationFlags = (policyView?.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
   const policyBlockedActions = policyView?.blockedActions ?? [];
+  // deenergize_section is a permanent safety constraint (always blocked when critical loads exist),
+  // not an operational BLOCK signal. Exclude it so the badge correctly reflects operational gate state.
+  const operationalBlockedActions = policyBlockedActions.filter((a) => a?.action !== 'deenergize_section');
   const policyEtrBand = policyView?.etrBand ?? null;
-  const hasBlockingEscalation = policyEscalationFlags.some((flag) => ['critical_load_at_risk', 'critical_backup_window_short', 'safety_block', 'hard_block'].includes(flag));
-  const policyGate: 'PASS' | 'WARN' | 'BLOCK' = (policyBlockedActions.length > 0 || hasBlockingEscalation)
+  const hasBlockingEscalation = policyEscalationFlags.some((flag) => ['critical_backup_window_short', 'safety_block', 'hard_block'].includes(flag));
+  const policyGate: 'PASS' | 'WARN' | 'BLOCK' = (operationalBlockedActions.length > 0 || hasBlockingEscalation)
     ? 'BLOCK'
     : (policyEscalationFlags.length > 0 || policyEtrBand?.band === 'LOW')
       ? 'WARN'
