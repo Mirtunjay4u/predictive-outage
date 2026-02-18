@@ -55,6 +55,19 @@ type PolicyResult = {
   etrBand?: EtrBand;
   safetyConstraints?: Array<{ severity?: string; triggered?: boolean }>;
 };
+
+type DemoLogEntry = {
+  ts: string;
+  msg: string;
+};
+
+type DemoStep = {
+  label: string;
+  patch: Record<string, unknown>;
+  waitMs: number;
+  after?: 'policy' | 'briefing' | 'none';
+};
+
 const HAZARD_FALLBACK = 'heavy rain';
 
 function getOutageBreakdown(scenarios: Scenario[]) {
@@ -254,7 +267,16 @@ export default function Dashboard() {
   const [lastEvaluatedAt, setLastEvaluatedAt] = useState<string | null>(null);
   const [autoRunEnabled, setAutoRunEnabled] = useState(true);
   const [policySummary, setPolicySummary] = useState<string | null>(null);
+  const [demoModeEnabled, setDemoModeEnabled] = useState(false);
+  const [demoRunning, setDemoRunning] = useState(false);
+  const [demoStepIndex, setDemoStepIndex] = useState(-1);
+  const [demoLastRunAt, setDemoLastRunAt] = useState<string | null>(null);
+  const [demoLog, setDemoLog] = useState<DemoLogEntry[]>([]);
+  const [demoScenarioOverride, setDemoScenarioOverride] = useState<Scenario | null>(null);
+  const [demoBriefingTick, setDemoBriefingTick] = useState(0);
   const baseNemotronInvokeRef = useRef(supabase.functions.invoke.bind(supabase.functions));
+  const demoTimerRef = useRef<number | null>(null);
+  const demoRunNonceRef = useRef(0);
 
   const preEventScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Pre-Event');
   const activeScenarios = scenarios.filter((s) => s.lifecycle_stage === 'Event');
@@ -293,13 +315,139 @@ export default function Dashboard() {
 
   const scenarioName = scenarios[0]?.name ?? 'Regional Preparedness Drill';
   const hazard = getScenarioHazard(scenarios);
-  // No explicit active scenario selector exists yet, so default to first scenario.
-  const scenarioPayload = scenarios[0] ?? null;
 
-  const runPolicyCheck = useCallback(async () => {
+  const applyDemoPatch = useCallback((baseScenario: Scenario, patch: Record<string, unknown>): Scenario => {
+    const merged = {
+      ...baseScenario,
+      ...patch,
+      assets: [
+        ...(((patch.assets as Array<Record<string, unknown>> | undefined)
+          ?? ((baseScenario as unknown as Record<string, unknown>).assets as Array<Record<string, unknown>> | undefined)
+          ?? [])),
+      ],
+      criticalLoads: [
+        ...(((patch.criticalLoads as Array<Record<string, unknown>> | undefined)
+          ?? ((baseScenario as unknown as Record<string, unknown>).criticalLoads as Array<Record<string, unknown>> | undefined)
+          ?? [])),
+      ],
+      crews: {
+        ...(((baseScenario as unknown as Record<string, unknown>).crews as Record<string, unknown> | undefined) ?? {}),
+        ...((patch.crews as Record<string, unknown> | undefined) ?? {}),
+      },
+      dataQuality: {
+        ...(((baseScenario as unknown as Record<string, unknown>).dataQuality as Record<string, unknown> | undefined) ?? {}),
+        ...((patch.dataQuality as Record<string, unknown> | undefined) ?? {}),
+      },
+    };
+
+    return merged as Scenario;
+  }, []);
+
+  const logDemo = useCallback((msg: string) => {
+    const ts = new Date().toISOString();
+    setDemoLog((prev) => [...prev, { ts, msg }].slice(-20));
+  }, []);
+
+  const getScenarioPayload = useCallback(() => {
+    return (demoModeEnabled ? demoScenarioOverride : null) ?? scenarios[0] ?? null;
+  }, [demoModeEnabled, demoScenarioOverride, scenarios]);
+
+  const scenarioPayload = getScenarioPayload();
+
+  const demoSteps = useMemo<DemoStep[]>(() => [
+    {
+      label: 'Storm cell intensifies',
+      patch: {
+        severity: 3,
+        hazard: 'Severe thunderstorms',
+        outage_type: 'Thunderstorm',
+        customersAffected: 1350,
+        customers_impacted: 1350,
+        dataQuality: { freshnessMinutes: 7 },
+      },
+      waitMs: 1300,
+      after: 'none',
+    },
+    {
+      label: 'Critical load risk rises',
+      patch: {
+        severity: 4,
+        customersAffected: 2140,
+        customers_impacted: 2140,
+        assets: [
+          { id: 'FEEDER-A12', vegetationExposure: 'high', loadCriticality: 'high', ageYears: 37 },
+          { id: 'FEEDER-B07', vegetationExposure: 'med', loadCriticality: 'high', ageYears: 28 },
+        ],
+        criticalLoads: [
+          { name: 'Regional Hospital', backupHoursRemaining: 3.5 },
+          { name: 'Water Treatment Plant', backupHoursRemaining: 5.2 },
+        ],
+      },
+      waitMs: 1600,
+      after: 'policy',
+    },
+    {
+      label: 'Crew ETA updated',
+      patch: {
+        crews: { available: 6, enRoute: 4 },
+        crews_available: 6,
+        crews_enroute: 4,
+        dataQuality: { freshnessMinutes: 4 },
+      },
+      waitMs: 1200,
+      after: 'none',
+    },
+    {
+      label: 'Secondary feeder impact confirmed',
+      patch: {
+        severity: 5,
+        customersAffected: 3025,
+        customers_impacted: 3025,
+        assets: [
+          { id: 'FEEDER-A12', vegetationExposure: 'high', loadCriticality: 'high', ageYears: 37 },
+          { id: 'FEEDER-C19', vegetationExposure: 'high', loadCriticality: 'med', ageYears: 41 },
+          { id: 'FEEDER-D03', vegetationExposure: 'med', loadCriticality: 'high', ageYears: 24 },
+        ],
+        criticalLoads: [
+          { name: 'Regional Hospital', backupHoursRemaining: 2.2 },
+          { name: 'Telecom Hub', backupHoursRemaining: 4.8 },
+        ],
+      },
+      waitMs: 1700,
+      after: 'policy',
+    },
+    {
+      label: 'AI briefing refresh checkpoint',
+      patch: {
+        dataQuality: { freshnessMinutes: 2 },
+      },
+      waitMs: 1200,
+      after: 'briefing',
+    },
+    {
+      label: 'Stabilization update',
+      patch: {
+        severity: 3,
+        customersAffected: 1880,
+        customers_impacted: 1880,
+        crews: { available: 8, enRoute: 2 },
+        crews_available: 8,
+        crews_enroute: 2,
+        criticalLoads: [
+          { name: 'Regional Hospital', backupHoursRemaining: 5.4 },
+          { name: 'Water Treatment Plant', backupHoursRemaining: 7.1 },
+        ],
+      },
+      waitMs: 1400,
+      after: 'policy',
+    },
+  ], []);
+
+  const runPolicyCheck = useCallback(async (overridePayload?: Scenario | null) => {
     const start = Date.now();
+    const payload = overridePayload ?? getScenarioPayload();
 
-    if (!scenarioPayload) {
+    if (!payload) {
       setPolicyLatencyMs(Date.now() - start);
       setPolicyStatus('error');
       setPolicyError('Policy check is unavailable until a scenario is loaded.');
@@ -311,7 +459,7 @@ export default function Dashboard() {
 
     try {
       const { data, error } = await supabase.functions.invoke('copilot-evaluate', {
-        body: scenarioPayload,
+        body: payload,
       });
 
       if (error) throw error;
@@ -328,7 +476,7 @@ export default function Dashboard() {
       setPolicyStatus('error');
       setPolicyError('Policy service unavailable — showing last evaluation');
     }
-  }, [scenarioPayload]);
+  }, [getScenarioPayload]);
 
   useEffect(() => {
     if (!autoRunEnabled) return;
@@ -403,6 +551,150 @@ export default function Dashboard() {
       supabase.functions.invoke = baseInvoke;
     };
   }, [executiveBriefingPrompt, gateReason, policyGate, policyView, scenarioPayload]);
+
+  useEffect(() => {
+    return () => {
+      if (demoTimerRef.current !== null) {
+        window.clearTimeout(demoTimerRef.current);
+      }
+      demoRunNonceRef.current += 1;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!demoModeEnabled && demoRunning) {
+      demoRunNonceRef.current += 1;
+      if (demoTimerRef.current !== null) {
+        window.clearTimeout(demoTimerRef.current);
+      }
+      setDemoRunning(false);
+      setDemoStepIndex(-1);
+      setDemoScenarioOverride(null);
+    }
+  }, [demoModeEnabled, demoRunning]);
+
+  const refreshAIBriefing = useCallback(async (overridePayload?: Scenario | null) => {
+    try {
+      await supabase.functions.invoke('nemotron', {
+        body: {
+          prompt: executiveBriefingPrompt,
+          context: JSON.stringify({
+            scenario: overridePayload ?? getScenarioPayload(),
+            policyGate,
+            gateReason,
+            policyView,
+            policyContext: buildPolicyContext(policyView),
+          }),
+        },
+      });
+      setDemoBriefingTick((tick) => tick + 1);
+      logDemo('AI briefing refresh requested.');
+    } catch {
+      logDemo('AI briefing refresh failed; retained last good briefing.');
+    }
+  }, [executiveBriefingPrompt, gateReason, getScenarioPayload, logDemo, policyGate, policyView]);
+
+  const runDemoStep = useCallback(async (index: number) => {
+    if (!demoModeEnabled || index >= demoSteps.length) {
+      if (index >= demoSteps.length) {
+        setDemoRunning(false);
+        setDemoStepIndex(-1);
+        setDemoLastRunAt(new Date().toISOString());
+      }
+      return;
+    }
+
+    const runNonce = demoRunNonceRef.current;
+    const step = demoSteps[index];
+    const baseScenario = getScenarioPayload();
+    if (!baseScenario) {
+      logDemo('Demo stopped: no scenario loaded.');
+      setDemoRunning(false);
+      setDemoStepIndex(-1);
+      return;
+    }
+
+    setDemoStepIndex(index);
+    const updatedScenario = applyDemoPatch(baseScenario, step.patch);
+    setDemoScenarioOverride(updatedScenario);
+    logDemo(step.label);
+
+    if (step.after === 'policy') {
+      try {
+        await runPolicyCheck(updatedScenario);
+      } catch {
+        logDemo('Policy run failed; retained last good policy result.');
+      }
+      await refreshAIBriefing(updatedScenario);
+    }
+
+    if (step.after === 'briefing') {
+      await refreshAIBriefing(updatedScenario);
+    }
+
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      demoTimerRef.current = window.setTimeout(() => {
+        demoTimerRef.current = null;
+        resolve();
+      }, step.waitMs);
+    });
+
+    if (demoRunNonceRef.current !== runNonce) return;
+
+    if (index + 1 >= demoSteps.length) {
+      setDemoRunning(false);
+      setDemoStepIndex(-1);
+      setDemoLastRunAt(new Date().toISOString());
+      logDemo('Demo playback complete.');
+      return;
+    }
+
+    void runDemoStep(index + 1);
+  }, [applyDemoPatch, demoModeEnabled, demoSteps, getScenarioPayload, logDemo, prefersReducedMotion, refreshAIBriefing, runPolicyCheck]);
+
+  const handleRunDemo = useCallback(() => {
+    if (demoRunning || !demoModeEnabled) return;
+    const seedScenario = getScenarioPayload();
+    if (!seedScenario) {
+      logDemo('Demo unavailable until a scenario is loaded.');
+      return;
+    }
+
+    demoRunNonceRef.current += 1;
+    if (demoTimerRef.current !== null) {
+      window.clearTimeout(demoTimerRef.current);
+    }
+
+    setDemoLog([]);
+    setDemoScenarioOverride(seedScenario);
+    setDemoRunning(true);
+    setDemoStepIndex(-1);
+    setDemoLastRunAt(null);
+
+    if (!prefersReducedMotion) {
+      void runDemoStep(0);
+    } else {
+      logDemo('Reduced motion enabled: step through playback manually.');
+    }
+  }, [demoModeEnabled, demoRunning, getScenarioPayload, logDemo, prefersReducedMotion, runDemoStep]);
+
+  const handleNextDemoStep = useCallback(() => {
+    if (!demoModeEnabled || !demoRunning || !prefersReducedMotion) return;
+    const nextIndex = demoStepIndex + 1;
+    if (nextIndex >= demoSteps.length) {
+      setDemoRunning(false);
+      setDemoStepIndex(-1);
+      setDemoLastRunAt(new Date().toISOString());
+      logDemo('Demo playback complete.');
+      return;
+    }
+
+    void runDemoStep(nextIndex);
+  }, [demoModeEnabled, demoRunning, demoStepIndex, demoSteps.length, logDemo, prefersReducedMotion, runDemoStep]);
 
   const riskDrivers = useMemo(() => {
     const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
@@ -505,6 +797,65 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <section className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Scenario Playback (GTC Demo)</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">Demo mode uses local playback; policy + AI calls remain real.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Now Playing: {demoRunning && demoStepIndex >= 0 ? demoSteps[demoStepIndex]?.label : 'Idle'} ({demoRunning && demoStepIndex >= 0 ? demoStepIndex + 1 : 0}/{demoSteps.length})
+            </p>
+            {demoLastRunAt && <p className="text-[11px] text-muted-foreground">Last run: {demoLastRunAt.slice(5, 16).replace('T', ' ')}</p>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5 rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={demoModeEnabled}
+                onChange={(event) => {
+                  const enabled = event.target.checked;
+                  setDemoModeEnabled(enabled);
+                  if (!enabled) {
+                    setDemoScenarioOverride(null);
+                  }
+                }}
+                className="h-3.5 w-3.5 rounded border-border"
+              />
+              Demo Mode
+            </label>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRunDemo}
+              disabled={!demoModeEnabled || demoRunning || !scenarioPayload}
+              className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
+            >
+              {demoRunning ? 'Running…' : 'Run Demo'}
+            </Button>
+            {prefersReducedMotion && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleNextDemoStep}
+                disabled={!demoModeEnabled || !demoRunning}
+                className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
+              >
+                Next Step
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="mt-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Playback Log</p>
+          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+            {demoLog.slice(-5).map((entry, index) => (
+              <li key={`${entry.ts}-${index}`} className="font-mono">{entry.ts.slice(11, 19)} · {entry.msg}</li>
+            ))}
+            {demoLog.length === 0 && <li className="text-muted-foreground">No demo activity yet.</li>}
+          </ul>
+        </div>
+      </section>
+
       <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -535,6 +886,7 @@ export default function Dashboard() {
 
       {isAIBriefingAllowed ? (
         <AIExecutiveBriefingPanel
+          key={`ai-briefing-${demoBriefingTick}`}
           scenarios={scenarios}
           dataUpdatedAt={dataUpdatedAt}
           boardroomMode={boardroomMode}
