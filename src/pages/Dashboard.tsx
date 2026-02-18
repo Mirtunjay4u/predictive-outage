@@ -443,6 +443,126 @@ export default function Dashboard() {
     },
   ], []);
 
+  /** Maps a DB Scenario to the ScenarioInput shape expected by the copilot-evaluate edge function. */
+  const buildPolicyPayload = useCallback(async (scenario: Scenario) => {
+    // ── Severity: blend priority rank + customers_impacted bracket ──────────
+    const priorityScore = scenario.priority === 'high' ? 5 : scenario.priority === 'low' ? 1 : 3;
+    const customers = scenario.customers_impacted ?? 0;
+    const customerScore = customers > 5000 ? 5 : customers > 1000 ? 4 : customers > 500 ? 3 : customers > 100 ? 2 : 1;
+    const severity = Math.round((priorityScore + customerScore) / 2);
+
+    // ── Phase: map lifecycle_stage to edge function enum ───────────────────
+    const phaseMap: Record<string, 'PRE_EVENT' | 'ACTIVE' | 'POST_EVENT' | 'UNKNOWN'> = {
+      'Pre-Event': 'PRE_EVENT',
+      'Event': 'ACTIVE',
+      'Post-Event': 'POST_EVENT',
+    };
+    const phase = phaseMap[scenario.lifecycle_stage] ?? 'UNKNOWN';
+
+    // ── Hazard type: map outage_type to edge function enum ─────────────────
+    const hazardMap: Record<string, 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN'> = {
+      Storm: 'STORM', 'Snow Storm': 'STORM', 'High Wind': 'STORM', Lightning: 'STORM',
+      'Ice/Snow': 'STORM', Heatwave: 'STORM',
+      Wildfire: 'WILDFIRE',
+      Flood: 'RAIN', 'Heavy Rain': 'RAIN',
+    };
+    const hazardType = scenario.outage_type ? (hazardMap[scenario.outage_type] ?? 'UNKNOWN') : 'UNKNOWN';
+
+    // ── Assets: fetch from event_assets join table ─────────────────────────
+    let assets: Array<{ id: string; type: string; ageYears?: number; vegetationExposure?: number; loadCriticality?: number }> = [];
+    try {
+      const { data: eventAssets } = await supabase
+        .from('event_assets')
+        .select('asset_id, assets(id, name, asset_type, meta)')
+        .eq('event_id', scenario.id);
+
+      if (eventAssets && eventAssets.length > 0) {
+        assets = eventAssets.map((ea) => {
+          const asset = ea.assets as { id: string; name: string; asset_type: string; meta: Record<string, unknown> | null } | null;
+          const meta = (asset?.meta ?? {}) as Record<string, unknown>;
+          return {
+            id: asset?.id ?? ea.asset_id,
+            type: asset?.asset_type ?? 'Transformer',
+            ageYears: typeof meta.age_years === 'number' ? meta.age_years : undefined,
+            vegetationExposure: typeof meta.vegetation_exposure === 'number' ? meta.vegetation_exposure : undefined,
+            loadCriticality: scenario.has_critical_load ? 0.9 : 0.4,
+          };
+        });
+      } else {
+        // Synthetic stubs from ID fields when no event_assets rows exist
+        const stubs = [
+          scenario.fault_id && { id: scenario.fault_id, type: 'Fault' },
+          scenario.feeder_id && { id: scenario.feeder_id, type: 'Feeder' },
+          scenario.transformer_id && { id: scenario.transformer_id, type: 'Transformer' },
+        ].filter(Boolean) as Array<{ id: string; type: string }>;
+        assets = stubs.map((s) => ({
+          ...s,
+          ageYears: 10,
+          vegetationExposure: 0.5,
+          loadCriticality: scenario.has_critical_load ? 0.85 : 0.5,
+        }));
+      }
+    } catch {
+      // Non-fatal — function normalizes missing assets gracefully
+    }
+
+    // ── Crews: fetch assigned crews + available pool ───────────────────────
+    let crewsAvailable = 0;
+    let crewsEnRoute = 0;
+    try {
+      const { data: assignedCrews } = await supabase
+        .from('crews')
+        .select('status')
+        .eq('assigned_event_id', scenario.id);
+
+      const { data: availableCrews } = await supabase
+        .from('crews')
+        .select('id')
+        .eq('status', 'available')
+        .is('assigned_event_id', null);
+
+      crewsEnRoute = (assignedCrews ?? []).filter((c) => c.status === 'en_route' || c.status === 'on_site').length;
+      crewsAvailable = (availableCrews ?? []).length;
+    } catch {
+      // Non-fatal — function defaults crew counts to 0
+    }
+
+    // ── Critical loads: map from scenario fields ───────────────────────────
+    const criticalLoadTypes = Array.isArray(scenario.critical_load_types)
+      ? (scenario.critical_load_types as string[])
+      : [];
+    const criticalLoadTypeMap: Record<string, 'HOSPITAL' | 'WATER' | 'TELECOM' | 'SHELTER' | 'OTHER'> = {
+      Hospital: 'HOSPITAL', Water: 'WATER', Telecom: 'TELECOM', Shelter: 'SHELTER',
+    };
+    const criticalLoads = scenario.has_critical_load
+      ? criticalLoadTypes.map((t) => ({
+          type: criticalLoadTypeMap[t] ?? ('OTHER' as const),
+          name: t,
+          backupHoursRemaining: scenario.backup_runtime_remaining_hours ?? undefined,
+        }))
+      : [];
+
+    return {
+      scenarioId: scenario.id,
+      hazardType,
+      phase,
+      severity,
+      customersAffected: scenario.customers_impacted ?? 0,
+      assets,
+      criticalLoads,
+      crews: { available: crewsAvailable, enRoute: crewsEnRoute },
+      lastUpdated: scenario.event_last_update_time ?? scenario.updated_at,
+      dataQuality: {
+        completeness: assets.length > 0 ? 0.8 : 0.5,
+        freshnessMinutes: 15,
+      },
+      operatorContext: {
+        region: scenario.service_area ?? undefined,
+        role: scenario.operator_role ?? undefined,
+      },
+    };
+  }, []);
+
   const runPolicyCheck = useCallback(async (overridePayload?: Scenario | null) => {
     const start = Date.now();
     const payload = overridePayload ?? getScenarioPayload();
@@ -458,8 +578,9 @@ export default function Dashboard() {
     setPolicyError(null);
 
     try {
+      const mappedPayload = await buildPolicyPayload(payload);
       const { data, error } = await supabase.functions.invoke('copilot-evaluate', {
-        body: payload,
+        body: mappedPayload,
       });
 
       if (error) throw error;
@@ -476,7 +597,7 @@ export default function Dashboard() {
       setPolicyStatus('error');
       setPolicyError('Policy service unavailable — showing last evaluation');
     }
-  }, [getScenarioPayload]);
+  }, [buildPolicyPayload, getScenarioPayload]);
 
   useEffect(() => {
     if (!autoRunEnabled) return;
