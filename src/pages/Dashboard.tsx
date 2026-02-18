@@ -945,7 +945,7 @@ export default function Dashboard() {
             <Button
               size="sm"
               variant="outline"
-              onClick={runPolicyCheck}
+              onClick={() => void runPolicyCheck()}
               disabled={policyStatus === 'evaluating' || !scenarioPayload}
               className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}
             >
