@@ -2,6 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
+  formatEtrBand,
+  formatBandWidth,
+  formatConfidenceFull,
+  confidenceBadgeClass,
+  formatRuntimeHours,
+} from "@/lib/etr-format";
+import {
   X,
   Bot,
   MapPin,
@@ -30,7 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
-import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
+import type { ScenarioWithIntelligence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
 interface EventDetailDrawerProps {
   event: ScenarioWithIntelligence | null;
@@ -344,23 +351,11 @@ function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
 
   if (!hasEtrData) return null;
 
-  const formatEtrTime = (dateStr: string | null) => {
-    if (!dateStr) return "—";
-    return format(new Date(dateStr), "h:mm a");
-  };
-
-  const getConfidenceBadgeStyle = (confidence: EtrConfidence | null) => {
-    switch (confidence) {
-      case "HIGH":
-        return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30";
-      case "MEDIUM":
-        return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30";
-      case "LOW":
-        return "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30";
-      default:
-        return "bg-muted text-muted-foreground border-border";
-    }
-  };
+  // ETR formatting via shared utility
+  const etrBand = formatEtrBand(event.etr_earliest, event.etr_latest);
+  const etrBandWidth = formatBandWidth(event.etr_band_hours);
+  const confidenceLabel = formatConfidenceFull(event.etr_confidence);
+  const confidenceClass = confidenceBadgeClass(event.etr_confidence);
 
   const getRiskBadgeStyle = (risk: EtrRiskLevel | null) => {
     switch (risk) {
@@ -384,8 +379,8 @@ function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
           <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
             ETR Confidence
             {event.etr_confidence && (
-              <Badge variant="outline" className={`text-[9px] ${getConfidenceBadgeStyle(event.etr_confidence)}`}>
-                {event.etr_confidence}
+              <Badge variant="outline" className={`text-[9px] ${confidenceClass}`}>
+                {confidenceLabel}
               </Badge>
             )}
           </span>
@@ -399,17 +394,13 @@ function EtrConfidenceSection({ event }: { event: ScenarioWithIntelligence }) {
       <CollapsibleContent className="pt-2 pb-1">
         <div className="space-y-2">
           {/* ETR Band */}
-          {(event.etr_earliest || event.etr_latest) && (
+          {etrBand && (
             <div className="p-2.5 rounded-md bg-background border border-border">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">Restoration Window</span>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-mono text-foreground">{formatEtrTime(event.etr_earliest)}</span>
-                <span className="text-muted-foreground">→</span>
-                <span className="font-mono text-foreground">{formatEtrTime(event.etr_latest)}</span>
-              </div>
-              {event.etr_band_hours !== null && (
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide block mb-1">ETR</span>
+              <p className="text-sm font-semibold font-mono text-foreground">{etrBand}</p>
+              {etrBandWidth && (
                 <p className="text-[10px] text-muted-foreground mt-1.5">
-                  Band width: {event.etr_band_hours.toFixed(1)} hrs
+                  Band width: {etrBandWidth}
                 </p>
               )}
             </div>
@@ -512,8 +503,7 @@ function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
                 <div className="p-2 rounded-md bg-background border border-border">
                   <span className="text-[9px] text-muted-foreground uppercase tracking-wide block">Remaining</span>
                   <span className="text-base font-bold text-foreground">
-                    {event.backup_runtime_remaining_hours.toFixed(1)}
-                    <span className="text-xs font-normal text-muted-foreground ml-1">hrs</span>
+                    {formatRuntimeHours(event.backup_runtime_remaining_hours)}
                   </span>
                 </div>
               )}
@@ -521,8 +511,7 @@ function CriticalLoadSection({ event }: { event: ScenarioWithIntelligence }) {
                 <div className="p-2 rounded-md bg-background border border-border">
                   <span className="text-[9px] text-muted-foreground uppercase tracking-wide block">Threshold</span>
                   <span className="text-base font-bold text-foreground">
-                    {event.critical_escalation_threshold_hours.toFixed(1)}
-                    <span className="text-xs font-normal text-muted-foreground ml-1">hrs</span>
+                    {formatRuntimeHours(event.critical_escalation_threshold_hours)}
                   </span>
                 </div>
               )}
