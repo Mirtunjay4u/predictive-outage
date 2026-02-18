@@ -1050,29 +1050,40 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
               {/* ── Policy Status Badge ──────────────────────────────── */}
-              {policyView && (
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all duration-300',
-                    policyGate === 'BLOCK'
+              {/* Shows POLICY UNKNOWN (neutral) when no evaluation has run yet */}
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all duration-300',
+                  !policyView
+                    ? 'border-border/50 bg-muted/40 text-muted-foreground'
+                    : policyGate === 'BLOCK'
                       ? 'border-destructive/50 bg-destructive/10 text-destructive'
                       : policyGate === 'WARN'
                         ? 'border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300'
-                        : 'border-success/40 bg-success/10 text-success',
-                  )}
-                  aria-label={`Policy gate: ${policyGate}`}
-                >
-                  {policyGate === 'BLOCK' && <ShieldX className="h-2.5 w-2.5" />}
-                  {policyGate === 'WARN' && <ShieldAlert className="h-2.5 w-2.5" />}
-                  {policyGate === 'PASS' && <ShieldCheck className="h-2.5 w-2.5" />}
-                  {policyGate === 'BLOCK' ? 'POLICY BLOCKED' : policyGate === 'WARN' ? 'POLICY WARN' : 'POLICY CLEAR'}
-                </span>
-              )}
+                        : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+                )}
+                aria-label={`Policy gate: ${!policyView ? 'UNKNOWN' : policyGate}`}
+                title={policyView ? gateReason : 'No policy evaluation run yet.'}
+              >
+                {!policyView && <ShieldCheck className="h-2.5 w-2.5 opacity-40" />}
+                {policyView && policyGate === 'BLOCK' && <ShieldX className="h-2.5 w-2.5" />}
+                {policyView && policyGate === 'WARN' && <ShieldAlert className="h-2.5 w-2.5" />}
+                {policyView && policyGate === 'PASS' && <ShieldCheck className="h-2.5 w-2.5" />}
+                {!policyView
+                  ? 'POLICY UNKNOWN'
+                  : policyGate === 'BLOCK'
+                    ? 'POLICY BLOCKED'
+                    : policyGate === 'WARN'
+                      ? 'POLICY WARN'
+                      : 'POLICY CLEAR'}
+              </span>
               {/* ── Briefing Updated pulse ───────────────────────────── */}
-              {briefingPulse && policyView && (
+              {/* 1.2 s fade-in/out; suppressed if reduced-motion is preferred */}
+              {briefingPulse && (
                 <span
                   key={`pulse-${demoStepIndex}-${lastEvaluatedAt}`}
-                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary animate-pulse"
+                  style={prefersReducedMotion ? undefined : { animation: 'briefing-pulse-fade 1.2s ease-in-out forwards' }}
+                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
                   aria-live="polite"
                 >
                   <Sparkles className="h-2.5 w-2.5" />
@@ -1378,13 +1389,44 @@ export default function Dashboard() {
            Uses only div-based layout — no extra libraries.
       ────────────────────────────────────────────────────────────────────────── */}
       {(() => {
+        // ── Phase definitions with per-phase tooltips ─────────────────────
         const PHASES = [
-          { id: 'detection',    label: 'Detection',    step: 0 },
-          { id: 'risk-scoring', label: 'Risk Scoring', step: 1 },
-          { id: 'policy-check', label: 'Policy Check', step: 2 },
-          { id: 'ai-briefing',  label: 'AI Briefing',  step: 3 },
-          { id: 'dispatch',     label: 'Dispatch',     step: 4 },
-          { id: 'recovery',     label: 'Recovery',     step: 5 },
+          {
+            id: 'detection',
+            label: 'Detection',
+            step: 0,
+            tooltip: 'Sensor and GIS data ingestion; initial outage boundary established.',
+          },
+          {
+            id: 'risk-scoring',
+            label: 'Risk Scoring',
+            step: 1,
+            tooltip: 'Asset age, vegetation exposure, and load criticality scored by rule engine.',
+          },
+          {
+            id: 'policy-check',
+            label: 'Policy Check',
+            step: 2,
+            tooltip: 'Deterministic policy engine evaluates allowed and blocked actions.',
+          },
+          {
+            id: 'ai-briefing',
+            label: 'AI Briefing',
+            step: 3,
+            tooltip: 'Executive situation briefing generated; reflects current policy gate.',
+          },
+          {
+            id: 'dispatch',
+            label: 'Dispatch',
+            step: 4,
+            tooltip: 'Crew dispatch sequencing initiated; incident command notified.',
+          },
+          {
+            id: 'recovery',
+            label: 'Recovery',
+            step: 5,
+            tooltip: 'Restoration actions underway; ETR tracking active.',
+          },
         ] as const;
 
         // Map the 6 demo steps (0-indexed) → phases (0-indexed), clamped to 5.
@@ -1392,79 +1434,129 @@ export default function Dashboard() {
           ? Math.min(Math.floor((demoStepIndex / Math.max(1, demoSteps.length - 1)) * 5), 5)
           : -1;
 
-        const isBlocked = policyGate === 'BLOCK';
+        // Policy gate state for per-phase coloring.
+        const isGateBlock = policyGate === 'BLOCK';
+        const isGateWarn  = policyGate === 'WARN';
+        // Index of the Policy Check phase.
+        const POLICY_PHASE_IDX = 2;
 
         return (
-          <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm" role="region" aria-label="Operational phase timeline">
+          <div
+            className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm"
+            role="region"
+            aria-label="Operational phase timeline"
+          >
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Operational Phase
               </p>
               {demoRunning && demoStepIndex >= 0 && (
                 <span className="text-[10px] text-muted-foreground">
-                  Step {demoStepIndex + 1} / {demoSteps.length} — {demoSteps[demoStepIndex]?.label ?? ''}
+                  Step {demoStepIndex + 1}&thinsp;/&thinsp;{demoSteps.length} — {demoSteps[demoStepIndex]?.label ?? ''}
                 </span>
               )}
             </div>
+
             <div className="flex items-stretch gap-0 overflow-x-auto">
               {PHASES.map((phase, idx) => {
-                const isActive  = activePhaseIndex === idx;
-                const isDone    = activePhaseIndex > idx;
-                const isBlockedPhase = isBlocked && (isActive || isDone);
+                const isActive = activePhaseIndex === idx;
+                const isDone   = activePhaseIndex > idx;
+
+                // Policy-aware state only affects Policy Check (idx 2) and phases after it.
+                const isPolicyPhase   = idx === POLICY_PHASE_IDX;
+                const isPostPolicy    = idx > POLICY_PHASE_IDX;
+
+                // Policy Check pill coloring.
+                const policyPhaseBlock = isPolicyPhase && isGateBlock && (isActive || isDone);
+                const policyPhaseWarn  = isPolicyPhase && isGateWarn  && (isActive || isDone);
+                const policyPhaseClear = isPolicyPhase && !isGateBlock && !isGateWarn && isDone;
+
+                // Post-policy phases are muted/disabled when gate is BLOCK.
+                const isPostPolicyBlocked = isPostPolicy && isGateBlock && isDone;
+
+                // Derive pill variant.
+                const pillVariant: 'block' | 'warn' | 'done' | 'active' | 'muted-block' | 'neutral' =
+                  policyPhaseBlock ? 'block'
+                  : policyPhaseWarn ? 'warn'
+                  : isPostPolicyBlocked ? 'muted-block'
+                  : (isDone || policyPhaseClear) ? 'done'
+                  : isActive ? 'active'
+                  : 'neutral';
+
+                const pillBg: Record<typeof pillVariant, string> = {
+                  block:        'border border-destructive/40 bg-destructive/10',
+                  warn:         'border border-amber-500/40 bg-amber-500/10',
+                  'muted-block':'border border-destructive/20 bg-destructive/5 opacity-50',
+                  done:         'border border-emerald-500/30 bg-emerald-500/10',
+                  active:       'border border-primary/40 bg-primary/10',
+                  neutral:      'border border-border/40 bg-muted/20',
+                };
+
+                const textColor: Record<typeof pillVariant, string> = {
+                  block:        'text-destructive',
+                  warn:         'text-amber-700 dark:text-amber-300',
+                  'muted-block':'text-destructive/50',
+                  done:         'text-emerald-700 dark:text-emerald-400',
+                  active:       'text-primary',
+                  neutral:      'text-muted-foreground',
+                };
+
+                const dotColor: Record<typeof pillVariant, string> = {
+                  block:        'bg-destructive',
+                  warn:         'bg-amber-500',
+                  'muted-block':'bg-destructive/30',
+                  done:         'bg-emerald-500',
+                  active:       'bg-primary',
+                  neutral:      'bg-border',
+                };
+
+                const connectorColor: Record<typeof pillVariant, string> = {
+                  block:        'bg-destructive/40',
+                  warn:         'bg-amber-500/30',
+                  'muted-block':'bg-destructive/20',
+                  done:         'bg-emerald-500/40',
+                  active:       'bg-primary/30',
+                  neutral:      'bg-border/60',
+                };
 
                 return (
                   <div key={phase.id} className="flex min-w-0 flex-1 items-center">
-                    {/* Phase pill */}
+                    {/* Phase pill with hover tooltip */}
                     <div
                       className={cn(
                         'flex flex-1 flex-col items-center justify-center rounded-md px-2 py-2 transition-all duration-300',
-                        isBlockedPhase
-                          ? 'border border-destructive/40 bg-destructive/10'
-                          : isDone
-                            ? 'border border-success/30 bg-success/10'
-                            : isActive
-                              ? 'border border-primary/40 bg-primary/10'
-                              : 'border border-border/40 bg-muted/20',
+                        pillBg[pillVariant],
                       )}
+                      title={phase.tooltip}
                     >
                       <span
                         className={cn(
                           'text-[10px] font-semibold leading-tight text-center whitespace-nowrap',
-                          isBlockedPhase
-                            ? 'text-destructive'
-                            : isDone
-                              ? 'text-success'
-                              : isActive
-                                ? 'text-primary'
-                                : 'text-muted-foreground',
+                          textColor[pillVariant],
                         )}
                       >
                         {phase.label}
                       </span>
-                      {/* Status dot */}
-                      <span
-                        className={cn(
-                          'mt-1 h-1 w-1 rounded-full',
-                          isBlockedPhase
-                            ? 'bg-destructive'
-                            : isDone
-                              ? 'bg-success'
-                              : isActive
-                                ? 'bg-primary animate-pulse'
-                                : 'bg-border',
-                        )}
-                      />
+                      {/* Checkmark for completed phases; dot for active */}
+                      {isDone || policyPhaseClear ? (
+                        <span className={cn('mt-1 text-[8px] leading-none', textColor[pillVariant])}>✓</span>
+                      ) : (
+                        <span
+                          className={cn(
+                            'mt-1 h-1 w-1 rounded-full',
+                            dotColor[pillVariant],
+                            // Pulsing active dot respects reduced-motion
+                            isActive && !prefersReducedMotion ? 'animate-pulse' : '',
+                          )}
+                        />
+                      )}
                     </div>
-                    {/* Connector arrow (not after last) */}
+                    {/* Connector line (not after last) */}
                     {idx < PHASES.length - 1 && (
                       <div
                         className={cn(
                           'mx-0.5 h-px w-3 shrink-0 transition-all duration-300',
-                          isBlockedPhase
-                            ? 'bg-destructive/40'
-                            : isDone
-                              ? 'bg-success/40'
-                              : 'bg-border/60',
+                          connectorColor[pillVariant],
                         )}
                       />
                     )}
