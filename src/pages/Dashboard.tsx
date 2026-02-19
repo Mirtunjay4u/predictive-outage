@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatConfidenceFull } from '@/lib/etr-format';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { type LucideIcon, FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles, ShieldCheck, ShieldAlert, ShieldX, CloudLightning, Flame, Droplets, Snowflake, Thermometer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
+
 
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
   'Total Events': { title: 'All Tracked Events', subtitle: 'All outage-related events currently monitored', tooltip: 'Complete inventory of events across all lifecycle stages.' },
@@ -1236,8 +1236,23 @@ export default function Dashboard() {
     navigate('/events');
   };
 
-  // Animated count-up for System Risk Index — re-triggers on hazard or severity override change.
-  const animatedRiskIndex = useAnimatedNumber(riskDrivers.index, 600);
+  // Framer-motion count-up for System Risk Index — re-triggers on hazard or severity override change.
+  const riskMotionValue = useMotionValue(riskDrivers.index);
+  const animatedRiskIndex = useTransform(riskMotionValue, (v) => Math.round(v));
+  const [displayRiskIndex, setDisplayRiskIndex] = useState(riskDrivers.index);
+
+  useEffect(() => {
+    const controls = animate(riskMotionValue, riskDrivers.index, {
+      duration: prefersReducedMotion ? 0 : 0.6,
+      ease: [0.16, 1, 0.3, 1], // expo-out
+    });
+    const unsubscribe = animatedRiskIndex.on('change', (v) => setDisplayRiskIndex(v));
+    return () => {
+      controls.stop();
+      unsubscribe();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [riskDrivers.index]);
 
   return (
     <motion.div
@@ -1545,7 +1560,7 @@ export default function Dashboard() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="cursor-help text-3xl font-semibold tabular-nums underline decoration-dashed decoration-muted-foreground/40 underline-offset-4">
-                      {animatedRiskIndex}
+                      {displayRiskIndex}
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" align="start" className="w-64 p-3 text-xs">
@@ -1574,7 +1589,7 @@ export default function Dashboard() {
                     </ul>
                     <div className="mt-2.5 border-t border-border/40 pt-2 flex items-center justify-between">
                       <span className="text-muted-foreground">Total</span>
-                      <span className="font-bold tabular-nums text-foreground">{animatedRiskIndex} / 100</span>
+                      <span className="font-bold tabular-nums text-foreground">{displayRiskIndex} / 100</span>
                     </div>
                   </TooltipContent>
                 </Tooltip>
