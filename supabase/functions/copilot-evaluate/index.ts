@@ -343,10 +343,29 @@ serve(async (req: Request): Promise<Response> => {
         ]
       : [];
 
+  // ── HEAT thermal overload reroute block ──────────────────────────────────────
+  // SC-HEAT-001 triggers at severity >= 3. Load rerouting risks pushing already
+  // thermally stressed transformers into insulation degradation territory.
+  const heatOverloadBlock: BlockedAction[] =
+    scenario.hazardType === "HEAT" && scenario.severity >= 3
+      ? [
+          {
+            action: "reroute_load",
+            reason: "Transformer thermal overload risk — load rerouting deferred until thermal ratings are confirmed.",
+            remediation: [
+              "Review transformer thermal ratings for affected feeders.",
+              "Confirm adequate cooling margins before switching.",
+              "Coordinate with asset management before restoring full load.",
+            ],
+          },
+        ]
+      : [];
+
   const baseBlocked: BlockedAction[] = [
     ...vegetationFireBlock,
     ...iceActiveBlock,
     ...stormActiveBlock,
+    ...heatOverloadBlock,
     ...crewResult.blockedActions,
     ...criticalResult.blockedActions.map((action) => ({
       action,
