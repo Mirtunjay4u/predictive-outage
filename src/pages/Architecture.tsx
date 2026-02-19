@@ -1223,6 +1223,16 @@ function RuleCoverageTable() {
             The hash is computed over the normalised scenario inputs before any rule is applied, ensuring the evaluation is stateless and replay-safe.
           </p>
         </div>
+
+        {/* Footnote — evaluatedAt timestamp */}
+        <div className="rounded-md border border-border/30 bg-muted/20 px-3 py-2.5 text-[10px] leading-relaxed text-muted-foreground/80 space-y-1">
+          <p>
+            <span className="font-semibold text-muted-foreground">Incident timestamps —</span>{' '}
+            each evaluation also records a{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">meta.evaluatedAt</code>{' '}
+            ISO timestamp so audit logs can confirm the exact moment a constraint set was calculated — supporting incident post-mortems and regulatory review.
+          </p>
+        </div>
       </div>
     </div>
   );
