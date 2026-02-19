@@ -225,8 +225,10 @@ function CriticalLoadPanel({ scenario }: { scenario: Scenario }) {
   const hospitals = types.filter((t) => t.toLowerCase().includes('hospital'));
   const water = types.filter((t) => t.toLowerCase().includes('water'));
   const shelters = types.filter((t) => t.toLowerCase().includes('shelter'));
+  const datacenters = types.filter((t) => t.toLowerCase().includes('data center') || t.toLowerCase().includes('datacenter'));
+  const telecom = types.filter((t) => t.toLowerCase().includes('telecom'));
   const other = types.filter((t) =>
-    !['hospital', 'water', 'shelter'].some((k) => t.toLowerCase().includes(k))
+    !['hospital', 'water', 'shelter', 'data center', 'datacenter', 'telecom'].some((k) => t.toLowerCase().includes(k))
   );
 
   const remaining = scenario.backup_runtime_remaining_hours;
@@ -276,6 +278,24 @@ function CriticalLoadPanel({ scenario }: { scenario: Scenario }) {
             <div>
               <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">{shelters.length} Shelter{shelters.length > 1 ? 's' : ''}</p>
               <p className="text-[9px] text-muted-foreground">Tier 2 Critical</p>
+            </div>
+          </div>
+        )}
+        {datacenters.length > 0 && (
+          <div className="flex items-center gap-1.5 rounded-md bg-purple-500/10 border border-purple-400/20 px-2 py-1.5">
+            <span className="text-base">🖥️</span>
+            <div>
+              <p className="text-[10px] font-semibold text-purple-700 dark:text-purple-300">{datacenters.length} Data Center{datacenters.length > 1 ? 's' : ''}</p>
+              <p className="text-[9px] text-muted-foreground">Tier 2 Critical</p>
+            </div>
+          </div>
+        )}
+        {telecom.length > 0 && (
+          <div className="flex items-center gap-1.5 rounded-md bg-sky-500/10 border border-sky-400/20 px-2 py-1.5">
+            <span className="text-base">📡</span>
+            <div>
+              <p className="text-[10px] font-semibold text-sky-700 dark:text-sky-300">{telecom.length} Telecom{telecom.length > 1 ? ' Sites' : ' Site'}</p>
+              <p className="text-[9px] text-muted-foreground">Tier 1 Critical</p>
             </div>
           </div>
         )}
