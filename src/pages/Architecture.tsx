@@ -1012,6 +1012,7 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     evidence: [
       'Asset {id} ({type}) — vegetation exposure: {vegetationExposure} (threshold: 0.50).',
     ],
+    conditionalNote: 'One evidence line is emitted per asset with vegetationExposure > 0.50. This constraint fires independently of SC-ICE-001 — it targets line loading risk rather than the switching prohibition.',
   },
   {
     constraint: 'SC-WILD-001',
