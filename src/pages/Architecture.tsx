@@ -913,6 +913,7 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     evidence: [
       '{load.type} ({load.name}) backup < 4h.',
     ],
+    conditionalNote: 'One evidence line is emitted per qualifying critical load with backupHoursRemaining < 4. Multiple loads each produce a separate bullet: {load.type} ({load.name}) backup < 4h.',
   },
   {
     constraint: 'SC-CREW-001',
