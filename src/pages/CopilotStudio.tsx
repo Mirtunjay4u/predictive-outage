@@ -28,7 +28,9 @@ import type { ScenarioWithIntelligence } from '@/types/scenario';
 import type { Crew } from '@/types/crew';
 import type { Asset } from '@/types/asset';
 import { formatEtrPrimary } from '@/lib/etr-format';
+import { getEventSeverity } from '@/lib/severity';
 import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
+import type { PolicyEvalResult } from '@/hooks/usePolicyEvaluation';
 
 // ─── Response history entry ──────────────────────────────────────────────────
 interface HistoryEntry {
@@ -40,6 +42,7 @@ interface HistoryEntry {
   crewsSnapshot: Crew[];
   assetsSnapshot: Asset[];
   hazardOverlap: string | null;
+  policyEval: PolicyEvalResult | null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -149,14 +152,50 @@ export default function CopilotStudio() {
     };
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('copilot', {
-        body: request,
-      });
+      // Build policy engine payload
+      const hazardMap: Record<string, string> = {
+        'Storm': 'STORM', 'High Wind': 'STORM', 'Lightning': 'STORM', 'Snow Storm': 'ICE',
+        'Wildfire': 'WILDFIRE', 'Vegetation': 'WILDFIRE',
+        'Flood': 'RAIN', 'Heavy Rain': 'RAIN',
+        'Heatwave': 'HEAT', 'Ice/Snow': 'ICE',
+        'Equipment Failure': 'UNKNOWN',
+      };
+      const phaseMap: Record<string, string> = {
+        'Pre-Event': 'PRE_EVENT', 'Event': 'ACTIVE', 'Post-Event': 'POST_EVENT',
+      };
+      const policyPayload = {
+        scenarioId: selectedEvent.id,
+        hazardType: hazardMap[selectedEvent.outage_type || ''] || 'UNKNOWN',
+        phase: phaseMap[selectedEvent.lifecycle_stage] || 'UNKNOWN',
+        severity: getEventSeverity(selectedEvent),
+        customersAffected: selectedEvent.customers_impacted || 0,
+        assets: linkedAssets.map(a => ({
+          id: a.id,
+          type: a.asset_type,
+          ageYears: (a.meta as Record<string, unknown>)?.age_years as number | undefined,
+          vegetationExposure: (a.meta as Record<string, unknown>)?.vegetation_exposure as number | undefined,
+          loadCriticality: (a.meta as Record<string, unknown>)?.load_criticality as number | undefined,
+        })),
+        criticalLoads: ((selectedEvent.critical_load_types || []) as string[]).map(t => ({ type: t, name: t })),
+        crews: {
+          available: assignedCrews.filter(c => c.status === 'available').length,
+          enRoute: assignedCrews.filter(c => c.status === 'en_route').length,
+        },
+        lastUpdated: selectedEvent.event_last_update_time || undefined,
+        dataQuality: { completeness: linkedAssets.length > 0 ? 0.8 : 0.4, freshnessMinutes: 15 },
+      };
 
-      if (fnError) throw fnError;
+      // Fire both calls in parallel
+      const [copilotResult, policyResult] = await Promise.all([
+        supabase.functions.invoke('copilot', { body: request }),
+        supabase.functions.invoke('copilot-evaluate', { body: policyPayload }),
+      ]);
 
-      const raw = data as CopilotResponse;
+      if (copilotResult.error) throw copilotResult.error;
+
+      const raw = copilotResult.data as CopilotResponse;
       const contract = mapToOperatorContract(raw);
+      const policyEval = policyResult.error ? null : (policyResult.data as PolicyEvalResult);
 
       setHistory(prev => [
         {
@@ -168,6 +207,7 @@ export default function CopilotStudio() {
           crewsSnapshot: [...assignedCrews],
           assetsSnapshot: [...linkedAssets],
           hazardOverlap: searchParams.get('hazard_overlap'),
+          policyEval,
         },
         ...prev,
       ]);
@@ -553,6 +593,7 @@ export default function CopilotStudio() {
                       linkedAssets={latestEntry.assetsSnapshot}
                       hazardOverlap={latestEntry.hazardOverlap}
                       timestamp={latestEntry.timestamp}
+                      policyEval={latestEntry.policyEval}
                     />
                   </motion.div>
                 )}

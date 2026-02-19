@@ -15,6 +15,19 @@ export interface PolicyEvalResult {
     triggered: boolean;
     evidence: string[];
   }>;
+  explainability?: {
+    drivers: Array<{ key: string; value: string | number | boolean; weight: number }>;
+    assumptions: string[];
+    dataQualityWarnings: string[];
+  };
+  timestamps?: {
+    evaluatedAt: string;
+    inputLastUpdated?: string;
+  };
+  meta?: {
+    engineVersion: string;
+    deterministicHash: string;
+  };
 }
 
 export function usePolicyEvaluation() {
