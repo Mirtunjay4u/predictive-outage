@@ -1254,6 +1254,17 @@ export default function Dashboard() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riskDrivers.index]);
 
+  // ── Severity badge pulse animation — fires whenever the tier crosses a boundary ──
+  const prevSeverityRef = useRef<string>(riskDrivers.severity);
+  const [badgeTierKey, setBadgeTierKey] = useState(0);
+
+  useEffect(() => {
+    if (prevSeverityRef.current !== riskDrivers.severity) {
+      prevSeverityRef.current = riskDrivers.severity;
+      setBadgeTierKey((k) => k + 1);
+    }
+  }, [riskDrivers.severity]);
+
   return (
     <motion.div
       layout
@@ -1594,7 +1605,18 @@ export default function Dashboard() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Badge variant="outline" className={cn('text-[11px]', getRiskBadgeClass(riskDrivers.severity))}>{riskDrivers.severity}</Badge>
+              <motion.span
+                key={badgeTierKey}
+                initial={prefersReducedMotion ? false : { scale: 1.35, filter: 'brightness(1.8)' }}
+                animate={{ scale: 1, filter: 'brightness(1)' }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                className={cn(
+                  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors',
+                  getRiskBadgeClass(riskDrivers.severity),
+                )}
+              >
+                {riskDrivers.severity}
+              </motion.span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
