@@ -650,7 +650,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-orange-500/10 border-orange-400/30',
     iconCls: 'text-orange-500',
     labelCls: 'text-orange-700 dark:text-orange-300',
-    tooltip: 'High vegetation exposure in active wildfire conditions. Suspend field switching until aerial fire assessment is complete.',
+    tooltip: 'High vegetation exposure in active wildfire conditions. Suspend field switching until aerial fire assessment confirms line clearance.',
   },
   critical_backup_window_short: {
     icon: Zap,
