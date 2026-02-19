@@ -413,6 +413,19 @@ export default function Dashboard() {
   // ── Operational Phase strip: which phase detail popover is open ──────────
   type PhaseId = 'detection' | 'risk-scoring' | 'policy-check' | 'ai-briefing' | 'dispatch' | 'recovery';
   const [openPhaseId, setOpenPhaseId] = useState<PhaseId | null>(null);
+  const phaseStripRef = useRef<HTMLDivElement>(null);
+
+  // Close the phase popover when clicking outside the strip
+  useEffect(() => {
+    if (!openPhaseId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (phaseStripRef.current && !phaseStripRef.current.contains(e.target as Node)) {
+        setOpenPhaseId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openPhaseId]);
 
   // When the hazard changes, reset the override so each hazard starts at its own default
   const handleHazardChange = (key: ExtremeHazardKey) => {
@@ -1934,6 +1947,7 @@ export default function Dashboard() {
 
         return (
           <div
+            ref={phaseStripRef}
             className="rounded-xl border border-border/60 bg-card shadow-card overflow-visible"
             role="region"
             aria-label="Operational phase timeline"
