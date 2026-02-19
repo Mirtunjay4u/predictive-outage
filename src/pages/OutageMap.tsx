@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -41,7 +41,7 @@ import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
 import type { Crew } from '@/types/crew';
 import { OUTAGE_TYPES } from '@/types/scenario';
-
+import { getEventSeverity, severityColor, severityLabel, HAZARD_OVERLAYS, type HazardOverlay } from '@/lib/severity';
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
 const PRIORITY_OPTIONS = ['high', 'medium', 'low'];
 
@@ -62,6 +62,12 @@ export default function OutageMap() {
   const [showFeederZones, setShowFeederZones] = useState(false);
   const [showCrews, setShowCrews] = useState(true);
   const [layersPanelOpen, setLayersPanelOpen] = useState(true);
+  
+  // New operator filters
+  const [showCriticalLoads, setShowCriticalLoads] = useState(true);
+  const [severityFilter, setSeverityFilter] = useState<number | null>(null);
+  const [criticalLoadOnly, setCriticalLoadOnly] = useState(false);
+  const [activeHazardOverlays, setActiveHazardOverlays] = useState<HazardOverlay[]>([]);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -563,6 +569,15 @@ export default function OutageMap() {
                       {scenario.outage_type && (
                         <OutageTypeBadge type={scenario.outage_type} className="text-[10px]" />
                       )}
+                      <span 
+                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold border"
+                        style={{ borderColor: severityColor(getEventSeverity(scenario)), color: severityColor(getEventSeverity(scenario)) }}
+                      >
+                        Sev {getEventSeverity(scenario)}
+                      </span>
+                      {!scenario.geo_center && (
+                        <span className="text-[9px] text-warning italic">≈ approx</span>
+                      )}
                     </div>
                     
                     {/* Customer Impact */}
@@ -612,6 +627,10 @@ export default function OutageMap() {
               crews={crews}
               onCrewClick={handleCrewClick}
               onSimulateCrewMovement={handleSimulateCrewMovement}
+              showCriticalLoads={showCriticalLoads}
+              activeHazardOverlays={activeHazardOverlays}
+              severityFilter={severityFilter}
+              criticalLoadOnly={criticalLoadOnly}
             />
           </MapErrorBoundary>
           
@@ -752,6 +771,83 @@ export default function OutageMap() {
                   checked={showCrews}
                   onCheckedChange={setShowCrews}
                 />
+                
+                <LayerToggle
+                  id="critical-loads-toggle"
+                  icon={<ShieldAlert className="w-4 h-4" />}
+                  label="Critical Loads"
+                  badge="Demo"
+                  checked={showCriticalLoads}
+                  onCheckedChange={setShowCriticalLoads}
+                />
+                
+                {/* Operator Filters Section */}
+                <div className="pt-2 mt-2 border-t border-border">
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Operator Filters</span>
+                  
+                  {/* Severity Filter */}
+                  <div className="mt-2 space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Min Severity</Label>
+                    <div className="flex gap-1">
+                      {[null, 1, 2, 3, 4, 5].map(sev => (
+                        <button
+                          key={sev ?? 'all'}
+                          onClick={() => setSeverityFilter(sev)}
+                          className={cn(
+                            "flex-1 h-7 rounded text-[10px] font-bold border transition-all",
+                            severityFilter === sev
+                              ? "bg-primary/20 border-primary text-primary"
+                              : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/50"
+                          )}
+                          style={sev ? { borderBottomColor: severityColor(sev), borderBottomWidth: 3 } : undefined}
+                        >
+                          {sev ?? 'All'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Critical Load Only */}
+                  <div className="flex items-center gap-3 py-1.5 mt-2">
+                    <ShieldAlert className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="critical-only" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+                      Critical load only
+                    </Label>
+                    <Switch
+                      id="critical-only"
+                      checked={criticalLoadOnly}
+                      onCheckedChange={setCriticalLoadOnly}
+                    />
+                  </div>
+                  
+                  {/* Hazard Overlay Toggles */}
+                  <div className="mt-2 space-y-1">
+                    <Label className="text-xs text-muted-foreground">Hazard Overlays</Label>
+                    <div className="flex flex-col gap-1.5 mt-1">
+                      {HAZARD_OVERLAYS.map(hazard => {
+                        const isActive = activeHazardOverlays.includes(hazard);
+                        const iconMap: Record<string, React.ReactNode> = { Storm: <Wind className="w-3.5 h-3.5" />, Wildfire: <TreePine className="w-3.5 h-3.5" />, Flood: <Droplets className="w-3.5 h-3.5" /> };
+                        return (
+                          <button
+                            key={hazard}
+                            onClick={() => setActiveHazardOverlays(prev => 
+                              isActive ? prev.filter(h => h !== hazard) : [...prev, hazard]
+                            )}
+                            className={cn(
+                              "flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-all border",
+                              isActive 
+                                ? "bg-primary/10 border-primary/40 text-primary" 
+                                : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/50"
+                            )}
+                          >
+                            {iconMap[hazard]}
+                            {hazard}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
