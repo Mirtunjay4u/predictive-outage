@@ -13,11 +13,11 @@ import { cn } from '@/lib/utils';
 const demoSteps = [
   {
     title: 'Operations Dashboard',
-    description: 'Start on the Dashboard to see active event KPIs, high-priority alerts, crew workload, and system-wide readiness at a glance.',
+    description: 'Start on the Dashboard to review active event KPIs, high-priority alerts, crew workload, and system-wide readiness at a glance.',
   },
   {
     title: 'Scenario Playback',
-    description: 'Use the Scenario Playback panel on the Dashboard to step through a pre-loaded hazard scenario — select a hazard type and advance through lifecycle stages.',
+    description: 'Use the Scenario Playback panel on the Dashboard to step through a pre-loaded hazard scenario — select a hazard type and advance through Pre-Event, Event, and Post-Event lifecycle stages.',
   },
   {
     title: 'Events List',
@@ -25,11 +25,11 @@ const demoSteps = [
   },
   {
     title: 'Event Details',
-    description: 'Click any event to open the Event Details drawer. Review ETR confidence bands, critical-load runway, and crew assignments.',
+    description: 'Select any event to open its detail view. Review ETR confidence bands, critical-load runway, crew assignments, and supporting signals.',
   },
   {
     title: 'Situation Report',
-    description: 'From Event Details, open the Situation Report panel. Generate an AI-assisted SitRep, review the content, and approve it.',
+    description: 'From Event Details, open the Situation Report panel. Generate an AI-assisted SitRep, review the content, and approve it for distribution.',
   },
   {
     title: 'Customer Communications',
@@ -37,11 +37,11 @@ const demoSteps = [
   },
   {
     title: 'Outage Map',
-    description: 'Navigate to the Outage Map to see events geographically. Select events, view feeder zones, and explore crew positions.',
+    description: 'Navigate to the Outage Map to see events geographically. Select events, view feeder zones, and explore crew positions on the live map.',
   },
   {
     title: 'Analytics & Copilot Studio',
-    description: 'Visit Analytics for operational insights, and explore Copilot Studio for AI-assisted event analysis and recommendations.',
+    description: 'Visit Analytics for operational performance insights, then explore Copilot Studio for AI-assisted event analysis and prioritisation recommendations.',
   },
 ];
 
