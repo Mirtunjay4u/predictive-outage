@@ -352,22 +352,35 @@ serve(async (req: Request): Promise<Response> => {
       : [];
 
   // ── HEAT thermal overload reroute block ──────────────────────────────────────
-  // SC-HEAT-001 triggers at severity >= 3. Load rerouting risks pushing already
-  // thermally stressed transformers into insulation degradation territory.
+  // Severity >= 4: extreme heat spike — rerouting onto already heat-stressed
+  // feeders is explicitly deferred until thermal ratings are confirmed.
+  // Severity 3: moderate thermal concern — softer advisory block still applies.
   const heatOverloadBlock: BlockedAction[] =
-    scenario.hazardType === "HEAT" && scenario.severity >= 3
+    scenario.hazardType === "HEAT" && scenario.severity >= 4
       ? [
           {
             action: "reroute_load",
-            reason: "Transformer thermal overload risk — load rerouting deferred until thermal ratings are confirmed.",
+            reason: "Transformer thermal overload risk — rerouting load onto already heat-stressed feeders is deferred until thermal ratings are confirmed.",
             remediation: [
-              "Review transformer thermal ratings for affected feeders.",
-              "Confirm adequate cooling margins before switching.",
+              "Review transformer thermal ratings for all candidate feeders.",
+              "Confirm adequate cooling margins before any switching.",
               "Coordinate with asset management before restoring full load.",
             ],
           },
         ]
-      : [];
+      : scenario.hazardType === "HEAT" && scenario.severity === 3
+        ? [
+            {
+              action: "reroute_load",
+              reason: "Transformer thermal overload risk — load rerouting deferred until thermal ratings are confirmed.",
+              remediation: [
+                "Review transformer thermal ratings for affected feeders.",
+                "Confirm adequate cooling margins before switching.",
+                "Coordinate with asset management before restoring full load.",
+              ],
+            },
+          ]
+        : [];
 
   // ── FLOOD/RAIN active-phase crew dispatch block ───────────────────────────────
   // Ground saturation and standing water restrict safe field access near
