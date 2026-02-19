@@ -1536,7 +1536,9 @@ export default function Dashboard() {
             {(() => {
               const flags = policyEscalationFlags.map((f) => humanizePolicyFlag(f));
               const flagPart = flags.length > 0 ? flags.join(' · ') : 'Policy constraints active';
-              const etrPart = policyView?.etrBand?.confidence ? `· ETR confidence ${policyView.etrBand.confidence.toUpperCase()}${policyView.etrBand.band ? ` (${policyView.etrBand.band})` : ''}` : '';
+              const rawConf = policyView?.etrBand?.confidence;
+              const confStr = typeof rawConf === 'string' ? rawConf.toUpperCase() : rawConf != null ? String(rawConf) : '';
+              const etrPart = confStr ? `· ETR confidence ${confStr}${policyView?.etrBand?.band ? ` (${policyView.etrBand.band})` : ''}` : '';
               return (
                 <p className="mt-2 text-[12px] font-semibold text-red-200">{flagPart} {etrPart}</p>
               );
