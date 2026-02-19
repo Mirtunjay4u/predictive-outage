@@ -1,13 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, AlertTriangle } from 'lucide-react';
+import { FileText, AlertTriangle, Activity } from 'lucide-react';
 import { useScenarios, useCreateScenario, useUpdateScenario, useDeleteScenario } from '@/hooks/useScenarios';
 import { EventFilters } from '@/components/events/EventFilters';
 import { EventTable } from '@/components/events/EventTable';
 import { EventCard } from '@/components/events/EventCard';
 import { EventDrawer } from '@/components/events/EventDrawer';
-import { CopilotPanel } from '@/components/copilot/CopilotPanel';
+import { EventDetailPanel } from '@/components/events/EventDetailPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { ScenarioTableSkeleton, ScenarioCardsSkeleton } from '@/components/LoadingSkeleton';
 import {
@@ -20,33 +20,43 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 import type { Scenario, ScenarioInsert } from '@/types/scenario';
 
-export default function Scenarios() {
+// ── Tiny summary stat chip ────────────────────────────────────────────────────
+function StatChip({ label, value, accent }: { label: string; value: number; accent?: string }) {
+  return (
+    <div className={cn('rounded-lg border border-border/50 bg-card px-3 py-2 flex flex-col gap-0.5', accent)}>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-xl font-semibold tabular-nums text-foreground">{value}</p>
+    </div>
+  );
+}
+
+export default function Events() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [stageFilter, setStageFilter] = useState('all');
   const [lifecycleFilter, setLifecycleFilter] = useState('all');
   const [outageTypeFilter, setOutageTypeFilter] = useState('all');
+
+  // Detail panel — opens when row is clicked
+  const [detailScenario, setDetailScenario] = useState<Scenario | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // Edit drawer — opened from the action menu or "Edit" footer button in detail
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
-  const [copilotScenario, setCopilotScenario] = useState<Scenario | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(true);
+
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Read filters from URL params on mount
+  // Apply URL filter params from dashboard navigation
   useEffect(() => {
     const lifecycleParam = searchParams.get('lifecycle');
     const outageTypeParam = searchParams.get('outage_type');
-    
     if (lifecycleParam || outageTypeParam) {
-      if (lifecycleParam) {
-        setLifecycleFilter(lifecycleParam);
-      }
-      if (outageTypeParam) {
-        setOutageTypeFilter(outageTypeParam);
-      }
-      // Clear the URL params after applying
+      if (lifecycleParam) setLifecycleFilter(lifecycleParam);
+      if (outageTypeParam) setOutageTypeFilter(outageTypeParam);
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -57,31 +67,41 @@ export default function Scenarios() {
   const deleteMutation = useDeleteScenario();
 
   const filteredScenarios = useMemo(() => {
-    return scenarios.filter(scenario => {
+    return scenarios.filter((scenario) => {
       if (stageFilter !== 'all') {
         if (stageFilter === 'active' && !scenario.stage) return false;
         if (stageFilter === 'inactive' && scenario.stage) return false;
       }
-      if (lifecycleFilter !== 'all' && scenario.lifecycle_stage !== lifecycleFilter) {
-        return false;
-      }
-      if (outageTypeFilter !== 'all' && scenario.outage_type !== outageTypeFilter) {
-        return false;
-      }
+      if (lifecycleFilter !== 'all' && scenario.lifecycle_stage !== lifecycleFilter) return false;
+      if (outageTypeFilter !== 'all' && scenario.outage_type !== outageTypeFilter) return false;
       return true;
     });
   }, [scenarios, stageFilter, lifecycleFilter, outageTypeFilter]);
 
   const activeFilters = useMemo(() => {
-    const filters: string[] = [];
-    if (lifecycleFilter !== 'all') filters.push(lifecycleFilter);
-    if (outageTypeFilter !== 'all') filters.push(outageTypeFilter);
-    return filters;
+    const f: string[] = [];
+    if (lifecycleFilter !== 'all') f.push(lifecycleFilter);
+    if (outageTypeFilter !== 'all') f.push(outageTypeFilter);
+    return f;
   }, [lifecycleFilter, outageTypeFilter]);
+
+  // Summary stats
+  const stats = useMemo(() => ({
+    total: filteredScenarios.length,
+    active: filteredScenarios.filter((s) => s.lifecycle_stage === 'Event').length,
+    high: filteredScenarios.filter((s) => s.priority === 'high').length,
+    critical: filteredScenarios.filter((s) => s.has_critical_load).length,
+  }), [filteredScenarios]);
 
   const clearFilters = () => {
     setLifecycleFilter('all');
     setOutageTypeFilter('all');
+    setStageFilter('all');
+  };
+
+  const handleRowClick = (scenario: Scenario) => {
+    setDetailScenario(scenario);
+    setIsDetailOpen(true);
   };
 
   const handleCreate = () => {
@@ -91,7 +111,6 @@ export default function Scenarios() {
 
   const handleEdit = (scenario: Scenario) => {
     setEditingScenario(scenario);
-    setCopilotScenario(scenario);
     setIsDrawerOpen(true);
   };
 
@@ -99,23 +118,10 @@ export default function Scenarios() {
     if (editingScenario) {
       updateMutation.mutate(
         { id: editingScenario.id, data },
-        { 
-          onSuccess: (updatedScenario) => {
-            setIsDrawerOpen(false);
-            // Update copilot scenario if it was the one being edited
-            if (copilotScenario?.id === editingScenario.id) {
-              setCopilotScenario(updatedScenario);
-            }
-          }
-        }
+        { onSuccess: () => setIsDrawerOpen(false) },
       );
     } else {
-      createMutation.mutate(data, {
-        onSuccess: (newScenario) => {
-          setIsDrawerOpen(false);
-          setCopilotScenario(newScenario);
-        },
-      });
+      createMutation.mutate(data, { onSuccess: () => setIsDrawerOpen(false) });
     }
   };
 
@@ -124,132 +130,139 @@ export default function Scenarios() {
       deleteMutation.mutate(deleteId, {
         onSuccess: () => {
           setDeleteId(null);
-          if (copilotScenario?.id === deleteId) {
-            setCopilotScenario(null);
-          }
+          if (detailScenario?.id === deleteId) setIsDetailOpen(false);
         },
       });
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto bg-gradient-to-br from-background via-background to-muted/20">
-        <div className="p-6">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4"
-          >
-            <h1 className="text-2xl font-bold mb-1">Events</h1>
-            <p className="text-muted-foreground">
-              Manage and monitor operational events
-            </p>
-          </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="mx-auto max-w-[1600px] px-4 py-5 lg:px-6 space-y-5">
 
-          {/* Active Filter Banner */}
-          {activeFilters.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-3 flex items-center gap-2 text-sm bg-muted/40 rounded-lg px-3 py-2 border border-border/50"
-            >
-              <span className="text-muted-foreground">Filtered by:</span>
-              <span className="font-medium">{activeFilters.join(' • ')}</span>
-              <button
-                onClick={clearFilters}
-                className="ml-auto text-xs text-muted-foreground hover:text-foreground underline transition-colors"
-              >
-                Clear filters
-              </button>
-            </motion.div>
-          )}
+        {/* ── Header ── */}
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Activity className="h-5 w-5 text-primary" />
+                <h1 className="text-xl font-bold text-foreground">Operational Events</h1>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Single source of truth for active, pre-event, and post-event operational events — with policy evaluation and crew readiness.
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-          {/* Filters */}
+        {/* ── Summary strip ── */}
+        {!isLoading && scenarios.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="mb-4"
+            transition={{ delay: 0.05 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
           >
-            <EventFilters
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              stageFilter={stageFilter}
-              onStageFilterChange={setStageFilter}
-              lifecycleFilter={lifecycleFilter}
-              onLifecycleFilterChange={setLifecycleFilter}
-              outageTypeFilter={outageTypeFilter}
-              onOutageTypeFilterChange={setOutageTypeFilter}
-              onCreateClick={handleCreate}
+            <StatChip label="Total Events" value={stats.total} />
+            <StatChip label="Active Outages" value={stats.active} />
+            <StatChip label="High Priority" value={stats.high} accent={stats.high > 0 ? 'border-amber-400/30' : ''} />
+            <StatChip label="Crit. Load" value={stats.critical} accent={stats.critical > 0 ? 'border-red-400/30' : ''} />
+          </motion.div>
+        )}
+
+        {/* ── Active filter banner ── */}
+        {activeFilters.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 text-sm bg-muted/40 rounded-lg px-3 py-2 border border-border/50"
+          >
+            <span className="text-muted-foreground">Filtered by:</span>
+            <span className="font-medium">{activeFilters.join(' · ')}</span>
+            <button
+              onClick={clearFilters}
+              className="ml-auto text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+            >
+              Clear
+            </button>
+          </motion.div>
+        )}
+
+        {/* ── Filters bar ── */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+          <EventFilters
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            stageFilter={stageFilter}
+            onStageFilterChange={setStageFilter}
+            lifecycleFilter={lifecycleFilter}
+            onLifecycleFilterChange={setLifecycleFilter}
+            outageTypeFilter={outageTypeFilter}
+            onOutageTypeFilterChange={setOutageTypeFilter}
+            onCreateClick={handleCreate}
+          />
+        </motion.div>
+
+        {/* ── Content ── */}
+        {isLoading ? (
+          viewMode === 'table' ? <ScenarioTableSkeleton /> : <ScenarioCardsSkeleton />
+        ) : error ? (
+          <EmptyState
+            icon={AlertTriangle}
+            title="Failed to load events"
+            description="There was an error loading events. Please try again."
+            actionLabel="Retry"
+            onAction={() => window.location.reload()}
+          />
+        ) : filteredScenarios.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No events found"
+            description={
+              scenarios.length === 0
+                ? 'Get started by creating your first event'
+                : 'No events match your current filters'
+            }
+            actionLabel={scenarios.length === 0 ? 'Create Event' : undefined}
+            onAction={scenarios.length === 0 ? handleCreate : undefined}
+          />
+        ) : viewMode === 'table' ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
+            <EventTable
+              scenarios={filteredScenarios}
+              onRowClick={handleRowClick}
+              onEdit={handleEdit}
+              onDelete={setDeleteId}
             />
           </motion.div>
-
-          {/* Content */}
-          {isLoading ? (
-            viewMode === 'table' ? <ScenarioTableSkeleton /> : <ScenarioCardsSkeleton />
-          ) : error ? (
-            <EmptyState
-              icon={AlertTriangle}
-              title="Failed to load scenarios"
-              description="There was an error loading scenarios. Please try again."
-              actionLabel="Retry"
-              onAction={() => window.location.reload()}
-            />
-          ) : filteredScenarios.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="No events found"
-              description={
-                scenarios.length === 0
-                  ? "Get started by creating your first event"
-                  : "No events match your current filters"
-              }
-              actionLabel={scenarios.length === 0 ? "Create Event" : undefined}
-              onAction={scenarios.length === 0 ? handleCreate : undefined}
-            />
-          ) : viewMode === 'table' ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <EventTable
-                scenarios={filteredScenarios}
-                onRowClick={handleEdit}
-                onDelete={setDeleteId}
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {filteredScenarios.map((scenario) => (
+              <EventCard
+                key={scenario.id}
+                scenario={scenario}
+                onClick={() => handleRowClick(scenario)}
+                onDelete={() => setDeleteId(scenario.id)}
               />
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-            >
-              {filteredScenarios.map((scenario) => (
-                <EventCard
-                  key={scenario.id}
-                  scenario={scenario}
-                  onClick={() => handleEdit(scenario)}
-                  onDelete={() => setDeleteId(scenario.id)}
-                />
-              ))}
-            </motion.div>
-          )}
-        </div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
-      {/* Copilot Panel */}
-      <CopilotPanel
-        scenario={copilotScenario}
-        isOpen={isCopilotOpen}
-        onToggle={() => setIsCopilotOpen(!isCopilotOpen)}
+      {/* ── Event Detail Panel ── */}
+      <EventDetailPanel
+        scenario={detailScenario}
+        open={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onEdit={handleEdit}
       />
 
-      {/* Drawer */}
+      {/* ── Edit Drawer ── */}
       <EventDrawer
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -258,7 +271,7 @@ export default function Scenarios() {
         isLoading={createMutation.isPending || updateMutation.isPending}
       />
 
-      {/* Delete Confirmation */}
+      {/* ── Delete Confirm ── */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
