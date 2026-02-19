@@ -29,8 +29,6 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
   }
 
   // ── ICE hazard rules ──────────────────────────────────────────────────────────
-  // During ice storms, vegetation (tree branches, ice accumulation on lines)
-  // is a primary failure driver. Flag when any asset exceeds 0.5 exposure.
   const isIce = scenario.hazardType === "ICE";
   const iceVegetationAssets = isIce
     ? scenario.assets.filter((a) => typeof a.vegetationExposure === "number" && a.vegetationExposure > 0.5)
@@ -41,9 +39,16 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
     escalationFlags.add("ice_load_risk");
   }
 
-  // Block reroute_load during active ICE events — switching on ice-loaded lines
-  // without visual crew confirmation risks equipment damage and crew safety.
   const blockRerouteForIce = isIce && scenario.phase === "ACTIVE";
+
+  // ── WILDFIRE hazard rules ─────────────────────────────────────────────────────
+  // Aerial fire line clearance is required before any field switching when
+  // average vegetation exposure exceeds 0.60 in an active wildfire event.
+  const isWildfire = scenario.hazardType === "WILDFIRE";
+  const wildfireHighExposureAssets = isWildfire
+    ? scenario.assets.filter((a) => typeof a.vegetationExposure === "number" && a.vegetationExposure > 0.6)
+    : [];
+  const hasWildfireSwitchingRisk = isWildfire && wildfireHighExposureAssets.length > 0;
 
   // ── Safety constraints ────────────────────────────────────────────────────────
   const safetyConstraints: SafetyConstraint[] = [
@@ -100,6 +105,21 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
             (a) => `Asset ${a.id} (${a.type}) — vegetation exposure: ${(a.vegetationExposure ?? 0).toFixed(2)}.`,
           )
         : ["No ICE hazard or all assets below 0.5 vegetation exposure threshold."],
+    },
+    {
+      id: "SC-WILD-001",
+      title: "Wildfire vegetation switching prohibition",
+      description: "Field switching is prohibited until aerial fire line clearance is confirmed.",
+      severity: hasWildfireSwitchingRisk ? "HIGH" : "LOW",
+      triggered: hasWildfireSwitchingRisk,
+      evidence: hasWildfireSwitchingRisk
+        ? [
+            `Hazard: WILDFIRE — ${wildfireHighExposureAssets.length} asset(s) exceed 0.60 vegetation exposure threshold.`,
+            ...wildfireHighExposureAssets.map(
+              (a) => `Asset ${a.id} (${a.type}) — vegetation exposure: ${(a.vegetationExposure ?? 0).toFixed(2)}.`,
+            ),
+          ]
+        : ["Not triggered — WILDFIRE hazard not active or all assets at or below 0.60 vegetation exposure."],
     },
   ];
 
