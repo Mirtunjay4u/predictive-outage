@@ -787,6 +787,13 @@ export function EventDetailPanel({
   const policyStatus = externalPolicyState?.status ?? localPolicyStatus;
   const policy = externalPolicyState?.result ?? localPolicy;
 
+  // Auto-open the "Why" panel once evaluation completes
+  useEffect(() => {
+    if (policyStatus === 'done' && policy?.explainability) {
+      setWhyOpen(true);
+    }
+  }, [policyStatus, policy]);
+
   const buildPayload = useCallback((s: Scenario) => {
     const priority = s.priority ?? 'medium';
     const severityNum = deriveSeverity(s);

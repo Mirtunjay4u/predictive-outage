@@ -150,29 +150,43 @@ function CritLoadCell({ scenario }: { scenario: Scenario }) {
 }
 
 // ── Crew cell ─────────────────────────────────────────────────────────────────
-function CrewCell({ policyEntry }: { policyEntry: PolicyEntry | undefined }) {
-  if (!policyEntry || policyEntry.status !== 'done' || !policyEntry.result) {
-    return <span className="text-[10px] text-muted-foreground">—</span>;
+function CrewCell({ scenario, policyEntry }: { scenario: Scenario; policyEntry: PolicyEntry | undefined }) {
+  // If policy evaluated → show policy-driven crew status
+  if (policyEntry?.status === 'done' && policyEntry.result) {
+    const flags = policyEntry.result.escalationFlags ?? [];
+    const crewShortfall = flags.includes('insufficient_crews');
+    return (
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-1">
+          <Users className={cn('h-3 w-3 shrink-0', crewShortfall ? 'text-red-500' : 'text-emerald-500')} />
+          <span className={cn('text-[10px] font-semibold', crewShortfall ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
+            {crewShortfall ? 'Shortage' : 'Ready'}
+          </span>
+        </div>
+        {crewShortfall && (
+          <span className="block text-[9px] text-amber-600 dark:text-amber-400">↳ Blocks switching</span>
+        )}
+      </div>
+    );
   }
 
-  // Extract crew info from explainability drivers
-  const drivers = policyEntry.result.explainability?.drivers ?? [];
-  const crewDriver = drivers.find((d) => d.key === 'crews_sufficient');
-  const sufficient = crewDriver?.value === true;
-  const flags = policyEntry.result.escalationFlags ?? [];
-  const crewShortfall = flags.includes('insufficient_crews');
+  // Baseline: show operator_role assignment, or "Unassigned"
+  if (scenario.operator_role) {
+    return (
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3 shrink-0 text-muted-foreground" />
+          <span className="text-[10px] font-medium text-foreground truncate max-w-[72px]">{scenario.operator_role}</span>
+        </div>
+        <span className="block text-[9px] text-muted-foreground">Assigned</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-0.5">
-      <div className="flex items-center gap-1">
-        <Users className={cn('h-3 w-3 shrink-0', crewShortfall ? 'text-red-500' : 'text-emerald-500')} />
-        <span className={cn('text-[10px] font-semibold', crewShortfall ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400')}>
-          {crewShortfall ? 'Shortage' : 'Ready'}
-        </span>
-      </div>
-      {crewShortfall && (
-        <span className="block text-[9px] text-amber-600 dark:text-amber-400">↳ Blocks switching</span>
-      )}
+    <div className="flex items-center gap-1">
+      <Users className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+      <span className="text-[10px] text-muted-foreground">Unassigned</span>
     </div>
   );
 }
@@ -400,7 +414,7 @@ export function EventTable({
 
                   {/* Crew constraint — derived from policy result */}
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <CrewCell policyEntry={policyMap[scenario.id]} />
+                    <CrewCell scenario={scenario} policyEntry={policyMap[scenario.id]} />
                   </TableCell>
 
                   {/* Escalation flags */}
