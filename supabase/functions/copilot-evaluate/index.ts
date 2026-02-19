@@ -275,6 +275,8 @@ serve(async (req: Request): Promise<Response> => {
   const additionalEscalations: string[] = [];
   if (hazardEscalating) additionalEscalations.push("storm_active");
   if (etrBand.band === "LOW") additionalEscalations.push("low_confidence_etr");
+  // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT)
+  additionalEscalations.push(...assetResult.escalationFlags);
 
   const baseBlocked: BlockedAction[] = [
     ...crewResult.blockedActions,
