@@ -8,6 +8,7 @@ import type { FeederZone } from '@/types/feederZone';
 import type { Crew } from '@/types/crew';
 import type { WeatherPoint } from '@/hooks/useWeatherData';
 import { weatherCodeToDescription } from '@/hooks/useWeatherData';
+import { getEventSeverity, severityColor, severityLabel, getEffectiveLocation, outageToHazard, hazardOverlayColor, type HazardOverlay } from '@/lib/severity';
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -54,33 +55,22 @@ interface OutageMapViewProps {
   crews?: Crew[];
   onCrewClick?: (crew: Crew) => void;
   onSimulateCrewMovement?: (crewId: string, targetLat: number, targetLng: number) => void;
+  // New props
+  showCriticalLoads?: boolean;
+  activeHazardOverlays?: HazardOverlay[];
+  severityFilter?: number | null; // minimum severity to show
+  criticalLoadOnly?: boolean;
 }
 
-// Helper functions
-const getMarkerColor = (scenario: Scenario | ScenarioWithIntelligence) => {
-  switch (scenario.lifecycle_stage) {
-    case 'Event': return '#ef4444';
-    case 'Pre-Event': return '#f59e0b';
-    case 'Post-Event': return '#6b7280';
-    default: return '#6b7280';
-  }
-};
-
-const getPolygonColor = (scenario: Scenario | ScenarioWithIntelligence) => {
-  switch (scenario.lifecycle_stage) {
-    case 'Event': return { fill: '#ef444430', stroke: '#ef4444' };
-    case 'Pre-Event': return { fill: '#f59e0b30', stroke: '#f59e0b' };
-    case 'Post-Event': return { fill: '#6b728030', stroke: '#6b7280' };
-    default: return { fill: '#6b728030', stroke: '#6b7280' };
-  }
-};
-
-const createColoredIcon = (color: string, isSelected: boolean) => {
+// Helper: severity-colored marker icon
+const createSeverityIcon = (severity: number, isSelected: boolean, isApprox: boolean) => {
+  const color = severityColor(severity);
   const size = isSelected ? 32 : 24;
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">
       <path fill="${color}" stroke="${isSelected ? '#ffffff' : '#374151'}" stroke-width="${isSelected ? '2' : '1'}" 
         d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      ${isApprox ? `<text x="12" y="22" text-anchor="middle" fill="${color}" font-size="5" font-weight="bold">≈</text>` : ''}
     </svg>
   `;
   return L.divIcon({
@@ -89,6 +79,23 @@ const createColoredIcon = (color: string, isSelected: boolean) => {
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
+  });
+};
+
+// Critical load marker icon
+const createCriticalLoadIcon = (loadType: string) => {
+  const size = 28;
+  let glyph = '🏥';
+  if (loadType.toLowerCase().includes('water')) glyph = '💧';
+  else if (loadType.toLowerCase().includes('shelter') || loadType.toLowerCase().includes('emergency')) glyph = '🏠';
+  else if (loadType.toLowerCase().includes('telecom') || loadType.toLowerCase().includes('data')) glyph = '📡';
+
+  return L.divIcon({
+    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(220,38,38,0.15);border:2px solid #dc2626;border-radius:6px;font-size:16px;backdrop-filter:blur(2px)">${glyph}</div>`,
+    className: 'critical-load-marker',
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2)],
   });
 };
 
@@ -228,6 +235,10 @@ export function OutageMapView({
   showCrews = false,
   crews = [],
   onCrewClick,
+  showCriticalLoads = false,
+  activeHazardOverlays = [],
+  severityFilter = null,
+  criticalLoadOnly = false,
 }: OutageMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -238,8 +249,19 @@ export function OutageMapView({
     feeders: L.LayerGroup;
     crews: L.LayerGroup;
     weather: L.LayerGroup;
+    criticalLoads: L.LayerGroup;
+    hazardOverlays: L.LayerGroup;
     heatmap: L.Layer | null;
   } | null>(null);
+
+  // Filter scenarios by severity and critical-load-only
+  const displayScenarios = useMemo(() => {
+    return scenarios.filter(s => {
+      if (severityFilter && getEventSeverity(s) < severityFilter) return false;
+      if (criticalLoadOnly && !s.has_critical_load) return false;
+      return true;
+    });
+  }, [scenarios, severityFilter, criticalLoadOnly]);
 
   // Calculate center from scenarios or default to Houston
   const mapCenter = useMemo(() => {
@@ -261,24 +283,22 @@ export function OutageMapView({
     const map = L.map(mapContainerRef.current, {
       center: mapCenter,
       zoom: 9,
-      zoomControl: false, // Disable default zoom control
+      zoomControl: false,
     });
 
-    // Add zoom control to top-left with proper positioning
-    L.control.zoom({
-      position: 'topleft',
-    }).addTo(map);
+    L.control.zoom({ position: 'topleft' }).addTo(map);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     }).addTo(map);
 
-    // Create layer groups
     layersRef.current = {
       polygons: L.layerGroup().addTo(map),
       feeders: L.layerGroup().addTo(map),
       weather: L.layerGroup().addTo(map),
+      hazardOverlays: L.layerGroup().addTo(map),
       assets: L.layerGroup().addTo(map),
+      criticalLoads: L.layerGroup().addTo(map),
       crews: L.layerGroup().addTo(map),
       scenarios: L.layerGroup().addTo(map),
       heatmap: null,
@@ -293,39 +313,41 @@ export function OutageMapView({
     };
   }, []);
 
-  // Update scenario markers
+  // Update scenario markers — severity-colored
   useEffect(() => {
     if (!mapRef.current || !layersRef.current) return;
     
     const layer = layersRef.current.scenarios;
     layer.clearLayers();
 
-    scenarios.forEach(scenario => {
-      if (!scenario.geo_center) return;
-      
+    displayScenarios.forEach(scenario => {
+      const loc = getEffectiveLocation(scenario);
+      const severity = getEventSeverity(scenario);
       const isSelected = scenario.id === selectedEventId;
-      const color = getMarkerColor(scenario);
-      const icon = createColoredIcon(color, isSelected);
+      const icon = createSeverityIcon(severity, isSelected, loc.isApprox);
 
-      const marker = L.marker([scenario.geo_center.lat, scenario.geo_center.lng], { icon })
-        .bindPopup(`
-          <div style="padding: 4px;">
-            <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">${scenario.name}</h3>
-            <p style="font-size: 12px; color: #888; margin: 0;">
-              ${scenario.outage_type || 'Unknown'} • ${scenario.lifecycle_stage}
+      const popupContent = `
+        <div style="padding: 4px;">
+          <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">${scenario.name}</h3>
+          <p style="font-size: 12px; color: #888; margin: 0;">
+            ${scenario.outage_type || 'Unknown'} • ${scenario.lifecycle_stage} • Severity ${severity}/5
+          </p>
+          ${scenario.customers_impacted && scenario.customers_impacted > 0 ? `
+            <p style="font-size: 12px; color: #888; margin: 2px 0 0 0;">
+              ${scenario.customers_impacted.toLocaleString()} customers
             </p>
-            ${scenario.customers_impacted && scenario.customers_impacted > 0 ? `
-              <p style="font-size: 12px; color: #888; margin: 2px 0 0 0;">
-                ${scenario.customers_impacted.toLocaleString()} customers
-              </p>
-            ` : ''}
-          </div>
-        `, { className: 'custom-popup' })
+          ` : ''}
+          ${loc.isApprox ? '<p style="font-size: 11px; color: #f59e0b; margin: 4px 0 0 0;">≈ Approx. location</p>' : ''}
+        </div>
+      `;
+
+      const marker = L.marker([loc.lat, loc.lng], { icon })
+        .bindPopup(popupContent, { className: 'custom-popup' })
         .on('click', () => onMarkerClick(scenario));
 
       layer.addLayer(marker);
     });
-  }, [scenarios, selectedEventId, onMarkerClick]);
+  }, [displayScenarios, selectedEventId, onMarkerClick]);
 
   // Update scenario polygons
   useEffect(() => {
@@ -334,29 +356,103 @@ export function OutageMapView({
     const layer = layersRef.current.polygons;
     layer.clearLayers();
 
-    scenarios.forEach(scenario => {
+    displayScenarios.forEach(scenario => {
       if (!scenario.geo_area) return;
       
-      const colors = getPolygonColor(scenario);
-      const latLngs = geoAreaToLatLngs(scenario.geo_area);
+      const severity = getEventSeverity(scenario);
+      const color = severityColor(severity);
       const isSelected = scenario.id === selectedEventId;
 
+      const latLngs = geoAreaToLatLngs(scenario.geo_area);
       const polygon = L.polygon(latLngs, {
-        fillColor: colors.fill,
-        fillOpacity: isSelected ? 0.4 : 0.25,
-        color: colors.stroke,
+        fillColor: color,
+        fillOpacity: isSelected ? 0.4 : 0.2,
+        color,
         weight: isSelected ? 3 : 2,
       }).on('click', () => onMarkerClick(scenario));
 
       layer.addLayer(polygon);
     });
-  }, [scenarios, selectedEventId, showHeatmap, onMarkerClick]);
+  }, [displayScenarios, selectedEventId, showHeatmap, onMarkerClick]);
+
+  // Critical load markers
+  useEffect(() => {
+    if (!mapRef.current || !layersRef.current) return;
+
+    const layer = layersRef.current.criticalLoads;
+    layer.clearLayers();
+
+    if (!showCriticalLoads || !selectedEventId) return;
+
+    const selected = displayScenarios.find(s => s.id === selectedEventId);
+    if (!selected?.has_critical_load || !selected.critical_load_types?.length) return;
+
+    const loc = getEffectiveLocation(selected);
+    
+    selected.critical_load_types.forEach((loadType, idx) => {
+      const icon = createCriticalLoadIcon(loadType);
+      // Offset slightly so they don't stack
+      const offsetLat = loc.lat + (idx - (selected.critical_load_types!.length - 1) / 2) * 0.003;
+      const offsetLng = loc.lng + 0.005;
+
+      const marker = L.marker([offsetLat, offsetLng], { icon })
+        .bindPopup(`
+          <div style="padding: 4px;">
+            <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">Critical Load</h3>
+            <p style="font-size: 13px; color: #f87171; margin: 0;">${loadType}</p>
+            <p style="font-size: 11px; color: #888; margin: 4px 0 0 0;">Linked to: ${selected.name}</p>
+          </div>
+        `, { className: 'custom-popup' });
+
+      layer.addLayer(marker);
+    });
+  }, [showCriticalLoads, selectedEventId, displayScenarios]);
+
+  // Hazard overlay polygons
+  useEffect(() => {
+    if (!mapRef.current || !layersRef.current) return;
+
+    const layer = layersRef.current.hazardOverlays;
+    layer.clearLayers();
+
+    if (activeHazardOverlays.length === 0) return;
+
+    displayScenarios.forEach(scenario => {
+      const hazard = outageToHazard(scenario.outage_type);
+      if (!hazard || !activeHazardOverlays.includes(hazard)) return;
+
+      const loc = getEffectiveLocation(scenario);
+      const colors = hazardOverlayColor(hazard);
+
+      if (scenario.geo_area) {
+        const latLngs = geoAreaToLatLngs(scenario.geo_area);
+        const polygon = L.polygon(latLngs, {
+          fillColor: colors.fill,
+          fillOpacity: 0.25,
+          color: colors.stroke,
+          weight: 2,
+          dashArray: '6 4',
+        }).bindTooltip(`${hazard} zone: ${scenario.name}`, { direction: 'top' });
+        layer.addLayer(polygon);
+      } else {
+        // Synthetic circle for events without geo_area
+        const circle = L.circle([loc.lat, loc.lng], {
+          radius: 2000,
+          fillColor: colors.fill,
+          fillOpacity: 0.2,
+          color: colors.stroke,
+          weight: 2,
+          dashArray: '6 4',
+        }).bindTooltip(`${hazard} zone: ${scenario.name}`, { direction: 'top' });
+        layer.addLayer(circle);
+      }
+    });
+  }, [activeHazardOverlays, displayScenarios]);
 
   // Update heatmap
   useEffect(() => {
     if (!mapRef.current || !layersRef.current) return;
 
-    // Remove existing heatmap
     if (layersRef.current.heatmap) {
       mapRef.current.removeLayer(layersRef.current.heatmap);
       layersRef.current.heatmap = null;
@@ -364,29 +460,22 @@ export function OutageMapView({
 
     if (!showHeatmap) return;
 
-    const maxImpact = Math.max(...scenarios.map(s => s.customers_impacted || 0), 1);
-    const heatData: [number, number, number][] = scenarios
-      .filter(s => s.geo_center && (s.customers_impacted || 0) > 0)
-      .map(s => [s.geo_center!.lat, s.geo_center!.lng, (s.customers_impacted || 0) / maxImpact]);
+    const maxImpact = Math.max(...displayScenarios.map(s => s.customers_impacted || 0), 1);
+    const heatData: [number, number, number][] = displayScenarios
+      .filter(s => (s.customers_impacted || 0) > 0)
+      .map(s => {
+        const loc = getEffectiveLocation(s);
+        return [loc.lat, loc.lng, (s.customers_impacted || 0) / maxImpact];
+      });
 
     const heatLayer = L.heatLayer(heatData, {
-      radius: 35,
-      blur: 25,
-      maxZoom: 12,
-      max: 1.0,
-      minOpacity: 0.4,
-      gradient: {
-        0.0: '#1e3a5f',
-        0.25: '#3b82f6',
-        0.5: '#f59e0b',
-        0.75: '#ef4444',
-        1.0: '#dc2626',
-      },
+      radius: 35, blur: 25, maxZoom: 12, max: 1.0, minOpacity: 0.4,
+      gradient: { 0.0: '#1e3a5f', 0.25: '#3b82f6', 0.5: '#f59e0b', 0.75: '#ef4444', 1.0: '#dc2626' },
     });
 
     heatLayer.addTo(mapRef.current);
     layersRef.current.heatmap = heatLayer;
-  }, [showHeatmap, scenarios]);
+  }, [showHeatmap, displayScenarios]);
 
   // Update feeder zones
   useEffect(() => {
@@ -409,9 +498,7 @@ export function OutageMapView({
         dashArray: isHighlighted ? undefined : '4 4',
       })
         .bindTooltip(`<strong>Feeder ${zone.feeder_name}</strong><br/><span style="font-size: 11px;">${zone.feeder_id}</span>`, {
-          direction: 'top',
-          offset: [0, -10],
-          opacity: 0.95,
+          direction: 'top', offset: [0, -10], opacity: 0.95,
         })
         .on('click', () => onFeederClick?.(zone));
 
@@ -433,6 +520,10 @@ export function OutageMapView({
     assets.forEach(asset => {
       const isLinked = linkedAssetIds.includes(asset.id);
       const isHighlighted = highlightedAssetId === asset.id;
+      
+      // When an event is selected, only show linked assets
+      if (hasSelectedEvent && !isLinked && !isHighlighted) return;
+
       const icon = createAssetIcon(asset.asset_type, isLinked, hasSelectedEvent, isHighlighted);
 
       const marker = L.marker([asset.lat, asset.lng], { icon })
@@ -477,7 +568,6 @@ export function OutageMapView({
 
       layer.addLayer(marker);
 
-      // Draw route line if dispatched
       if (hasAssignment && (crew.status === 'dispatched' || crew.status === 'en_route')) {
         const targetScenario = scenarios.find(s => s.id === crew.assigned_event_id);
         if (targetScenario?.geo_center) {
@@ -486,9 +576,7 @@ export function OutageMapView({
             [targetScenario.geo_center.lat, targetScenario.geo_center.lng],
           ], {
             color: crew.status === 'en_route' ? '#3b82f6' : '#f59e0b',
-            weight: 2,
-            opacity: 0.5,
-            dashArray: '8, 12',
+            weight: 2, opacity: 0.5, dashArray: '8, 12',
           });
           layer.addLayer(polyline);
         }
@@ -511,12 +599,7 @@ export function OutageMapView({
       const opacity = point.weatherCode >= 95 ? 0.7 : point.weatherCode >= 61 ? 0.5 : 0.3;
 
       const circle = L.circleMarker([point.lat, point.lng], {
-        radius: 35,
-        fillColor: color,
-        fillOpacity: opacity,
-        color: color,
-        weight: 1,
-        opacity: 0.6,
+        radius: 35, fillColor: color, fillOpacity: opacity, color, weight: 1, opacity: 0.6,
       }).bindPopup(`
         <div style="padding: 8px; min-width: 160px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -540,8 +623,9 @@ export function OutageMapView({
     if (!mapRef.current || !selectedEventId) return;
     
     const scenario = scenarios.find(s => s.id === selectedEventId);
-    if (scenario?.geo_center) {
-      mapRef.current.flyTo([scenario.geo_center.lat, scenario.geo_center.lng], 12, { duration: 0.8 });
+    if (scenario) {
+      const loc = getEffectiveLocation(scenario);
+      mapRef.current.flyTo([loc.lat, loc.lng], 12, { duration: 0.8 });
     }
   }, [selectedEventId, scenarios]);
 
