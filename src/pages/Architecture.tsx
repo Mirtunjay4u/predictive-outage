@@ -993,6 +993,7 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     evidence: [
       'Hazard: ICE — phase: ACTIVE.',
       'Remote switching without visual line inspection risks cascading failures on ice-loaded conductors.',
+      'Asset {id} ({type}) — vegetation exposure: {vegetationExposure} (threshold: 0.50).',
     ],
   },
   {
