@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatConfidenceFull } from '@/lib/etr-format';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles, ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
+import { type LucideIcon, FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles, ShieldCheck, ShieldAlert, ShieldX, CloudLightning, Flame, Droplets, Snowflake, Thermometer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useScenarios } from '@/hooks/useScenarios';
@@ -70,6 +70,88 @@ type DemoStep = {
 };
 
 const HAZARD_FALLBACK = 'heavy rain';
+
+// ── Extreme Event Classification Model (5 hazard types) ───────────────────
+type ExtremeHazardKey = 'storm' | 'wildfire' | 'flood' | 'extreme-cold' | 'extreme-heat';
+
+interface ExtremeHazard {
+  key: ExtremeHazardKey;
+  label: string;
+  shortLabel: string;
+  icon: LucideIcon;
+  severityLabel: string;
+  policyHazardType: 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN';
+  /** Context line shown in the Active Extreme Event surface */
+  contextLine: string;
+  /** Label used for the contextual KPI chip */
+  exposureLabel: string;
+  /** Adjusts demo playback description text */
+  demoContext: string;
+}
+
+const EXTREME_HAZARDS: ExtremeHazard[] = [
+  {
+    key: 'storm',
+    label: 'Severe Storm',
+    shortLabel: 'Storm',
+    icon: CloudLightning,
+    severityLabel: 'Severe',
+    policyHazardType: 'STORM',
+    contextLine: 'High-wind and lightning exposure; feeder fault probability elevated.',
+    exposureLabel: 'Wind / Lightning Risk',
+    demoContext: 'Severe thunderstorm cell intensifying; wind-driven vegetation contact on exposed feeders.',
+  },
+  {
+    key: 'wildfire',
+    label: 'Wildfire',
+    shortLabel: 'Wildfire',
+    icon: Flame,
+    severityLabel: 'Severe',
+    policyHazardType: 'WILDFIRE',
+    contextLine: 'Vegetation proximity and red-flag wind conditions elevate ignition risk.',
+    exposureLabel: 'Vegetation Exposure',
+    demoContext: 'Active wildfire perimeter advancing; vegetation exposure and heat-driven asset stress critical.',
+  },
+  {
+    key: 'flood',
+    label: 'Flooding / Heavy Rain',
+    shortLabel: 'Flood',
+    icon: Droplets,
+    severityLabel: 'Moderate',
+    policyHazardType: 'RAIN',
+    contextLine: 'Soil saturation and substation inundation risk; low-lying infrastructure at risk.',
+    exposureLabel: 'Water Exposure Risk',
+    demoContext: 'Sustained rainfall causing soil saturation; substation flooding risk in low-elevation zones.',
+  },
+  {
+    key: 'extreme-cold',
+    label: 'Extreme Cold / Ice',
+    shortLabel: 'Extreme Cold',
+    icon: Snowflake,
+    severityLabel: 'Moderate',
+    policyHazardType: 'STORM',
+    contextLine: 'Ice loading on conductors and brittle hardware failure risk.',
+    exposureLabel: 'Ice Load Risk',
+    demoContext: 'Ice accumulation on transmission lines; brittle material failure risk increasing with temperature drop.',
+  },
+  {
+    key: 'extreme-heat',
+    label: 'Extreme Heat',
+    shortLabel: 'Extreme Heat',
+    icon: Thermometer,
+    severityLabel: 'Moderate',
+    policyHazardType: 'UNKNOWN',
+    contextLine: 'Peak demand surge and transformer thermal stress; load shed risk elevated.',
+    exposureLabel: 'Thermal Load Risk',
+    demoContext: 'Extreme heat driving load surge; transformer thermal stress and cooling system strain in dense service areas.',
+  },
+];
+
+const DEFAULT_HAZARD_KEY: ExtremeHazardKey = 'storm';
+
+function getExtremeHazard(key: ExtremeHazardKey): ExtremeHazard {
+  return EXTREME_HAZARDS.find((h) => h.key === key) ?? EXTREME_HAZARDS[0]!;
+}
 
 function getOutageBreakdown(scenarios: Scenario[]) {
   const breakdown = scenarios.reduce<Record<string, number>>((acc, s) => {
@@ -279,6 +361,8 @@ export default function Dashboard() {
   const [demoScenarioOverride, setDemoScenarioOverride] = useState<Scenario | null>(null);
   const [demoBriefingTick, setDemoBriefingTick] = useState(0);
   const [briefingPulse, setBriefingPulse] = useState(false);
+  // ── Extreme Event Classification state ──────────────────────────────────
+  const [selectedHazardKey, setSelectedHazardKey] = useState<ExtremeHazardKey>(DEFAULT_HAZARD_KEY);
   const briefingPulseTimerRef = useRef<number | null>(null);
   const baseNemotronInvokeRef = useRef(supabase.functions.invoke.bind(supabase.functions));
   const demoTimerRef = useRef<number | null>(null);
@@ -494,7 +578,13 @@ export default function Dashboard() {
       Wildfire: 'WILDFIRE',
       Flood: 'RAIN', 'Heavy Rain': 'RAIN',
     };
-    const hazardType = scenario.outage_type ? (hazardMap[scenario.outage_type] ?? 'UNKNOWN') : 'UNKNOWN';
+    // selectedHazardKey overrides the scenario's outage_type mapping so the operator's
+    // selected extreme event is reflected in the policy payload. If no selection is active
+    // the original DB-derived hazard type is preserved.
+    const selectedHazard = getExtremeHazard(selectedHazardKey);
+    const hazardType = selectedHazard.policyHazardType !== 'UNKNOWN'
+      ? selectedHazard.policyHazardType
+      : (scenario.outage_type ? (hazardMap[scenario.outage_type] ?? 'UNKNOWN') : 'UNKNOWN');
 
     // ── Assets ─────────────────────────────────────────────────────────────
     // Demo path: scenario.assets is set by applyDemoPatch. Every entry must have a string
@@ -658,7 +748,7 @@ export default function Dashboard() {
         role: scenario.operator_role ?? undefined,
       },
     };
-  }, []);
+  }, [selectedHazardKey]);
 
   const runPolicyCheck = useCallback(async (overridePayload?: Scenario | null) => {
     const start = Date.now();
@@ -966,17 +1056,19 @@ export default function Dashboard() {
     const criticalLoadExposure = Math.min(25, activeScenarios.filter((scenario) => scenario.has_critical_load).length * 8);
     const crewReadiness = Math.min(20, Math.max(0, 20 - postEventScenarios.length * 2));
     const index = Math.min(100, weatherSeverity + activeHazards + criticalLoadExposure + crewReadiness);
+    // The second chip adapts its label to the selected extreme hazard type (label-only; value unchanged).
+    const hazardExposureLabel = getExtremeHazard(selectedHazardKey).exposureLabel;
     return {
       index,
       severity: deriveRiskSeverity(index),
       chips: [
         { key: 'Weather severity', value: weatherSeverity },
-        { key: 'Active hazards', value: activeHazards },
+        { key: hazardExposureLabel, value: activeHazards },
         { key: 'Critical load exposure', value: criticalLoadExposure },
         { key: 'Crew readiness', value: crewReadiness },
       ],
     };
-  }, [activeScenarios, highPriorityScenarios.length, postEventScenarios.length, preEventScenarios.length]);
+  }, [activeScenarios, highPriorityScenarios.length, postEventScenarios.length, preEventScenarios.length, selectedHazardKey]);
 
   const topFeeders = useMemo(() => {
     const feeders = new Map<string, { feederId: string; name: string; customers: number; critical: number; etr: Date[]; riskScore: number }>();
@@ -1104,10 +1196,83 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* ── Active Extreme Event Surface ───────────────────────────────────────
+           Enterprise event classification bar. Shows the active extreme event
+           with severity badge and a horizontal pill selector for all 5 hazard types.
+           Styled subtly — enterprise monochrome, not weather-widget.
+      ────────────────────────────────────────────────────────────────────────── */}
+      {(() => {
+        const activeHazard = getExtremeHazard(selectedHazardKey);
+        const HazardIcon = activeHazard.icon;
+
+        const severityBadgeClass =
+          activeHazard.severityLabel === 'Severe'
+            ? 'border-destructive/40 bg-destructive/8 text-destructive'
+            : 'border-amber-500/40 bg-amber-500/8 text-amber-700 dark:text-amber-300';
+
+        return (
+          <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+            {/* Top row: active event label */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Active Extreme Event
+                </span>
+                <span className="text-muted-foreground/40 text-[11px]">›</span>
+                <HazardIcon className="h-3.5 w-3.5 text-foreground/70" strokeWidth={1.75} />
+                <span className="text-sm font-semibold text-foreground">{activeHazard.label}</span>
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide',
+                    severityBadgeClass,
+                  )}
+                >
+                  {activeHazard.severityLabel}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80 italic">{activeHazard.contextLine}</p>
+            </div>
+
+            {/* Pill selector */}
+            <div
+              className="mt-3 flex flex-wrap gap-1.5"
+              role="group"
+              aria-label="Select active extreme event type"
+            >
+              {EXTREME_HAZARDS.map((hazard) => {
+                const PillIcon = hazard.icon;
+                const isSelected = hazard.key === selectedHazardKey;
+                return (
+                  <button
+                    key={hazard.key}
+                    type="button"
+                    aria-pressed={isSelected}
+                    onClick={() => setSelectedHazardKey(hazard.key)}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors duration-150',
+                      DASHBOARD_INTERACTIVE_BUTTON_CLASS,
+                      isSelected
+                        ? 'border-foreground/40 bg-foreground/8 text-foreground'
+                        : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                    )}
+                  >
+                    <PillIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                    {hazard.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       <section className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold">Scenario Playback (GTC Demo)</h2>
+             <h2 className="text-sm font-semibold">Scenario Playback (GTC Demo)</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Active hazard context: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).demoContext}</span>
+            </p>
             <p className="mt-1 text-[11px] text-muted-foreground">Demo mode uses local playback; policy + AI calls remain real.</p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Now Playing: {demoRunning && demoStepIndex >= 0 ? demoSteps[demoStepIndex]?.label : 'Idle'} ({demoRunning && demoStepIndex >= 0 ? demoStepIndex + 1 : 0}/{demoSteps.length})
@@ -1589,7 +1754,9 @@ export default function Dashboard() {
         const criticalLoadCount = activeScenarios.filter((s) => s.has_critical_load).length;
         const etrBandLabel = policyView?.etrBand?.band ?? '—';
         const etrConfLabel = policyView?.etrBand?.confidence ? formatConfidenceFull(policyView.etrBand.confidence) : '—';
-        const activeHazardLabel = hazard ? hazard.charAt(0).toUpperCase() + hazard.slice(1) : '—';
+        // Use the selected extreme hazard for the Active Hazard tile
+        const activeExtHazard = getExtremeHazard(selectedHazardKey);
+        const activeHazardLabel = activeExtHazard.label;
         const policyStatusLabel2 = !policyView ? 'Unknown' : policyGate === 'BLOCK' ? 'Blocked' : policyGate === 'WARN' ? 'Warn' : 'Clear';
         const policyTileColor = !policyView
           ? 'border-border/50 text-muted-foreground'
@@ -1651,11 +1818,12 @@ export default function Dashboard() {
             id: 'hazard',
             label: 'Active Hazard',
             value: activeHazardLabel,
-            sub: `${stats.active} active · ${stats.highPriority} high-priority`,
+            // Sub-label reflects the hazard-specific exposure type (e.g., Vegetation Exposure for Wildfire)
+            sub: `${activeExtHazard.exposureLabel} · ${stats.active} active`,
             subColor: 'text-muted-foreground',
             tileColor: 'border-border/50 text-foreground',
             tileBg: 'bg-card',
-            icon: Activity,
+            icon: activeExtHazard.icon,
           },
         ];
 
