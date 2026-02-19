@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
+import { outageToHazard, type HazardOverlay } from "@/lib/severity";
 import type { ScenarioWithIntelligence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
 interface EventDetailDrawerProps {
@@ -44,13 +45,24 @@ interface EventDetailDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenInCopilot: () => void;
+  activeHazardOverlays?: HazardOverlay[];
 }
 
-export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }: EventDetailDrawerProps) {
+export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, activeHazardOverlays = [] }: EventDetailDrawerProps) {
   const navigate = useNavigate();
   const { data: assets = [] } = useAssets();
   const { data: linkedAssetIds = [] } = useEventAssets(event?.id || null);
 
+  // Compute hazard overlap for the selected event
+  const hazardOverlap = useMemo(() => {
+    if (!event || activeHazardOverlays.length === 0) return null;
+    const eventHazard = outageToHazard(event.outage_type);
+    const overlapping = activeHazardOverlays.filter(h => h === eventHazard);
+    return {
+      hasOverlap: overlapping.length > 0,
+      types: overlapping,
+    };
+  }, [event, activeHazardOverlays]);
   const linkedAssets = assets.filter(a => linkedAssetIds.includes(a.id));
   const assetCounts = {
     Fault: linkedAssets.filter(a => a.asset_type === 'Fault').length,
@@ -252,7 +264,34 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot }
                   </div>
                 </section>
 
-                {/* SECTION: Linked Assets */}
+                {/* SECTION: Hazard Overlap */}
+                {hazardOverlap && activeHazardOverlays.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Hazard Overlap
+                    </h3>
+                    <div className={`p-3 rounded-lg border flex items-center gap-3 ${
+                      hazardOverlap.hasOverlap
+                        ? 'bg-destructive/5 border-destructive/30'
+                        : 'bg-muted/40 border-border'
+                    }`}>
+                      <span className={`text-sm font-semibold ${
+                        hazardOverlap.hasOverlap ? 'text-destructive' : 'text-muted-foreground'
+                      }`}>
+                        {hazardOverlap.hasOverlap ? 'Yes' : 'No'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {hazardOverlap.hasOverlap
+                          ? `Overlaps: ${hazardOverlap.types.join(', ')}`
+                          : `Active overlays: ${activeHazardOverlays.join(', ')} — no match`
+                        }
+                      </span>
+                    </div>
+                  </section>
+                )}
+
+
                 {hasLinkedAssets && (
                   <section>
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
