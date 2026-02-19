@@ -629,6 +629,20 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     iconCls: 'text-blue-500',
     labelCls: 'text-blue-700 dark:text-blue-300',
   },
+  ice_load_risk: {
+    icon: Snowflake,
+    label: 'Ice Vegetation Line Risk',
+    chipCls: 'bg-sky-500/10 border-sky-400/30',
+    iconCls: 'text-sky-500',
+    labelCls: 'text-sky-700 dark:text-sky-300',
+  },
+  critical_backup_window_short: {
+    icon: Zap,
+    label: 'Backup Window Short',
+    chipCls: 'bg-red-500/10 border-red-400/30',
+    iconCls: 'text-red-500',
+    labelCls: 'text-red-700 dark:text-red-300',
+  },
 };
 
 function EscalationFlagChips({ flags }: { flags: string[] }) {
