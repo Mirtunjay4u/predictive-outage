@@ -12,31 +12,35 @@ import { cn } from '@/lib/utils';
 
 const demoSteps = [
   {
-    title: 'Review the Operations Dashboard',
-    description: 'Start on the Dashboard to see active event KPIs, high-priority alerts, and system-wide metrics at a glance.',
+    title: 'Operations Dashboard',
+    description: 'Start on the Dashboard to see active event KPIs, high-priority alerts, crew workload, and system-wide readiness at a glance.',
   },
   {
-    title: 'Explore the Events List',
-    description: 'Navigate to Events to browse outage events. Toggle between table and card views, filter by lifecycle stage, priority, or outage type.',
+    title: 'Scenario Playback',
+    description: 'Use the Scenario Playback panel on the Dashboard to step through a pre-loaded hazard scenario — select a hazard type and advance through lifecycle stages.',
   },
   {
-    title: 'Open an Event & View Details',
+    title: 'Events List',
+    description: 'Navigate to Events to browse outage events. Toggle between table and card views, and filter by lifecycle stage, priority, or outage type.',
+  },
+  {
+    title: 'Event Details',
     description: 'Click any event to open the Event Details drawer. Review ETR confidence bands, critical-load runway, and crew assignments.',
   },
   {
-    title: 'Generate a Situation Report',
+    title: 'Situation Report',
     description: 'From Event Details, open the Situation Report panel. Generate an AI-assisted SitRep, review the content, and approve it.',
   },
   {
-    title: 'Create Customer Communications',
+    title: 'Customer Communications',
     description: 'With an approved SitRep, generate the Customer Communications Pack — SMS, Email, and Web Banner drafts in utility-safe language.',
   },
   {
-    title: 'Visualize on the Outage Map',
+    title: 'Outage Map',
     description: 'Navigate to the Outage Map to see events geographically. Select events, view feeder zones, and explore crew positions.',
   },
   {
-    title: 'Review Analytics & Copilot Studio',
+    title: 'Analytics & Copilot Studio',
     description: 'Visit Analytics for operational insights, and explore Copilot Studio for AI-assisted event analysis and recommendations.',
   },
 ];
