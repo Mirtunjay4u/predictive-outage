@@ -40,6 +40,11 @@ export interface CopilotResponse {
   assumptions: string[];
   source_notes: string[];
   disclaimer: string;
+  /** Runtime model attribution — shown in UI for auditability */
+  model_engine?: string;
+  /** Whether a fallback was triggered */
+  fallback_used?: boolean;
+  fallback_reason?: string;
 }
 
 /**

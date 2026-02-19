@@ -358,10 +358,24 @@ export default function CopilotStudio() {
                   <Bot className="w-4 h-4 text-primary" />
                   Operator Analysis
                 </CardTitle>
-                {latestEntry && !isLoading && (
-                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={handleCopy}>
-                    {copied ? <><Check className="w-4 h-4 text-green-500" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
-                  </Button>
+                <div className="flex items-center gap-2">
+                  {latestEntry && !isLoading && (
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={handleCopy}>
+                      {copied ? <><Check className="w-4 h-4 text-green-500" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {/* Model attribution — always visible */}
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-primary/30 text-primary">
+                  <Zap className="w-3 h-3" />
+                  Model: NVIDIA Nemotron (NIM)
+                </Badge>
+                {latestEntry?.raw.fallback_used && (
+                  <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
+                    Fallback Active
+                  </Badge>
                 )}
               </div>
             </CardHeader>
@@ -501,10 +515,11 @@ export default function CopilotStudio() {
                       </div>
                     </div>
 
-                    {/* Timestamp */}
-                    <p className="text-[11px] text-muted-foreground/60 text-right">
-                      Generated {latestEntry.timestamp.toLocaleTimeString()} for "{latestEntry.eventName}"
-                    </p>
+                    {/* Model + Timestamp */}
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground/60">
+                      <span>{latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
+                      <span>Generated {latestEntry.timestamp.toLocaleTimeString()} for "{latestEntry.eventName}"</span>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
