@@ -301,8 +301,6 @@ serve(async (req: Request): Promise<Response> => {
     : [];
 
   // ── ICE active-phase switching block ─────────────────────────────────────────
-  // Remote switching during an active ice storm risks cascading failures on
-  // ice-loaded conductors. De-energization requires crew visual confirmation.
   const iceActiveBlock: BlockedAction[] =
     scenario.hazardType === "ICE" && scenario.phase === "ACTIVE"
       ? [
@@ -318,9 +316,28 @@ serve(async (req: Request): Promise<Response> => {
         ]
       : [];
 
+  // ── STORM active-phase crew dispatch block ────────────────────────────────────
+  // High wind conditions elevate conductor contact and tree strike risk for
+  // field personnel. Crew dispatch is deferred until conditions stabilise.
+  const stormActiveBlock: BlockedAction[] =
+    scenario.hazardType === "STORM" && scenario.phase === "ACTIVE"
+      ? [
+          {
+            action: "dispatch_crews",
+            reason: "Active storm conditions — field crew dispatch deferred until wind speeds drop below operational safety threshold.",
+            remediation: [
+              "Monitor wind speed telemetry and await all-clear from safety officer.",
+              "Stage crews at a safe distance from the affected zone.",
+              "Re-evaluate dispatch readiness after conditions stabilise.",
+            ],
+          },
+        ]
+      : [];
+
   const baseBlocked: BlockedAction[] = [
     ...vegetationFireBlock,
     ...iceActiveBlock,
+    ...stormActiveBlock,
     ...crewResult.blockedActions,
     ...criticalResult.blockedActions.map((action) => ({
       action,
