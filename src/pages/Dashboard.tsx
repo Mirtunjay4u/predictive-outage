@@ -148,7 +148,7 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
   {
     key: 'extreme-cold',
     label: 'Ice Storm / Blizzards',
-    shortLabel: 'Ice Storm / Blizzards',
+    shortLabel: 'Ice Storm',
     icon: Snowflake,
     severityLabel: 'Moderate',
     policyHazardType: 'STORM',
