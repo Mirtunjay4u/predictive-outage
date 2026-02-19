@@ -1,5 +1,5 @@
 import { format, formatDistanceToNow } from 'date-fns';
-import { AlertTriangle, MoreVertical, Zap } from 'lucide-react';
+import { AlertTriangle, MoreVertical, Zap, Play, Loader2, ShieldX, ShieldAlert, ShieldCheck } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -20,7 +20,10 @@ import { cn } from '@/lib/utils';
 import { deriveSeverity } from '@/components/events/EventDetailPanel';
 import type { Scenario } from '@/types/scenario';
 
-// ── Column helper classes ────────────────────────────────────────────────────
+// ── Policy state type (mirrors Events.tsx PolicyMap value) ─────────────────────
+type PolicyEntry = { status: 'idle' | 'loading' | 'done' | 'error'; result: { policyGate?: string; allowedActions?: unknown[]; blockedActions?: unknown[]; escalationFlags?: string[] } | null };
+
+// ── Column helper classes ─────────────────────────────────────────────────────
 function priorityClass(p: string | null) {
   if (p === 'high') return 'bg-red-500/10 text-red-700 border-red-500/40 dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/50';
   if (p === 'medium') return 'bg-amber-500/10 text-amber-700 border-amber-500/40 dark:text-amber-300';
@@ -62,27 +65,82 @@ function SeverityDots({ score }: { score: number }) {
   );
 }
 
+// ── Policy cell ────────────────────────────────────────────────────────────────
+function PolicyCell({ entry, onRun, eventId }: { entry: PolicyEntry | undefined; onRun: (id: string) => void; eventId: string }) {
+  if (!entry || entry.status === 'idle') {
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); onRun(eventId); }}
+        className="flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors whitespace-nowrap"
+      >
+        <Play className="h-2.5 w-2.5" />
+        Run Copilot
+      </button>
+    );
+  }
+  if (entry.status === 'loading') {
+    return (
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Evaluating…</span>
+      </div>
+    );
+  }
+  if (entry.status === 'error') {
+    return <span className="text-[10px] text-destructive">Eval failed</span>;
+  }
+
+  const gate = entry.result?.policyGate ?? 'PASS';
+  const icon =
+    gate === 'BLOCK' ? <ShieldX className="h-3 w-3 text-red-400" />
+    : gate === 'WARN' ? <ShieldAlert className="h-3 w-3 text-amber-400" />
+    : <ShieldCheck className="h-3 w-3 text-emerald-400" />;
+  const cls =
+    gate === 'BLOCK' ? 'bg-red-500/10 border-red-400/40 text-red-700 dark:text-red-300'
+    : gate === 'WARN' ? 'bg-amber-500/10 border-amber-400/40 text-amber-700 dark:text-amber-300'
+    : 'bg-emerald-500/10 border-emerald-400/40 text-emerald-700 dark:text-emerald-300';
+  const allowed = entry.result?.allowedActions?.length ?? 0;
+  const blocked = entry.result?.blockedActions?.length ?? 0;
+
+  return (
+    <div className="space-y-0.5">
+      <div className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold', cls)}>
+        {icon}
+        {gate}
+      </div>
+      <div className="flex gap-1.5 text-[10px]">
+        <span className="text-emerald-600 dark:text-emerald-400">✓{allowed}</span>
+        <span className="text-red-600 dark:text-red-400">✗{blocked}</span>
+      </div>
+    </div>
+  );
+}
+
 interface EventTableProps {
   scenarios: Scenario[];
+  policyMap?: Record<string, PolicyEntry>;
   onRowClick: (scenario: Scenario) => void;
   onEdit: (scenario: Scenario) => void;
   onDelete: (id: string) => void;
+  onRunCopilot?: (id: string) => void;
+  bordered?: boolean;
 }
 
-export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTableProps) {
+export function EventTable({ scenarios, policyMap = {}, onRowClick, onEdit, onDelete, onRunCopilot, bordered = true }: EventTableProps) {
   return (
-    <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden">
+    <div className={cn('bg-card overflow-hidden', bordered && 'rounded-xl border border-border/50 shadow-sm')}>
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent bg-muted/30">
-            <TableHead className="font-semibold min-w-[180px]">Event</TableHead>
+            <TableHead className="font-semibold min-w-[200px]">Event / OMS Tag</TableHead>
             <TableHead className="font-semibold">Phase</TableHead>
             <TableHead className="font-semibold">Type</TableHead>
             <TableHead className="font-semibold">Priority</TableHead>
             <TableHead className="font-semibold">Severity</TableHead>
-            <TableHead className="font-semibold">ETR Conf.</TableHead>
+            <TableHead className="font-semibold">ETR Band</TableHead>
             <TableHead className="font-semibold">Crit. Load</TableHead>
             <TableHead className="font-semibold">Escalation</TableHead>
+            <TableHead className="font-semibold">Policy</TableHead>
             <TableHead className="font-semibold">Updated</TableHead>
             <TableHead className="w-[50px]" />
           </TableRow>
@@ -100,26 +158,39 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
               scenario.critical_escalation_threshold_hours != null &&
               scenario.backup_runtime_remaining_hours <= scenario.critical_escalation_threshold_hours;
 
+            // OMS-style feeder/substation tag from fault_id / feeder_id
+            const omsTag = scenario.feeder_id
+              ? `Feeder ${scenario.feeder_id}`
+              : scenario.fault_id
+              ? `Fault ${scenario.fault_id}`
+              : null;
+
             return (
               <TableRow
                 key={scenario.id}
                 className="cursor-pointer group transition-colors hover:bg-primary/5 border-b border-border/30"
                 onClick={() => onRowClick(scenario)}
               >
-                {/* Name + description */}
+                {/* Name + OMS tag */}
                 <TableCell className="font-medium py-3">
                   <div>
-                    <span className="group-hover:text-primary transition-colors text-sm">
+                    <span className="group-hover:text-primary transition-colors text-sm font-semibold">
                       {scenario.name}
                     </span>
+                    {omsTag && (
+                      <span className="ml-2 rounded bg-muted/60 px-1.5 py-0.5 text-[9px] font-mono text-muted-foreground border border-border/40">
+                        {omsTag}
+                      </span>
+                    )}
                     {scenario.location_name && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                      <p className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
                         {scenario.location_name}
+                        {scenario.service_area && ` · ${scenario.service_area}`}
                       </p>
                     )}
                     {scenario.customers_impacted != null && (
                       <p className="text-xs text-muted-foreground">
-                        {scenario.customers_impacted.toLocaleString()} cust.
+                        {scenario.customers_impacted.toLocaleString()} customers
                       </p>
                     )}
                   </div>
@@ -127,10 +198,7 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
 
                 {/* Lifecycle phase */}
                 <TableCell>
-                  <span className={cn(
-                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold',
-                    lifecycleClass(scenario.lifecycle_stage),
-                  )}>
+                  <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold', lifecycleClass(scenario.lifecycle_stage))}>
                     {scenario.lifecycle_stage}
                   </span>
                 </TableCell>
@@ -142,25 +210,25 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
 
                 {/* Priority */}
                 <TableCell>
-                  <span className={cn(
-                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize',
-                    priorityClass(scenario.priority),
-                  )}>
+                  <span className={cn('inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize', priorityClass(scenario.priority))}>
                     {scenario.priority ?? 'medium'}
                   </span>
                 </TableCell>
 
                 {/* Severity dots */}
                 <TableCell>
-                  <SeverityDots score={severity} />
+                  <div className="flex flex-col gap-0.5">
+                    <SeverityDots score={severity} />
+                    <span className="text-[10px] text-muted-foreground">{severity}/5</span>
+                  </div>
                 </TableCell>
 
                 {/* ETR band + confidence */}
                 <TableCell>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs text-muted-foreground tabular-nums">{etrBand}</span>
-                    <span className={cn('text-[11px] font-semibold', etrConfClass(scenario.etr_confidence))}>
-                      {scenario.etr_confidence ?? '—'}
+                    <span className="text-xs text-foreground tabular-nums font-medium">{etrBand}</span>
+                    <span className={cn('text-[10px] font-semibold', etrConfClass(scenario.etr_confidence))}>
+                      {scenario.etr_confidence ?? '—'} conf.
                     </span>
                   </div>
                 </TableCell>
@@ -168,13 +236,18 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
                 {/* Critical load */}
                 <TableCell>
                   {scenario.has_critical_load ? (
-                    <div className="flex items-center gap-1">
-                      <Zap className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                      <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                        {scenario.backup_runtime_remaining_hours != null
-                          ? `${scenario.backup_runtime_remaining_hours.toFixed(1)}h`
-                          : 'Active'}
-                      </span>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <Zap className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                        <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                          {scenario.backup_runtime_remaining_hours != null
+                            ? `${scenario.backup_runtime_remaining_hours.toFixed(1)}h left`
+                            : 'Active'}
+                        </span>
+                      </div>
+                      {(scenario.critical_load_types as string[] ?? []).slice(0, 2).map((t) => (
+                        <span key={t} className="block text-[9px] text-muted-foreground">{t}</span>
+                      ))}
                     </div>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
@@ -193,6 +266,15 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
+                </TableCell>
+
+                {/* Policy evaluation cell */}
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <PolicyCell
+                    entry={policyMap[scenario.id]}
+                    onRun={onRunCopilot ?? (() => {})}
+                    eventId={scenario.id}
+                  />
                 </TableCell>
 
                 {/* Updated */}
@@ -219,6 +301,11 @@ export function EventTable({ scenarios, onRowClick, onEdit, onDelete }: EventTab
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(scenario); }}>
                         Edit Event
                       </DropdownMenuItem>
+                      {onRunCopilot && (
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRunCopilot(scenario.id); }}>
+                          Run Copilot
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         onClick={(e) => { e.stopPropagation(); onDelete(scenario.id); }}
                         className="text-destructive"
