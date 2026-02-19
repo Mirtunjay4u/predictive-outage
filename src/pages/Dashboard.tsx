@@ -1234,7 +1234,7 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-            <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{scenarioName}</span> • Hazard: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).label}</span></p>
+            <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).label} Event</span> • Hazard: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).label}</span></p>
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}><span className="font-medium text-foreground">{summary}</span> · {stats.total} total tracked</p>
           </div>
           <div className="flex items-center gap-2">
