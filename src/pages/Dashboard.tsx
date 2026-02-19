@@ -230,7 +230,7 @@ function deriveRiskSeverity(index: number) {
 }
 
 function getRiskBadgeClass(severity: string) {
-  if (severity === 'Severe') return 'bg-destructive/10 text-destructive border-destructive/40';
+  if (severity === 'Severe') return 'bg-red-500/10 text-red-700 border-red-500/40 dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/50';
   if (severity === 'Elevated') return 'bg-orange-500/10 text-orange-700 border-orange-500/40 dark:text-orange-300';
   if (severity === 'Moderate') return 'bg-amber-500/10 text-amber-700 border-amber-500/40 dark:text-amber-300';
   return 'bg-emerald-500/10 text-emerald-700 border-emerald-500/40 dark:text-emerald-300';
@@ -1339,7 +1339,7 @@ export default function Dashboard() {
 
         const getSeverityBadgeClass = (s: SeverityOverride) =>
           s === 'Severe'
-            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            ? 'border-red-500/40 bg-red-500/10 text-red-700 dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/50'
             : s === 'Moderate'
               ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
               : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
@@ -2257,7 +2257,7 @@ export default function Dashboard() {
                             {isPolicyPhase && policyGate && (
                               <span className={cn(
                                 'inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border',
-                                isGateBlock ? 'bg-destructive/10 border-destructive/40 text-destructive'
+                                isGateBlock ? 'bg-red-500/10 border-red-500/40 text-red-700 dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/50'
                                   : isGateWarn ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300'
                                   : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
                               )}>
