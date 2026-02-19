@@ -1083,22 +1083,40 @@ function RuleCoverageTable() {
         </tbody>
       </table>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border/20 pt-3">
-        <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Legend</p>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px] text-amber-400">SC-ID</span>
-          <span className="text-[9px] text-muted-foreground/70">Safety constraint</span>
+      {/* Legend + footnote */}
+      <div className="mt-4 space-y-3 border-t border-border/20 pt-3">
+        {/* Chip legend */}
+        <div className="flex flex-wrap items-center gap-4">
+          <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Legend</p>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px] text-amber-400">SC-ID</span>
+            <span className="text-[9px] text-muted-foreground/70">Safety constraint</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">flag</span>
+            <span className="text-[9px] text-muted-foreground/70">Escalation flag emitted</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive">action</span>
+            <span className="text-[9px] text-muted-foreground/70">Blocked action</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">flag</span>
-          <span className="text-[9px] text-muted-foreground/70">Escalation flag emitted</span>
+
+        {/* Footnote */}
+        <div className="rounded-md border border-border/30 bg-muted/20 px-3 py-2.5 text-[10px] leading-relaxed text-muted-foreground/80 space-y-1">
+          <p>
+            <span className="font-semibold text-primary/70">Escalation flags</span> are emitted in the{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">escalationFlags</code> array.{' '}
+            <span className="font-semibold text-destructive/70">Blocked actions</span> appear in{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">blockedActions</code> with remediation steps.{' '}
+            <span className="font-semibold text-amber-400/80">Safety constraints</span> appear in{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">safetyConstraints</code> with{' '}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[9px]">triggered: true</code> and evidence lines.
+          </p>
+          <p className="text-muted-foreground/60 italic">
+            All outputs are advisory — operators review and approve before any action is taken.
+          </p>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive">action</span>
-          <span className="text-[9px] text-muted-foreground/70">Blocked action</span>
-        </div>
-        <p className="ml-auto text-[9px] text-muted-foreground/50 italic">All outputs are advisory — operator approval required before any action is taken.</p>
       </div>
     </div>
   );
