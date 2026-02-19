@@ -363,6 +363,15 @@ export default function Dashboard() {
   const [briefingPulse, setBriefingPulse] = useState(false);
   // ── Extreme Event Classification state ──────────────────────────────────
   const [selectedHazardKey, setSelectedHazardKey] = useState<ExtremeHazardKey>(DEFAULT_HAZARD_KEY);
+  // ── Severity override state (null = use hazard default) ─────────────────
+  type SeverityOverride = 'Low' | 'Moderate' | 'Severe';
+  const [severityOverride, setSeverityOverride] = useState<SeverityOverride | null>(null);
+
+  // When the hazard changes, reset the override so each hazard starts at its own default
+  const handleHazardChange = (key: ExtremeHazardKey) => {
+    setSelectedHazardKey(key);
+    setSeverityOverride(null);
+  };
   const briefingPulseTimerRef = useRef<number | null>(null);
   const baseNemotronInvokeRef = useRef(supabase.functions.invoke.bind(supabase.functions));
   const demoTimerRef = useRef<number | null>(null);
@@ -552,9 +561,16 @@ export default function Dashboard() {
 
     // ── Severity ───────────────────────────────────────────────────────────
     // Honour an explicit numeric severity from a demo patch (1–5 clamped).
+    // severityOverride from the UI takes precedence over everything else.
     // Fall back to blending priority rank + customers_impacted bracket.
     let severity: number;
-    if (typeof sr.severity === 'number' && isFinite(sr.severity)) {
+    if (severityOverride === 'Severe') {
+      severity = 5;
+    } else if (severityOverride === 'Moderate') {
+      severity = 3;
+    } else if (severityOverride === 'Low') {
+      severity = 1;
+    } else if (typeof sr.severity === 'number' && isFinite(sr.severity)) {
       severity = Math.min(5, Math.max(1, Math.round(sr.severity)));
     } else {
       const priorityScore = scenario.priority === 'high' ? 5 : scenario.priority === 'low' ? 1 : 3;
@@ -1205,16 +1221,21 @@ export default function Dashboard() {
         const activeHazard = getExtremeHazard(selectedHazardKey);
         const HazardIcon = activeHazard.icon;
 
-        const severityBadgeClass =
-          activeHazard.severityLabel === 'Severe'
+        // Severity label: override takes precedence over hazard default
+        const activeSeverityLabel: SeverityOverride = severityOverride ?? (activeHazard.severityLabel as SeverityOverride);
+
+        const getSeverityBadgeClass = (s: SeverityOverride) =>
+          s === 'Severe'
             ? 'border-destructive/40 bg-destructive/10 text-destructive'
-            : activeHazard.severityLabel === 'Moderate'
+            : s === 'Moderate'
               ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
               : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
 
+        const SEVERITY_OPTIONS: SeverityOverride[] = ['Low', 'Moderate', 'Severe'];
+
         return (
           <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-            {/* Top row: active event label */}
+            {/* Top row: active event label + severity badge */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
@@ -1225,17 +1246,17 @@ export default function Dashboard() {
                 <span className="text-sm font-semibold text-foreground">{activeHazard.label}</span>
                 <span
                   className={cn(
-                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide',
-                    severityBadgeClass,
+                    'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-150',
+                    getSeverityBadgeClass(activeSeverityLabel),
                   )}
                 >
-                  {activeHazard.severityLabel}
+                  {activeSeverityLabel}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground/80 italic">{activeHazard.contextLine}</p>
             </div>
 
-            {/* Pill selector */}
+            {/* Hazard pill selector */}
             <div
               className="mt-3 flex flex-wrap gap-1.5"
               role="group"
@@ -1249,7 +1270,7 @@ export default function Dashboard() {
                     key={hazard.key}
                     type="button"
                     aria-pressed={isSelected}
-                    onClick={() => setSelectedHazardKey(hazard.key)}
+                    onClick={() => handleHazardChange(hazard.key)}
                     className={cn(
                       'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors duration-150',
                       DASHBOARD_INTERACTIVE_BUTTON_CLASS,
@@ -1263,6 +1284,44 @@ export default function Dashboard() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Severity override row */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-border/30 pt-2.5">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 shrink-0">
+                Severity Override
+              </span>
+              <div className="flex gap-1.5" role="group" aria-label="Override hazard severity">
+                {SEVERITY_OPTIONS.map((level) => {
+                  const isActive = activeSeverityLabel === level;
+                  const isExplicitOverride = severityOverride === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() =>
+                        // Clicking the active override again resets to hazard default
+                        setSeverityOverride(isExplicitOverride ? null : level)
+                      }
+                      className={cn(
+                        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-150',
+                        DASHBOARD_INTERACTIVE_BUTTON_CLASS,
+                        isActive
+                          ? getSeverityBadgeClass(level)
+                          : 'border-border/40 bg-transparent text-muted-foreground hover:border-border/70 hover:text-foreground',
+                      )}
+                    >
+                      {level}
+                    </button>
+                  );
+                })}
+              </div>
+              {severityOverride && (
+                <span className="text-[10px] text-muted-foreground/60 italic">
+                  overrides default · click active pill to reset
+                </span>
+              )}
             </div>
           </div>
         );
