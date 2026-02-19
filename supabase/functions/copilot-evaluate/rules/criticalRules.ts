@@ -28,6 +28,24 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
     escalationFlags.add("critical_backup_window_short");
   }
 
+  // ── ICE hazard rules ──────────────────────────────────────────────────────────
+  // During ice storms, vegetation (tree branches, ice accumulation on lines)
+  // is a primary failure driver. Flag when any asset exceeds 0.5 exposure.
+  const isIce = scenario.hazardType === "ICE";
+  const iceVegetationAssets = isIce
+    ? scenario.assets.filter((a) => typeof a.vegetationExposure === "number" && a.vegetationExposure > 0.5)
+    : [];
+  const hasIceLoadRisk = isIce && iceVegetationAssets.length > 0;
+
+  if (hasIceLoadRisk) {
+    escalationFlags.add("ice_load_risk");
+  }
+
+  // Block reroute_load during active ICE events — switching on ice-loaded lines
+  // without visual crew confirmation risks equipment damage and crew safety.
+  const blockRerouteForIce = isIce && scenario.phase === "ACTIVE";
+
+  // ── Safety constraints ────────────────────────────────────────────────────────
   const safetyConstraints: SafetyConstraint[] = [
     {
       id: "SC-CRIT-001",
@@ -53,11 +71,44 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
           ? lowBackupLoads.map((load) => `${load.type}${load.name ? ` (${load.name})` : ""} backup < 4h.`)
           : ["No backup duration under 4 hours provided."],
     },
+    {
+      id: "SC-ICE-001",
+      title: "Ice storm switching prohibition",
+      description:
+        "Load rerouting via switching is prohibited during active ICE events without crew visual confirmation of line state.",
+      severity: blockRerouteForIce ? "HIGH" : "LOW",
+      triggered: blockRerouteForIce,
+      evidence: blockRerouteForIce
+        ? [
+            "Hazard: ICE — phase: ACTIVE.",
+            "Remote switching without visual line inspection risks cascading failures on ice-loaded conductors.",
+            blockRerouteForIce && hasIceLoadRisk
+              ? `${iceVegetationAssets.length} asset(s) with vegetation exposure > 0.5 identified.`
+              : "",
+          ].filter(Boolean)
+        : ["Not triggered — ICE phase not ACTIVE or hazard is not ICE."],
+    },
+    {
+      id: "SC-ICE-002",
+      title: "Ice vegetation line loading",
+      description:
+        "Assets with high vegetation exposure are at elevated risk of conductor failure under ice accumulation.",
+      severity: hasIceLoadRisk ? "HIGH" : "LOW",
+      triggered: hasIceLoadRisk,
+      evidence: hasIceLoadRisk
+        ? iceVegetationAssets.map(
+            (a) => `Asset ${a.id} (${a.type}) — vegetation exposure: ${(a.vegetationExposure ?? 0).toFixed(2)}.`,
+          )
+        : ["No ICE hazard or all assets below 0.5 vegetation exposure threshold."],
+    },
   ];
 
   const blockedActions: ActionType[] = [];
   if (criticalLoadAtRisk) {
     blockedActions.push("deenergize_section");
+  }
+  if (blockRerouteForIce) {
+    blockedActions.push("reroute_load");
   }
 
   return {
