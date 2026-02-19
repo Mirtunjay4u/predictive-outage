@@ -1070,9 +1070,18 @@ function PolicySection({
                         <div>
                           <p className="font-semibold text-foreground mb-1">Assumptions</p>
                           <ul className="space-y-0.5">
-                            {policy.explainability.assumptions!.map((a, i) => (
-                              <li key={i} className="text-muted-foreground leading-snug">· {a}</li>
-                            ))}
+                            {policy.explainability.assumptions!.map((a, i) => {
+                              const isEscalation = a.includes('escalation flagged');
+                              return (
+                                <li key={i} className={cn('leading-snug flex items-start gap-1.5', isEscalation ? 'text-foreground' : 'text-muted-foreground')}>
+                                  {isEscalation
+                                    ? <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                                    : <span className="shrink-0 text-muted-foreground">·</span>
+                                  }
+                                  <span className={isEscalation ? 'font-semibold' : ''}>{a}</span>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}
