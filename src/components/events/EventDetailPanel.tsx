@@ -1087,10 +1087,16 @@ function PolicySection({
                       )}
                       {(policy.explainability.dataQualityWarnings ?? []).length > 0 && (
                         <div>
-                          <p className="font-semibold text-amber-600 dark:text-amber-400 mb-1">Data Quality Warnings</p>
-                          <ul className="space-y-0.5">
+                          <p className="font-semibold text-foreground mb-1.5">Data Quality Warnings</p>
+                          <ul className="space-y-1.5">
                             {policy.explainability.dataQualityWarnings!.map((w, i) => (
-                              <li key={i} className="text-muted-foreground leading-snug">⚠ {w}</li>
+                              <li
+                                key={i}
+                                className="rounded-md border border-amber-400/25 border-l-2 border-l-amber-500 bg-amber-500/5 pl-3 pr-3 py-2 flex items-start gap-2"
+                              >
+                                <span className="mt-1 h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                                <span className="text-[10px] text-amber-700 dark:text-amber-300 leading-snug">⚠ {w}</span>
+                              </li>
                             ))}
                           </ul>
                         </div>
