@@ -1537,7 +1537,7 @@ export default function Dashboard() {
               const flags = policyEscalationFlags.map((f) => humanizePolicyFlag(f));
               const flagPart = flags.length > 0 ? flags.join(' · ') : 'Policy constraints active';
               const rawConf = policyView?.etrBand?.confidence;
-              const confStr = typeof rawConf === 'string' ? rawConf.toUpperCase() : rawConf != null ? String(rawConf) : '';
+              const confStr = rawConf != null ? formatConfidenceFull(rawConf) : '';
               const etrPart = confStr ? `· ETR confidence ${confStr}${policyView?.etrBand?.band ? ` (${policyView.etrBand.band})` : ''}` : '';
               return (
                 <p className="mt-2 text-[12px] font-semibold text-red-200">{flagPart} {etrPart}</p>
@@ -2003,9 +2003,10 @@ export default function Dashboard() {
             id: 'risk',
             label: 'System Risk Index',
             value: String(riskDrivers.index),
+            valueColor: '',
             sub: riskDrivers.severity,
             subColor: getRiskBadgeClass(riskDrivers.severity),
-            tileColor: 'border-border/50 text-foreground',
+            tileColor: 'border-border/50',
             tileBg: 'bg-card',
             icon: Gauge,
           },
@@ -2013,9 +2014,10 @@ export default function Dashboard() {
             id: 'etr',
             label: 'ETR Confidence Band',
             value: etrBandLabel,
+            valueColor: '',
             sub: etrConfLabel !== '—' ? `${etrConfLabel} confidence` : 'Awaiting evaluation',
             subColor: 'text-muted-foreground',
-            tileColor: 'border-border/50 text-foreground',
+            tileColor: 'border-border/50',
             tileBg: 'bg-card',
             icon: Clock,
           },
@@ -2023,10 +2025,11 @@ export default function Dashboard() {
             id: 'critical',
             label: 'Critical Load at Risk',
             value: String(criticalLoadCount),
+            // Boardroom-safe: text-red-200 value color for legibility on dark projectors
+            valueColor: criticalLoadCount > 0 ? 'text-red-200' : 'text-foreground',
             sub: criticalLoadCount > 0 ? 'Active exposure' : 'No exposure',
-            // Boardroom-safe: text-red-200 instead of text-destructive so it's legible on dark backgrounds
-            subColor: criticalLoadCount > 0 ? 'text-red-200' : 'text-emerald-300',
-            tileColor: criticalLoadCount > 0 ? 'border-red-400/35 text-red-200' : 'border-border/50 text-foreground',
+            subColor: criticalLoadCount > 0 ? 'text-red-200/70' : 'text-emerald-300',
+            tileColor: criticalLoadCount > 0 ? 'border-red-400/35' : 'border-border/50',
             tileBg: criticalLoadCount > 0 ? 'bg-red-500/12 shadow-[0_0_12px_rgba(248,113,113,0.15)]' : 'bg-card',
             icon: AlertTriangle,
           },
@@ -2034,9 +2037,23 @@ export default function Dashboard() {
             id: 'policy',
             label: 'Policy Status',
             value: policyStatusLabel2,
+            // Boardroom-safe: explicit value color separate from tile border
+            valueColor: !policyView
+              ? 'text-muted-foreground'
+              : policyGate === 'BLOCK'
+                ? 'text-red-200'
+                : policyGate === 'WARN'
+                  ? 'text-amber-200'
+                  : 'text-emerald-200',
             sub: gateReason.length > 52 ? gateReason.slice(0, 52) + '…' : gateReason,
             subColor: 'text-muted-foreground',
-            tileColor: policyTileColor,
+            tileColor: !policyView
+              ? 'border-border/50'
+              : policyGate === 'BLOCK'
+                ? 'border-red-400/35'
+                : policyGate === 'WARN'
+                  ? 'border-amber-400/30'
+                  : 'border-emerald-400/30',
             tileBg: policyTileBg,
             icon: policyGate === 'BLOCK' ? ShieldX : policyGate === 'WARN' ? ShieldAlert : ShieldCheck,
           },
@@ -2044,10 +2061,11 @@ export default function Dashboard() {
             id: 'hazard',
             label: 'Active Hazard',
             value: activeHazardLabel,
+            valueColor: '',
             // Sub-label reflects the hazard-specific exposure type (e.g., Vegetation Exposure for Wildfire)
             sub: `${activeExtHazard.exposureLabel} · ${stats.active} active`,
             subColor: 'text-muted-foreground',
-            tileColor: 'border-border/50 text-foreground',
+            tileColor: 'border-border/50',
             tileBg: 'bg-card',
             icon: activeExtHazard.icon,
           },
@@ -2063,7 +2081,7 @@ export default function Dashboard() {
             )}
           >
             <div className="grid grid-cols-5 gap-1">
-              {boardroomTiles.map(({ id, label, value, sub, subColor, tileColor, tileBg, icon: TileIcon }) => (
+              {boardroomTiles.map(({ id, label, value, valueColor, sub, subColor, tileColor, tileBg, icon: TileIcon }) => (
                 <div
                   key={id}
                   className={cn(
@@ -2077,7 +2095,7 @@ export default function Dashboard() {
                     {label}
                   </div>
                   <div className="mt-3">
-                    <p className="text-[2rem] font-semibold leading-none tabular-nums tracking-tight">{value}</p>
+                    <p className={cn('text-[2rem] font-semibold leading-none tabular-nums tracking-tight', valueColor || 'text-foreground')}>{value}</p>
                     <p className={cn('mt-1.5 text-[11px] leading-snug', subColor)}>{sub}</p>
                   </div>
                 </div>
