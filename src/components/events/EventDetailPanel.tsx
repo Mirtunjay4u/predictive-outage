@@ -584,7 +584,95 @@ function SupportingSignals({ scenario }: { scenario: Scenario }) {
   );
 }
 
+// ── Escalation flag chip config ────────────────────────────────────────────────
+type FlagConfig = {
+  icon: React.ElementType;
+  label: string;
+  chipCls: string;
+  iconCls: string;
+  labelCls: string;
+};
+
+const FLAG_CONFIG: Record<string, FlagConfig> = {
+  transformer_thermal_stress: {
+    icon: Thermometer,
+    label: 'Transformer Thermal Stress',
+    chipCls: 'bg-amber-500/10 border-amber-400/30',
+    iconCls: 'text-amber-500',
+    labelCls: 'text-amber-700 dark:text-amber-300',
+  },
+  critical_load_at_risk: {
+    icon: Zap,
+    label: 'Critical Load At Risk',
+    chipCls: 'bg-red-500/10 border-red-400/30',
+    iconCls: 'text-red-500',
+    labelCls: 'text-red-700 dark:text-red-300',
+  },
+  insufficient_crews: {
+    icon: Users,
+    label: 'Insufficient Crews',
+    chipCls: 'bg-orange-500/10 border-orange-400/30',
+    iconCls: 'text-orange-500',
+    labelCls: 'text-orange-700 dark:text-orange-300',
+  },
+  low_confidence_etr: {
+    icon: Clock,
+    label: 'Low Confidence ETR',
+    chipCls: 'bg-amber-500/10 border-amber-400/30',
+    iconCls: 'text-amber-500',
+    labelCls: 'text-amber-700 dark:text-amber-300',
+  },
+  storm_active: {
+    icon: Wind,
+    label: 'Storm Active',
+    chipCls: 'bg-blue-500/10 border-blue-400/30',
+    iconCls: 'text-blue-500',
+    labelCls: 'text-blue-700 dark:text-blue-300',
+  },
+};
+
+function EscalationFlagChips({ flags }: { flags: string[] }) {
+  if (flags.length === 0) return null;
+  return (
+    <div>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
+        Active Escalation Flags
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {flags.map((flag) => {
+          const cfg = FLAG_CONFIG[flag];
+          if (cfg) {
+            const Icon = cfg.icon;
+            return (
+              <span
+                key={flag}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold',
+                  cfg.chipCls,
+                )}
+              >
+                <Icon className={cn('h-3 w-3 shrink-0', cfg.iconCls)} />
+                <span className={cfg.labelCls}>{cfg.label}</span>
+              </span>
+            );
+          }
+          // Fallback for unknown flags
+          return (
+            <span
+              key={flag}
+              className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/50 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"
+            >
+              ⚑ {flag.replace(/_/g, ' ')}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Policy Evaluation Section ──────────────────────────────────────────────────
+
 function PolicySection({
   policy, policyStatus, gate, whyOpen, setWhyOpen, handleRunEvaluation,
 }: {
@@ -640,15 +728,9 @@ function PolicySection({
             </div>
           </div>
 
-          {/* Escalation flags */}
+          {/* Escalation flag chips — styled per flag type */}
           {(policy?.escalationFlags ?? []).length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {policy!.escalationFlags!.map((f) => (
-                <span key={f} className="rounded-full bg-amber-500/10 border border-amber-400/30 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
-                  ⚑ {f.replace(/_/g, ' ')}
-                </span>
-              ))}
-            </div>
+            <EscalationFlagChips flags={policy!.escalationFlags!} />
           )}
 
           {/* Allowed actions */}
