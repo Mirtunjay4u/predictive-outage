@@ -381,6 +381,23 @@ function buildExecutiveBriefingPrompt(args: {
   ].join('\n');
 }
 
+// ── Tooltip chip count-up — mounted fresh each time the tooltip opens ────
+function TooltipChipValue({ value, delay, reduced }: { value: number; delay: number; reduced: boolean }) {
+  const mv = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const unsub = mv.on('change', (v) => setDisplay(Math.round(v)));
+    const controls = animate(mv, value, {
+      duration: reduced ? 0 : 0.5,
+      delay: reduced ? 0 : delay,
+      ease: [0.16, 1, 0.3, 1],
+    });
+    return () => { controls.stop(); unsub(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return <span className="w-5 text-right font-semibold tabular-nums text-foreground">{display}</span>;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { boardroomMode } = useDashboardUi();
@@ -1601,7 +1618,7 @@ export default function Dashboard() {
                                   }
                                 />
                               </div>
-                              <span className="w-5 text-right font-semibold tabular-nums text-foreground">{chip.value}</span>
+                              <TooltipChipValue value={chip.value} delay={i * 0.07} reduced={!!prefersReducedMotion} />
                             </div>
                           </li>
                         );
