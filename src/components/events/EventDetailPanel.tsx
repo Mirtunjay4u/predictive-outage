@@ -718,8 +718,84 @@ function EscalationFlagChips({ flags }: { flags: string[] }) {
 
 // ── Policy Evaluation Section ──────────────────────────────────────────────────
 
+// ── Hazard weight legend ────────────────────────────────────────────────────────
+type HazardWeightProfile = {
+  label: string;
+  icon: React.ElementType;
+  iconCls: string;
+  borderCls: string;
+  bgCls: string;
+  textCls: string;
+  chips: Array<{ driver: string; multiplier: string; direction: 'up' | 'down' }>;
+  rationale: string;
+};
+
+const HAZARD_WEIGHT_PROFILES: Record<string, HazardWeightProfile> = {
+  HEAT: {
+    label: 'HEAT',
+    icon: Thermometer,
+    iconCls: 'text-red-500',
+    borderCls: 'border-red-400/30',
+    bgCls: 'bg-red-500/5',
+    textCls: 'text-red-700 dark:text-red-300',
+    chips: [
+      { driver: 'load criticality', multiplier: '×1.33', direction: 'up' },
+      { driver: 'vegetation', multiplier: '×0.6', direction: 'down' },
+    ],
+    rationale: 'Cooling-load priority elevates load criticality; vegetation is less relevant in heat events.',
+  },
+  ICE: {
+    label: 'ICE',
+    icon: Snowflake,
+    iconCls: 'text-sky-500',
+    borderCls: 'border-sky-400/30',
+    bgCls: 'bg-sky-500/5',
+    textCls: 'text-sky-700 dark:text-sky-300',
+    chips: [
+      { driver: 'vegetation', multiplier: '×1.8', direction: 'up' },
+      { driver: 'load criticality', multiplier: '×0.5', direction: 'down' },
+    ],
+    rationale: 'Ice accumulation on vegetation-exposed conductors is the primary mechanical failure driver.',
+  },
+};
+
+function HazardWeightLegend({ outageType }: { outageType: string | null | undefined }) {
+  const hazardMap: Record<string, string> = {
+    'Snow Storm': 'ICE',
+    'Ice/Snow': 'ICE',
+    Heatwave: 'HEAT',
+  };
+  const hazardKey = hazardMap[outageType ?? ''];
+  const profile = hazardKey ? HAZARD_WEIGHT_PROFILES[hazardKey] : null;
+  if (!profile) return null;
+
+  const Icon = profile.icon;
+  return (
+    <div className={`rounded-md border ${profile.borderCls} ${profile.bgCls} px-3 py-2 space-y-1.5`}>
+      <div className="flex items-center gap-1.5">
+        <Icon className={`h-3 w-3 ${profile.iconCls}`} />
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${profile.textCls}`}>
+          Weight profile: {profile.label}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {profile.chips.map((chip) => (
+          <span
+            key={chip.driver}
+            className={`inline-flex items-center gap-1 rounded-full border ${profile.borderCls} ${profile.bgCls} px-2 py-0.5 text-[10px] font-semibold ${profile.textCls}`}
+          >
+            <span>{chip.direction === 'up' ? '↑' : '↓'}</span>
+            <span>{chip.driver} {chip.multiplier}</span>
+          </span>
+        ))}
+      </div>
+      <p className="text-[9px] text-muted-foreground leading-snug italic">{profile.rationale}</p>
+    </div>
+  );
+}
+
 function PolicySection({
-  policy, policyStatus, gate, whyOpen, setWhyOpen, handleRunEvaluation,
+  policy, policyStatus, gate, whyOpen, setWhyOpen, handleRunEvaluation, outageType,
 }: {
   policy: PolicyResult | null;
   policyStatus: string;
@@ -727,6 +803,7 @@ function PolicySection({
   whyOpen: boolean;
   setWhyOpen: (v: boolean) => void;
   handleRunEvaluation: () => void;
+  outageType: string | null | undefined;
 }) {
   return (
     <div className="rounded-lg border border-border/50 bg-card px-4 py-3 space-y-3">
@@ -879,7 +956,8 @@ function PolicySection({
                                 <p className="text-[9px] text-muted-foreground">Weight: {Math.round(d.weight * 100)}%</p>
                               </li>
                             ))}
-                          </ul>
+                           </ul>
+                          <HazardWeightLegend outageType={outageType} />
                         </div>
                       )}
                       {(policy.explainability.assumptions ?? []).length > 0 && (
@@ -1098,6 +1176,7 @@ export function EventDetailPanel({
                 whyOpen={whyOpen}
                 setWhyOpen={setWhyOpen}
                 handleRunEvaluation={handleRunEvaluation}
+                outageType={scenario.outage_type}
               />
 
               {/* 5. Crew readiness */}
