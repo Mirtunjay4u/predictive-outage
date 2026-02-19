@@ -46,6 +46,7 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
 
   // ── HEAT hazard rules ─────────────────────────────────────────────────────────
   const isHeatOverload = scenario.hazardType === "HEAT" && scenario.severity >= 3;
+  const isHeatPeakLoad = scenario.hazardType === "HEAT" && scenario.severity >= 4;
 
   // ── FLOOD/RAIN hazard rules ───────────────────────────────────────────────────
   const isFloodActive = scenario.hazardType === "RAIN" && scenario.phase === "ACTIVE";
@@ -125,6 +126,19 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
             "Sustained ambient heat elevates transformer winding temperature and may accelerate insulation breakdown under full load restoration.",
           ]
         : ["Not triggered — HEAT hazard not active or severity below threshold of 3."],
+    },
+    {
+      id: "SC-HEAT-002",
+      title: "Extreme heat peak load risk",
+      description: "Customer demand is expected to exceed feeder capacity during extreme heat. Prepare load shedding and demand response plans before switching actions are taken.",
+      severity: "HIGH",
+      triggered: isHeatPeakLoad,
+      evidence: isHeatPeakLoad
+        ? [
+            "Hazard: HEAT — severity >= 4 (threshold: 4).",
+            "Peak load conditions may push transformers beyond rated thermal limits under sustained extreme ambient temperatures.",
+          ]
+        : ["Not triggered — HEAT hazard not active or severity below threshold of 4."],
     },
     {
       id: "SC-FLOOD-001",
