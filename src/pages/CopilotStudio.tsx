@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert, Lightbulb, FileText, Copy, Check } from 'lucide-react';
+import {
+  Bot, Sparkles, AlertTriangle, ShieldAlert, FileText, Copy, Check,
+  Clock, Zap, Shield, Ban, ClipboardCheck, Activity, Play,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
   Select,
@@ -15,99 +18,117 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
 import { supabase } from '@/integrations/supabase/client';
-import type { CopilotMode, CopilotRequest, CopilotResponse } from '@/types/copilot';
-import type { OutageType } from '@/types/scenario';
-import { OUTAGE_TYPES } from '@/types/scenario';
+import { useScenariosWithIntelligence } from '@/hooks/useScenarios';
+import { useCrews } from '@/hooks/useCrews';
+import { useEventAssets } from '@/hooks/useAssets';
+import type { CopilotMode, CopilotRequest, CopilotResponse, OperatorOutputContract } from '@/types/copilot';
+import { mapToOperatorContract } from '@/types/copilot';
+import type { ScenarioWithIntelligence } from '@/types/scenario';
+import { formatEtrPrimary } from '@/lib/etr-format';
 
-const modeOptions: { value: CopilotMode; label: string; icon: string }[] = [
-  { value: 'DEMO', label: 'Demo Mode', icon: '🎯' },
-  { value: 'ACTIVE_EVENT', label: 'Active Event', icon: '🔴' },
-  { value: 'PLANNING', label: 'Planning', icon: '📋' },
-  { value: 'POST_EVENT_REVIEW', label: 'Post-Event Review', icon: '📊' },
-];
+// ─── Response history entry ──────────────────────────────────────────────────
+interface HistoryEntry {
+  contract: OperatorOutputContract;
+  raw: CopilotResponse;
+  eventName: string;
+  timestamp: Date;
+}
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function CopilotStudio() {
   const [searchParams] = useSearchParams();
-  // Copilot Studio - testing interface for AI copilot I/O contract
+
+  // Data
+  const { data: scenarios, isLoading: scenariosLoading } = useScenariosWithIntelligence();
+  const { data: crews } = useCrews();
+
+  // State
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [mode, setMode] = useState<CopilotMode>('DEMO');
-  const [outageType, setOutageType] = useState<OutageType>('Storm');
-  const [scenarioName, setScenarioName] = useState('Test Scenario');
-  const [userMessage, setUserMessage] = useState('');
-  const [response, setResponse] = useState<CopilotResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const autoRunTriggered = useRef(false);
 
-  const formatResponseForCopy = (res: CopilotResponse): string => {
-    let text = `[${res.mode_banner}]\n\n`;
-    
-    if (res.framing_line) {
-      text += `${res.framing_line}\n\n`;
-    }
-    
-    if (res.insights && res.insights.length > 0) {
-      res.insights.forEach((insight, index) => {
-        text += `${index + 1}. ${insight.title}\n`;
-        insight.bullets.forEach((bullet) => {
-          text += `   • ${bullet}\n`;
-        });
-        text += '\n';
-      });
-    }
-    
-    if (res.assumptions && res.assumptions.length > 0) {
-      text += `ASSUMPTIONS:\n`;
-      res.assumptions.forEach((assumption) => {
-        text += `• ${assumption}\n`;
-      });
-      text += '\n';
-    }
-    
-    if (res.source_notes && res.source_notes.length > 0) {
-      text += `SOURCE NOTES:\n`;
-      res.source_notes.forEach((note) => {
-        text += `• ${note}\n`;
-      });
-      text += '\n';
-    }
-    
-    if (res.disclaimer) {
-      text += `DISCLAIMER: ${res.disclaimer}`;
-    }
-    
-    return text;
-  };
+  // Selected event from scenarios
+  const selectedEvent = useMemo(
+    () => scenarios?.find(s => s.id === selectedEventId) ?? null,
+    [scenarios, selectedEventId],
+  );
 
-  const handleCopyResponse = async () => {
-    if (!response) return;
-    
-    try {
-      await navigator.clipboard.writeText(formatResponseForCopy(response));
-      setCopied(true);
-      toast.success('Response copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      toast.error('Failed to copy response');
-    }
-  };
+  // Linked assets for selected event
+  const { data: linkedAssetIds } = useEventAssets(selectedEventId);
 
-  const handleSend = async () => {
-    if (!userMessage.trim()) return;
+  // Assigned crews
+  const assignedCrews = useMemo(
+    () => (crews ?? []).filter(c => c.assigned_event_id === selectedEventId),
+    [crews, selectedEventId],
+  );
+
+  // Default to highest-severity active event or URL param
+  useEffect(() => {
+    const paramEventId = searchParams.get('event_id');
+    if (paramEventId) {
+      setSelectedEventId(paramEventId);
+      return;
+    }
+    if (!selectedEventId && scenarios && scenarios.length > 0) {
+      const active = scenarios
+        .filter(s => s.lifecycle_stage === 'Event')
+        .sort((a, b) => (b.customers_impacted ?? 0) - (a.customers_impacted ?? 0));
+      if (active.length > 0) setSelectedEventId(active[0].id);
+      else setSelectedEventId(scenarios[0].id);
+    }
+  }, [scenarios, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // URL param: auto-run & mode
+  useEffect(() => {
+    const autoRun = searchParams.get('auto_run') === 'true';
+    const hazardOverlap = searchParams.get('hazard_overlap');
+    if (hazardOverlap) setMode('ACTIVE_EVENT');
+
+    if (autoRun && !autoRunTriggered.current && selectedEventId) {
+      autoRunTriggered.current = true;
+      // Delay to let state settle
+      setTimeout(() => handleRun(), 500);
+    }
+  }, [selectedEventId, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Run Copilot ────────────────────────────────────────────────────────────
+  const handleRun = useCallback(async () => {
+    if (!selectedEvent) return;
 
     setIsLoading(true);
     setError(null);
 
+    const hazardOverlap = searchParams.get('hazard_overlap');
+
+    const contextDescription = [
+      `Event: ${selectedEvent.name}`,
+      `Outage Type: ${selectedEvent.outage_type || 'Unknown'}`,
+      `Lifecycle: ${selectedEvent.lifecycle_stage}`,
+      `Customers impacted: ${selectedEvent.customers_impacted ?? 'N/A'}`,
+      selectedEvent.location_name ? `Location: ${selectedEvent.location_name}` : null,
+      linkedAssetIds && linkedAssetIds.length > 0 ? `Linked asset IDs: ${linkedAssetIds.join(', ')}` : null,
+      assignedCrews.length > 0 ? `Assigned crews: ${assignedCrews.map(c => `${c.crew_name} (${c.status})`).join(', ')}` : null,
+      hazardOverlap ? `Hazard overlay overlap: ${hazardOverlap}` : null,
+    ].filter(Boolean).join('. ');
+
     const request: CopilotRequest = {
       mode,
-      user_message: userMessage,
+      user_message: `Provide a full operator analysis for this event. ${contextDescription}`,
+      scenario_id: selectedEvent.id,
       scenario: {
-        scenario_name: scenarioName,
-        outage_type: outageType,
-        lifecycle_stage: 'Event',
-        stage: false,
+        scenario_name: selectedEvent.name,
+        outage_type: selectedEvent.outage_type ?? undefined,
+        lifecycle_stage: selectedEvent.lifecycle_stage,
+        stage: selectedEvent.stage,
+        operator_role: selectedEvent.operator_role ?? undefined,
+        scenario_time: selectedEvent.scenario_time ?? undefined,
+        notes: selectedEvent.notes ?? undefined,
+        description: selectedEvent.description ?? undefined,
       },
       retrieved_knowledge: [],
       constraints: [],
@@ -119,49 +140,61 @@ export default function CopilotStudio() {
       });
 
       if (fnError) throw fnError;
-      setResponse(data as CopilotResponse);
+
+      const raw = data as CopilotResponse;
+      const contract = mapToOperatorContract(raw);
+
+      setHistory(prev => [
+        { contract, raw, eventName: selectedEvent.name, timestamp: new Date() },
+        ...prev,
+      ]);
     } catch (err) {
       console.error('Copilot error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to get response');
+      setError(err instanceof Error ? err.message : 'Failed to get response from Copilot');
     } finally {
       setIsLoading(false);
     }
+  }, [selectedEvent, mode, linkedAssetIds, assignedCrews, searchParams]);
+
+  // ─── Copy ───────────────────────────────────────────────────────────────────
+  const latestEntry = history[0] ?? null;
+
+  const handleCopy = async () => {
+    if (!latestEntry) return;
+    const c = latestEntry.contract;
+    const text = [
+      `[${c.mode}]`,
+      '',
+      `SITUATION SUMMARY: ${c.situation_summary}`,
+      `ETR BAND + CONFIDENCE: ${c.etr_band_confidence}`,
+      `CRITICAL LOAD RUNWAY: ${c.critical_load_runway}`,
+      '',
+      'RECOMMENDATIONS (ADVISORY):',
+      ...c.recommendations.map(r => `  • ${r}`),
+      '',
+      'BLOCKED ACTIONS:',
+      ...c.blocked_actions.map(b => `  ✕ ${b.action} — ${b.reason}`),
+      '',
+      'OPERATOR NOTES / APPROVAL REQUIRED:',
+      ...c.operator_notes.map(n => `  • ${n}`),
+      '',
+      'SOURCE NOTES:',
+      ...c.source_notes.map(s => `  • ${s}`),
+    ].join('\n');
+
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success('Copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  // Handle URL params from Outage Map handoff
-  useEffect(() => {
-    const prefill = searchParams.get('prefill');
-    const eventName = searchParams.get('event_name');
-    const paramOutageType = searchParams.get('outage_type');
-    const autoRun = searchParams.get('auto_run') === 'true';
-    const hazardOverlap = searchParams.get('hazard_overlap');
-    const assetIds = searchParams.get('asset_ids');
+  // ─── ETR from selected event ────────────────────────────────────────────────
+  const etrDisplay = useMemo(() => {
+    if (!selectedEvent) return null;
+    return formatEtrPrimary(selectedEvent.etr_earliest, selectedEvent.etr_latest, selectedEvent.etr_confidence);
+  }, [selectedEvent]);
 
-    if (prefill) {
-      let enrichedMessage = prefill;
-      if (hazardOverlap) {
-        enrichedMessage += `\n\nHazard overlay overlap: ${hazardOverlap}`;
-      }
-      if (assetIds) {
-        enrichedMessage += `\nLinked asset IDs: ${assetIds}`;
-      }
-      setUserMessage(enrichedMessage);
-    }
-    if (eventName) setScenarioName(eventName);
-    if (paramOutageType && OUTAGE_TYPES.includes(paramOutageType as OutageType)) {
-      setOutageType(paramOutageType as OutageType);
-    }
-    if (prefill) setMode('ACTIVE_EVENT');
-
-    // Auto-trigger send if requested
-    if (autoRun && prefill && !autoRunTriggered.current) {
-      autoRunTriggered.current = true;
-      setTimeout(() => {
-        document.getElementById('copilot-send-btn')?.click();
-      }, 400);
-    }
-  }, [searchParams]);
-
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
@@ -173,357 +206,285 @@ export default function CopilotStudio() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">Operator Copilot</h1>
-              <p className="text-sm text-muted-foreground">Scenario Studio</p>
+              <p className="text-sm text-muted-foreground">Strict Output Contract — Decision Support Only</p>
             </div>
             <Badge variant="outline" className="ml-auto bg-warning/10 text-warning border-warning/30">
-              Phase 1 — Deterministic Mock
+              Advisory Only
             </Badge>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {/* Input Panel */}
-          <Card className="shadow-card border-border/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Send className="w-5 h-5 text-primary" />
-                Copilot Input
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Mode Selector */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Mode</label>
-                <Select value={mode} onValueChange={(v) => setMode(v as CopilotMode)}>
+        <div className="grid lg:grid-cols-[380px_1fr] gap-8 max-w-7xl mx-auto">
+          {/* ─── Left: Controls ──────────────────────────────────────────── */}
+          <div className="space-y-6">
+            {/* Event Selector */}
+            <Card className="shadow-card border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-primary" />
+                  Selected Event
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Select
+                  value={selectedEventId ?? ''}
+                  onValueChange={(v) => setSelectedEventId(v)}
+                >
                   <SelectTrigger className="w-full bg-background">
-                    <SelectValue />
+                    <SelectValue placeholder={scenariosLoading ? 'Loading events…' : 'Select event'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {modeOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex items-center gap-2">
-                          <span>{opt.icon}</span>
-                          <span>{opt.label}</span>
+                    {(scenarios ?? []).map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        <span className="flex items-center gap-2 text-sm">
+                          <span className={`w-2 h-2 rounded-full ${s.lifecycle_stage === 'Event' ? 'bg-destructive' : 'bg-muted-foreground/40'}`} />
+                          {s.name}
                         </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
 
-              {/* Outage Type Selector */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Outage Type</label>
-                <Select value={outageType} onValueChange={(v) => setOutageType(v as OutageType)}>
+                {/* Event quick-info */}
+                {selectedEvent && (
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Outage</span>
+                      <Badge variant="outline" className="text-xs h-5">{selectedEvent.outage_type ?? '—'}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Customers</span>
+                      <span className="font-medium text-foreground">{selectedEvent.customers_impacted?.toLocaleString() ?? '—'}</span>
+                    </div>
+                    {etrDisplay && (
+                      <div className="flex justify-between">
+                        <span>ETR</span>
+                        <span className="font-medium text-foreground">{etrDisplay.band}</span>
+                      </div>
+                    )}
+                    {assignedCrews.length > 0 && (
+                      <div className="flex justify-between">
+                        <span>Crews</span>
+                        <span className="font-medium text-foreground">{assignedCrews.length} assigned</span>
+                      </div>
+                    )}
+                    {linkedAssetIds && linkedAssetIds.length > 0 && (
+                      <div className="flex justify-between">
+                        <span>Assets</span>
+                        <span className="font-medium text-foreground">{linkedAssetIds.length} linked</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Mode + Run */}
+            <Card className="shadow-card border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Analysis Mode
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Select value={mode} onValueChange={(v) => setMode(v as CopilotMode)}>
                   <SelectTrigger className="w-full bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {OUTAGE_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="DEMO">🎯 Demo Mode</SelectItem>
+                    <SelectItem value="ACTIVE_EVENT">🔴 Active Event</SelectItem>
+                    <SelectItem value="PLANNING">📋 Planning</SelectItem>
+                    <SelectItem value="POST_EVENT_REVIEW">📊 Post-Event Review</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
 
-              {/* Message Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Your Message</label>
-                <Textarea
-                  value={userMessage}
-                  onChange={(e) => setUserMessage(e.target.value)}
-                  placeholder="Ask the Copilot about your scenario..."
-                  className="min-h-[140px] resize-none bg-background"
-                />
-              </div>
-
-              {/* Send Button */}
-              <Button
-                id="copilot-send-btn"
-                onClick={handleSend}
-                disabled={!userMessage.trim() || isLoading}
-                className="w-full gap-2 shadow-md hover:shadow-lg transition-all"
-              >
-                {isLoading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <Sparkles className="w-4 h-4" />
-                    </motion.div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Send to Copilot
-                  </>
-                )}
-              </Button>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-center gap-2"
+                <Button
+                  onClick={handleRun}
+                  disabled={!selectedEventId || isLoading}
+                  className="w-full gap-2 shadow-md hover:shadow-lg transition-all"
+                  size="lg"
                 >
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                  {error}
-                </motion.div>
-              )}
-            </CardContent>
-          </Card>
+                  {isLoading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                      </motion.div>
+                      Running Analysis…
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4" />
+                      Run Operator Copilot
+                    </>
+                  )}
+                </Button>
 
-          <Card className="shadow-card border-border/50">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Bot className="w-5 h-5 text-primary" />
-                  Copilot Response
-                </CardTitle>
-                {response && !isLoading && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2 text-muted-foreground hover:text-foreground"
-                    onClick={handleCopyResponse}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-center gap-2"
                   >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 text-green-500" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copy
-                      </>
-                    )}
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Analysis failed</p>
+                      <p className="text-xs mt-0.5">{error}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* History count */}
+            {history.length > 1 && (
+              <p className="text-xs text-muted-foreground text-center">
+                {history.length} analyses in session history
+              </p>
+            )}
+          </div>
+
+          {/* ─── Right: Strict Section Renderer ────────────────────────── */}
+          <Card className="shadow-card border-border/50">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-primary" />
+                  Operator Analysis
+                </CardTitle>
+                {latestEntry && !isLoading && (
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={handleCopy}>
+                    {copied ? <><Check className="w-4 h-4 text-green-500" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
                   </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <AnimatePresence mode="wait">
-                {!response && !isLoading && (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center py-12 text-muted-foreground"
-                  >
+                {/* Empty state */}
+                {!latestEntry && !isLoading && (
+                  <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-16 text-muted-foreground">
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                    <p className="mb-2">Send a message to see the Copilot response.</p>
-                    <p className="text-xs">
-                      Responses are deterministically generated from mode + outage_type + scenario fields.
-                    </p>
+                    <p className="mb-2">Select an event and run the Operator Copilot.</p>
+                    <p className="text-xs">Results render into fixed operator sections — no free-form chat.</p>
                   </motion.div>
                 )}
 
+                {/* Loading skeleton */}
                 {isLoading && (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-5"
-                  >
-                    {/* Skeleton Outage Type Header */}
-                    <div className="flex items-center gap-2 pb-2 border-b border-border">
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-6 w-16 rounded-full" />
-                    </div>
-
-                    {/* Skeleton Mode Banner */}
-                    <Skeleton className="h-8 w-40 rounded-full" />
-
-                    {/* Skeleton Framing Line */}
-                    <div className="border-l-2 border-muted pl-3 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-
-                    {/* Skeleton Insights */}
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: i * 0.15 }}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Skeleton className="w-5 h-5 rounded-full" />
-                            <Skeleton className="h-4 w-48" />
-                          </div>
-                          <div className="pl-7 space-y-1.5">
-                            <div className="flex items-start gap-2">
-                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
-                              <Skeleton className="h-3 w-full" />
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
-                              <Skeleton className="h-3 w-5/6" />
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <Skeleton className="w-1.5 h-1.5 rounded-full mt-1.5" />
-                              <Skeleton className="h-3 w-4/5" />
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Skeleton Assumptions Block */}
-                    <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Skeleton className="w-4 h-4 rounded" />
-                        <Skeleton className="h-3 w-24" />
-                      </div>
-                      <div className="space-y-1">
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-4 w-40" />
                         <Skeleton className="h-3 w-full" />
                         <Skeleton className="h-3 w-3/4" />
                       </div>
-                    </div>
-
-                    {/* Skeleton Disclaimer */}
-                    <div className="pt-4 border-t border-border">
-                      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
-                        <div className="flex items-start gap-2">
-                          <Skeleton className="w-4 h-4 rounded mt-0.5" />
-                          <div className="flex-1 space-y-2">
-                            <Skeleton className="h-3 w-20" />
-                            <Skeleton className="h-3 w-full" />
-                            <Skeleton className="h-3 w-5/6" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Processing indicator */}
+                    ))}
                     <div className="flex items-center justify-center gap-2 pt-2">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                      >
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
                         <Sparkles className="w-4 h-4 text-primary" />
                       </motion.div>
-                      <span className="text-sm text-muted-foreground">Generating response...</span>
+                      <span className="text-sm text-muted-foreground">Generating operator analysis…</span>
                     </div>
                   </motion.div>
                 )}
 
-                {response && !isLoading && (
-                  <motion.div
-                    key="response"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-5"
-                  >
-                    {/* Outage Type Header */}
-                    <div className="flex items-center gap-2 pb-2 border-b border-border">
-                      <span className="text-xs text-muted-foreground">Outage Type:</span>
-                      <OutageTypeBadge type={outageType} />
-                    </div>
-
-                    {/* Mode Banner */}
-                    <div className="flex items-center justify-start">
+                {/* Rendered contract */}
+                {latestEntry && !isLoading && (
+                  <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                    {/* Section 1: Mode */}
+                    <Section icon={<Zap className="w-4 h-4" />} label="Mode">
                       <Badge className="bg-primary/90 text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full">
-                        {response.mode_banner}
+                        {latestEntry.contract.mode}
                       </Badge>
-                    </div>
+                    </Section>
 
-                    {/* Framing Line (only if present) */}
-                    {response.framing_line && (
-                      <p className="text-sm font-semibold text-foreground border-l-2 border-primary pl-3">
-                        {response.framing_line}
-                      </p>
-                    )}
+                    <Separator />
 
-                    {/* Insights */}
-                    <div className="space-y-4">
-                      {response.insights && response.insights.length > 0 ? (
-                        response.insights.map((insight, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="space-y-2"
-                          >
-                            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold">
-                                {index + 1}
-                              </span>
-                              {insight.title}
-                            </h4>
-                            <ul className="space-y-1.5 pl-7">
-                              {insight.bullets.map((bullet, bulletIndex) => (
-                                <li
-                                  key={bulletIndex}
-                                  className="text-sm text-muted-foreground flex items-start gap-2"
-                                >
-                                  <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-1.5 flex-shrink-0" />
-                                  <span>{bullet}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </motion.div>
-                        ))
+                    {/* Section 2: Situation Summary */}
+                    <Section icon={<Activity className="w-4 h-4" />} label="Situation Summary">
+                      <p className="text-sm text-foreground leading-relaxed">{latestEntry.contract.situation_summary}</p>
+                    </Section>
+
+                    <Separator />
+
+                    {/* Section 3: ETR Band + Confidence */}
+                    <Section icon={<Clock className="w-4 h-4" />} label="ETR Band + Confidence">
+                      <p className="text-sm text-foreground">{latestEntry.contract.etr_band_confidence}</p>
+                    </Section>
+
+                    <Separator />
+
+                    {/* Section 4: Critical Load Runway */}
+                    <Section icon={<AlertTriangle className="w-4 h-4" />} label="Critical Load Runway">
+                      <p className="text-sm text-foreground">{latestEntry.contract.critical_load_runway}</p>
+                    </Section>
+
+                    <Separator />
+
+                    {/* Section 5: Recommendations (Advisory) */}
+                    <Section icon={<Sparkles className="w-4 h-4" />} label="Recommendations (Advisory)">
+                      {latestEntry.contract.recommendations.length > 0 ? (
+                        <ul className="space-y-1.5">
+                          {latestEntry.contract.recommendations.map((r, i) => (
+                            <li key={i} className="text-sm text-foreground flex items-start gap-2">
+                              <span className="text-muted-foreground/60 mt-0.5">•</span>
+                              <span>{r}</span>
+                            </li>
+                          ))}
+                        </ul>
                       ) : (
-                        <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
-                          No insights returned.
-                        </div>
+                        <p className="text-sm text-muted-foreground">No recommendations.</p>
                       )}
-                    </div>
+                    </Section>
 
-                    {/* Assumptions Block */}
-                    {response.assumptions && response.assumptions.length > 0 && (
-                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                          <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
-                            Assumptions
-                          </span>
-                        </div>
-                        <ul className="space-y-1">
-                          {response.assumptions.map((assumption, index) => (
-                            <li key={index} className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
-                              <span className="mt-0.5">•</span>
-                              <span>{assumption}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <Separator />
 
-                    {/* Source Notes Block */}
-                    {response.source_notes && response.source_notes.length > 0 && (
-                      <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
-                            Source Notes
-                          </span>
-                        </div>
-                        <ul className="space-y-1">
-                          {response.source_notes.map((note, index) => (
-                            <li key={index} className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                              <span className="mt-0.5">•</span>
-                              <span>{note}</span>
-                            </li>
-                          ))}
-                        </ul>
+                    {/* Section 6: Blocked Actions + Reason */}
+                    <Section icon={<Ban className="w-4 h-4" />} label="Blocked Actions + Reason">
+                      <div className="space-y-2">
+                        {latestEntry.contract.blocked_actions.map((b, i) => (
+                          <div key={i} className="p-2 rounded-md bg-destructive/5 border border-destructive/20 text-sm">
+                            <span className="font-medium text-destructive">✕ {b.action}</span>
+                            <span className="text-muted-foreground"> — {b.reason}</span>
+                          </div>
+                        ))}
                       </div>
-                    )}
+                    </Section>
+
+                    <Separator />
+
+                    {/* Section 7: Operator Notes / Approval Required */}
+                    <Section icon={<ClipboardCheck className="w-4 h-4" />} label="Operator Notes / Approval Required">
+                      <ul className="space-y-1.5">
+                        {latestEntry.contract.operator_notes.map((n, i) => (
+                          <li key={i} className="text-sm text-foreground flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">⚑</span>
+                            <span>{n}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
+
+                    <Separator />
+
+                    {/* Section 8: Source Notes */}
+                    <Section icon={<FileText className="w-4 h-4" />} label="Source Notes">
+                      <ul className="space-y-1">
+                        {latestEntry.contract.source_notes.map((s, i) => (
+                          <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                            <span className="mt-0.5">•</span>
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </Section>
 
                     {/* Disclaimer */}
                     <div className="pt-4 border-t border-border">
@@ -531,16 +492,19 @@ export default function CopilotStudio() {
                         <div className="flex items-start gap-2">
                           <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                              Disclaimer
-                            </p>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Disclaimer</p>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                              {response.disclaimer}
+                              {latestEntry.raw.disclaimer}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Timestamp */}
+                    <p className="text-[11px] text-muted-foreground/60 text-right">
+                      Generated {latestEntry.timestamp.toLocaleTimeString()} for "{latestEntry.eventName}"
+                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -548,6 +512,19 @@ export default function CopilotStudio() {
           </Card>
         </div>
       </main>
+    </div>
+  );
+}
+
+// ─── Section helper component ─────────────────────────────────────────────────
+function Section({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        {icon}
+        {label}
+      </div>
+      <div className="pl-6">{children}</div>
     </div>
   );
 }
