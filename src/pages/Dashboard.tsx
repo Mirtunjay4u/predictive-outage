@@ -83,6 +83,8 @@ interface ExtremeHazard {
   policyHazardType: 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN';
   /** Context line shown in the Active Extreme Event surface */
   contextLine: string;
+  /** One-line risk hint shown on the pill tab (right side) */
+  riskHint: string;
   /** Label used for the contextual KPI chip */
   exposureLabel: string;
   /** Adjusts demo playback description text */
@@ -100,6 +102,7 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     severityLabel: 'Severe',
     policyHazardType: 'STORM',
     contextLine: 'High-wind and lightning exposure; feeder fault probability elevated.',
+    riskHint: 'Wind & lightning exposure rising; feeder fault probability elevated.',
     exposureLabel: 'Wind / Lightning Risk',
     demoContext: 'Severe thunderstorm cell intensifying; wind-driven vegetation contact on exposed feeders.',
     riskBullets: {
@@ -116,6 +119,7 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     severityLabel: 'Severe',
     policyHazardType: 'WILDFIRE',
     contextLine: 'Vegetation proximity and red-flag wind conditions elevate ignition risk.',
+    riskHint: 'Smoke + heat stress; PSPS readiness recommended.',
     exposureLabel: 'Vegetation Exposure',
     demoContext: 'Active wildfire perimeter advancing; vegetation exposure and heat-driven asset stress critical.',
     riskBullets: {
@@ -126,12 +130,13 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
   },
   {
     key: 'flood',
-    label: 'Flooding / Heavy Rain',
+    label: 'Flooding',
     shortLabel: 'Flood',
     icon: Droplets,
     severityLabel: 'Moderate',
     policyHazardType: 'RAIN',
     contextLine: 'Soil saturation and substation inundation risk; low-lying infrastructure at risk.',
+    riskHint: 'Substation low-lying risk; access constraints likely.',
     exposureLabel: 'Water Exposure Risk',
     demoContext: 'Sustained rainfall causing soil saturation; substation flooding risk in low-elevation zones.',
     riskBullets: {
@@ -142,12 +147,13 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
   },
   {
     key: 'extreme-cold',
-    label: 'Extreme Cold / Ice',
-    shortLabel: 'Extreme Cold',
+    label: 'Extreme Cold',
+    shortLabel: 'Ice / Cold',
     icon: Snowflake,
     severityLabel: 'Moderate',
     policyHazardType: 'STORM',
     contextLine: 'Ice loading on conductors and brittle hardware failure risk.',
+    riskHint: 'Icing + conductor sag; brittle failure probability up.',
     exposureLabel: 'Ice Load Risk',
     demoContext: 'Ice accumulation on transmission lines; brittle material failure risk increasing with temperature drop.',
     riskBullets: {
@@ -159,11 +165,12 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
   {
     key: 'extreme-heat',
     label: 'Extreme Heat',
-    shortLabel: 'Extreme Heat',
+    shortLabel: 'Ext. Heat',
     icon: Thermometer,
     severityLabel: 'Moderate',
     policyHazardType: 'UNKNOWN',
     contextLine: 'Peak demand surge and transformer thermal stress; load shed risk elevated.',
+    riskHint: 'Transformer thermal headroom reduced; peak demand risk.',
     exposureLabel: 'Thermal Load Risk',
     demoContext: 'Extreme heat driving load surge; transformer thermal stress and cooling system strain in dense service areas.',
     riskBullets: {
@@ -261,16 +268,17 @@ function humanizePolicyFlag(flag: string) {
 }
 
 function summarizePolicy(result: PolicyResult) {
+  // Deterministic executive format: "Gate: X. Drivers: Y. Primary blocked action: Z. Recommended next safe step: W."
   const escalationFlags = (result.escalationFlags ?? []).map((flag, index) => normalizeFlag(flag, index));
-  const blocked = result.blockedActions?.[0];
-  const allowed = result.allowedActions?.[0];
-  const etrBand = result.etrBand?.band ?? 'Unknown band';
-  const etrConfidence = result.etrBand?.confidence ?? 'Unknown';
-  const escalationText = escalationFlags.length > 0 ? `Escalation flags detected: ${escalationFlags.join(', ')}.` : 'No escalation flags detected.';
-  const blockedText = blocked ? `Primary blocked action is ${toTitleCase(blocked.action)} due to ${blocked.reason ?? 'policy constraints'}.` : 'No blocked actions were returned.';
-  const etrText = `ETR guidance is ${etrBand} with ${etrConfidence} confidence.`;
-  const allowedText = allowed ? `Top allowed action is ${toTitleCase(allowed.action)}${allowed.reason ? ` (${allowed.reason})` : ''}.` : 'No allowed action recommendation was returned.';
-  return `${escalationText} ${blockedText} ${etrText} ${allowedText}`;
+  const operationalBlocked = (result.blockedActions ?? []).filter((a) => a?.action !== 'deenergize_section');
+  const gate: 'PASS' | 'WARN' | 'BLOCK' = operationalBlocked.length > 0 ? 'BLOCK' : escalationFlags.length > 0 ? 'WARN' : 'PASS';
+  const driversText = escalationFlags.length > 0 ? escalationFlags.map((f) => f.replace(/_/g, ' ')).join(', ') : 'none';
+  const primaryBlocked = operationalBlocked[0];
+  const blockedText = primaryBlocked ? toTitleCase(primaryBlocked.action) : 'None';
+  const topAllowed = result.allowedActions?.[0];
+  const nextStep = topAllowed ? toTitleCase(topAllowed.action) : (result.etrBand?.band === 'LOW' ? 'Improve ETR confidence' : 'Monitor and reassess');
+  const etrPart = result.etrBand?.band ? ` ETR band: ${result.etrBand.band}${result.etrBand.confidence ? ` (${result.etrBand.confidence})` : ''}.` : '';
+  return `Gate: ${gate}. Drivers: ${driversText}.${etrPart} Primary blocked action: ${blockedText}. Recommended next safe step: ${nextStep}.`;
 }
 
 function buildPolicyContext(policyViewOrNull: PolicyResult | null): string {
@@ -1283,9 +1291,9 @@ export default function Dashboard() {
               <p className="text-[11px] text-muted-foreground/80 italic">{activeHazard.contextLine}</p>
             </div>
 
-            {/* Hazard pill selector */}
+            {/* Hazard pill selector — premium enterprise tabs */}
             <div
-              className="mt-3 flex flex-wrap gap-1.5"
+              className="mt-3 flex flex-wrap gap-2"
               role="group"
               aria-label="Select active extreme event type"
             >
@@ -1299,15 +1307,25 @@ export default function Dashboard() {
                     aria-pressed={isSelected}
                     onClick={() => handleHazardChange(hazard.key)}
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors duration-150',
+                      'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-all duration-150',
                       DASHBOARD_INTERACTIVE_BUTTON_CLASS,
                       isSelected
-                        ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                        ? 'border-primary/60 bg-gradient-to-r from-primary/15 to-primary/8 text-primary font-semibold shadow-sm'
                         : 'border-border/60 bg-muted/30 text-muted-foreground hover:border-primary/30 hover:text-foreground',
                     )}
                   >
+                    {/* Active dot */}
+                    {isSelected && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    )}
                     <PillIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />
-                    {hazard.shortLabel}
+                    <span className="font-semibold">{hazard.shortLabel}</span>
+                    {/* Risk hint — shown only on selected pill */}
+                    {isSelected && (
+                      <span className="hidden max-w-[240px] truncate text-[10px] font-normal text-primary/70 sm:block">
+                        {hazard.riskHint}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -1351,32 +1369,41 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* ── Contextual risk bullets (hazard × severity) ──────────────── */}
+            {/* ── Contextual risk bullets (hazard × severity) — boardroom-safe tokens ── */}
             {(() => {
               const bullets = (activeHazard.riskBullets ?? {})[activeSeverityLabel] ?? [];
               if (bullets.length === 0) return null;
+              // Boardroom-safe: never rely on raw red text alone — always bg + border + text-red-200
+              const rowClass =
+                activeSeverityLabel === 'Severe'
+                  ? 'border border-red-400/30 bg-red-500/10 rounded-md px-2.5 py-1.5'
+                  : activeSeverityLabel === 'Moderate'
+                    ? 'border border-amber-400/25 bg-amber-500/10 rounded-md px-2.5 py-1.5'
+                    : 'border border-emerald-400/20 bg-emerald-500/8 rounded-md px-2.5 py-1.5';
               const bulletColor =
                 activeSeverityLabel === 'Severe'
-                  ? 'text-destructive'
+                  ? 'text-red-200'
                   : activeSeverityLabel === 'Moderate'
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-emerald-600 dark:text-emerald-400';
+                    ? 'text-amber-200'
+                    : 'text-emerald-300';
               const dotColor =
                 activeSeverityLabel === 'Severe'
-                  ? 'bg-destructive'
+                  ? 'bg-red-400'
                   : activeSeverityLabel === 'Moderate'
-                    ? 'bg-amber-500'
-                    : 'bg-emerald-500';
+                    ? 'bg-amber-400'
+                    : 'bg-emerald-400';
               return (
                 <div className="mt-2.5 border-t border-border/30 pt-2.5">
-                  <ul className="space-y-1">
-                    {bullets.map((bullet, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', dotColor)} />
-                        <span className={cn('text-[11px] leading-snug', bulletColor)}>{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className={rowClass}>
+                    <ul className="space-y-1">
+                      {bullets.map((bullet, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', dotColor)} />
+                          <span className={cn('text-[11px] font-semibold leading-snug', bulletColor)}>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               );
             })()}
@@ -1505,8 +1532,15 @@ export default function Dashboard() {
                 <ShieldX className="h-2.5 w-2.5" />BLOCKED
               </span>
             </div>
-            {/* Reason line */}
-            <p className="mt-2 text-[12px] font-medium text-red-300/90">{gateReason}</p>
+            {/* Reason line — structured: flag · ETR confidence */}
+            {(() => {
+              const flags = policyEscalationFlags.map((f) => humanizePolicyFlag(f));
+              const flagPart = flags.length > 0 ? flags.join(' · ') : 'Policy constraints active';
+              const etrPart = policyView?.etrBand?.confidence ? `· ETR confidence ${policyView.etrBand.confidence.toUpperCase()}${policyView.etrBand.band ? ` (${policyView.etrBand.band})` : ''}` : '';
+              return (
+                <p className="mt-2 text-[12px] font-semibold text-red-200">{flagPart} {etrPart}</p>
+              );
+            })()}
             <p className="mt-1 text-[11px] text-muted-foreground/80">The policy engine has determined that current operational conditions prevent AI briefing generation. Resolve the flagged constraints below, then re-run the policy check.</p>
             {/* CTA */}
             <div className="mt-3 flex items-center gap-2">
@@ -1988,9 +2022,10 @@ export default function Dashboard() {
             label: 'Critical Load at Risk',
             value: String(criticalLoadCount),
             sub: criticalLoadCount > 0 ? 'Active exposure' : 'No exposure',
-            subColor: criticalLoadCount > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
-            tileColor: criticalLoadCount > 0 ? 'border-destructive/40 text-destructive' : 'border-border/50 text-foreground',
-            tileBg: criticalLoadCount > 0 ? 'bg-destructive/5' : 'bg-card',
+            // Boardroom-safe: text-red-200 instead of text-destructive so it's legible on dark backgrounds
+            subColor: criticalLoadCount > 0 ? 'text-red-200' : 'text-emerald-300',
+            tileColor: criticalLoadCount > 0 ? 'border-red-400/35 text-red-200' : 'border-border/50 text-foreground',
+            tileBg: criticalLoadCount > 0 ? 'bg-red-500/12 shadow-[0_0_12px_rgba(248,113,113,0.15)]' : 'bg-card',
             icon: AlertTriangle,
           },
           {
