@@ -1071,6 +1071,26 @@ function PolicySection({
                     className="overflow-hidden"
                   >
                     <div className="mt-2.5 rounded-lg border border-border/50 bg-muted/20 px-3 py-3 space-y-3 text-xs">
+                      {/* Dot colour legend */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border/30 pb-2.5">
+                        <span className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground mr-1">Legend</span>
+                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                          escalation note
+                        </span>
+                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                          triggered constraint
+                        </span>
+                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                          active hazard flag
+                        </span>
+                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                          <span className="h-1.5 w-1.5 rounded-full bg-border/60 shrink-0" />
+                          baseline / not triggered
+                        </span>
+                      </div>
                       {(policy.explainability.drivers ?? []).length > 0 && (
                         <DriverList drivers={policy.explainability.drivers!} outageType={outageType} />
                       )}
