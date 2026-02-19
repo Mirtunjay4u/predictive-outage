@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatConfidenceFull } from '@/lib/etr-format';
-import { motion, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion';
+import { motion, useMotionValue, animate, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { type LucideIcon, FileText, Clock, Activity, AlertTriangle, CheckCircle, RefreshCw, ArrowRight, Gauge, Ban, Sparkles, ShieldCheck, ShieldAlert, ShieldX, CloudLightning, Flame, Droplets, Snowflake, Thermometer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -1238,15 +1238,15 @@ export default function Dashboard() {
 
   // Framer-motion count-up for System Risk Index — re-triggers on hazard or severity override change.
   const riskMotionValue = useMotionValue(riskDrivers.index);
-  const animatedRiskIndex = useTransform(riskMotionValue, (v) => Math.round(v));
   const [displayRiskIndex, setDisplayRiskIndex] = useState(riskDrivers.index);
 
   useEffect(() => {
+    // Subscribe first so we capture every value the animation emits
+    const unsubscribe = riskMotionValue.on('change', (v) => setDisplayRiskIndex(Math.round(v)));
     const controls = animate(riskMotionValue, riskDrivers.index, {
       duration: prefersReducedMotion ? 0 : 0.6,
       ease: [0.16, 1, 0.3, 1], // expo-out
     });
-    const unsubscribe = animatedRiskIndex.on('change', (v) => setDisplayRiskIndex(v));
     return () => {
       controls.stop();
       unsubscribe();
