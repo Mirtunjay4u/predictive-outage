@@ -1095,6 +1095,92 @@ function PolicySection({
                           </ul>
                         </div>
                       )}
+
+                      {/* Safety Constraints */}
+                      {(policy.safetyConstraints ?? []).length > 0 && (
+                        <div>
+                          <p className="font-semibold text-foreground mb-1.5">Safety Constraints</p>
+                          <ul className="space-y-1.5">
+                            {policy.safetyConstraints!.map((sc) => {
+                              const isTriggered = sc.triggered;
+                              const isHigh = sc.severity === 'HIGH';
+                              return (
+                                <li
+                                  key={sc.id}
+                                  className={cn(
+                                    'rounded-md border pl-3 pr-3 py-2 border-l-2',
+                                    isTriggered
+                                      ? isHigh
+                                        ? 'border-red-400/25 border-l-red-500 bg-red-500/5'
+                                        : 'border-amber-400/25 border-l-amber-500 bg-amber-500/5'
+                                      : 'border-border/40 border-l-border/30 bg-muted/20',
+                                  )}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    {isTriggered ? (
+                                      <span
+                                        className={cn(
+                                          'mt-1 h-2 w-2 rounded-full shrink-0',
+                                          isHigh ? 'bg-red-500' : 'bg-amber-500',
+                                        )}
+                                      />
+                                    ) : (
+                                      <span className="mt-1 h-2 w-2 rounded-full bg-border/60 shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                          className={cn(
+                                            'text-[10px] font-bold',
+                                            isTriggered
+                                              ? isHigh ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300'
+                                              : 'text-muted-foreground',
+                                          )}
+                                        >
+                                          {sc.id}
+                                        </span>
+                                        <span
+                                          className={cn(
+                                            'inline-flex items-center rounded-full border px-1.5 py-0 text-[9px] font-bold',
+                                            isTriggered
+                                              ? isHigh
+                                                ? 'bg-red-500/10 border-red-400/30 text-red-700 dark:text-red-300'
+                                                : 'bg-amber-500/10 border-amber-400/30 text-amber-700 dark:text-amber-300'
+                                              : 'bg-muted/60 border-border/40 text-muted-foreground',
+                                          )}
+                                        >
+                                          {sc.severity}
+                                        </span>
+                                        {!isTriggered && (
+                                          <span className="text-[9px] text-muted-foreground italic">not triggered</span>
+                                        )}
+                                      </div>
+                                      <p
+                                        className={cn(
+                                          'text-[11px] font-semibold mt-0.5',
+                                          isTriggered ? 'text-foreground' : 'text-muted-foreground',
+                                        )}
+                                      >
+                                        {sc.title}
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                                        {sc.description}
+                                      </p>
+                                      {isTriggered && (sc.evidence ?? []).length > 0 && (
+                                        <ul className="mt-1 space-y-0.5">
+                                          {sc.evidence!.map((e, i) => (
+                                            <li key={i} className="text-[10px] text-muted-foreground leading-snug">· {e}</li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
