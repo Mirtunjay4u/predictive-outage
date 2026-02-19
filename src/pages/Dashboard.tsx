@@ -1805,11 +1805,10 @@ export default function Dashboard() {
       )}
 
       {/* ── Operational Phase Strip ────────────────────────────────────────────
-           Premium industrial phase track. Each phase pill is:
-           - Uniquely color-coded per phase identity
-           - Clickable to reveal a detail popover with phase context
-           - Policy-aware: Policy Check + downstream phases reflect gate state
-           - TCS brand-aligned: emerald accent language, authoritative typography
+           Premium industrial phase track — TCS logo-style typography.
+           Each phase block uses a strong, distinct background color identity.
+           Clickable to reveal a rich detail popover with phase metadata.
+           Policy-aware: Policy Check + downstream phases reflect gate state.
       ────────────────────────────────────────────────────────────────────────── */}
       {(() => {
         // PhaseId type and openPhaseId state are declared at component top-level
@@ -1818,117 +1817,108 @@ export default function Dashboard() {
           id: PhaseId;
           label: string;
           step: number;
-          shortLabel: string;
+          /** Full label used inside popovers */
+          fullLabel: string;
           tooltip: string;
           detail: string;
-          /** Base color tokens for idle/neutral state — these are Tailwind class strings */
-          idleColor: string;
-          idleBg: string;
-          idleBorder: string;
-          idleDot: string;
-          /** Active (current phase during playback) */
-          activeColor: string;
-          activeBg: string;
-          activeBorder: string;
-          activeDot: string;
+          /** Rich background color for the pill block — strong, not subtle */
+          blockBg: string;
+          /** Border color */
+          blockBorder: string;
+          /** Text color on the block */
+          blockText: string;
+          /** Dot / indicator color */
+          dotColor: string;
+          /** Active glow / ring color for the pulse ring */
+          glowRgb: string;
+          /** Icon char or symbol used as the phase type-mark */
+          typeMark: string;
         }
 
         const PHASES: PhaseDefinition[] = [
           {
             id: 'detection',
             label: 'Detection',
-            shortLabel: 'Detection',
+            fullLabel: 'Detection',
             step: 0,
             tooltip: 'Sensor and GIS data ingestion; initial outage boundary established.',
-            detail: 'Real-time sensor fusion and GIS correlation identifies fault location, outage boundary, and affected feeders. SCADA telemetry confirms de-energisation extent.',
-            idleColor:   'text-sky-700 dark:text-sky-300',
-            idleBg:      'bg-sky-500/8',
-            idleBorder:  'border-sky-500/30',
-            idleDot:     'bg-sky-400',
-            activeColor: 'text-sky-100',
-            activeBg:    'bg-sky-500/20',
-            activeBorder:'border-sky-400/70',
-            activeDot:   'bg-sky-400',
+            detail: 'Real-time sensor fusion and GIS correlation identifies fault location, outage boundary, and affected feeders. SCADA telemetry confirms de-energisation extent and confirms initial customer impact count.',
+            blockBg:     'bg-sky-600/18 dark:bg-sky-500/22',
+            blockBorder: 'border-sky-500/50 dark:border-sky-400/55',
+            blockText:   'text-sky-800 dark:text-sky-200',
+            dotColor:    'bg-sky-500',
+            glowRgb:     '56,189,248',
+            typeMark:    '◉',
           },
           {
             id: 'risk-scoring',
             label: 'Risk Scoring',
-            shortLabel: 'Risk Score',
+            fullLabel: 'Risk Scoring',
             step: 1,
             tooltip: 'Asset age, vegetation exposure, and load criticality scored by rule engine.',
-            detail: 'Rule-based scoring engine evaluates asset age, vegetation contact probability, load criticality, and backup runtime runway. Outputs a composite risk index (0–100).',
-            idleColor:   'text-amber-700 dark:text-amber-300',
-            idleBg:      'bg-amber-500/8',
-            idleBorder:  'border-amber-500/30',
-            idleDot:     'bg-amber-400',
-            activeColor: 'text-amber-100',
-            activeBg:    'bg-amber-500/20',
-            activeBorder:'border-amber-400/70',
-            activeDot:   'bg-amber-400',
+            detail: 'Rule-based scoring engine evaluates asset age, vegetation contact probability, load criticality, and backup runtime runway. Outputs a composite risk index (0–100) used to prioritise response sequencing.',
+            blockBg:     'bg-amber-500/18 dark:bg-amber-400/18',
+            blockBorder: 'border-amber-500/55 dark:border-amber-400/55',
+            blockText:   'text-amber-800 dark:text-amber-200',
+            dotColor:    'bg-amber-400',
+            glowRgb:     '251,191,36',
+            typeMark:    '◈',
           },
           {
             id: 'policy-check',
             label: 'Policy Check',
-            shortLabel: 'Policy',
+            fullLabel: 'Policy Check',
             step: 2,
             tooltip: 'Deterministic policy engine evaluates allowed and blocked actions.',
-            detail: 'Deterministic policy engine enforces safety constraints, crew readiness rules, and regulatory compliance. Outputs a PASS / WARN / BLOCK gate with full audit trail.',
-            idleColor:   'text-orange-700 dark:text-orange-300',
-            idleBg:      'bg-orange-500/8',
-            idleBorder:  'border-orange-500/30',
-            idleDot:     'bg-orange-400',
-            activeColor: 'text-orange-100',
-            activeBg:    'bg-orange-500/20',
-            activeBorder:'border-orange-400/70',
-            activeDot:   'bg-orange-400',
+            detail: 'Deterministic policy engine enforces safety constraints, crew readiness rules, and regulatory compliance. Emits PASS / WARN / BLOCK gate decision with full audit trail for each evaluated action.',
+            blockBg:     'bg-orange-500/18 dark:bg-orange-400/18',
+            blockBorder: 'border-orange-500/55 dark:border-orange-400/55',
+            blockText:   'text-orange-800 dark:text-orange-200',
+            dotColor:    'bg-orange-500',
+            glowRgb:     '249,115,22',
+            typeMark:    '⬡',
           },
           {
             id: 'ai-briefing',
             label: 'AI Briefing',
-            shortLabel: 'AI Brief',
+            fullLabel: 'AI Briefing',
             step: 3,
             tooltip: 'Executive situation briefing generated; reflects current policy gate.',
-            detail: 'AI synthesises sensor data, risk scores, and policy output into an executive incident briefing. Recommended actions are strictly constrained to policy-allowed operations.',
-            idleColor:   'text-violet-700 dark:text-violet-300',
-            idleBg:      'bg-violet-500/8',
-            idleBorder:  'border-violet-500/30',
-            idleDot:     'bg-violet-400',
-            activeColor: 'text-violet-100',
-            activeBg:    'bg-violet-500/20',
-            activeBorder:'border-violet-400/70',
-            activeDot:   'bg-violet-400',
+            detail: 'AI synthesises sensor data, risk scores, and policy output into a concise executive incident briefing. All recommended actions are strictly constrained to policy-allowed operations only.',
+            blockBg:     'bg-violet-500/18 dark:bg-violet-400/18',
+            blockBorder: 'border-violet-500/55 dark:border-violet-400/55',
+            blockText:   'text-violet-800 dark:text-violet-200',
+            dotColor:    'bg-violet-500',
+            glowRgb:     '167,139,250',
+            typeMark:    '✦',
           },
           {
             id: 'dispatch',
             label: 'Dispatch',
-            shortLabel: 'Dispatch',
+            fullLabel: 'Dispatch',
             step: 4,
             tooltip: 'Crew dispatch sequencing initiated; incident command notified.',
-            detail: 'Optimal crew routing and dispatch sequencing executed. Incident command and field supervisors notified. ETR committed to customer communication pipeline.',
-            idleColor:   'text-emerald-700 dark:text-emerald-300',
-            idleBg:      'bg-emerald-500/8',
-            idleBorder:  'border-emerald-500/30',
-            idleDot:     'bg-emerald-400',
-            activeColor: 'text-emerald-100',
-            activeBg:    'bg-emerald-500/20',
-            activeBorder:'border-emerald-400/70',
-            activeDot:   'bg-emerald-400',
+            detail: 'Optimal crew routing and dispatch sequencing executed by the system. Incident command and field supervisors are notified. ETR is committed to the customer communication pipeline.',
+            blockBg:     'bg-emerald-600/18 dark:bg-emerald-500/22',
+            blockBorder: 'border-emerald-500/55 dark:border-emerald-400/55',
+            blockText:   'text-emerald-800 dark:text-emerald-200',
+            dotColor:    'bg-emerald-500',
+            glowRgb:     '52,211,153',
+            typeMark:    '▶',
           },
           {
             id: 'recovery',
             label: 'Recovery',
-            shortLabel: 'Recovery',
+            fullLabel: 'Recovery',
             step: 5,
             tooltip: 'Restoration actions underway; ETR tracking active.',
-            detail: 'Restoration switching and physical repair in progress. ETR confidence tracked in real time. Post-event review and compliance reporting queued on resolution.',
-            idleColor:   'text-teal-700 dark:text-teal-300',
-            idleBg:      'bg-teal-500/8',
-            idleBorder:  'border-teal-500/30',
-            idleDot:     'bg-teal-400',
-            activeColor: 'text-teal-100',
-            activeBg:    'bg-teal-500/20',
-            activeBorder:'border-teal-400/70',
-            activeDot:   'bg-teal-400',
+            detail: 'Restoration switching and physical repair in progress. ETR confidence is tracked in real time. Post-event review and compliance reporting are queued automatically on event resolution.',
+            blockBg:     'bg-teal-600/18 dark:bg-teal-500/22',
+            blockBorder: 'border-teal-500/55 dark:border-teal-400/55',
+            blockText:   'text-teal-800 dark:text-teal-200',
+            dotColor:    'bg-teal-500',
+            glowRgb:     '20,184,166',
+            typeMark:    '◎',
           },
         ];
 
@@ -1942,30 +1932,34 @@ export default function Dashboard() {
         const isGateWarn  = policyGate === 'WARN';
         const POLICY_PHASE_IDX = 2;
 
-        // openPhaseId / setOpenPhaseId are hoisted to component-level state (top of Dashboard)
-
         return (
           <div
-            className="rounded-xl border border-border/50 bg-card shadow-card overflow-hidden"
+            className="rounded-xl border border-border/60 bg-card shadow-card overflow-hidden"
             role="region"
             aria-label="Operational phase timeline"
           >
-            {/* Header bar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/20">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
-                Operational Phase
-              </p>
+            {/* ── Header bar ─────────────────────────────────────────────── */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground/50 leading-none">
+                  Operational Phase
+                </span>
+                <span className="text-[9px] text-muted-foreground/30">·</span>
+                <span className="text-[9px] font-medium text-muted-foreground/40 leading-none">
+                  Click any phase to view details
+                </span>
+              </div>
               {demoRunning && demoStepIndex >= 0 && (
-                <span className="text-[10px] font-medium text-muted-foreground/70 tabular-nums">
+                <span className="text-[9px] font-semibold text-muted-foreground/60 tabular-nums bg-muted/40 px-2 py-0.5 rounded-full border border-border/40">
                   Step {demoStepIndex + 1}&thinsp;/&thinsp;{demoSteps.length}
-                  <span className="mx-1.5 text-muted-foreground/30">·</span>
+                  <span className="mx-1 text-muted-foreground/30">·</span>
                   {demoSteps[demoStepIndex]?.label ?? ''}
                 </span>
               )}
             </div>
 
-            {/* Phase track */}
-            <div className="flex items-stretch px-3 py-2.5 gap-1.5">
+            {/* ── Phase track ────────────────────────────────────────────── */}
+            <div className="flex items-stretch px-2.5 py-2 gap-1">
               {PHASES.map((phase, idx) => {
                 const isActive = activePhaseIndex === idx;
                 const isDone   = activePhaseIndex > idx;
@@ -1981,43 +1975,38 @@ export default function Dashboard() {
                 // ── Resolve visual variant ─────────────────────────────────
                 type Variant = 'block' | 'warn' | 'muted-block' | 'done' | 'active' | 'neutral';
                 const variant: Variant =
-                  policyPhaseBlock    ? 'block'
-                  : policyPhaseWarn   ? 'warn'
+                  policyPhaseBlock     ? 'block'
+                  : policyPhaseWarn    ? 'warn'
                   : isPostPolicyBlocked ? 'muted-block'
                   : (isDone || policyPhaseClear) ? 'done'
-                  : isActive          ? 'active'
+                  : isActive           ? 'active'
                   : 'neutral';
 
-                // ── Compute pill styles ────────────────────────────────────
-                let pillBg: string, pillBorder: string, pillText: string, dotBg: string;
+                // ── Resolve pill colors based on variant + phase identity ──
+                let pillBg: string, pillBorder: string, pillText: string;
 
                 if (variant === 'block') {
-                  pillBg = 'bg-destructive/12'; pillBorder = 'border-destructive/50';
-                  pillText = 'text-destructive'; dotBg = 'bg-destructive';
+                  pillBg = 'bg-destructive/15'; pillBorder = 'border-destructive/60';
+                  pillText = 'text-destructive dark:text-red-300';
                 } else if (variant === 'warn') {
-                  pillBg = 'bg-amber-500/12'; pillBorder = 'border-amber-500/50';
-                  pillText = 'text-amber-600 dark:text-amber-300'; dotBg = 'bg-amber-500';
+                  pillBg = 'bg-amber-500/15'; pillBorder = 'border-amber-500/60';
+                  pillText = 'text-amber-700 dark:text-amber-300';
                 } else if (variant === 'muted-block') {
-                  pillBg = 'bg-destructive/5 opacity-45'; pillBorder = 'border-destructive/20';
-                  pillText = 'text-destructive/40'; dotBg = 'bg-destructive/25';
-                } else if (variant === 'done') {
-                  // Done state: use phase identity color but softer
-                  pillBg = phase.idleBg; pillBorder = phase.idleBorder;
-                  pillText = phase.idleColor; dotBg = phase.idleDot;
-                } else if (variant === 'active') {
-                  // Active: full intensity phase color with glow border
-                  pillBg = phase.activeBg; pillBorder = phase.activeBorder;
-                  pillText = phase.activeColor; dotBg = phase.activeDot;
+                  pillBg = 'bg-muted/30'; pillBorder = 'border-border/30';
+                  pillText = 'text-muted-foreground/30';
                 } else {
-                  // Neutral idle: subtle phase tint so each phase is identifiable at rest
-                  pillBg = phase.idleBg; pillBorder = phase.idleBorder;
-                  pillText = phase.idleColor; dotBg = phase.idleDot;
+                  // Use the phase's own identity color block for done, active, neutral
+                  pillBg = phase.blockBg;
+                  pillBorder = phase.blockBorder;
+                  pillText = phase.blockText;
                 }
 
+                // ── Active state: stronger background tint ─────────────────
+                const activeBgExtra = isActive ? 'brightness-[1.18] saturate-[1.3]' : '';
 
                 return (
                   <div key={phase.id} className="flex min-w-0 flex-1 items-center">
-                    {/* ── Phase pill (clickable) ─────────────────────────── */}
+                    {/* ── Phase block (clickable) ────────────────────────── */}
                     <div className="relative flex-1 min-w-0">
                       <button
                         type="button"
@@ -2026,49 +2015,81 @@ export default function Dashboard() {
                         aria-expanded={isOpen}
                         aria-label={`${phase.label}: ${phase.tooltip}`}
                         className={cn(
-                          'w-full flex flex-col items-center justify-center',
-                          'rounded-lg px-1.5 py-2 border transition-all duration-200',
-                          'cursor-pointer select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-                          'hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]',
-                          pillBg, pillBorder,
-                          variant === 'muted-block' && 'opacity-45 pointer-events-none',
-                          isOpen && 'ring-1 ring-ring/30 shadow-md',
+                          'group/phase w-full flex flex-col items-center justify-between',
+                          'rounded-lg px-1.5 py-2.5 border transition-all duration-200',
+                          'cursor-pointer select-none focus:outline-none',
+                          'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                          'hover:scale-[1.025] hover:shadow-md active:scale-[0.975]',
+                          pillBg, pillBorder, activeBgExtra,
+                          variant === 'muted-block' && 'opacity-35 pointer-events-none',
+                          isOpen && 'ring-2 shadow-lg',
+                          isOpen && `ring-[rgb(${phase.glowRgb})/40]`,
+                          isActive && !prefersReducedMotion && `shadow-[0_0_10px_rgba(${phase.glowRgb},0.25)]`,
                         )}
                       >
-                        {/* Phase number badge */}
+                        {/* ── Top row: step number + typemark ─────────────── */}
+                        <div className="flex items-center justify-between w-full mb-1.5">
+                          <span className={cn(
+                            'text-[8px] font-black tabular-nums leading-none tracking-wider opacity-55',
+                            pillText,
+                          )}>
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <span className={cn(
+                            'text-[9px] leading-none opacity-50 transition-opacity group-hover/phase:opacity-80',
+                            pillText,
+                          )}>
+                            {phase.typeMark}
+                          </span>
+                        </div>
+
+                        {/* ── Phase label — TCS wordmark style ─────────────
+                             Bold, all-caps, tight tracking — mirrors TCS logo letterform precision */}
                         <span className={cn(
-                          'text-[8px] font-bold tabular-nums leading-none mb-1 opacity-50',
+                          'text-[10px] font-black uppercase tracking-[0.04em] leading-tight text-center',
+                          'whitespace-nowrap w-full overflow-hidden text-ellipsis',
                           pillText,
                         )}>
-                          {String(idx + 1).padStart(2, '0')}
+                          {phase.label}
                         </span>
 
-                        {/* Phase label */}
-                        <span className={cn(
-                          'text-[10px] font-bold leading-tight text-center whitespace-nowrap tracking-wide',
-                          pillText,
-                        )}>
-                          {phase.shortLabel}
-                        </span>
-
-                        {/* Status indicator */}
-                        <div className="mt-1.5 flex items-center justify-center gap-1">
+                        {/* ── Status indicator bar ──────────────────────── */}
+                        <div className="mt-2 w-full flex items-center justify-center gap-1">
                           {(isDone || policyPhaseClear) && variant !== 'block' ? (
-                            <span className={cn('text-[9px] font-bold leading-none', pillText)}>✓</span>
+                            <div className={cn(
+                              'h-[2px] w-full rounded-full',
+                              phase.dotColor, 'opacity-70',
+                            )} />
                           ) : isActive ? (
-                            <span
-                              className={cn(
-                                'h-1.5 w-1.5 rounded-full',
-                                dotBg,
-                                !prefersReducedMotion && 'animate-pulse',
-                              )}
-                            />
+                            <div className={cn(
+                              'h-[2px] rounded-full',
+                              phase.dotColor,
+                              !prefersReducedMotion ? 'w-full animate-pulse' : 'w-full',
+                            )} />
                           ) : variant === 'block' ? (
-                            <span className="text-[9px] font-bold leading-none text-destructive">✕</span>
+                            <div className="h-[2px] w-full rounded-full bg-destructive opacity-80" />
                           ) : variant === 'warn' ? (
-                            <span className="text-[9px] font-bold leading-none text-amber-500">!</span>
+                            <div className="h-[2px] w-full rounded-full bg-amber-500 opacity-60" />
                           ) : (
-                            <span className={cn('h-1 w-1 rounded-full opacity-40', dotBg)} />
+                            <div className={cn(
+                              'h-[2px] w-2/3 rounded-full opacity-20',
+                              phase.dotColor,
+                            )} />
+                          )}
+                        </div>
+
+                        {/* ── Completion / status label ─────────────────── */}
+                        <div className="mt-1 flex items-center justify-center">
+                          {(isDone || policyPhaseClear) && variant !== 'block' ? (
+                            <span className={cn('text-[8px] font-bold leading-none', pillText, 'opacity-70')}>DONE</span>
+                          ) : isActive ? (
+                            <span className={cn('text-[8px] font-bold leading-none', pillText, 'opacity-80')}>ACTIVE</span>
+                          ) : variant === 'block' ? (
+                            <span className="text-[8px] font-black leading-none text-destructive">BLOCK</span>
+                          ) : variant === 'warn' ? (
+                            <span className="text-[8px] font-black leading-none text-amber-600 dark:text-amber-300">WARN</span>
+                          ) : (
+                            <span className={cn('text-[8px] font-medium leading-none opacity-35', pillText)}>—</span>
                           )}
                         </div>
                       </button>
@@ -2077,51 +2098,82 @@ export default function Dashboard() {
                       {isOpen && (
                         <div
                           className={cn(
-                            'absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2',
-                            'w-56 rounded-xl border shadow-elevated',
-                            'bg-card/95 backdrop-blur-md',
+                            'absolute z-50 bottom-full mb-2.5 left-1/2 -translate-x-1/2',
+                            'w-64 rounded-xl border shadow-elevated',
+                            'bg-card/98 backdrop-blur-xl',
                             pillBorder,
                           )}
                           role="tooltip"
                         >
+                          {/* Popover accent line */}
+                          <div className={cn('h-[3px] w-full rounded-t-xl', phase.dotColor, 'opacity-80')} />
+
                           {/* Popover header */}
-                          <div className={cn(
-                            'flex items-center gap-2 px-3 pt-3 pb-2',
-                            'border-b border-border/30',
-                          )}>
-                            <span className={cn(
-                              'inline-flex items-center justify-center w-5 h-5 rounded-md text-[9px] font-black',
-                              pillBg, pillBorder, 'border', pillText,
-                            )}>
-                              {String(idx + 1).padStart(2, '0')}
-                            </span>
-                            <span className={cn('text-[11px] font-bold tracking-wide', pillText)}>
-                              {phase.label}
-                            </span>
-                          </div>
-                          {/* Popover body */}
-                          <p className="px-3 py-2.5 text-[10px] leading-relaxed text-muted-foreground">
-                            {phase.detail}
-                          </p>
-                          {/* Status chip */}
-                          <div className="px-3 pb-3">
-                            <span className={cn(
-                              'inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                          <div className="flex items-center gap-2.5 px-3.5 pt-3 pb-2.5 border-b border-border/30">
+                            {/* Phase identity block */}
+                            <div className={cn(
+                              'flex-shrink-0 inline-flex items-center justify-center',
+                              'w-7 h-7 rounded-lg border text-[11px] font-black',
                               pillBg, pillBorder, pillText,
                             )}>
-                              <span className={cn('h-1.5 w-1.5 rounded-full', dotBg)} />
+                              {String(idx + 1).padStart(2, '0')}
+                            </div>
+                            <div className="min-w-0">
+                              <p className={cn('text-[12px] font-black uppercase tracking-[0.06em] leading-none', pillText)}>
+                                {phase.fullLabel}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground/60 mt-0.5 leading-none font-medium">
+                                Operational Phase {idx + 1} of {PHASES.length}
+                              </p>
+                            </div>
+                            {/* Close hint */}
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setOpenPhaseId(null); }}
+                              className="ml-auto text-muted-foreground/40 hover:text-muted-foreground/80 transition-colors text-[10px] leading-none"
+                              aria-label="Close"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          {/* Popover body */}
+                          <div className="px-3.5 py-3">
+                            <p className="text-[10.5px] leading-relaxed text-muted-foreground">
+                              {phase.detail}
+                            </p>
+                          </div>
+
+                          {/* Status chip + policy context if policy phase */}
+                          <div className="px-3.5 pb-3.5 flex flex-wrap gap-1.5">
+                            <span className={cn(
+                              'inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border',
+                              pillBg, pillBorder, pillText,
+                            )}>
+                              <span className={cn('h-1.5 w-1.5 rounded-full flex-shrink-0', phase.dotColor)} />
                               {variant === 'block' ? 'Gate Blocked'
-                                : variant === 'warn' ? 'Gate Warn'
-                                : isDone ? 'Completed'
+                                : variant === 'warn' ? 'Gate Warning'
+                                : isDone || policyPhaseClear ? 'Completed'
                                 : isActive ? 'In Progress'
                                 : 'Pending'}
                             </span>
+                            {isPolicyPhase && policyGate && (
+                              <span className={cn(
+                                'inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border',
+                                isGateBlock ? 'bg-destructive/10 border-destructive/40 text-destructive'
+                                  : isGateWarn ? 'bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300'
+                                  : 'bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300',
+                              )}>
+                                Gate: {policyGate}
+                              </span>
+                            )}
                           </div>
-                          {/* Arrow */}
+
+                          {/* Arrow pointer */}
                           <div className={cn(
-                            'absolute -bottom-1.5 left-1/2 -translate-x-1/2',
-                            'w-3 h-3 rotate-45 border-r border-b',
-                            'bg-card/95', pillBorder,
+                            'absolute -bottom-[7px] left-1/2 -translate-x-1/2',
+                            'w-3 h-3 rotate-45 border-r border-b bg-card',
+                            pillBorder,
                           )} />
                         </div>
                       )}
@@ -2130,18 +2182,17 @@ export default function Dashboard() {
                     {/* ── Connector arrow (not after last phase) ──────────── */}
                     {idx < PHASES.length - 1 && (
                       <div className="flex items-center shrink-0 px-0.5">
-                        <svg width="14" height="10" viewBox="0 0 14 10" className={cn('transition-all duration-300', variant === 'done' ? 'opacity-70' : 'opacity-25')}>
+                        <svg width="12" height="10" viewBox="0 0 12 10" className={cn(
+                          'transition-all duration-300',
+                          variant === 'done' ? 'opacity-65' : 'opacity-20',
+                          variant === 'active' && 'opacity-50',
+                        )}>
                           <path
-                            d="M1 5h10M8 2l3 3-3 3"
+                            d="M1 5h8M7 2l3 3-3 3"
                             stroke={
                               variant === 'block' ? 'hsl(var(--destructive))'
-                              : variant === 'warn' ? 'rgb(245,158,11)'
-                              : variant === 'done' ? phase.idleDot.includes('sky') ? 'rgb(56,189,248)'
-                                : phase.idleDot.includes('amber') ? 'rgb(251,191,36)'
-                                : phase.idleDot.includes('orange') ? 'rgb(251,146,60)'
-                                : phase.idleDot.includes('violet') ? 'rgb(167,139,250)'
-                                : phase.idleDot.includes('emerald') ? 'rgb(52,211,153)'
-                                : 'rgb(45,212,191)'
+                              : variant === 'warn' ? `rgb(${phase.glowRgb})`
+                              : (variant === 'done' || variant === 'active') ? `rgb(${phase.glowRgb})`
                               : 'hsl(var(--border))'
                             }
                             strokeWidth="1.5"
@@ -2160,130 +2211,29 @@ export default function Dashboard() {
         );
       })()}
 
-      {/* ── Boardroom KPI Compression ───────────────────────────────────────
-           In boardroom mode, replace the standard KPI grid with 5 focused
-           executive stat tiles. Each tile surfaces a single, high-signal
-           metric. Standard mode renders the original 3-6-3 grid unchanged.
-      ────────────────────────────────────────────────────────────────────── */}
+      {/* ── Boardroom KPI Compression ─────────────────────────────────────── */}
       {boardroomMode ? (() => {
-        // ── Derived values for the 5 boardroom KPI tiles ─────────────────
         const criticalLoadCount = activeScenarios.filter((s) => s.has_critical_load).length;
         const etrBandLabel = policyView?.etrBand?.band ?? '—';
         const etrConfLabel = policyView?.etrBand?.confidence ? formatConfidenceFull(policyView.etrBand.confidence) : '—';
-        // Use the selected extreme hazard for the Active Hazard tile
         const activeExtHazard = getExtremeHazard(selectedHazardKey);
         const activeHazardLabel = activeExtHazard.label;
         const policyStatusLabel2 = !policyView ? 'Unknown' : policyGate === 'BLOCK' ? 'Blocked' : policyGate === 'WARN' ? 'Warn' : 'Clear';
-        const policyTileColor = !policyView
-          ? 'border-border/50 text-muted-foreground'
-          : policyGate === 'BLOCK'
-            ? 'border-red-400/35 text-red-200'
-            : policyGate === 'WARN'
-              ? 'border-amber-400/30 text-amber-200'
-              : 'border-emerald-400/30 text-emerald-200';
-        const policyTileBg = !policyView
-          ? 'bg-muted/20'
-          : policyGate === 'BLOCK'
-            ? 'bg-red-500/12 shadow-[0_0_16px_rgba(248,113,113,0.12)]'
-            : policyGate === 'WARN'
-              ? 'bg-amber-500/10'
-              : 'bg-emerald-500/10';
-
+        const policyTileBg = !policyView ? 'bg-muted/20' : policyGate === 'BLOCK' ? 'bg-red-500/12 shadow-[0_0_16px_rgba(248,113,113,0.12)]' : policyGate === 'WARN' ? 'bg-amber-500/10' : 'bg-emerald-500/10';
         const boardroomTiles = [
-          {
-            id: 'risk',
-            label: 'System Risk Index',
-            value: String(riskDrivers.index),
-            valueColor: '',
-            sub: riskDrivers.severity,
-            subColor: getRiskBadgeClass(riskDrivers.severity),
-            tileColor: 'border-border/50',
-            tileBg: 'bg-card',
-            icon: Gauge,
-          },
-          {
-            id: 'etr',
-            label: 'ETR Confidence Band',
-            value: etrBandLabel,
-            valueColor: '',
-            sub: etrConfLabel !== '—' ? `${etrConfLabel} confidence` : 'Awaiting evaluation',
-            subColor: 'text-muted-foreground',
-            tileColor: 'border-border/50',
-            tileBg: 'bg-card',
-            icon: Clock,
-          },
-          {
-            id: 'critical',
-            label: 'Critical Load at Risk',
-            value: String(criticalLoadCount),
-            // Boardroom-safe: text-red-200 value color for legibility on dark projectors
-            valueColor: criticalLoadCount > 0 ? 'text-red-200' : 'text-foreground',
-            sub: criticalLoadCount > 0 ? 'Active exposure' : 'No exposure',
-            subColor: criticalLoadCount > 0 ? 'text-red-200/70' : 'text-emerald-300',
-            tileColor: criticalLoadCount > 0 ? 'border-red-400/35' : 'border-border/50',
-            tileBg: criticalLoadCount > 0 ? 'bg-red-500/12 shadow-[0_0_12px_rgba(248,113,113,0.15)]' : 'bg-card',
-            icon: AlertTriangle,
-          },
-          {
-            id: 'policy',
-            label: 'Policy Status',
-            value: policyStatusLabel2,
-            // Boardroom-safe: explicit value color separate from tile border
-            valueColor: !policyView
-              ? 'text-muted-foreground'
-              : policyGate === 'BLOCK'
-                ? 'text-red-200'
-                : policyGate === 'WARN'
-                  ? 'text-amber-200'
-                  : 'text-emerald-200',
-            sub: gateReason.length > 52 ? gateReason.slice(0, 52) + '…' : gateReason,
-            subColor: 'text-muted-foreground',
-            tileColor: !policyView
-              ? 'border-border/50'
-              : policyGate === 'BLOCK'
-                ? 'border-red-400/35'
-                : policyGate === 'WARN'
-                  ? 'border-amber-400/30'
-                  : 'border-emerald-400/30',
-            tileBg: policyTileBg,
-            icon: policyGate === 'BLOCK' ? ShieldX : policyGate === 'WARN' ? ShieldAlert : ShieldCheck,
-          },
-          {
-            id: 'hazard',
-            label: 'Active Hazard',
-            value: activeHazardLabel,
-            valueColor: '',
-            // Sub-label reflects the hazard-specific exposure type (e.g., Vegetation Exposure for Wildfire)
-            sub: `${activeExtHazard.exposureLabel} · ${stats.active} active`,
-            subColor: 'text-muted-foreground',
-            tileColor: 'border-border/50',
-            tileBg: 'bg-card',
-            icon: activeExtHazard.icon,
-          },
+          { id: 'risk', label: 'System Risk Index', value: String(riskDrivers.index), valueColor: '', sub: riskDrivers.severity, subColor: getRiskBadgeClass(riskDrivers.severity), tileColor: 'border-border/50', tileBg: 'bg-card', icon: Gauge },
+          { id: 'etr', label: 'ETR Confidence Band', value: etrBandLabel, valueColor: '', sub: etrConfLabel !== '—' ? `${etrConfLabel} confidence` : 'Awaiting evaluation', subColor: 'text-muted-foreground', tileColor: 'border-border/50', tileBg: 'bg-card', icon: Clock },
+          { id: 'critical', label: 'Critical Load at Risk', value: String(criticalLoadCount), valueColor: criticalLoadCount > 0 ? 'text-red-200' : 'text-foreground', sub: criticalLoadCount > 0 ? 'Active exposure' : 'No exposure', subColor: criticalLoadCount > 0 ? 'text-red-200/70' : 'text-emerald-300', tileColor: criticalLoadCount > 0 ? 'border-red-400/35' : 'border-border/50', tileBg: criticalLoadCount > 0 ? 'bg-red-500/12 shadow-[0_0_12px_rgba(248,113,113,0.15)]' : 'bg-card', icon: AlertTriangle },
+          { id: 'policy', label: 'Policy Status', value: policyStatusLabel2, valueColor: !policyView ? 'text-muted-foreground' : policyGate === 'BLOCK' ? 'text-red-200' : policyGate === 'WARN' ? 'text-amber-200' : 'text-emerald-200', sub: gateReason.length > 52 ? gateReason.slice(0, 52) + '…' : gateReason, subColor: 'text-muted-foreground', tileColor: !policyView ? 'border-border/50' : policyGate === 'BLOCK' ? 'border-red-400/35' : policyGate === 'WARN' ? 'border-amber-400/30' : 'border-emerald-400/30', tileBg: policyTileBg, icon: policyGate === 'BLOCK' ? ShieldX : policyGate === 'WARN' ? ShieldAlert : ShieldCheck },
+          { id: 'hazard', label: 'Active Hazard', value: activeHazardLabel, valueColor: '', sub: `${activeExtHazard.exposureLabel} · ${stats.active} active`, subColor: 'text-muted-foreground', tileColor: 'border-border/50', tileBg: 'bg-card', icon: activeExtHazard.icon },
         ];
-
         return (
-          <div
-            className={cn(
-              'rounded-xl border p-1',
-              // Subtle glow frame around the KPI band in boardroom mode
-              'border-primary/20 shadow-[0_0_0_1px_hsl(var(--primary)/0.08),0_4px_24px_-4px_hsl(var(--primary)/0.12)]',
-              prefersReducedMotion ? '' : 'transition-shadow duration-500',
-            )}
-          >
+          <div className={cn('rounded-xl border p-1 border-primary/20 shadow-[0_0_0_1px_hsl(var(--primary)/0.08),0_4px_24px_-4px_hsl(var(--primary)/0.12)]', prefersReducedMotion ? '' : 'transition-shadow duration-500')}>
             <div className="grid grid-cols-5 gap-1">
               {boardroomTiles.map(({ id, label, value, valueColor, sub, subColor, tileColor, tileBg, icon: TileIcon }) => (
-                <div
-                  key={id}
-                  className={cn(
-                    'flex flex-col justify-between rounded-lg border px-4 py-4',
-                    tileColor,
-                    tileBg,
-                  )}
-                >
+                <div key={id} className={cn('flex flex-col justify-between rounded-lg border px-4 py-4', tileColor, tileBg)}>
                   <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                    <TileIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />
-                    {label}
+                    <TileIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />{label}
                   </div>
                   <div className="mt-3">
                     <p className={cn('text-[2rem] font-semibold leading-none tabular-nums tracking-tight', valueColor || 'text-foreground')}>{value}</p>
