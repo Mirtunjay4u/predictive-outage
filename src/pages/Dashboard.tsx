@@ -1137,24 +1137,46 @@ export default function Dashboard() {
   }, [demoModeEnabled, demoRunning, demoStepIndex, demoSteps.length, logDemo, prefersReducedMotion, runDemoStep]);
 
   const riskDrivers = useMemo(() => {
-    const weatherSeverity = Math.min(30, preEventScenarios.length * 6 + activeScenarios.length * 3);
-    const activeHazards = Math.min(25, activeScenarios.length * 5 + highPriorityScenarios.length * 4);
-    const criticalLoadExposure = Math.min(25, activeScenarios.filter((scenario) => scenario.has_critical_load).length * 8);
-    const crewReadiness = Math.min(20, Math.max(0, 20 - postEventScenarios.length * 2));
-    const index = Math.min(100, weatherSeverity + activeHazards + criticalLoadExposure + crewReadiness);
-    // The second chip adapts its label to the selected extreme hazard type (label-only; value unchanged).
     const hazardExposureLabel = getExtremeHazard(selectedHazardKey).exposureLabel;
+    const relevantOutageTypes = HAZARD_OUTAGE_TYPE_MAP[selectedHazardKey];
+
+    // Filter to scenarios relevant to the currently selected extreme hazard.
+    // Scenarios with no outage_type are included so they don't silently disappear
+    // from the index when operators haven't yet classified an event.
+    const hazardActiveScenarios = activeScenarios.filter(
+      (s) => !s.outage_type || relevantOutageTypes.includes(s.outage_type),
+    );
+    const hazardHighPriorityScenarios = highPriorityScenarios.filter(
+      (s) => !s.outage_type || relevantOutageTypes.includes(s.outage_type),
+    );
+    const hazardPreEventScenarios = preEventScenarios.filter(
+      (s) => !s.outage_type || relevantOutageTypes.includes(s.outage_type),
+    );
+
+    const weatherSeverity = Math.min(30, hazardPreEventScenarios.length * 6 + hazardActiveScenarios.length * 3);
+    const activeHazards = Math.min(25, hazardActiveScenarios.length * 5 + hazardHighPriorityScenarios.length * 4);
+    const criticalLoadExposure = Math.min(25, hazardActiveScenarios.filter((s) => s.has_critical_load).length * 8);
+    const crewReadiness = Math.min(20, Math.max(0, 20 - postEventScenarios.length * 2));
+
+    let index = Math.min(100, weatherSeverity + activeHazards + criticalLoadExposure + crewReadiness);
+
+    // Apply severity override: clamp the raw index into the appropriate band so
+    // the operator's explicit severity selection is always reflected in the index.
+    if (severityOverride === 'Severe')   index = Math.min(100, Math.max(index, 75));
+    else if (severityOverride === 'Moderate') index = Math.min(74, Math.max(index, 30));
+    else if (severityOverride === 'Low') index = Math.min(29, index);
+
     return {
       index,
       severity: deriveRiskSeverity(index),
       chips: [
-        { key: 'Weather severity', value: weatherSeverity },
-        { key: hazardExposureLabel, value: activeHazards },
+        { key: 'Weather severity',      value: weatherSeverity },
+        { key: hazardExposureLabel,     value: activeHazards },
         { key: 'Critical load exposure', value: criticalLoadExposure },
-        { key: 'Crew readiness', value: crewReadiness },
+        { key: 'Crew readiness',        value: crewReadiness },
       ],
     };
-  }, [activeScenarios, highPriorityScenarios.length, postEventScenarios.length, preEventScenarios.length, selectedHazardKey]);
+  }, [activeScenarios, highPriorityScenarios, postEventScenarios.length, preEventScenarios, selectedHazardKey, severityOverride]);
 
   const topFeeders = useMemo(() => {
     const feeders = new Map<string, { feederId: string; name: string; customers: number; critical: number; etr: Date[]; riskScore: number }>();
