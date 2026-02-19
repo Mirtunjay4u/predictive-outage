@@ -283,6 +283,10 @@ serve(async (req: Request): Promise<Response> => {
   if (scenario.hazardType === "RAIN" && scenario.phase === "ACTIVE") {
     additionalEscalations.push("flood_access_risk");
   }
+  // HEAT severe phase: extreme temperatures drive peak load conditions and transformer thermal stress.
+  if (scenario.hazardType === "HEAT" && scenario.severity >= 4) {
+    additionalEscalations.push("heat_load_spike");
+  }
   // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT, vegetation_fire_risk for WILDFIRE)
   additionalEscalations.push(...assetResult.escalationFlags);
 

@@ -628,6 +628,14 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     labelCls: 'text-amber-700 dark:text-amber-300',
     tooltip: 'ETR precision is reduced due to missing inputs or poor data quality. Communicate restoration windows as ranges, not fixed times.',
   },
+  heat_load_spike: {
+    icon: Thermometer,
+    label: 'Heat Load Spike',
+    chipCls: 'bg-red-500/10 border-red-400/30',
+    iconCls: 'text-red-500',
+    labelCls: 'text-red-700 dark:text-red-300',
+    tooltip: 'Extreme heat is driving peak load conditions. Monitor transformer loading in real time and prepare load shedding plans before customer demand exceeds feeder capacity.',
+  },
   flood_access_risk: {
     icon: CloudRain,
     label: 'Flood Access Risk',
