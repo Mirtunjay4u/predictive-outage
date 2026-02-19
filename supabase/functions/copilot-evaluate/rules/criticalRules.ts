@@ -41,6 +41,9 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
 
   const blockRerouteForIce = isIce && scenario.phase === "ACTIVE";
 
+  // ── STORM hazard rules ────────────────────────────────────────────────────────
+  const isStormActive = scenario.hazardType === "STORM" && scenario.phase === "ACTIVE";
+
   // ── WILDFIRE hazard rules ─────────────────────────────────────────────────────
   // Aerial fire line clearance is required before any field switching when
   // average vegetation exposure exceeds 0.60 in an active wildfire event.
@@ -107,8 +110,20 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
         : ["No ICE hazard or all assets below 0.5 vegetation exposure threshold."],
     },
     {
+      id: "SC-STORM-001",
+      title: "High wind field crew prohibition",
+      description: "Field crew dispatch is deferred until wind speeds drop below operational safety threshold.",
+      severity: "HIGH",
+      triggered: isStormActive,
+      evidence: isStormActive
+        ? [
+            "Hazard: STORM — phase: ACTIVE.",
+            "High wind conditions elevate conductor contact and tree strike risk for field personnel.",
+          ]
+        : ["Not triggered — STORM hazard not active or phase is not ACTIVE."],
+    },
+    {
       id: "SC-WILD-001",
-      title: "Wildfire vegetation switching prohibition",
       description: "Field switching is prohibited until aerial fire line clearance is confirmed by incident commander.",
       severity: hasWildfireSwitchingRisk ? "HIGH" : "LOW",
       triggered: hasWildfireSwitchingRisk,
