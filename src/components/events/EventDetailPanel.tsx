@@ -757,6 +757,19 @@ const HAZARD_WEIGHT_PROFILES: Record<string, HazardWeightProfile> = {
     ],
     rationale: 'Ice accumulation on vegetation-exposed conductors is the primary mechanical failure driver.',
   },
+  WILDFIRE: {
+    label: 'WILDFIRE',
+    icon: Flame,
+    iconCls: 'text-orange-500',
+    borderCls: 'border-orange-400/30',
+    bgCls: 'bg-orange-500/5',
+    textCls: 'text-orange-700 dark:text-orange-300',
+    chips: [
+      { driver: 'vegetation', multiplier: '×1.8', direction: 'up' },
+      { driver: 'load criticality', multiplier: '×0.5', direction: 'down' },
+    ],
+    rationale: 'Dry brush loading elevates vegetation exposure as the primary ignition and line-contact failure driver.',
+  },
 };
 
 function HazardWeightLegend({ outageType }: { outageType: string | null | undefined }) {
@@ -764,6 +777,8 @@ function HazardWeightLegend({ outageType }: { outageType: string | null | undefi
     'Snow Storm': 'ICE',
     'Ice/Snow': 'ICE',
     Heatwave: 'HEAT',
+    Wildfire: 'WILDFIRE',
+    Vegetation: 'WILDFIRE',
   };
   const hazardKey = hazardMap[outageType ?? ''];
   const profile = hazardKey ? HAZARD_WEIGHT_PROFILES[hazardKey] : null;

@@ -23,6 +23,8 @@ export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResul
   const escalationFlags: string[] = [];
   const assets = scenario.assets;
   const isHeat = scenario.hazardType === "HEAT";
+  const isIce = scenario.hazardType === "ICE";
+  const isWildfire = scenario.hazardType === "WILDFIRE";
 
   if (assets.length === 0) {
     assumptions.push("No assets provided; using scenario-level defaults for risk scoring.");
@@ -38,15 +40,16 @@ export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResul
     ? assets.reduce((sum, asset) => sum + clamp(asset.loadCriticality ?? 0.5, 0, 1), 0) / assets.length
     : 0.5;
 
-  const isIce = scenario.hazardType === "ICE";
-
   // HEAT hazard: cooling load priority elevates load_criticality weight from 0.30 → 0.40;
   // vegetation is less relevant in heat events so it drops from 0.25 → 0.15.
   //
   // ICE hazard: ice accumulation on conductors/vegetation is the primary failure driver,
   // so vegetation_exposure weight rises from 0.25 → 0.45; load_criticality drops to 0.15.
-  const loadCriticalityWeight = isHeat ? 0.40 : isIce ? 0.15 : 0.30;
-  const vegetationWeight      = isHeat ? 0.15 : isIce ? 0.45 : 0.25;
+  //
+  // WILDFIRE hazard: dry brush loading makes vegetation_exposure the primary ignition and
+  // line-contact failure driver, rising from 0.25 → 0.45; load_criticality drops to 0.15.
+  const loadCriticalityWeight = isHeat ? 0.40 : (isIce || isWildfire) ? 0.15 : 0.30;
+  const vegetationWeight      = isHeat ? 0.15 : (isIce || isWildfire) ? 0.45 : 0.25;
 
   if (isHeat) {
     assumptions.push("HEAT hazard: load_criticality_avg weight elevated to 0.40 (cooling load priority).");
@@ -55,6 +58,10 @@ export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResul
   if (isIce) {
     assumptions.push("ICE hazard: vegetation_exposure_avg weight elevated to 0.45 (ice accumulation on lines is primary failure driver).");
     assumptions.push("ICE hazard: load_criticality_avg weight reduced to 0.15 (line mechanical risk dominates over load profile).");
+  }
+  if (isWildfire) {
+    assumptions.push("WILDFIRE hazard: vegetation_exposure_avg weight elevated to 0.45 (dry brush loading is primary ignition and line-contact failure driver).");
+    assumptions.push("WILDFIRE hazard: load_criticality_avg weight reduced to 0.15 (vegetation exposure risk dominates over load profile).");
   }
 
   const ageFactor = clamp(avgAgeYears / 60, 0, 1);
