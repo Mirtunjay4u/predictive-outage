@@ -882,6 +882,8 @@ interface RuleCoverageRow {
   hazardColor: string;
   /** Evidence lines returned by the engine in safetyConstraints[].evidence */
   evidence: string[];
+  /** Optional note clarifying conditional evidence lines */
+  conditionalNote?: string;
 }
 
 const RULE_COVERAGE: RuleCoverageRow[] = [
@@ -995,6 +997,7 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
       'Remote switching without visual line inspection risks cascading failures on ice-loaded conductors.',
       'Asset {id} ({type}) — vegetation exposure: {vegetationExposure} (threshold: 0.50).',
     ],
+    conditionalNote: 'Third evidence line is only appended when hasIceLoadRisk is true (i.e. assets with vegetationExposure > 0.50 are present). Otherwise only the first two lines appear.',
   },
   {
     constraint: 'SC-ICE-002',
@@ -1164,6 +1167,14 @@ function RuleCoverageTable() {
                             <p className="mt-2 text-[9px] text-muted-foreground/50 italic">
                               Dynamic values shown as <code className="font-mono text-[8px]">{'{placeholder}'}</code> are substituted at evaluation time.
                             </p>
+                            {row.conditionalNote && (
+                              <div className="mt-2 flex items-start gap-1.5 rounded border border-cyan-500/20 bg-cyan-500/5 px-2 py-1.5">
+                                <span className="mt-[2px] shrink-0 text-[10px] leading-none text-cyan-400/70">⚑</span>
+                                <p className="text-[9px] text-cyan-300/80 leading-relaxed">
+                                  {row.conditionalNote}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       </AnimatePresence>
