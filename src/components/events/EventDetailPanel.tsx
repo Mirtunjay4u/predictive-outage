@@ -809,6 +809,76 @@ function HazardWeightLegend({ outageType }: { outageType: string | null | undefi
   );
 }
 
+
+const HAZARD_DRIVER_MAP: Record<string, string> = {
+  'Snow Storm': 'ICE', 'Ice/Snow': 'ICE',
+  Heatwave: 'HEAT',
+  Wildfire: 'WILDFIRE', Vegetation: 'WILDFIRE',
+};
+
+const REBALANCED_KEYS = new Set(['vegetation_exposure_avg', 'load_criticality_avg']);
+
+const HAZARD_DOT_CLS: Record<string, { dot: string; text: string }> = {
+  HEAT:     { dot: 'bg-red-500',    text: 'text-red-500' },
+  ICE:      { dot: 'bg-sky-500',    text: 'text-sky-500' },
+  WILDFIRE: { dot: 'bg-orange-500', text: 'text-orange-500' },
+};
+
+function DriverList({
+  drivers,
+  outageType,
+}: {
+  drivers: Array<{ key: string; value: string | number | boolean; weight: number }>;
+  outageType: string | null | undefined;
+}) {
+  const activeHazard = HAZARD_DRIVER_MAP[outageType ?? ''] ?? null;
+  const clsSet = activeHazard ? HAZARD_DOT_CLS[activeHazard] : null;
+
+  return (
+    <div>
+      <p className="font-semibold text-foreground mb-1.5">Decision Drivers</p>
+      <ul className="space-y-2">
+        {drivers.map((d) => {
+          const isRebalanced = !!(clsSet && REBALANCED_KEYS.has(d.key));
+          return (
+            <li key={d.key} className="space-y-0.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-muted-foreground capitalize">
+                  {isRebalanced && (
+                    <span
+                      className={cn('inline-block h-1.5 w-1.5 rounded-full shrink-0', clsSet!.dot)}
+                      title={`Weight rebalanced for ${activeHazard} hazard profile`}
+                    />
+                  )}
+                  {d.key.replace(/_/g, ' ')}
+                </span>
+                <span className="text-foreground font-medium tabular-nums text-right">
+                  {String(d.value).slice(0, 8)}
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                <div
+                  className={cn('h-full rounded-full transition-all', isRebalanced ? clsSet!.dot : 'bg-primary')}
+                  style={{ width: `${Math.min(100, Math.round(d.weight * 100))}%` }}
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground">
+                Weight: {Math.round(d.weight * 100)}%
+                {isRebalanced && (
+                  <span className={cn('ml-1 font-semibold', clsSet!.text)}>
+                    · {activeHazard} profile
+                  </span>
+                )}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+      <HazardWeightLegend outageType={outageType} />
+    </div>
+  );
+}
+
 function PolicySection({
   policy, policyStatus, gate, whyOpen, setWhyOpen, handleRunEvaluation, outageType,
 }: {
@@ -986,29 +1056,7 @@ function PolicySection({
                   >
                     <div className="mt-2.5 rounded-lg border border-border/50 bg-muted/20 px-3 py-3 space-y-3 text-xs">
                       {(policy.explainability.drivers ?? []).length > 0 && (
-                        <div>
-                          <p className="font-semibold text-foreground mb-1.5">Decision Drivers</p>
-                          <ul className="space-y-2">
-                            {policy.explainability.drivers!.map((d) => (
-                              <li key={d.key} className="space-y-0.5">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-muted-foreground capitalize">{d.key.replace(/_/g, ' ')}</span>
-                                  <span className="text-foreground font-medium tabular-nums text-right">
-                                    {String(d.value).slice(0, 8)}
-                                  </span>
-                                </div>
-                                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full bg-primary transition-all"
-                                    style={{ width: `${Math.min(100, Math.round(d.weight * 100))}%` }}
-                                  />
-                                </div>
-                                <p className="text-[9px] text-muted-foreground">Weight: {Math.round(d.weight * 100)}%</p>
-                              </li>
-                            ))}
-                           </ul>
-                          <HazardWeightLegend outageType={outageType} />
-                        </div>
+                        <DriverList drivers={policy.explainability.drivers!} outageType={outageType} />
                       )}
                       {(policy.explainability.assumptions ?? []).length > 0 && (
                         <div>
