@@ -331,6 +331,15 @@ serve(async (req: Request): Promise<Response> => {
               "Re-evaluate dispatch readiness after conditions stabilise.",
             ],
           },
+          {
+            action: "reroute_load",
+            reason: "Active storm conditions — remote load rerouting deferred until storm clears and feeder integrity can be confirmed.",
+            remediation: [
+              "Await storm clearance before initiating any remote switching.",
+              "Confirm feeder integrity and thermal limits post-storm before rerouting.",
+              "Coordinate with field supervisor once wind speeds drop below operational threshold.",
+            ],
+          },
         ]
       : [];
 
