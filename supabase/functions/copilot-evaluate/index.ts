@@ -365,11 +365,30 @@ serve(async (req: Request): Promise<Response> => {
         ]
       : [];
 
+  // ── FLOOD/RAIN active-phase crew dispatch block ───────────────────────────────
+  // Ground saturation and standing water restrict safe field access near
+  // pad-mount and substation equipment.
+  const floodActiveBlock: BlockedAction[] =
+    scenario.hazardType === "RAIN" && scenario.phase === "ACTIVE"
+      ? [
+          {
+            action: "dispatch_crews",
+            reason: "Active flood conditions — field crew ground access deferred until flood levels recede and site safety is confirmed.",
+            remediation: [
+              "Monitor flood level telemetry and await site safety clearance.",
+              "Stage crews away from flood-affected zones.",
+              "Re-evaluate access once water levels recede and SC-FLOOD-001 constraint is lifted.",
+            ],
+          },
+        ]
+      : [];
+
   const baseBlocked: BlockedAction[] = [
     ...vegetationFireBlock,
     ...iceActiveBlock,
     ...stormActiveBlock,
     ...heatOverloadBlock,
+    ...floodActiveBlock,
     ...crewResult.blockedActions,
     ...criticalResult.blockedActions.map((action) => ({
       action,
