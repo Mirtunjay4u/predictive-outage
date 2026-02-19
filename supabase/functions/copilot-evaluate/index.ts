@@ -275,6 +275,10 @@ serve(async (req: Request): Promise<Response> => {
   const additionalEscalations: string[] = [];
   if (hazardEscalating) additionalEscalations.push("storm_active");
   if (etrBand.band === "LOW") additionalEscalations.push("low_confidence_etr");
+  // STORM active phase: high wind elevates conductor contact and tree strike risk.
+  if (scenario.hazardType === "STORM" && scenario.phase === "ACTIVE") {
+    additionalEscalations.push("high_wind_conductor_risk");
+  }
   // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT, vegetation_fire_risk for WILDFIRE)
   additionalEscalations.push(...assetResult.escalationFlags);
 
