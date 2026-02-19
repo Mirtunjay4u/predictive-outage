@@ -354,25 +354,33 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, 
             
             {/* Footer - Actions */}
             <footer className="flex-shrink-0 p-4 border-t border-border bg-muted/30 space-y-2">
+              <Button
+                onClick={onOpenInCopilot}
+                className="w-full gap-2 h-10 bg-primary hover:bg-primary/90"
+              >
+                <Bot className="w-4 h-4" />
+                Analyze this event in Copilot
+              </Button>
               <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant="outline"
                   onClick={handleViewFullDetails}
-                  className="gap-2 h-10"
+                  className="gap-2 h-9"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Full Details
                 </Button>
                 <Button 
-                  onClick={onOpenInCopilot}
-                  className="gap-2 h-10"
+                  variant="outline"
+                  onClick={handleGenerateSituationReport}
+                  className="gap-2 h-9"
                 >
-                  <Bot className="w-4 h-4" />
-                  Copilot
+                  <FileText className="w-4 h-4" />
+                  Sit. Report
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground text-center mt-1">
-                Open full page for detailed analysis or get AI insights
+                AI analysis passes event context, linked assets, and hazard overlap
               </p>
             </footer>
           </motion.div>
