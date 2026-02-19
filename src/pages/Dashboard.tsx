@@ -25,6 +25,7 @@ import { SupportingSignalsSheet } from '@/components/dashboard/SupportingSignals
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
 import { supabase } from '@/integrations/supabase/client';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const KPI_CONFIG: Record<string, { title: string; subtitle: string; tooltip: string }> = {
   'Total Events': { title: 'All Tracked Events', subtitle: 'All outage-related events currently monitored', tooltip: 'Complete inventory of events across all lifecycle stages.' },
@@ -1536,7 +1537,44 @@ export default function Dashboard() {
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Gauge className="h-3.5 w-3.5" />System Risk Index</p>
             <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-3xl font-semibold tabular-nums">{riskDrivers.index}</span>
+              <TooltipProvider delayDuration={120}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-help text-3xl font-semibold tabular-nums underline decoration-dashed decoration-muted-foreground/40 underline-offset-4">
+                      {riskDrivers.index}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start" className="w-64 p-3 text-xs">
+                    <p className="mb-2 font-semibold text-foreground">How this score is calculated</p>
+                    <p className="mb-2 text-muted-foreground leading-snug">
+                      Each driver is filtered to events matching the selected hazard type. The severity override clamps the final index into the corresponding band.
+                    </p>
+                    <ul className="space-y-1.5">
+                      {riskDrivers.chips.map((chip) => (
+                        <li key={chip.key} className="flex items-center justify-between gap-3">
+                          <span className="text-muted-foreground">{chip.key}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted/50">
+                              <div
+                                className={cn(
+                                  'h-full rounded-full transition-all duration-300',
+                                  chip.key === 'Crew readiness' ? 'bg-emerald-500' : 'bg-primary',
+                                )}
+                                style={{ width: `${Math.round((chip.value / 30) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="w-5 text-right font-semibold tabular-nums text-foreground">{chip.value}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-2.5 border-t border-border/40 pt-2 flex items-center justify-between">
+                      <span className="text-muted-foreground">Total</span>
+                      <span className="font-bold tabular-nums text-foreground">{riskDrivers.index} / 100</span>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Badge variant="outline" className={cn('text-[11px]', getRiskBadgeClass(riskDrivers.severity))}>{riskDrivers.severity}</Badge>
             </div>
           </div>
