@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
@@ -66,7 +67,7 @@ export default function OutageMap() {
   
   // New operator filters
   const [showCriticalLoads, setShowCriticalLoads] = useState(true);
-  const [severityFilter, setSeverityFilter] = useState<number | null>(null);
+  const [severityHighOnly, setSeverityHighOnly] = useState(false);
   const [criticalLoadOnly, setCriticalLoadOnly] = useState(false);
   const [activeHazardOverlays, setActiveHazardOverlays] = useState<HazardOverlay[]>([]);
   
@@ -96,12 +97,26 @@ export default function OutageMap() {
   const [playbackTime, setPlaybackTime] = useState<Date | null>(null);
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
 
+  // Sort scenarios by severity descending for event selector
+  const sortedByServerity = useMemo(() => {
+    if (!scenarios) return [];
+    return [...scenarios]
+      .filter(s => s.geo_center && s.lifecycle_stage === 'Event')
+      .sort((a, b) => getEventSeverity(b) - getEventSeverity(a));
+  }, [scenarios]);
+
+  // Auto-select highest severity event when none selected
+  const effectiveSelectedId = useMemo(() => {
+    if (selectedEventId) return selectedEventId;
+    return sortedByServerity[0]?.id ?? null;
+  }, [selectedEventId, sortedByServerity]);
+
   // Fetch weather data
   const { data: weatherData, isLoading: weatherLoading, refetch: refetchWeather } = useWeatherData(showWeather);
   
   // Fetch assets data
   const { data: assets = [] } = useAssets();
-  const { data: linkedAssetIds = [] } = useEventAssets(selectedEventId);
+  const { data: linkedAssetIds = [] } = useEventAssets(effectiveSelectedId);
   
   // Fetch feeder zones
   const { data: feederZones = [] } = useFeederZones();
@@ -203,10 +218,13 @@ export default function OutageMap() {
     }
   }, [feederZones]);
 
+  // Derive severity filter value from boolean
+  const severityFilter = severityHighOnly ? 4 : null;
+
   const selectedEvent = useMemo(() => {
-    if (!selectedEventId || !scenarios) return null;
-    return scenarios.find(s => s.id === selectedEventId) || null;
-  }, [selectedEventId, scenarios]);
+    if (!effectiveSelectedId || !scenarios) return null;
+    return scenarios.find(s => s.id === effectiveSelectedId) || null;
+  }, [effectiveSelectedId, scenarios]);
 
   const handleViewOnMap = (scenario: ScenarioWithIntelligence) => {
     setSelectedEventId(scenario.id);
@@ -520,7 +538,7 @@ export default function OutageMap() {
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`group p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedEventId === scenario.id 
+                      effectiveSelectedId === scenario.id 
                         ? 'border-primary bg-primary/5 shadow-md' 
                         : 'border-transparent bg-background hover:border-border hover:shadow-sm hover:bg-muted/30'
                     }`}
@@ -623,7 +641,7 @@ export default function OutageMap() {
           <MapErrorBoundary>
             <OutageMapView 
               scenarios={filteredScenarios}
-              selectedEventId={selectedEventId}
+              selectedEventId={effectiveSelectedId}
               onMarkerClick={handleMarkerClick}
               showHeatmap={showHeatmap}
               enableClustering={enableClustering}
@@ -656,7 +674,7 @@ export default function OutageMap() {
             <CrewDispatchPanel
               crews={crews}
               scenarios={scenarios || []}
-              selectedEventId={selectedEventId}
+              selectedEventId={effectiveSelectedId}
               onDispatchCrew={handleDispatchCrew}
               onEmergencyDispatch={handleEmergencyDispatch}
               onSimulateAll={handleSimulateAll}
@@ -802,26 +820,51 @@ export default function OutageMap() {
                 <div className="pt-2 mt-2 border-t border-border">
                   <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Operator Filters</span>
                   
-                  {/* Severity Filter */}
+                  {/* Event Selector */}
                   <div className="mt-2 space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Min Severity</Label>
-                    <div className="flex gap-1">
-                      {[null, 1, 2, 3, 4, 5].map(sev => (
-                        <button
-                          key={sev ?? 'all'}
-                          onClick={() => setSeverityFilter(sev)}
-                          className={cn(
-                            "flex-1 h-7 rounded text-[10px] font-bold border transition-all",
-                            severityFilter === sev
-                              ? "bg-primary/20 border-primary text-primary"
-                              : "bg-muted/30 border-border text-muted-foreground hover:bg-muted/50"
-                          )}
-                          style={sev ? { borderBottomColor: severityColor(sev), borderBottomWidth: 3 } : undefined}
-                        >
-                          {sev ?? 'All'}
-                        </button>
-                      ))}
-                    </div>
+                    <Label className="text-xs text-muted-foreground">Focus Event</Label>
+                    <Select
+                      value={effectiveSelectedId ?? 'none'}
+                      onValueChange={(val) => {
+                        if (val === 'none') {
+                          setSelectedEventId(null);
+                        } else {
+                          setSelectedEventId(val);
+                          if (!showAssets) setShowAssets(true);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Auto (highest severity)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {sortedByServerity.map(s => (
+                          <SelectItem key={s.id} value={s.id}>
+                            <span className="flex items-center gap-1.5">
+                              <span
+                                className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: severityColor(getEventSeverity(s)) }}
+                              />
+                              <span className="truncate max-w-[150px]">{s.name}</span>
+                              <span className="text-muted-foreground ml-auto">Sev {getEventSeverity(s)}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Severity 4-5 Only Checkbox */}
+                  <div className="flex items-center gap-3 py-1.5 mt-2">
+                    <Checkbox
+                      id="severity-high-only"
+                      checked={severityHighOnly}
+                      onCheckedChange={(checked) => setSeverityHighOnly(!!checked)}
+                    />
+                    <Label htmlFor="severity-high-only" className="text-xs font-medium text-foreground cursor-pointer flex-1">
+                      Severity 4–5 only
+                    </Label>
                   </div>
                   
                   {/* Critical Load Only */}
@@ -878,6 +921,7 @@ export default function OutageMap() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         onOpenInCopilot={handleOpenInCopilot}
+        activeHazardOverlays={activeHazardOverlays}
       />
       
       <AssetDetailDrawer
