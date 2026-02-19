@@ -44,7 +44,8 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
   // ── STORM hazard rules ────────────────────────────────────────────────────────
   const isStormActive = scenario.hazardType === "STORM" && scenario.phase === "ACTIVE";
 
-  // ── WILDFIRE hazard rules ─────────────────────────────────────────────────────
+  // ── HEAT hazard rules ─────────────────────────────────────────────────────────
+  const isHeatOverload = scenario.hazardType === "HEAT" && scenario.severity >= 3;
   // Aerial fire line clearance is required before any field switching when
   // average vegetation exposure exceeds 0.60 in an active wildfire event.
   const isWildfire = scenario.hazardType === "WILDFIRE";
@@ -108,6 +109,19 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
             (a) => `Asset ${a.id} (${a.type}) — vegetation exposure: ${(a.vegetationExposure ?? 0).toFixed(2)}.`,
           )
         : ["No ICE hazard or all assets below 0.5 vegetation exposure threshold."],
+    },
+    {
+      id: "SC-HEAT-001",
+      title: "Transformer thermal overload risk",
+      description: "Sustained heat load may accelerate insulation degradation — review transformer thermal ratings before restoring full load.",
+      severity: "HIGH",
+      triggered: isHeatOverload,
+      evidence: isHeatOverload
+        ? [
+            `Hazard: HEAT — severity ${scenario.severity}/5 (threshold: 3).`,
+            "Sustained ambient heat elevates transformer winding temperature and may accelerate insulation breakdown under full load restoration.",
+          ]
+        : ["Not triggered — HEAT hazard not active or severity below threshold of 3."],
     },
     {
       id: "SC-STORM-001",
