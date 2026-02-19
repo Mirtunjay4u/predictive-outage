@@ -4,6 +4,8 @@ const HAZARD_MULTIPLIERS: Record<NormalizedScenario["hazardType"], number> = {
   STORM: 1.25,
   WILDFIRE: 1.4,
   RAIN: 1.1,
+  HEAT: 1.15,
+  ICE: 1.2,
   UNKNOWN: 1,
 };
 
@@ -13,11 +15,14 @@ export interface AssetRuleResult {
   assetRiskScore: number;
   drivers: ExplainabilityDriver[];
   assumptions: string[];
+  escalationFlags: string[];
 }
 
 export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResult => {
   const assumptions: string[] = [];
+  const escalationFlags: string[] = [];
   const assets = scenario.assets;
+  const isHeat = scenario.hazardType === "HEAT";
 
   if (assets.length === 0) {
     assumptions.push("No assets provided; using scenario-level defaults for risk scoring.");
@@ -33,20 +38,44 @@ export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResul
     ? assets.reduce((sum, asset) => sum + clamp(asset.loadCriticality ?? 0.5, 0, 1), 0) / assets.length
     : 0.5;
 
+  // HEAT hazard: cooling load priority elevates load_criticality weight from
+  // 0.30 → 0.40 (pulling from vegetation_exposure which is less relevant in heat events).
+  const loadCriticalityWeight = isHeat ? 0.40 : 0.30;
+  const vegetationWeight = isHeat ? 0.15 : 0.25;
+
+  if (isHeat) {
+    assumptions.push("HEAT hazard: load_criticality_avg weight elevated to 0.40 (cooling load priority).");
+    assumptions.push("HEAT hazard: vegetation_exposure_avg weight reduced to 0.15 (less relevant in heat events).");
+  }
+
   const ageFactor = clamp(avgAgeYears / 60, 0, 1);
   const hazardMultiplier = HAZARD_MULTIPLIERS[scenario.hazardType];
 
-  const rawScore = (ageFactor * 35 + avgVegetationExposure * 25 + avgLoadCriticality * 30 + (scenario.severity / 5) * 10) * hazardMultiplier;
+  const rawScore =
+    (ageFactor * 35 +
+      avgVegetationExposure * vegetationWeight * 100 +
+      avgLoadCriticality * loadCriticalityWeight * 100 +
+      (scenario.severity / 5) * 10) *
+    hazardMultiplier;
 
   const assetRiskScore = clamp(Math.round(rawScore), 0, 100);
+
+  // HEAT escalation: transformer thermal stress flag when severity >= 3.
+  // High ambient temps + sustained load push transformer cooling limits.
+  if (isHeat && scenario.severity >= 3) {
+    escalationFlags.push("transformer_thermal_stress");
+    assumptions.push(
+      `HEAT severity ${scenario.severity}/5: transformer_thermal_stress escalation flagged — ambient heat may accelerate insulation degradation under sustained load.`,
+    );
+  }
 
   const drivers: ExplainabilityDriver[] = [
     { key: "asset_age_years_avg", value: Number(avgAgeYears.toFixed(1)), weight: 0.35 },
     { key: "hazard_type", value: scenario.hazardType, weight: 0.25 },
-    { key: "vegetation_exposure_avg", value: Number(avgVegetationExposure.toFixed(2)), weight: 0.2 },
-    { key: "load_criticality_avg", value: Number(avgLoadCriticality.toFixed(2)), weight: 0.2 },
+    { key: "vegetation_exposure_avg", value: Number(avgVegetationExposure.toFixed(2)), weight: vegetationWeight },
+    { key: "load_criticality_avg", value: Number(avgLoadCriticality.toFixed(2)), weight: loadCriticalityWeight },
     { key: "asset_risk_score", value: assetRiskScore, weight: 1 },
   ];
 
-  return { assetRiskScore, drivers, assumptions };
+  return { assetRiskScore, drivers, assumptions, escalationFlags };
 };
