@@ -2,7 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Layers, Lock, X } from 'lucide-react';
+import { Layers, Lock, ShieldAlert, X } from 'lucide-react';
 import { PopoverClose } from '@radix-ui/react-popover';
 
 const fadeUp = {
@@ -870,11 +870,149 @@ function DiagramLegend() {
   );
 }
 
+/* ─── rule coverage data ─── */
+interface RuleCoverageRow {
+  hazard: string;
+  trigger: string;
+  flags: string[];
+  blocked: string[];
+  constraints: string[];
+  hazardColor: string;
+}
+
+const RULE_COVERAGE: RuleCoverageRow[] = [
+  {
+    hazard: 'RAIN / ACTIVE',
+    trigger: 'hazardType = RAIN & phase = ACTIVE',
+    flags: ['flood_access_risk'],
+    blocked: ['dispatch_crews'],
+    constraints: ['SC-FLOOD-001 HIGH'],
+    hazardColor: 'text-blue-400',
+  },
+  {
+    hazard: 'HEAT ≥ 3',
+    trigger: 'hazardType = HEAT & severity ≥ 3',
+    flags: ['transformer_thermal_stress'],
+    blocked: ['reroute_load'],
+    constraints: ['SC-HEAT-001 HIGH'],
+    hazardColor: 'text-amber-400',
+  },
+  {
+    hazard: 'HEAT ≥ 4',
+    trigger: 'hazardType = HEAT & severity ≥ 4',
+    flags: ['heat_load_spike', 'transformer_thermal_stress'],
+    blocked: ['reroute_load'],
+    constraints: ['SC-HEAT-001 HIGH', 'SC-HEAT-002 HIGH'],
+    hazardColor: 'text-red-400',
+  },
+  {
+    hazard: 'STORM / ACTIVE',
+    trigger: 'hazardType = STORM & phase = ACTIVE',
+    flags: ['storm_active', 'high_wind_conductor_risk'],
+    blocked: ['dispatch_crews', 'reroute_load'],
+    constraints: ['SC-STORM-001 HIGH'],
+    hazardColor: 'text-sky-400',
+  },
+  {
+    hazard: 'ICE / ACTIVE',
+    trigger: 'hazardType = ICE & phase = ACTIVE',
+    flags: ['ice_load_risk'],
+    blocked: ['reroute_load', 'deenergize_section'],
+    constraints: ['SC-ICE-001 HIGH', 'SC-ICE-002 HIGH'],
+    hazardColor: 'text-cyan-400',
+  },
+  {
+    hazard: 'WILDFIRE',
+    trigger: 'hazardType = WILDFIRE & vegetation_exposure_avg > 0.60',
+    flags: ['vegetation_fire_risk'],
+    blocked: ['deenergize_section'],
+    constraints: ['SC-WILD-001 HIGH'],
+    hazardColor: 'text-orange-400',
+  },
+];
+
+function RuleCoverageTable() {
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className="w-full min-w-[720px] border-collapse text-xs">
+        <thead>
+          <tr className="border-b border-border/40">
+            {['Hazard', 'Trigger Condition', 'Escalation Flags', 'Actions Blocked', 'Safety Constraints'].map(h => (
+              <th key={h} className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/80 whitespace-nowrap">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {RULE_COVERAGE.map((row, i) => (
+            <tr
+              key={row.hazard}
+              className={`border-b border-border/20 transition-colors hover:bg-muted/30 ${i % 2 === 0 ? 'bg-muted/10' : ''}`}
+            >
+              {/* Hazard */}
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <span className={`font-mono font-semibold ${row.hazardColor}`}>{row.hazard}</span>
+              </td>
+
+              {/* Trigger */}
+              <td className="px-3 py-2.5">
+                <code className="text-[10px] text-muted-foreground/90 font-mono">{row.trigger}</code>
+              </td>
+
+              {/* Escalation flags */}
+              <td className="px-3 py-2.5">
+                <div className="flex flex-wrap gap-1">
+                  {row.flags.map(f => (
+                    <span key={f} className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </td>
+
+              {/* Actions blocked */}
+              <td className="px-3 py-2.5">
+                <div className="flex flex-wrap gap-1">
+                  {row.blocked.map(a => (
+                    <span key={a} className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive">
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </td>
+
+              {/* Safety constraints */}
+              <td className="px-3 py-2.5">
+                <div className="flex flex-wrap gap-1">
+                  {row.constraints.map(c => {
+                    const [id, sev] = c.split(' ');
+                    return (
+                      <span key={id} className="inline-flex items-center gap-1 rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px]">
+                        <span className="text-amber-400">{id}</span>
+                        {sev === 'HIGH' && (
+                          <span className="rounded-sm bg-destructive/15 px-0.5 text-[8px] font-bold uppercase text-destructive">
+                            {sev}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ─── page ─── */
 export default function Architecture() {
   return (
-    <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6">
-      <motion.div {...fadeUp} className="mb-5">
+    <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6 space-y-5">
+      <motion.div {...fadeUp} className="mb-1">
         <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-primary/80">System Design</p>
         <h1 className="text-xl font-semibold text-foreground">Technical Architecture</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -894,6 +1032,24 @@ export default function Architecture() {
           <CardContent className="w-full overflow-x-auto px-3 pb-3 md:px-4 md:pb-4">
             <ArchitectureDiagram />
             <DiagramLegend />
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <ShieldAlert className="h-4 w-4 text-amber-400" />
+              Policy Evaluation Engine — Rule Coverage Matrix
+            </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Deterministic safety rules applied by the <code className="text-primary/80">copilot-evaluate</code> engine per hazard scenario.
+              All outputs are advisory — operators review and approve before any action is taken.
+            </p>
+          </CardHeader>
+          <CardContent className="px-3 pb-4 md:px-4">
+            <RuleCoverageTable />
           </CardContent>
         </Card>
       </motion.div>
