@@ -275,10 +275,29 @@ serve(async (req: Request): Promise<Response> => {
   const additionalEscalations: string[] = [];
   if (hazardEscalating) additionalEscalations.push("storm_active");
   if (etrBand.band === "LOW") additionalEscalations.push("low_confidence_etr");
-  // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT)
+  // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT, vegetation_fire_risk for WILDFIRE)
   additionalEscalations.push(...assetResult.escalationFlags);
 
+  // ── Wildfire field-switching block ────────────────────────────────────────────
+  // When vegetation_fire_risk is active, deenergize_section must be blocked:
+  // aerial fire assessment is required before any field switching is permitted.
+  const vegetationFireBlocked = assetResult.escalationFlags.includes("vegetation_fire_risk");
+  const vegetationFireBlock: BlockedAction[] = vegetationFireBlocked
+    ? [
+        {
+          action: "deenergize_section",
+          reason: "Vegetation fire risk active — aerial assessment required before field switching.",
+          remediation: [
+            "Complete aerial fire line clearance.",
+            "Obtain confirmation from incident commander.",
+            "Re-evaluate once vegetation exposure drops below 0.60 threshold.",
+          ],
+        },
+      ]
+    : [];
+
   const baseBlocked: BlockedAction[] = [
+    ...vegetationFireBlock,
     ...crewResult.blockedActions,
     ...criticalResult.blockedActions.map((action) => ({
       action,
