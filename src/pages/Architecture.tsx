@@ -872,73 +872,143 @@ function DiagramLegend() {
 
 /* ─── rule coverage data ─── */
 interface RuleCoverageRow {
+  constraint: string;
   hazard: string;
   trigger: string;
   flags: string[];
   blocked: string[];
-  constraints: string[];
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  title: string;
   hazardColor: string;
 }
 
 const RULE_COVERAGE: RuleCoverageRow[] = [
   {
-    hazard: 'RAIN / ACTIVE',
-    trigger: 'hazardType = RAIN & phase = ACTIVE',
-    flags: ['flood_access_risk'],
-    blocked: ['dispatch_crews'],
-    constraints: ['SC-FLOOD-001 HIGH'],
-    hazardColor: 'text-blue-400',
-  },
-  {
-    hazard: 'HEAT ≥ 3',
-    trigger: 'hazardType = HEAT & severity ≥ 3',
-    flags: ['transformer_thermal_stress'],
-    blocked: ['reroute_load'],
-    constraints: ['SC-HEAT-001 HIGH'],
-    hazardColor: 'text-amber-400',
-  },
-  {
-    hazard: 'HEAT ≥ 4',
-    trigger: 'hazardType = HEAT & severity ≥ 4',
-    flags: ['heat_load_spike', 'transformer_thermal_stress'],
-    blocked: ['reroute_load'],
-    constraints: ['SC-HEAT-001 HIGH', 'SC-HEAT-002 HIGH'],
+    constraint: 'SC-CRIT-001',
+    title: 'Critical service continuity',
+    hazard: 'ANY',
+    trigger: 'criticalLoads includes HOSPITAL/WATER/TELECOM  OR  avgLoadCriticality ≥ 0.70',
+    flags: ['critical_load_at_risk'],
+    blocked: ['deenergize_section'],
+    severity: 'HIGH',
     hazardColor: 'text-red-400',
   },
   {
+    constraint: 'SC-CRIT-002',
+    title: 'Backup power depletion risk',
+    hazard: 'ANY',
+    trigger: 'criticalLoad.backupHoursRemaining < 4',
+    flags: ['critical_backup_window_short'],
+    blocked: [],
+    severity: 'HIGH',
+    hazardColor: 'text-red-400',
+  },
+  {
+    constraint: 'SC-CREW-001',
+    title: 'Field crew sufficiency',
+    hazard: 'ANY',
+    trigger: 'crewsAvailable + enRoute < estimatedCrewsNeeded',
+    flags: ['insufficient_crews'],
+    blocked: ['reroute_load'],
+    severity: 'HIGH',
+    hazardColor: 'text-orange-400',
+  },
+  {
+    constraint: 'SC-HEAT-001',
+    title: 'Transformer thermal overload risk',
+    hazard: 'HEAT ≥ 3',
+    trigger: 'hazardType = HEAT  &  severity ≥ 3',
+    flags: ['transformer_thermal_stress'],
+    blocked: ['reroute_load'],
+    severity: 'HIGH',
+    hazardColor: 'text-amber-400',
+  },
+  {
+    constraint: 'SC-HEAT-002',
+    title: 'Extreme heat peak load risk',
+    hazard: 'HEAT ≥ 4',
+    trigger: 'hazardType = HEAT  &  severity ≥ 4',
+    flags: ['heat_load_spike', 'transformer_thermal_stress'],
+    blocked: ['reroute_load'],
+    severity: 'HIGH',
+    hazardColor: 'text-red-400',
+  },
+  {
+    constraint: 'SC-FLOOD-001',
+    title: 'Flood zone equipment access restriction',
+    hazard: 'RAIN / ACTIVE',
+    trigger: 'hazardType = RAIN  &  phase = ACTIVE',
+    flags: ['flood_access_risk'],
+    blocked: ['dispatch_crews'],
+    severity: 'HIGH',
+    hazardColor: 'text-blue-400',
+  },
+  {
+    constraint: 'SC-STORM-001',
+    title: 'High wind field crew prohibition',
     hazard: 'STORM / ACTIVE',
-    trigger: 'hazardType = STORM & phase = ACTIVE',
+    trigger: 'hazardType = STORM  &  phase = ACTIVE',
     flags: ['storm_active', 'high_wind_conductor_risk'],
     blocked: ['dispatch_crews', 'reroute_load'],
-    constraints: ['SC-STORM-001 HIGH'],
+    severity: 'HIGH',
     hazardColor: 'text-sky-400',
   },
   {
+    constraint: 'SC-ICE-001',
+    title: 'Ice storm switching prohibition',
     hazard: 'ICE / ACTIVE',
-    trigger: 'hazardType = ICE & phase = ACTIVE',
+    trigger: 'hazardType = ICE  &  phase = ACTIVE',
     flags: ['ice_load_risk'],
     blocked: ['reroute_load', 'deenergize_section'],
-    constraints: ['SC-ICE-001 HIGH', 'SC-ICE-002 HIGH'],
+    severity: 'HIGH',
     hazardColor: 'text-cyan-400',
   },
   {
+    constraint: 'SC-ICE-002',
+    title: 'Ice vegetation line loading',
+    hazard: 'ICE / ACTIVE',
+    trigger: 'hazardType = ICE  &  asset.vegetationExposure > 0.50',
+    flags: ['ice_load_risk'],
+    blocked: [],
+    severity: 'HIGH',
+    hazardColor: 'text-cyan-400',
+  },
+  {
+    constraint: 'SC-WILD-001',
+    title: 'Wildfire aerial clearance required',
     hazard: 'WILDFIRE',
-    trigger: 'hazardType = WILDFIRE & vegetation_exposure_avg > 0.60',
+    trigger: 'hazardType = WILDFIRE  &  vegetation_exposure_avg > 0.60',
     flags: ['vegetation_fire_risk'],
     blocked: ['deenergize_section'],
-    constraints: ['SC-WILD-001 HIGH'],
+    severity: 'HIGH',
     hazardColor: 'text-orange-400',
   },
 ];
 
+const SEV_CLS: Record<RuleCoverageRow['severity'], string> = {
+  HIGH: 'bg-destructive/15 text-destructive',
+  MEDIUM: 'bg-amber-500/15 text-amber-400',
+  LOW: 'bg-muted text-muted-foreground',
+};
+
 function RuleCoverageTable() {
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse text-xs">
+      <table className="w-full min-w-[860px] border-collapse text-xs">
         <thead>
           <tr className="border-b border-border/40">
-            {['Hazard', 'Trigger Condition', 'Escalation Flags', 'Actions Blocked', 'Safety Constraints'].map(h => (
-              <th key={h} className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/80 whitespace-nowrap">
+            {[
+              'Constraint',
+              'Hazard',
+              'Trigger Condition',
+              'Escalation Flags',
+              'Actions Blocked',
+              'Sev',
+            ].map(h => (
+              <th
+                key={h}
+                className="px-3 py-2.5 text-left text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/80 whitespace-nowrap"
+              >
                 {h}
               </th>
             ))}
@@ -947,63 +1017,89 @@ function RuleCoverageTable() {
         <tbody>
           {RULE_COVERAGE.map((row, i) => (
             <tr
-              key={row.hazard}
+              key={row.constraint}
               className={`border-b border-border/20 transition-colors hover:bg-muted/30 ${i % 2 === 0 ? 'bg-muted/10' : ''}`}
             >
+              {/* Constraint ID + title */}
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-mono text-[10px] font-bold text-amber-400">{row.constraint}</span>
+                  <span className="text-[9px] text-muted-foreground leading-tight max-w-[140px]">{row.title}</span>
+                </div>
+              </td>
+
               {/* Hazard */}
               <td className="px-3 py-2.5 whitespace-nowrap">
-                <span className={`font-mono font-semibold ${row.hazardColor}`}>{row.hazard}</span>
+                <span className={`font-mono text-[10px] font-semibold ${row.hazardColor}`}>{row.hazard}</span>
               </td>
 
               {/* Trigger */}
-              <td className="px-3 py-2.5">
-                <code className="text-[10px] text-muted-foreground/90 font-mono">{row.trigger}</code>
+              <td className="px-3 py-2.5 max-w-[220px]">
+                <code className="text-[9px] text-muted-foreground/80 font-mono leading-relaxed break-words">
+                  {row.trigger}
+                </code>
               </td>
 
               {/* Escalation flags */}
               <td className="px-3 py-2.5">
                 <div className="flex flex-wrap gap-1">
-                  {row.flags.map(f => (
-                    <span key={f} className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">
+                  {row.flags.length > 0 ? row.flags.map(f => (
+                    <span
+                      key={f}
+                      className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary"
+                    >
                       {f}
                     </span>
-                  ))}
+                  )) : (
+                    <span className="text-[9px] text-muted-foreground/50 italic">—</span>
+                  )}
                 </div>
               </td>
 
               {/* Actions blocked */}
               <td className="px-3 py-2.5">
                 <div className="flex flex-wrap gap-1">
-                  {row.blocked.map(a => (
-                    <span key={a} className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive">
+                  {row.blocked.length > 0 ? row.blocked.map(a => (
+                    <span
+                      key={a}
+                      className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive"
+                    >
                       {a}
                     </span>
-                  ))}
+                  )) : (
+                    <span className="text-[9px] text-muted-foreground/50 italic">—</span>
+                  )}
                 </div>
               </td>
 
-              {/* Safety constraints */}
-              <td className="px-3 py-2.5">
-                <div className="flex flex-wrap gap-1">
-                  {row.constraints.map(c => {
-                    const [id, sev] = c.split(' ');
-                    return (
-                      <span key={id} className="inline-flex items-center gap-1 rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px]">
-                        <span className="text-amber-400">{id}</span>
-                        {sev === 'HIGH' && (
-                          <span className="rounded-sm bg-destructive/15 px-0.5 text-[8px] font-bold uppercase text-destructive">
-                            {sev}
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
+              {/* Severity */}
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase ${SEV_CLS[row.severity]}`}>
+                  {row.severity}
+                </span>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border/20 pt-3">
+        <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Legend</p>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px] text-amber-400">SC-ID</span>
+          <span className="text-[9px] text-muted-foreground/70">Safety constraint</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">flag</span>
+          <span className="text-[9px] text-muted-foreground/70">Escalation flag emitted</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive">action</span>
+          <span className="text-[9px] text-muted-foreground/70">Blocked action</span>
+        </div>
+        <p className="ml-auto text-[9px] text-muted-foreground/50 italic">All outputs are advisory — operator approval required before any action is taken.</p>
+      </div>
     </div>
   );
 }
