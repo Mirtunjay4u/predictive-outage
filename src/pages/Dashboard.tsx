@@ -83,7 +83,7 @@ interface ExtremeHazard {
   shortLabel: string;
   icon: LucideIcon;
   severityLabel: string;
-  policyHazardType: 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN';
+  policyHazardType: 'STORM' | 'WILDFIRE' | 'RAIN' | 'HEAT' | 'ICE' | 'UNKNOWN';
   /** Context line shown in the Active Extreme Event surface */
   contextLine: string;
   /** One-line risk hint shown on the pill tab (right side) */
@@ -171,7 +171,7 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     shortLabel: 'Ext. Heat',
     icon: Thermometer,
     severityLabel: 'Moderate',
-    policyHazardType: 'UNKNOWN',
+    policyHazardType: 'HEAT',
     contextLine: 'Peak demand surge and transformer thermal stress; load shed risk elevated.',
     riskHint: 'Transformer thermal headroom reduced; peak demand risk.',
     exposureLabel: 'Thermal Load Risk',
@@ -677,11 +677,12 @@ export default function Dashboard() {
     const phase = phaseMap[scenario.lifecycle_stage] ?? 'UNKNOWN';
 
     // ── Hazard type ────────────────────────────────────────────────────────
-    const hazardMap: Record<string, 'STORM' | 'WILDFIRE' | 'RAIN' | 'UNKNOWN'> = {
+    const hazardMap: Record<string, 'STORM' | 'WILDFIRE' | 'RAIN' | 'HEAT' | 'ICE' | 'UNKNOWN'> = {
       Storm: 'STORM', 'Snow Storm': 'STORM', 'High Wind': 'STORM', Lightning: 'STORM',
-      'Ice/Snow': 'STORM', Heatwave: 'STORM',
-      Wildfire: 'WILDFIRE',
+      Wildfire: 'WILDFIRE', Vegetation: 'WILDFIRE',
       Flood: 'RAIN', 'Heavy Rain': 'RAIN',
+      Heatwave: 'HEAT',
+      'Ice/Snow': 'ICE',
     };
     // selectedHazardKey overrides the scenario's outage_type mapping so the operator's
     // selected extreme event is reflected in the policy payload. If no selection is active
