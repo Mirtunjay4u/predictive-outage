@@ -9,6 +9,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   formatEtrBand, formatConfidenceFull, formatConfidencePct,
@@ -591,6 +592,7 @@ type FlagConfig = {
   chipCls: string;
   iconCls: string;
   labelCls: string;
+  tooltip: string;
 };
 
 const FLAG_CONFIG: Record<string, FlagConfig> = {
@@ -600,6 +602,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-amber-500/10 border-amber-400/30',
     iconCls: 'text-amber-500',
     labelCls: 'text-amber-700 dark:text-amber-300',
+    tooltip: 'Sustained heat load may accelerate insulation degradation. Review transformer thermal ratings before restoring full load.',
   },
   critical_load_at_risk: {
     icon: Zap,
@@ -607,6 +610,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-red-500/10 border-red-400/30',
     iconCls: 'text-red-500',
     labelCls: 'text-red-700 dark:text-red-300',
+    tooltip: 'Critical infrastructure has exceeded safety thresholds. Prioritise restoration for hospitals, water, and telecom before any switching action.',
   },
   insufficient_crews: {
     icon: Users,
@@ -614,6 +618,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-orange-500/10 border-orange-400/30',
     iconCls: 'text-orange-500',
     labelCls: 'text-orange-700 dark:text-orange-300',
+    tooltip: 'Available and en-route crews fall below the estimated need. Consider mutual aid or defer high-risk switching until staffing improves.',
   },
   low_confidence_etr: {
     icon: Clock,
@@ -621,6 +626,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-amber-500/10 border-amber-400/30',
     iconCls: 'text-amber-500',
     labelCls: 'text-amber-700 dark:text-amber-300',
+    tooltip: 'ETR precision is reduced due to missing inputs or poor data quality. Communicate restoration windows as ranges, not fixed times.',
   },
   storm_active: {
     icon: Wind,
@@ -628,6 +634,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-blue-500/10 border-blue-400/30',
     iconCls: 'text-blue-500',
     labelCls: 'text-blue-700 dark:text-blue-300',
+    tooltip: 'An active storm hazard is escalating conditions. Field operations should be paused or restricted until conditions stabilise.',
   },
   ice_load_risk: {
     icon: Snowflake,
@@ -635,6 +642,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-sky-500/10 border-sky-400/30',
     iconCls: 'text-sky-500',
     labelCls: 'text-sky-700 dark:text-sky-300',
+    tooltip: 'Ice accumulation on vegetation-exposed conductors increases the risk of mechanical line failure. Switching is prohibited without crew visual confirmation.',
   },
   critical_backup_window_short: {
     icon: Zap,
@@ -642,6 +650,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     chipCls: 'bg-red-500/10 border-red-400/30',
     iconCls: 'text-red-500',
     labelCls: 'text-red-700 dark:text-red-300',
+    tooltip: 'One or more critical loads have less than 4 hours of backup power remaining. Accelerate restoration sequencing for affected sites.',
   },
 };
 
@@ -654,42 +663,55 @@ function EscalationFlagChips({ flags }: { flags: string[] }) {
       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">
         Active Escalation Flags
       </p>
-      <div className="flex flex-wrap gap-1.5">
-        {flags.map((flag) => {
-          const cfg = FLAG_CONFIG[flag];
-          if (cfg) {
-            const Icon = cfg.icon;
+      <TooltipProvider delayDuration={200}>
+        <div className="flex flex-wrap gap-1.5">
+          {flags.map((flag) => {
+            const cfg = FLAG_CONFIG[flag];
+            if (cfg) {
+              const Icon = cfg.icon;
+              const chip = (
+                <span
+                  key={flag}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold',
+                    cfg.chipCls,
+                  )}
+                >
+                  {CRITICAL_PULSE_FLAGS.has(flag) ? (
+                    <span className="relative flex h-3 w-3 shrink-0 items-center justify-center">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                      <Icon className={cn('relative h-3 w-3', cfg.iconCls)} />
+                    </span>
+                  ) : (
+                    <Icon className={cn('h-3 w-3 shrink-0', cfg.iconCls)} />
+                  )}
+                  <span className={cfg.labelCls}>{cfg.label}</span>
+                </span>
+              );
+              return (
+                <Tooltip key={flag}>
+                  <TooltipTrigger asChild>{chip}</TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="max-w-[240px] text-center text-[11px] leading-snug"
+                  >
+                    {cfg.tooltip}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+            // Fallback for unknown flags — no tooltip
             return (
               <span
                 key={flag}
-                className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold',
-                  cfg.chipCls,
-                )}
+                className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/50 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"
               >
-                {CRITICAL_PULSE_FLAGS.has(flag) ? (
-                  <span className="relative flex h-3 w-3 shrink-0 items-center justify-center">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
-                    <Icon className={cn('relative h-3 w-3', cfg.iconCls)} />
-                  </span>
-                ) : (
-                  <Icon className={cn('h-3 w-3 shrink-0', cfg.iconCls)} />
-                )}
-                <span className={cfg.labelCls}>{cfg.label}</span>
+                ⚑ {flag.replace(/_/g, ' ')}
               </span>
             );
-          }
-          // Fallback for unknown flags
-          return (
-            <span
-              key={flag}
-              className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-muted/50 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"
-            >
-              ⚑ {flag.replace(/_/g, ' ')}
-            </span>
-          );
-        })}
-      </div>
+          })}
+        </div>
+      </TooltipProvider>
     </div>
   );
 }
