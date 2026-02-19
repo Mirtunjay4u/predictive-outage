@@ -60,6 +60,7 @@ interface OutageMapViewProps {
   activeHazardOverlays?: HazardOverlay[];
   severityFilter?: number | null; // minimum severity to show
   criticalLoadOnly?: boolean;
+  onCriticalLoadClick?: (loadType: string, event: Scenario | ScenarioWithIntelligence) => void;
 }
 
 // Helper: severity-colored marker icon
@@ -91,7 +92,7 @@ const createCriticalLoadIcon = (loadType: string) => {
   else if (loadType.toLowerCase().includes('telecom') || loadType.toLowerCase().includes('data')) glyph = '📡';
 
   return L.divIcon({
-    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(220,38,38,0.15);border:2px solid #dc2626;border-radius:6px;font-size:16px;backdrop-filter:blur(2px)">${glyph}</div>`,
+    html: `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;background:rgba(220,38,38,0.15);border:2px solid #dc2626;border-radius:6px;font-size:16px;backdrop-filter:blur(2px);cursor:pointer;pointer-events:auto">${glyph}</div>`,
     className: 'critical-load-marker',
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
@@ -239,6 +240,7 @@ export function OutageMapView({
   activeHazardOverlays = [],
   severityFilter = null,
   criticalLoadOnly = false,
+  onCriticalLoadClick,
 }: OutageMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -396,17 +398,12 @@ export function OutageMapView({
       const offsetLng = loc.lng + 0.005;
 
       const marker = L.marker([offsetLat, offsetLng], { icon })
-        .bindPopup(`
-          <div style="padding: 4px;">
-            <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">Critical Load</h3>
-            <p style="font-size: 13px; color: #f87171; margin: 0;">${loadType}</p>
-            <p style="font-size: 11px; color: #888; margin: 4px 0 0 0;">Linked to: ${selected.name}</p>
-          </div>
-        `, { className: 'custom-popup' });
+        .bindTooltip(`<strong>Critical Load</strong><br/>${loadType}`, { direction: 'top', offset: [0, -14] })
+        .on('click', () => onCriticalLoadClick?.(loadType, selected));
 
       layer.addLayer(marker);
     });
-  }, [showCriticalLoads, selectedEventId, displayScenarios]);
+  }, [showCriticalLoads, selectedEventId, displayScenarios, onCriticalLoadClick]);
 
   // Hazard overlay polygons
   useEffect(() => {
