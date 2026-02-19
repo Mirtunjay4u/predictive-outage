@@ -85,6 +85,16 @@ export const evaluateAssetRules = (scenario: NormalizedScenario): AssetRuleResul
     );
   }
 
+  // WILDFIRE escalation: vegetation_fire_risk flag when avg vegetation exposure > 0.6.
+  // High vegetation exposure in an active wildfire context elevates ignition and
+  // line-contact risk to a level that warrants suspending field switching.
+  if (isWildfire && avgVegetationExposure > 0.6) {
+    escalationFlags.push("vegetation_fire_risk");
+    assumptions.push(
+      `WILDFIRE: vegetation_fire_risk escalation flagged — average vegetation exposure (${avgVegetationExposure.toFixed(2)}) exceeds 0.60 threshold. Field switching suspended pending aerial fire assessment.`,
+    );
+  }
+
   const drivers: ExplainabilityDriver[] = [
     { key: "asset_age_years_avg", value: Number(avgAgeYears.toFixed(1)), weight: 0.35 },
     { key: "hazard_type", value: scenario.hazardType, weight: 0.25 },

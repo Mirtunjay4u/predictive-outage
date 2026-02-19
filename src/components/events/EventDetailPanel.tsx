@@ -644,6 +644,14 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     labelCls: 'text-sky-700 dark:text-sky-300',
     tooltip: 'Ice accumulation on vegetation-exposed conductors increases the risk of mechanical line failure. Switching is prohibited without crew visual confirmation.',
   },
+  vegetation_fire_risk: {
+    icon: Flame,
+    label: 'Vegetation Fire Risk',
+    chipCls: 'bg-orange-500/10 border-orange-400/30',
+    iconCls: 'text-orange-500',
+    labelCls: 'text-orange-700 dark:text-orange-300',
+    tooltip: 'High vegetation exposure in active wildfire conditions. Suspend field switching until aerial fire assessment is complete.',
+  },
   critical_backup_window_short: {
     icon: Zap,
     label: 'Backup Window Short',
@@ -654,7 +662,7 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
   },
 };
 
-const CRITICAL_PULSE_FLAGS = new Set(['critical_load_at_risk', 'insufficient_crews']);
+const CRITICAL_PULSE_FLAGS = new Set(['critical_load_at_risk', 'insufficient_crews', 'vegetation_fire_risk']);
 
 function EscalationFlagChips({ flags }: { flags: string[] }) {
   if (flags.length === 0) return null;
