@@ -1207,8 +1207,10 @@ export default function Dashboard() {
 
         const severityBadgeClass =
           activeHazard.severityLabel === 'Severe'
-            ? 'border-destructive/40 bg-destructive/8 text-destructive'
-            : 'border-amber-500/40 bg-amber-500/8 text-amber-700 dark:text-amber-300';
+            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            : activeHazard.severityLabel === 'Moderate'
+              ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+              : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
 
         return (
           <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
@@ -1252,8 +1254,8 @@ export default function Dashboard() {
                       'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium transition-colors duration-150',
                       DASHBOARD_INTERACTIVE_BUTTON_CLASS,
                       isSelected
-                        ? 'border-foreground/40 bg-foreground/8 text-foreground'
-                        : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-foreground/30 hover:text-foreground',
+                        ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                        : 'border-border/60 bg-muted/30 text-muted-foreground hover:border-primary/30 hover:text-foreground',
                     )}
                   >
                     <PillIcon className="h-3 w-3 shrink-0" strokeWidth={1.75} />
