@@ -1432,7 +1432,7 @@ export default function Dashboard() {
       <section className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-             <h2 className="text-sm font-semibold">Scenario Playback (GTC Demo)</h2>
+             <h2 className="text-sm font-semibold">Scenario Playback</h2>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Active hazard context: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).demoContext}</span>
             </p>
