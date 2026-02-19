@@ -296,8 +296,27 @@ serve(async (req: Request): Promise<Response> => {
       ]
     : [];
 
+  // ── ICE active-phase switching block ─────────────────────────────────────────
+  // Remote switching during an active ice storm risks cascading failures on
+  // ice-loaded conductors. De-energization requires crew visual confirmation.
+  const iceActiveBlock: BlockedAction[] =
+    scenario.hazardType === "ICE" && scenario.phase === "ACTIVE"
+      ? [
+          {
+            action: "deenergize_section",
+            reason: "Active ice storm — remote switching prohibited without crew visual confirmation of line state.",
+            remediation: [
+              "Await crew visual confirmation of line state before any switching action.",
+              "Re-evaluate after ice accumulation assessment is complete.",
+              "Coordinate with field supervisor; do not switch remotely on ice-loaded conductors.",
+            ],
+          },
+        ]
+      : [];
+
   const baseBlocked: BlockedAction[] = [
     ...vegetationFireBlock,
+    ...iceActiveBlock,
     ...crewResult.blockedActions,
     ...criticalResult.blockedActions.map((action) => ({
       action,
