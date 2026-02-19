@@ -821,6 +821,8 @@ export function EventDetailPanel({
       Storm: 'STORM', Lightning: 'STORM', 'High Wind': 'STORM', 'Snow Storm': 'STORM',
       Wildfire: 'WILDFIRE', Vegetation: 'WILDFIRE',
       Flood: 'RAIN', 'Heavy Rain': 'RAIN',
+      Heatwave: 'HEAT',
+      'Ice/Snow': 'ICE',
     };
     const hazardType = hazardMap[s.outage_type ?? ''] ?? 'UNKNOWN';
     const phase =

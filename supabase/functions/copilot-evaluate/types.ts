@@ -1,4 +1,4 @@
-export type HazardType = "STORM" | "WILDFIRE" | "RAIN" | "UNKNOWN";
+export type HazardType = "STORM" | "WILDFIRE" | "RAIN" | "HEAT" | "ICE" | "UNKNOWN";
 export type Phase = "PRE_EVENT" | "ACTIVE" | "POST_EVENT" | "UNKNOWN";
 export type CriticalLoadType = "HOSPITAL" | "WATER" | "TELECOM" | "SHELTER" | "OTHER";
 

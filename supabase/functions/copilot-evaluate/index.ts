@@ -33,7 +33,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const validHazards: HazardType[] = ["STORM", "WILDFIRE", "RAIN", "UNKNOWN"];
+const validHazards: HazardType[] = ["STORM", "WILDFIRE", "RAIN", "HEAT", "ICE", "UNKNOWN"];
 const validPhases: Phase[] = ["PRE_EVENT", "ACTIVE", "POST_EVENT", "UNKNOWN"];
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
