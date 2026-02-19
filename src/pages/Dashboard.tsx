@@ -1189,7 +1189,7 @@ export default function Dashboard() {
       <header>
         <div className={cn('flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-card shadow-sm', boardroomMode ? 'px-5 py-4' : 'px-4 py-3')}>
           <div>
-            <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {scenarioName}</p>
+            <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {getExtremeHazard(selectedHazardKey).label}</p>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
               {/* ── Policy Status Badge ──────────────────────────────── */}
@@ -1234,7 +1234,7 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
-            <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{scenarioName}</span> • Hazard: <span className="font-medium text-foreground capitalize">{hazard}</span></p>
+            <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}>Scenario: <span className="font-medium text-foreground">{scenarioName}</span> • Hazard: <span className="font-medium text-foreground">{getExtremeHazard(selectedHazardKey).label}</span></p>
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}><span className="font-medium text-foreground">{summary}</span> · {stats.total} total tracked</p>
           </div>
           <div className="flex items-center gap-2">
