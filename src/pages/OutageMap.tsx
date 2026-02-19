@@ -32,6 +32,7 @@ import { EventDetailDrawer } from '@/components/map/EventDetailDrawer';
 import { AssetDetailDrawer } from '@/components/map/AssetDetailDrawer';
 import { FeederDetailDrawer } from '@/components/map/FeederDetailDrawer';
 import { CrewDetailDrawer } from '@/components/map/CrewDetailDrawer';
+import { CriticalLoadDetailDrawer } from '@/components/map/CriticalLoadDetailDrawer';
 import { CrewDispatchPanel } from '@/components/map/CrewDispatchPanel';
 import { PlaybackPanel } from '@/components/map/PlaybackPanel';
 import { CommandSummary } from '@/components/map/CommandSummary';
@@ -82,6 +83,10 @@ export default function OutageMap() {
   const [selectedCrew, setSelectedCrew] = useState<Crew | null>(null);
   const [crewDrawerOpen, setCrewDrawerOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
+  
+  // Critical load drawer state
+  const [criticalLoadDrawerOpen, setCriticalLoadDrawerOpen] = useState(false);
+  const [selectedCriticalLoad, setSelectedCriticalLoad] = useState<{ loadType: string; event: ScenarioWithIntelligence } | null>(null);
   
   // Search & zoom state
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
@@ -205,6 +210,8 @@ export default function OutageMap() {
 
   const handleViewOnMap = (scenario: ScenarioWithIntelligence) => {
     setSelectedEventId(scenario.id);
+    // Auto-enable asset layer when an event is selected so linked assets are visible
+    if (!showAssets) setShowAssets(true);
   };
 
   const handleMarkerClick = (scenario: ScenarioWithIntelligence) => {
@@ -266,6 +273,15 @@ export default function OutageMap() {
     setSelectedCrew(crew);
     setCrewDrawerOpen(true);
   }, []);
+
+  const handleCriticalLoadClick = useCallback((loadType: string, event: any) => {
+    // Find the full intelligence event
+    const fullEvent = scenarios?.find(s => s.id === event.id);
+    if (fullEvent) {
+      setSelectedCriticalLoad({ loadType, event: fullEvent });
+      setCriticalLoadDrawerOpen(true);
+    }
+  }, [scenarios]);
 
   const handleDispatchCrew = useCallback((crewId: string, eventId: string) => {
     const event = scenarios?.find(s => s.id === eventId);
@@ -631,6 +647,7 @@ export default function OutageMap() {
               activeHazardOverlays={activeHazardOverlays}
               severityFilter={severityFilter}
               criticalLoadOnly={criticalLoadOnly}
+              onCriticalLoadClick={handleCriticalLoadClick}
             />
           </MapErrorBoundary>
           
@@ -901,6 +918,12 @@ export default function OutageMap() {
           setCrewDrawerOpen(false);
           toast.success('Crew marked as available');
         } : undefined}
+      />
+      
+      <CriticalLoadDetailDrawer
+        criticalLoad={selectedCriticalLoad}
+        open={criticalLoadDrawerOpen}
+        onOpenChange={setCriticalLoadDrawerOpen}
       />
     </div>
   );
