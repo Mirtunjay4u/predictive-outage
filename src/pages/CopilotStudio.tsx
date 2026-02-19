@@ -21,11 +21,14 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useScenariosWithIntelligence } from '@/hooks/useScenarios';
 import { useCrews } from '@/hooks/useCrews';
-import { useEventAssets } from '@/hooks/useAssets';
+import { useEventAssets, useAssets } from '@/hooks/useAssets';
 import type { CopilotMode, CopilotRequest, CopilotResponse, OperatorOutputContract } from '@/types/copilot';
 import { mapToOperatorContract } from '@/types/copilot';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
+import type { Crew } from '@/types/crew';
+import type { Asset } from '@/types/asset';
 import { formatEtrPrimary } from '@/lib/etr-format';
+import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
 
 // ─── Response history entry ──────────────────────────────────────────────────
 interface HistoryEntry {
@@ -33,6 +36,10 @@ interface HistoryEntry {
   raw: CopilotResponse;
   eventName: string;
   timestamp: Date;
+  eventSnapshot: ScenarioWithIntelligence;
+  crewsSnapshot: Crew[];
+  assetsSnapshot: Asset[];
+  hazardOverlap: string | null;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -42,6 +49,7 @@ export default function CopilotStudio() {
   // Data
   const { data: scenarios, isLoading: scenariosLoading } = useScenariosWithIntelligence();
   const { data: crews } = useCrews();
+  const { data: allAssets } = useAssets();
 
   // State
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -65,6 +73,12 @@ export default function CopilotStudio() {
   const assignedCrews = useMemo(
     () => (crews ?? []).filter(c => c.assigned_event_id === selectedEventId),
     [crews, selectedEventId],
+  );
+
+  // Full asset objects for linked asset IDs
+  const linkedAssets = useMemo(
+    () => (allAssets ?? []).filter(a => (linkedAssetIds ?? []).includes(a.id)),
+    [allAssets, linkedAssetIds],
   );
 
   // Default to highest-severity active event or URL param
@@ -145,7 +159,16 @@ export default function CopilotStudio() {
       const contract = mapToOperatorContract(raw);
 
       setHistory(prev => [
-        { contract, raw, eventName: selectedEvent.name, timestamp: new Date() },
+        {
+          contract,
+          raw,
+          eventName: selectedEvent.name,
+          timestamp: new Date(),
+          eventSnapshot: { ...selectedEvent },
+          crewsSnapshot: [...assignedCrews],
+          assetsSnapshot: [...linkedAssets],
+          hazardOverlap: searchParams.get('hazard_overlap'),
+        },
         ...prev,
       ]);
     } catch (err) {
@@ -154,7 +177,7 @@ export default function CopilotStudio() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedEvent, mode, linkedAssetIds, assignedCrews, searchParams]);
+  }, [selectedEvent, mode, linkedAssetIds, assignedCrews, linkedAssets, searchParams]);
 
   // ─── Copy ───────────────────────────────────────────────────────────────────
   const latestEntry = history[0] ?? null;
@@ -520,6 +543,17 @@ export default function CopilotStudio() {
                       <span>{latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
                       <span>Generated {latestEntry.timestamp.toLocaleTimeString()} for "{latestEntry.eventName}"</span>
                     </div>
+
+                    {/* Defensibility Panels */}
+                    <DefensibilityPanels
+                      contract={latestEntry.contract}
+                      raw={latestEntry.raw}
+                      event={latestEntry.eventSnapshot}
+                      assignedCrews={latestEntry.crewsSnapshot}
+                      linkedAssets={latestEntry.assetsSnapshot}
+                      hazardOverlap={latestEntry.hazardOverlap}
+                      timestamp={latestEntry.timestamp}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
