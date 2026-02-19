@@ -1025,7 +1025,7 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
       'Hazard: WILDFIRE — {n} asset(s) exceed 0.60 vegetation exposure threshold.',
       'Asset {id} ({type}) — vegetation exposure: {vegetationExposure}.',
     ],
-    conditionalNote: 'Second evidence line is repeated once per qualifying asset. It is only appended when hasWildfireSwitchingRisk is true (i.e. assets with vegetationExposure > 0.60 are present). Otherwise only the summary line appears.',
+    conditionalNote: 'Evidence lines are only appended per-asset when hasWildfireSwitchingRisk is true (i.e. assets with vegetationExposure > 0.60 are present). Otherwise only the summary line appears.',
   },
 ];
 
