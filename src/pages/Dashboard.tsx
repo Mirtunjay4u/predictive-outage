@@ -1934,12 +1934,12 @@ export default function Dashboard() {
 
         return (
           <div
-            className="rounded-xl border border-border/60 bg-card shadow-card overflow-hidden"
+            className="rounded-xl border border-border/60 bg-card shadow-card overflow-visible"
             role="region"
             aria-label="Operational phase timeline"
           >
             {/* ── Header bar ─────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30 rounded-t-xl">
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground/50 leading-none">
                   Operational Phase
