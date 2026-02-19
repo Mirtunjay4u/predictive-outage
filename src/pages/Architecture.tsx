@@ -1,8 +1,8 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Layers, Lock, ShieldAlert, X } from 'lucide-react';
+import { ChevronDown, Layers, Lock, ShieldAlert, X } from 'lucide-react';
 import { PopoverClose } from '@radix-ui/react-popover';
 
 const fadeUp = {
@@ -880,6 +880,8 @@ interface RuleCoverageRow {
   severity: 'HIGH' | 'MEDIUM' | 'LOW';
   title: string;
   hazardColor: string;
+  /** Evidence lines returned by the engine in safetyConstraints[].evidence */
+  evidence: string[];
 }
 
 const RULE_COVERAGE: RuleCoverageRow[] = [
@@ -892,6 +894,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['deenergize_section'],
     severity: 'HIGH',
     hazardColor: 'text-red-400',
+    evidence: [
+      'Critical load types (hospital/water/telecom) detected.',
+      'Average load criticality is {avgLoadCriticality} (>= 0.70).',
+    ],
   },
   {
     constraint: 'SC-CRIT-002',
@@ -902,6 +908,9 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: [],
     severity: 'HIGH',
     hazardColor: 'text-red-400',
+    evidence: [
+      '{load.type} ({load.name}) backup < 4h.',
+    ],
   },
   {
     constraint: 'SC-CREW-001',
@@ -912,6 +921,9 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['reroute_load'],
     severity: 'HIGH',
     hazardColor: 'text-orange-400',
+    evidence: [
+      '{crewsAvailable} crew(s) available, {enRoute} en route — {estimatedCrewsNeeded} estimated needed.',
+    ],
   },
   {
     constraint: 'SC-HEAT-001',
@@ -922,6 +934,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['reroute_load'],
     severity: 'HIGH',
     hazardColor: 'text-amber-400',
+    evidence: [
+      'Hazard: HEAT — severity {severity}/5 (threshold: 3).',
+      'Sustained ambient heat elevates transformer winding temperature and may accelerate insulation breakdown under full load restoration.',
+    ],
   },
   {
     constraint: 'SC-HEAT-002',
@@ -932,6 +948,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['reroute_load'],
     severity: 'HIGH',
     hazardColor: 'text-red-400',
+    evidence: [
+      'Hazard: HEAT — severity >= 4 (threshold: 4).',
+      'Peak load conditions may push transformers beyond rated thermal limits under sustained extreme ambient temperatures.',
+    ],
   },
   {
     constraint: 'SC-FLOOD-001',
@@ -942,6 +962,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['dispatch_crews'],
     severity: 'HIGH',
     hazardColor: 'text-blue-400',
+    evidence: [
+      'Hazard: FLOOD/RAIN — phase: ACTIVE.',
+      'Ground saturation and standing water elevate electrocution risk for field personnel near pad-mount equipment.',
+    ],
   },
   {
     constraint: 'SC-STORM-001',
@@ -952,6 +976,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['dispatch_crews', 'reroute_load'],
     severity: 'HIGH',
     hazardColor: 'text-sky-400',
+    evidence: [
+      'Hazard: STORM — phase: ACTIVE.',
+      'High wind conditions elevate conductor contact and tree strike risk for field personnel.',
+    ],
   },
   {
     constraint: 'SC-ICE-001',
@@ -962,6 +990,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['reroute_load', 'deenergize_section'],
     severity: 'HIGH',
     hazardColor: 'text-cyan-400',
+    evidence: [
+      'Hazard: ICE — phase: ACTIVE.',
+      'Remote switching without visual line inspection risks cascading failures on ice-loaded conductors.',
+    ],
   },
   {
     constraint: 'SC-ICE-002',
@@ -972,6 +1004,9 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: [],
     severity: 'HIGH',
     hazardColor: 'text-cyan-400',
+    evidence: [
+      'Asset {id} ({type}) — vegetation exposure: {vegetationExposure} (threshold: 0.50).',
+    ],
   },
   {
     constraint: 'SC-WILD-001',
@@ -982,6 +1017,10 @@ const RULE_COVERAGE: RuleCoverageRow[] = [
     blocked: ['deenergize_section'],
     severity: 'HIGH',
     hazardColor: 'text-orange-400',
+    evidence: [
+      'Hazard: WILDFIRE — {n} asset(s) exceed 0.60 vegetation exposure threshold.',
+      'Asset {id} ({type}) — vegetation exposure: {vegetationExposure}.',
+    ],
   },
 ];
 
@@ -992,6 +1031,10 @@ const SEV_CLS: Record<RuleCoverageRow['severity'], string> = {
 };
 
 function RuleCoverageTable() {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const toggle = (id: string) => setExpanded(prev => prev === id ? null : id);
+
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full min-w-[860px] border-collapse text-xs">
@@ -1015,71 +1058,120 @@ function RuleCoverageTable() {
           </tr>
         </thead>
         <tbody>
-          {RULE_COVERAGE.map((row, i) => (
-            <tr
-              key={row.constraint}
-              className={`border-b border-border/20 transition-colors hover:bg-muted/30 ${i % 2 === 0 ? 'bg-muted/10' : ''}`}
-            >
-              {/* Constraint ID + title */}
-              <td className="px-3 py-2.5 whitespace-nowrap">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-mono text-[10px] font-bold text-amber-400">{row.constraint}</span>
-                  <span className="text-[9px] text-muted-foreground leading-tight max-w-[140px]">{row.title}</span>
-                </div>
-              </td>
+          {RULE_COVERAGE.map((row, i) => {
+            const isOpen = expanded === row.constraint;
+            return (
+              <>
+                <tr
+                  key={row.constraint}
+                  onClick={() => toggle(row.constraint)}
+                  className={`border-b border-border/20 transition-colors cursor-pointer select-none
+                    ${isOpen ? 'bg-muted/30' : i % 2 === 0 ? 'bg-muted/10 hover:bg-muted/30' : 'hover:bg-muted/30'}`}
+                >
+                  {/* Constraint ID + title + expand chevron */}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <div className="flex items-start gap-1.5">
+                      <ChevronDown
+                        className={`mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/50 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                      />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-mono text-[10px] font-bold text-amber-400">{row.constraint}</span>
+                        <span className="text-[9px] text-muted-foreground leading-tight max-w-[140px]">{row.title}</span>
+                      </div>
+                    </div>
+                  </td>
 
-              {/* Hazard */}
-              <td className="px-3 py-2.5 whitespace-nowrap">
-                <span className={`font-mono text-[10px] font-semibold ${row.hazardColor}`}>{row.hazard}</span>
-              </td>
+                  {/* Hazard */}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <span className={`font-mono text-[10px] font-semibold ${row.hazardColor}`}>{row.hazard}</span>
+                  </td>
 
-              {/* Trigger */}
-              <td className="px-3 py-2.5 max-w-[220px]">
-                <code className="text-[9px] text-muted-foreground/80 font-mono leading-relaxed break-words">
-                  {row.trigger}
-                </code>
-              </td>
+                  {/* Trigger */}
+                  <td className="px-3 py-2.5 max-w-[220px]">
+                    <code className="text-[9px] text-muted-foreground/80 font-mono leading-relaxed break-words">
+                      {row.trigger}
+                    </code>
+                  </td>
 
-              {/* Escalation flags */}
-              <td className="px-3 py-2.5">
-                <div className="flex flex-wrap gap-1">
-                  {row.flags.length > 0 ? row.flags.map(f => (
-                    <span
-                      key={f}
-                      className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary"
-                    >
-                      {f}
+                  {/* Escalation flags */}
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {row.flags.length > 0 ? row.flags.map(f => (
+                        <span
+                          key={f}
+                          className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary"
+                        >
+                          {f}
+                        </span>
+                      )) : (
+                        <span className="text-[9px] text-muted-foreground/50 italic">—</span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Actions blocked */}
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {row.blocked.length > 0 ? row.blocked.map(a => (
+                        <span
+                          key={a}
+                          className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive"
+                        >
+                          {a}
+                        </span>
+                      )) : (
+                        <span className="text-[9px] text-muted-foreground/50 italic">—</span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Severity */}
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase ${SEV_CLS[row.severity]}`}>
+                      {row.severity}
                     </span>
-                  )) : (
-                    <span className="text-[9px] text-muted-foreground/50 italic">—</span>
-                  )}
-                </div>
-              </td>
+                  </td>
+                </tr>
 
-              {/* Actions blocked */}
-              <td className="px-3 py-2.5">
-                <div className="flex flex-wrap gap-1">
-                  {row.blocked.length > 0 ? row.blocked.map(a => (
-                    <span
-                      key={a}
-                      className="inline-flex items-center rounded border border-destructive/25 bg-destructive/5 px-1.5 py-0.5 font-mono text-[9px] text-destructive"
-                    >
-                      {a}
-                    </span>
-                  )) : (
-                    <span className="text-[9px] text-muted-foreground/50 italic">—</span>
-                  )}
-                </div>
-              </td>
-
-              {/* Severity */}
-              <td className="px-3 py-2.5 whitespace-nowrap">
-                <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase ${SEV_CLS[row.severity]}`}>
-                  {row.severity}
-                </span>
-              </td>
-            </tr>
-          ))}
+                {/* Expandable evidence row */}
+                {isOpen && (
+                  <tr key={`${row.constraint}-evidence`} className="border-b border-border/20">
+                    <td colSpan={6} className="px-0 py-0">
+                      <AnimatePresence initial={false}>
+                        <motion.div
+                          key="evidence"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.18, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mx-3 my-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2.5">
+                            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-widest text-amber-400/80">
+                              Engine evidence — <code className="font-mono normal-case tracking-normal">safetyConstraints[].evidence</code>
+                            </p>
+                            <ul className="space-y-1">
+                              {row.evidence.map((line, idx) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
+                                  <code className="text-[10px] font-mono text-muted-foreground/90 leading-relaxed break-words">
+                                    {line}
+                                  </code>
+                                </li>
+                              ))}
+                            </ul>
+                            <p className="mt-2 text-[9px] text-muted-foreground/50 italic">
+                              Dynamic values shown as <code className="font-mono text-[8px]">{'{placeholder}'}</code> are substituted at evaluation time.
+                            </p>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    </td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
         </tbody>
       </table>
 
@@ -1090,7 +1182,7 @@ function RuleCoverageTable() {
           <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/60">Legend</p>
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center rounded border border-amber-500/25 bg-amber-500/5 px-1.5 py-0.5 font-mono text-[9px] text-amber-400">SC-ID</span>
-            <span className="text-[9px] text-muted-foreground/70">Safety constraint</span>
+            <span className="text-[9px] text-muted-foreground/70">Safety constraint — click any row to view engine evidence</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary">flag</span>
