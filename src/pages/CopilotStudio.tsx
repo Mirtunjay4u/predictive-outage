@@ -370,11 +370,11 @@ export default function CopilotStudio() {
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-primary/30 text-primary">
                   <Zap className="w-3 h-3" />
-                  Model: NVIDIA Nemotron (NIM)
+                  {latestEntry?.raw.model_engine || 'Model: NVIDIA Nemotron (NIM)'}
                 </Badge>
                 {latestEntry?.raw.fallback_used && (
                   <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
-                    Fallback Active
+                    {latestEntry.raw.model_engine?.includes('Model Router') ? 'Model Router (Gemini)' : 'Deterministic Fallback'}
                   </Badge>
                 )}
               </div>

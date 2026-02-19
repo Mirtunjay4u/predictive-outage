@@ -159,15 +159,15 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
           {/* Model Attribution + Mode Banner */}
           <div className="px-4 py-2 border-b border-border bg-muted/20 space-y-1.5">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal border-primary/30 text-primary">
-                <Zap className="w-3 h-3" />
-                NVIDIA Nemotron (NIM)
-              </Badge>
-              {response?.fallback_used && (
-                <Badge variant="outline" className="text-[10px] h-5 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
-                  Fallback
+                <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal border-primary/30 text-primary">
+                  <Zap className="w-3 h-3" />
+                  {response?.model_engine || 'NVIDIA Nemotron (NIM)'}
                 </Badge>
-              )}
+                {response?.fallback_used && (
+                  <Badge variant="outline" className="text-[10px] h-5 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
+                    {response.model_engine?.includes('Model Router') ? 'Model Router' : 'Deterministic Fallback'}
+                  </Badge>
+                )}
             </div>
             {response && (
               <span className={cn(

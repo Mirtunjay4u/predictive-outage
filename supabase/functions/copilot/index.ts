@@ -279,6 +279,95 @@ async function callNemotron(
   }
 }
 
+// ─── Secondary: Lovable AI Gateway (Model Router / Multi-model Fallback) ─────
+async function callModelRouter(
+  mode: CopilotMode,
+  userMessage: string,
+  scenario: ScenarioContext
+): Promise<CopilotResponse> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) {
+    throw new Error("LOVABLE_API_KEY not configured — cannot reach Model Router.");
+  }
+
+  const userPrompt = buildUserPrompt(mode, userMessage, scenario);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 25000);
+
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 2000,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Model Router error ${response.status}:`, errorText);
+      throw new Error(`Model Router error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const rawContent = data.choices?.[0]?.message?.content ?? "";
+
+    let parsed: Record<string, unknown> | null = null;
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[0]); } catch { parsed = null; }
+      }
+    }
+
+    if (parsed && Array.isArray(parsed.insights)) {
+      return {
+        mode_banner: (parsed.mode_banner as string) || MODE_BANNERS[mode],
+        framing_line: parsed.framing_line as string | undefined,
+        insights: (parsed.insights as CopilotInsight[]) || [],
+        assumptions: (parsed.assumptions as string[]) || [],
+        source_notes: (parsed.source_notes as string[]) || ["Scenario record", "User prompt"],
+        disclaimer: (parsed.disclaimer as string) || DISCLAIMER,
+        model_engine: "Model Router (Gemini · Fallback)",
+        fallback_used: true,
+        fallback_reason: "NVIDIA Nemotron unavailable — routed to Model Router (Gemini)",
+      };
+    }
+
+    // Wrap unstructured text
+    const paragraphs = rawContent.split(/\n\n+/).filter(Boolean);
+    return {
+      mode_banner: MODE_BANNERS[mode],
+      framing_line: paragraphs[0]?.substring(0, 200) || "Analysis complete.",
+      insights: paragraphs.slice(1, 7).map((p: string, i: number) => ({
+        title: `Analysis Point ${i + 1}`,
+        bullets: p.split(/\n/).filter(Boolean).map((l: string) => l.replace(/^[-•*]\s*/, "")).slice(0, 4),
+      })),
+      assumptions: ["Model Router output was unstructured — displayed as raw analysis points"],
+      source_notes: ["Scenario record", "User prompt", "Model Router (Gemini)"],
+      disclaimer: DISCLAIMER,
+      model_engine: "Model Router (Gemini · Fallback)",
+      fallback_used: true,
+      fallback_reason: "NVIDIA Nemotron unavailable — routed to Model Router (Gemini)",
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // ─── Deterministic Fallback ──────────────────────────────────────────────────
 function generateDeterministicFallback(
   mode: CopilotMode,
@@ -396,13 +485,19 @@ serve(async (req) => {
       // Explicit mock request
       response = generateDeterministicFallback(mode, userMessage, scenario, "Explicit mock request");
     } else {
-      // Primary path: NVIDIA Nemotron NIM
+      // Primary: NVIDIA Nemotron NIM → Secondary: Model Router (Gemini) → Deterministic
       try {
         response = await callNemotron(mode, userMessage, scenario);
-      } catch (err) {
-        const reason = err instanceof Error ? err.message : "Unknown error";
-        console.error("Nemotron NIM failed, using deterministic fallback:", reason);
-        response = generateDeterministicFallback(mode, userMessage, scenario, reason);
+      } catch (nemotronErr) {
+        const nemotronReason = nemotronErr instanceof Error ? nemotronErr.message : "Unknown error";
+        console.error("Nemotron NIM failed, trying Model Router (Gemini):", nemotronReason);
+        try {
+          response = await callModelRouter(mode, userMessage, scenario);
+        } catch (routerErr) {
+          const routerReason = routerErr instanceof Error ? routerErr.message : "Unknown error";
+          console.error("Model Router also failed, using deterministic fallback:", routerReason);
+          response = generateDeterministicFallback(mode, userMessage, scenario, `Nemotron: ${nemotronReason}; Model Router: ${routerReason}`);
+        }
       }
     }
 
