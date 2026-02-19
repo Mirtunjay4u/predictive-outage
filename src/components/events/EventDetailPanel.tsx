@@ -645,6 +645,8 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
   },
 };
 
+const CRITICAL_PULSE_FLAGS = new Set(['critical_load_at_risk', 'insufficient_crews']);
+
 function EscalationFlagChips({ flags }: { flags: string[] }) {
   if (flags.length === 0) return null;
   return (
@@ -665,7 +667,14 @@ function EscalationFlagChips({ flags }: { flags: string[] }) {
                   cfg.chipCls,
                 )}
               >
-                <Icon className={cn('h-3 w-3 shrink-0', cfg.iconCls)} />
+                {CRITICAL_PULSE_FLAGS.has(flag) ? (
+                  <span className="relative flex h-3 w-3 shrink-0 items-center justify-center">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                    <Icon className={cn('relative h-3 w-3', cfg.iconCls)} />
+                  </span>
+                ) : (
+                  <Icon className={cn('h-3 w-3 shrink-0', cfg.iconCls)} />
+                )}
                 <span className={cfg.labelCls}>{cfg.label}</span>
               </span>
             );
