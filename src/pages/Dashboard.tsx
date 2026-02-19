@@ -87,6 +87,8 @@ interface ExtremeHazard {
   exposureLabel: string;
   /** Adjusts demo playback description text */
   demoContext: string;
+  /** Contextual risk bullets keyed by severity level */
+  riskBullets: Record<'Low' | 'Moderate' | 'Severe', string[]>;
 }
 
 const EXTREME_HAZARDS: ExtremeHazard[] = [
@@ -100,6 +102,11 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     contextLine: 'High-wind and lightning exposure; feeder fault probability elevated.',
     exposureLabel: 'Wind / Lightning Risk',
     demoContext: 'Severe thunderstorm cell intensifying; wind-driven vegetation contact on exposed feeders.',
+    riskBullets: {
+      Low:      ['Wind speeds below fault threshold', 'Lightning risk: Minimal', 'Feeder patrols: Routine'],
+      Moderate: ['Sustained winds 35–55 mph; line sag possible', 'Lightning activity increasing in service area', 'Pre-position crews near high-exposure feeders'],
+      Severe:   ['Damaging winds >55 mph; multiple fault risk', 'Lightning strike probability: Elevated', 'Emergency switching plans: Activated'],
+    },
   },
   {
     key: 'wildfire',
@@ -111,6 +118,11 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     contextLine: 'Vegetation proximity and red-flag wind conditions elevate ignition risk.',
     exposureLabel: 'Vegetation Exposure',
     demoContext: 'Active wildfire perimeter advancing; vegetation exposure and heat-driven asset stress critical.',
+    riskBullets: {
+      Low:      ['No active fire perimeter within service area', 'Vegetation clearance: Within tolerance', 'De-energization: Not required'],
+      Moderate: ['Fire perimeter within 10 mi of transmission corridor', 'Red-flag watch: Wind gusts >25 mph', 'De-energization protocols: On standby'],
+      Severe:   ['Red-flag wind alert active', 'Vegetation contact probability: Critical', 'De-energization protocols: Standby'],
+    },
   },
   {
     key: 'flood',
@@ -122,6 +134,11 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     contextLine: 'Soil saturation and substation inundation risk; low-lying infrastructure at risk.',
     exposureLabel: 'Water Exposure Risk',
     demoContext: 'Sustained rainfall causing soil saturation; substation flooding risk in low-elevation zones.',
+    riskBullets: {
+      Low:      ['Rainfall within normal absorption capacity', 'Substation flood barriers: Nominal', 'Access roads: Open'],
+      Moderate: ['Soil saturation >70%; runoff risk elevated', 'Low-elevation substation monitoring: Active', 'Crew access to flood-prone zones: Restricted'],
+      Severe:   ['Flash flood watch issued for service territory', 'Substation inundation risk: High — barriers deployed', 'Underground cable fault probability: Elevated'],
+    },
   },
   {
     key: 'extreme-cold',
@@ -133,6 +150,11 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     contextLine: 'Ice loading on conductors and brittle hardware failure risk.',
     exposureLabel: 'Ice Load Risk',
     demoContext: 'Ice accumulation on transmission lines; brittle material failure risk increasing with temperature drop.',
+    riskBullets: {
+      Low:      ['Temperature above brittle failure threshold', 'Ice accumulation: Negligible', 'Heating load demand: Normal'],
+      Moderate: ['Ice load on conductors: 0.25–0.5 in radial', 'Brittle hardware risk: Elevated on aging spans', 'Heating demand surge: +18% above baseline'],
+      Severe:   ['Ice accumulation >0.5 in — conductor galloping risk', 'Brittle material failure: Imminent on aged infrastructure', 'Peak heating demand: Critical — load shed protocols armed'],
+    },
   },
   {
     key: 'extreme-heat',
@@ -144,6 +166,11 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
     contextLine: 'Peak demand surge and transformer thermal stress; load shed risk elevated.',
     exposureLabel: 'Thermal Load Risk',
     demoContext: 'Extreme heat driving load surge; transformer thermal stress and cooling system strain in dense service areas.',
+    riskBullets: {
+      Low:      ['Ambient temp within transformer rating envelope', 'Cooling load: Elevated but manageable', 'Load shed threshold: Not approached'],
+      Moderate: ['Transformer thermal stress >80% rated capacity', 'Cooling system strain in dense service areas', 'Voluntary conservation request: Issued'],
+      Severe:   ['Transformer overload risk: Imminent — thermal alarm active', 'Load surge >15% above peak planning capacity', 'Emergency load shed protocols: Staged and ready'],
+    },
   },
 ];
 
@@ -1323,6 +1350,36 @@ export default function Dashboard() {
                 </span>
               )}
             </div>
+
+            {/* ── Contextual risk bullets (hazard × severity) ──────────────── */}
+            {(() => {
+              const bullets = (activeHazard.riskBullets ?? {})[activeSeverityLabel] ?? [];
+              if (bullets.length === 0) return null;
+              const bulletColor =
+                activeSeverityLabel === 'Severe'
+                  ? 'text-destructive'
+                  : activeSeverityLabel === 'Moderate'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-emerald-600 dark:text-emerald-400';
+              const dotColor =
+                activeSeverityLabel === 'Severe'
+                  ? 'bg-destructive'
+                  : activeSeverityLabel === 'Moderate'
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-500';
+              return (
+                <div className="mt-2.5 border-t border-border/30 pt-2.5">
+                  <ul className="space-y-1">
+                    {bullets.map((bullet, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className={cn('mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full', dotColor)} />
+                        <span className={cn('text-[11px] leading-snug', bulletColor)}>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}
