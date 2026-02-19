@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatConfidenceFull } from '@/lib/etr-format';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -1218,7 +1219,8 @@ export default function Dashboard() {
       animate={prefersReducedMotion ? { opacity: 1, y: 0 } : boardroomMode ? { opacity: 1, y: 0 } : { opacity: 0.98, y: 2 }}
       className={cn('mx-auto max-w-[1600px]', boardroomMode ? 'px-6 py-7 lg:px-7' : 'px-4 py-5 lg:px-5')}
     >
-      <div className="space-y-6 lg:space-y-7">
+      {/* pb-20 reserves space so the fixed phase strip never covers content */}
+      <div className="space-y-6 lg:space-y-7 pb-20">
 
       <header>
         <div className={cn('flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-card shadow-sm', boardroomMode ? 'px-5 py-4' : 'px-4 py-3')}>
@@ -1945,15 +1947,17 @@ export default function Dashboard() {
         const isGateWarn  = policyGate === 'WARN';
         const POLICY_PHASE_IDX = 2;
 
-        return (
+        return createPortal(
           <div
             ref={phaseStripRef}
-            className="rounded-xl border border-border/60 bg-card shadow-card overflow-visible"
+            className="fixed bottom-8 left-0 right-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-md shadow-elevated overflow-visible"
             role="region"
             aria-label="Operational phase timeline"
           >
+            {/* ── Inner constrained container ────────────────────────────── */}
+            <div className="mx-auto max-w-[1600px] px-4 lg:px-5">
             {/* ── Header bar ─────────────────────────────────────────────── */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40 bg-muted/30 rounded-t-xl">
+            <div className="flex items-center justify-between py-1.5 border-b border-border/30">
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground/50 leading-none">
                   Operational Phase
@@ -1973,7 +1977,7 @@ export default function Dashboard() {
             </div>
 
             {/* ── Phase track ────────────────────────────────────────────── */}
-            <div className="flex items-stretch px-2.5 py-2 gap-1">
+            <div className="flex items-stretch px-0 py-2 gap-1">
               {PHASES.map((phase, idx) => {
                 const isActive = activePhaseIndex === idx;
                 const isDone   = activePhaseIndex > idx;
@@ -2221,7 +2225,9 @@ export default function Dashboard() {
                 );
               })}
             </div>
-          </div>
+            </div>{/* end max-width container */}
+          </div>,
+          document.body
         );
       })()}
 
