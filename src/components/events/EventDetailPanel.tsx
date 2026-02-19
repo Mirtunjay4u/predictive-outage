@@ -636,6 +636,14 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     labelCls: 'text-blue-700 dark:text-blue-300',
     tooltip: 'An active storm hazard is escalating conditions. Field operations should be paused or restricted until conditions stabilise.',
   },
+  high_wind_conductor_risk: {
+    icon: Wind,
+    label: 'High Wind Conductor Risk',
+    chipCls: 'bg-blue-500/10 border-blue-400/30',
+    iconCls: 'text-blue-500',
+    labelCls: 'text-blue-700 dark:text-blue-300',
+    tooltip: 'High wind conditions elevate conductor contact and tree strike risk. Defer field crew dispatch until wind speeds drop below operational threshold.',
+  },
   ice_load_risk: {
     icon: Snowflake,
     label: 'Ice Vegetation Line Risk',
