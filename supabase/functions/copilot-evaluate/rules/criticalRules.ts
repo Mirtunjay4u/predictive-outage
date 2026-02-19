@@ -46,6 +46,9 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
 
   // ── HEAT hazard rules ─────────────────────────────────────────────────────────
   const isHeatOverload = scenario.hazardType === "HEAT" && scenario.severity >= 3;
+
+  // ── FLOOD/RAIN hazard rules ───────────────────────────────────────────────────
+  const isFloodActive = scenario.hazardType === "RAIN" && scenario.phase === "ACTIVE";
   // Aerial fire line clearance is required before any field switching when
   // average vegetation exposure exceeds 0.60 in an active wildfire event.
   const isWildfire = scenario.hazardType === "WILDFIRE";
@@ -122,6 +125,19 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
             "Sustained ambient heat elevates transformer winding temperature and may accelerate insulation breakdown under full load restoration.",
           ]
         : ["Not triggered — HEAT hazard not active or severity below threshold of 3."],
+    },
+    {
+      id: "SC-FLOOD-001",
+      title: "Flood zone equipment access restriction",
+      description: "Pad-mount and ground-level equipment access is restricted until flood levels recede and site safety is confirmed.",
+      severity: "HIGH",
+      triggered: isFloodActive,
+      evidence: isFloodActive
+        ? [
+            "Hazard: FLOOD/RAIN — phase: ACTIVE.",
+            "Ground saturation and standing water elevate electrocution risk for field personnel near pad-mount equipment.",
+          ]
+        : ["Not triggered — FLOOD/RAIN hazard not active or phase is not ACTIVE."],
     },
     {
       id: "SC-STORM-001",
