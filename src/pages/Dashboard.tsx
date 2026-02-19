@@ -1580,23 +1580,32 @@ export default function Dashboard() {
                       Each driver is filtered to events matching the selected hazard type. The severity override clamps the final index into the corresponding band.
                     </p>
                     <ul className="space-y-1.5">
-                      {riskDrivers.chips.map((chip) => (
-                        <li key={chip.key} className="flex items-center justify-between gap-3">
-                          <span className="text-muted-foreground">{chip.key}</span>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted/50">
-                              <div
-                                className={cn(
-                                  'h-full rounded-full transition-all duration-300',
-                                  chip.key === 'Crew readiness' ? 'bg-emerald-500' : 'bg-primary',
-                                )}
-                                style={{ width: `${Math.round((chip.value / 30) * 100)}%` }}
-                              />
+                      {riskDrivers.chips.map((chip, i) => {
+                        const pct = Math.round((chip.value / 30) * 100);
+                        return (
+                          <li key={chip.key} className="flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">{chip.key}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted/50">
+                                <motion.div
+                                  className={cn(
+                                    'h-full rounded-full',
+                                    chip.key === 'Crew readiness' ? 'bg-emerald-500' : 'bg-primary',
+                                  )}
+                                  initial={{ width: '0%' }}
+                                  animate={{ width: `${pct}%` }}
+                                  transition={
+                                    prefersReducedMotion
+                                      ? { duration: 0 }
+                                      : { duration: 0.5, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }
+                                  }
+                                />
+                              </div>
+                              <span className="w-5 text-right font-semibold tabular-nums text-foreground">{chip.value}</span>
                             </div>
-                            <span className="w-5 text-right font-semibold tabular-nums text-foreground">{chip.value}</span>
-                          </div>
-                        </li>
-                      ))}
+                          </li>
+                        );
+                      })}
                     </ul>
                     <div className="mt-2.5 border-t border-border/40 pt-2 flex items-center justify-between">
                       <span className="text-muted-foreground">Total</span>
