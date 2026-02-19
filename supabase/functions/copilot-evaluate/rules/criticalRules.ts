@@ -109,7 +109,7 @@ export const evaluateCriticalRules = (scenario: NormalizedScenario, avgLoadCriti
     {
       id: "SC-WILD-001",
       title: "Wildfire vegetation switching prohibition",
-      description: "Field switching is prohibited until aerial fire line clearance is confirmed.",
+      description: "Field switching is prohibited until aerial fire line clearance is confirmed by incident commander.",
       severity: hasWildfireSwitchingRisk ? "HIGH" : "LOW",
       triggered: hasWildfireSwitchingRisk,
       evidence: hasWildfireSwitchingRisk
