@@ -147,8 +147,8 @@ const EXTREME_HAZARDS: ExtremeHazard[] = [
   },
   {
     key: 'extreme-cold',
-    label: 'Extreme Cold',
-    shortLabel: 'Ice / Cold',
+    label: 'Ice Storm / Blizzards',
+    shortLabel: 'Ice Storm / Blizzards',
     icon: Snowflake,
     severityLabel: 'Moderate',
     policyHazardType: 'STORM',
@@ -186,6 +186,15 @@ const DEFAULT_HAZARD_KEY: ExtremeHazardKey = 'storm';
 function getExtremeHazard(key: ExtremeHazardKey): ExtremeHazard {
   return EXTREME_HAZARDS.find((h) => h.key === key) ?? EXTREME_HAZARDS[0]!;
 }
+
+// Maps each hazard key to its matching outage_type values in the DB for attention count filtering
+const HAZARD_OUTAGE_TYPE_MAP: Record<ExtremeHazardKey, string[]> = {
+  'storm':        ['Storm', 'Lightning', 'High Wind', 'Snow Storm'],
+  'wildfire':     ['Wildfire', 'Vegetation'],
+  'flood':        ['Flood', 'Heavy Rain'],
+  'extreme-cold': ['Ice/Snow', 'Snow Storm'],
+  'extreme-heat': ['Heatwave'],
+};
 
 function getOutageBreakdown(scenarios: Scenario[]) {
   const breakdown = scenarios.reduce<Record<string, number>>((acc, s) => {
@@ -440,12 +449,21 @@ export default function Dashboard() {
     navigate(qs ? `/events?${qs}` : '/events');
   };
 
+  // High-priority events relevant to the currently selected hazard
+  const hazardHighPriority = useMemo(() => {
+    const relevantTypes = HAZARD_OUTAGE_TYPE_MAP[selectedHazardKey];
+    return highPriorityScenarios.filter(
+      (s) => !s.outage_type || relevantTypes.includes(s.outage_type)
+    ).length;
+  }, [highPriorityScenarios, selectedHazardKey]);
+
   const summary = useMemo(() => {
+    if (hazardHighPriority > 0) return `${hazardHighPriority} high-priority events require attention`;
     if (stats.highPriority > 0) return `${stats.highPriority} high-priority events require attention`;
     if (stats.active > 0) return `${stats.active} active events currently in progress`;
     if (stats.preEvent > 0) return `${stats.preEvent} events under monitoring`;
     return 'No active events at this time';
-  }, [stats.active, stats.highPriority, stats.preEvent]);
+  }, [hazardHighPriority, stats.active, stats.highPriority, stats.preEvent]);
 
   const scenarioName = scenarios[0]?.name ?? 'Regional Preparedness Drill';
   const hazard = getScenarioHazard(scenarios);
