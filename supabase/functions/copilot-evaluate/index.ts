@@ -279,6 +279,10 @@ serve(async (req: Request): Promise<Response> => {
   if (scenario.hazardType === "STORM" && scenario.phase === "ACTIVE") {
     additionalEscalations.push("high_wind_conductor_risk");
   }
+  // FLOOD/RAIN active phase: ground saturation restricts pad-mount equipment access.
+  if (scenario.hazardType === "RAIN" && scenario.phase === "ACTIVE") {
+    additionalEscalations.push("flood_access_risk");
+  }
   // Asset-rule escalation flags (e.g. transformer_thermal_stress for HEAT, vegetation_fire_risk for WILDFIRE)
   additionalEscalations.push(...assetResult.escalationFlags);
 

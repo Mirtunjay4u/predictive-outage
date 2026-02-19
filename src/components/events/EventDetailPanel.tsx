@@ -628,6 +628,14 @@ const FLAG_CONFIG: Record<string, FlagConfig> = {
     labelCls: 'text-amber-700 dark:text-amber-300',
     tooltip: 'ETR precision is reduced due to missing inputs or poor data quality. Communicate restoration windows as ranges, not fixed times.',
   },
+  flood_access_risk: {
+    icon: CloudRain,
+    label: 'Flood Access Risk',
+    chipCls: 'bg-blue-500/10 border-blue-400/30',
+    iconCls: 'text-blue-500',
+    labelCls: 'text-blue-700 dark:text-blue-300',
+    tooltip: 'Active flood conditions restrict ground-level equipment access. Defer pad-mount and substation access until water levels recede and site safety is confirmed by field supervisor.',
+  },
   storm_active: {
     icon: Wind,
     label: 'Storm Active',
