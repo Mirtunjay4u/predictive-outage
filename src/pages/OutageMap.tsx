@@ -43,7 +43,7 @@ import type { Asset } from '@/types/asset';
 import type { FeederZone } from '@/types/feederZone';
 import type { Crew } from '@/types/crew';
 import { OUTAGE_TYPES } from '@/types/scenario';
-import { getEventSeverity, severityColor, severityLabel, HAZARD_OVERLAYS, type HazardOverlay } from '@/lib/severity';
+import { getEventSeverity, severityColor, severityLabel, HAZARD_OVERLAYS, outageToHazard, type HazardOverlay } from '@/lib/severity';
 const LIFECYCLE_OPTIONS: LifecycleStage[] = ['Pre-Event', 'Event', 'Post-Event'];
 const PRIORITY_OPTIONS = ['high', 'medium', 'low'];
 
@@ -248,13 +248,28 @@ export default function OutageMap() {
     setHighlightedFeederId(zone.feeder_id);
   };
 
-  const handleOpenInCopilot = () => {
+  const handleOpenInCopilot = useCallback(() => {
     if (!selectedEvent) return;
-    const prompt = encodeURIComponent(
-      `Summarize outage context, risks, trade-offs, and checklist for this event: "${selectedEvent.name}" (${selectedEvent.outage_type || 'Unknown'} - ${selectedEvent.lifecycle_stage})`
-    );
-    navigate(`/copilot-studio?prefill=${prompt}`);
-  };
+    const params = new URLSearchParams();
+    params.set('event_id', selectedEvent.id);
+    params.set('event_name', selectedEvent.name);
+    params.set('outage_type', selectedEvent.outage_type || 'Unknown');
+    params.set('lifecycle', selectedEvent.lifecycle_stage);
+    if (linkedAssetIds.length > 0) {
+      params.set('asset_ids', linkedAssetIds.join(','));
+    }
+    if (activeHazardOverlays.length > 0) {
+      const eventHazard = outageToHazard(selectedEvent.outage_type);
+      const overlapping = activeHazardOverlays.filter(h => h === eventHazard);
+      if (overlapping.length > 0) {
+        params.set('hazard_overlap', overlapping.join(','));
+      }
+    }
+    const prompt = `Analyze outage event "${selectedEvent.name}" (${selectedEvent.outage_type || 'Unknown'} – ${selectedEvent.lifecycle_stage}): risks, trade-offs, crew considerations, and recommended actions.`;
+    params.set('prefill', prompt);
+    params.set('auto_run', 'true');
+    navigate(`/copilot-studio?${params.toString()}`);
+  }, [selectedEvent, linkedAssetIds, activeHazardOverlays, navigate]);
 
   const handleSearchSelect = useCallback((result: SearchResult) => {
     if (result.lat && result.lng) {

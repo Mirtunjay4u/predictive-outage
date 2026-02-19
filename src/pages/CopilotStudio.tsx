@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, Sparkles, AlertTriangle, ShieldAlert, Lightbulb, FileText, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ const modeOptions: { value: CopilotMode; label: string; icon: string }[] = [
 ];
 
 export default function CopilotStudio() {
+  const [searchParams] = useSearchParams();
   // Copilot Studio - testing interface for AI copilot I/O contract
   const [mode, setMode] = useState<CopilotMode>('DEMO');
   const [outageType, setOutageType] = useState<OutageType>('Storm');
@@ -37,6 +39,7 @@ export default function CopilotStudio() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const autoRunTriggered = useRef(false);
 
   const formatResponseForCopy = (res: CopilotResponse): string => {
     let text = `[${res.mode_banner}]\n\n`;
@@ -125,6 +128,40 @@ export default function CopilotStudio() {
     }
   };
 
+  // Handle URL params from Outage Map handoff
+  useEffect(() => {
+    const prefill = searchParams.get('prefill');
+    const eventName = searchParams.get('event_name');
+    const paramOutageType = searchParams.get('outage_type');
+    const autoRun = searchParams.get('auto_run') === 'true';
+    const hazardOverlap = searchParams.get('hazard_overlap');
+    const assetIds = searchParams.get('asset_ids');
+
+    if (prefill) {
+      let enrichedMessage = prefill;
+      if (hazardOverlap) {
+        enrichedMessage += `\n\nHazard overlay overlap: ${hazardOverlap}`;
+      }
+      if (assetIds) {
+        enrichedMessage += `\nLinked asset IDs: ${assetIds}`;
+      }
+      setUserMessage(enrichedMessage);
+    }
+    if (eventName) setScenarioName(eventName);
+    if (paramOutageType && OUTAGE_TYPES.includes(paramOutageType as OutageType)) {
+      setOutageType(paramOutageType as OutageType);
+    }
+    if (prefill) setMode('ACTIVE_EVENT');
+
+    // Auto-trigger send if requested
+    if (autoRun && prefill && !autoRunTriggered.current) {
+      autoRunTriggered.current = true;
+      setTimeout(() => {
+        document.getElementById('copilot-send-btn')?.click();
+      }, 400);
+    }
+  }, [searchParams]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
@@ -206,6 +243,7 @@ export default function CopilotStudio() {
 
               {/* Send Button */}
               <Button
+                id="copilot-send-btn"
                 onClick={handleSend}
                 disabled={!userMessage.trim() || isLoading}
                 className="w-full gap-2 shadow-md hover:shadow-lg transition-all"

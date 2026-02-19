@@ -539,7 +539,7 @@ export function OutageMapView({
     });
   }, [showAssets, assets, linkedAssetIds, selectedEventId, highlightedAssetId, onAssetClick]);
 
-  // Update crews
+  // Update crews — event-scoped when an event is selected
   useEffect(() => {
     if (!mapRef.current || !layersRef.current) return;
     
@@ -548,19 +548,27 @@ export function OutageMapView({
 
     if (!showCrews) return;
 
-    crews.forEach(crew => {
+    // When an event is selected, only show crews assigned to that event
+    const filteredCrews = selectedEventId
+      ? crews.filter(c => c.assigned_event_id === selectedEventId)
+      : crews;
+
+    filteredCrews.forEach(crew => {
       const hasAssignment = !!crew.assigned_event_id;
       const icon = createCrewIcon(crew.status, hasAssignment);
 
+      const tooltipContent = `
+        <div style="padding: 2px; min-width: 140px;">
+          <strong>${crew.crew_name}</strong><br/>
+          <span style="font-size: 11px; color: #aaa;">
+            ${crew.specialization || crew.vehicle_type} · ${crew.status.replace('_', ' ')}
+            ${crew.eta_minutes ? ` · ETA ${crew.eta_minutes}m` : ''}
+          </span>
+        </div>
+      `;
+
       const marker = L.marker([crew.current_lat, crew.current_lng], { icon })
-        .bindPopup(`
-          <div style="padding: 8px; min-width: 200px;">
-            <h3 style="font-weight: 600; font-size: 14px; color: #fff; margin: 0 0 4px 0;">${crew.crew_name}</h3>
-            <p style="font-size: 12px; color: #888; margin: 0;">${crew.crew_id}</p>
-            <p style="font-size: 12px; color: #888; margin: 4px 0;">Status: ${crew.status}</p>
-            <p style="font-size: 12px; color: #888; margin: 0;">${crew.vehicle_type} • ${crew.team_size} members</p>
-          </div>
-        `, { className: 'custom-popup crew-popup', maxWidth: 280 })
+        .bindTooltip(tooltipContent, { direction: 'top', offset: [0, -18], opacity: 0.95 })
         .on('click', () => onCrewClick?.(crew));
 
       layer.addLayer(marker);
@@ -579,7 +587,7 @@ export function OutageMapView({
         }
       }
     });
-  }, [showCrews, crews, scenarios, onCrewClick]);
+  }, [showCrews, crews, scenarios, selectedEventId, onCrewClick]);
 
   // Update weather
   useEffect(() => {
