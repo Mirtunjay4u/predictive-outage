@@ -54,33 +54,33 @@ export function AppSidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 248 }}
+      animate={{ width: collapsed ? 68 : 240 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar"
       role="complementary"
       aria-label="Application sidebar"
     >
-      <div className="flex min-h-16 items-center border-b border-sidebar-border px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary">
-            <Bot className="h-5 w-5 text-primary-foreground" />
+      <div className="flex min-h-14 items-center border-b border-sidebar-border px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary">
+            <Bot className="h-4 w-4 text-primary-foreground" />
           </div>
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex min-w-0 flex-col">
-              <span className="text-sm font-bold leading-tight text-sidebar-foreground">Operator Copilot</span>
-              <span className="mt-0.5 text-[10px] leading-tight text-sidebar-foreground/60">Predictive Outage Management</span>
+              <span className="text-[13px] font-semibold leading-tight text-sidebar-foreground">Operator Copilot</span>
+              <span className="mt-0.5 text-[9px] leading-tight text-sidebar-foreground/50">Predictive Outage Mgmt</span>
             </motion.div>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-3" role="navigation" aria-label="Main navigation">
+      <nav className="flex-1 space-y-3 overflow-y-auto px-2.5 py-2.5" role="navigation" aria-label="Main navigation">
         {navGroups.map((group) => (
-          <div key={group.label} className="space-y-1.5">
+          <div key={group.label} className="space-y-0.5">
             {!collapsed && (
-              <div className="flex items-center gap-2 px-2 pt-1">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/50">{group.label}</span>
-                <div className="h-px flex-1 bg-sidebar-border/70" />
+              <div className="flex items-center gap-2 px-2 pt-1 pb-0.5">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">{group.label}</span>
+                <div className="h-px flex-1 bg-sidebar-border/50" />
               </div>
             )}
 
@@ -91,11 +91,11 @@ export function AppSidebar() {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'group/nav-item flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-colors',
+                    'group/nav-item flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none transition-colors',
                     'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar',
                     isActive
                       ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                   )}
                 >
                   <item.icon className="h-4.5 w-4.5 flex-shrink-0" />

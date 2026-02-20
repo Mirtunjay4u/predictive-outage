@@ -25,7 +25,7 @@ export function TopBar({ onSearch }: TopBarProps) {
   const { boardroomMode, setBoardroomMode } = useDashboardUi();
 
   return (
-    <header className="h-16 border-b border-border bg-card/50 px-6 backdrop-blur-sm" role="banner" aria-label="Application header">
+    <header className="h-14 border-b border-border/50 bg-card/80 px-5 backdrop-blur-sm" role="banner" aria-label="Application header">
       <div className="flex h-full w-full items-center justify-between gap-4">
         <search role="search" aria-label="Search scenarios" className="relative w-full max-w-80">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -37,16 +37,22 @@ export function TopBar({ onSearch }: TopBarProps) {
           />
         </search>
 
-        <div className="flex items-center gap-4" role="group" aria-label="User actions">
-          <div className="flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-1">
-            <span className="text-[11px] font-medium text-muted-foreground">Boardroom</span>
-            <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" />
-            {boardroomMode && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">ON</span>}
+        <div className="flex items-center gap-3" role="group" aria-label="User actions">
+          {/* Phase-1 Demo micro-indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+            <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">Phase-1 Demo</span>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning/15 px-2.5 py-1">
-            <FlaskConical className="h-3.5 w-3.5 text-warning" />
-            <span className="text-xs font-medium text-warning">Demo Mode</span>
+          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
+            <span className="text-[10px] font-medium text-muted-foreground">Boardroom</span>
+            <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" className="scale-90" />
+            {boardroomMode && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">ON</span>}
+          </div>
+
+          <div className="flex items-center gap-1 rounded-md border border-warning/20 bg-warning/8 px-2 py-1">
+            <FlaskConical className="h-3 w-3 text-warning/70" />
+            <span className="text-[10px] font-medium text-warning/80">Demo</span>
           </div>
 
           <div className="flex items-center gap-2 border-l border-border/50 pl-3">
@@ -56,9 +62,9 @@ export function TopBar({ onSearch }: TopBarProps) {
             </Avatar>
           </div>
 
-          <Button variant="ghost" size="icon" className="relative transition-colors hover:bg-primary/10" aria-label="Open notifications">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">3</span>
+          <Button variant="ghost" size="icon" className="relative h-8 w-8 transition-colors hover:bg-muted" aria-label="Open notifications">
+            <Bell className="h-4 w-4" />
+            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">3</span>
           </Button>
 
           <DropdownMenu>

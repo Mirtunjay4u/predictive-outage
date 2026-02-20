@@ -27,9 +27,9 @@ export function AppLayout() {
         </main>
         
         {/* Persistent Demo Footer */}
-        <footer className="h-8 border-t border-border/50 bg-muted/30 flex items-center justify-center px-4">
-          <p className="text-[10px] text-muted-foreground tracking-wide">
-            Prototype Demo • Synthetic Data • Decision Support Only • No SCADA/OMS/ADMS Integration
+        <footer className="h-7 border-t border-border/30 bg-surface-0 flex items-center justify-center px-4 shrink-0">
+          <p className="text-[10px] text-muted-foreground/60 tracking-wide font-medium">
+            Operator Copilot – Predictive Outage Management · Phase-1 Decision Intelligence Demonstrator · Synthetic Data · Advisory Only
           </p>
         </footer>
       </div>

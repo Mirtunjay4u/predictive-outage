@@ -535,12 +535,12 @@ export default function OutageMap() {
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* ===== TOP HEADER (fixed, compact) ===== */}
-      <header className="flex-shrink-0 h-14 border-b border-border bg-card px-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Map className="w-5 h-5 text-primary" />
+      <header className="flex-shrink-0 h-12 border-b border-border/50 bg-card/80 backdrop-blur-sm px-4 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <Map className="w-4 h-4 text-primary" />
           <div>
-            <h1 className="text-base font-bold text-foreground leading-tight">Outage Command Map</h1>
-            <p className="text-[10px] text-muted-foreground leading-none">Situational awareness and decision support (Demo)</p>
+            <h1 className="text-sm font-semibold text-foreground leading-tight">Outage Command Map</h1>
+            <p className="text-[9px] text-muted-foreground leading-none">Situational awareness · Decision support · Synthetic data</p>
           </div>
         </div>
         
@@ -554,7 +554,7 @@ export default function OutageMap() {
       </header>
 
       {/* ===== COMMAND SUMMARY ROW ===== */}
-      <div className="flex-shrink-0 border-b border-border bg-muted/30 px-4 py-2">
+      <div className="flex-shrink-0 border-b border-border/30 bg-surface-2/50 px-4 py-1.5">
         <CommandSummary
           scenarios={filteredScenarios}
           onHighPriorityClick={handleHighPriorityClick}
@@ -566,7 +566,7 @@ export default function OutageMap() {
       {/* ===== MAIN CONTENT AREA (two-panel layout) ===== */}
       <div className="flex flex-1 min-h-0">
         {/* LEFT PANEL - Event List (30% width) */}
-        <aside className="w-[360px] min-w-[320px] border-r border-border flex flex-col bg-card">
+        <aside className="w-[340px] min-w-[300px] border-r border-border/40 flex flex-col bg-card">
           {/* Search & Filters Header */}
           <div className="flex-shrink-0 p-4 space-y-3 border-b border-border">
             {/* Search Input */}
