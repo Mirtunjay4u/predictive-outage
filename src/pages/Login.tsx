@@ -71,7 +71,7 @@ export default function Login() {
       <div className="flex gradient-primary relative overflow-hidden md:w-1/2">
         {/* Watermark background image – transmission grid silhouette */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.045]"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
           style={{ backgroundImage: `url(${gridWatermark})` }}
           aria-hidden="true"
         />
