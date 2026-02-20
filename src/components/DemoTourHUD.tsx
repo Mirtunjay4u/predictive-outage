@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipForward, Square, CheckCircle2, RotateCcw, X,
   Shield, Brain, Map, BarChart3, FileText, Layout, CloudLightning,
-  Network, Info, Settings, Zap, Globe,
+  Network, Info, Settings, Zap, Globe, Eye, Activity, Lock, Unlock,
+  AlertTriangle, Target, Gauge, Users, Radio, Layers, Cpu, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -290,19 +291,109 @@ export function DemoTourHUD() {
     setTourComplete(false);
   }, []);
 
-  // ── Feature summary for completion screen ──
-  const featureSummary = [
-    { icon: Layout, label: 'Operations Dashboard', detail: 'KPIs, alerts, crew workload, Executive Signal' },
-    { icon: BarChart3, label: 'Scenario Playback', detail: 'Pre-Event → Event → Post-Event lifecycle' },
-    { icon: FileText, label: 'Events Triage Queue', detail: 'Severity, ETR bands, critical load, policy status' },
-    { icon: Shield, label: 'Event Detail & SitRep', detail: 'Crew assignment, escalation, hazard correlation' },
-    { icon: Map, label: 'Outage Map', detail: 'Geospatial events, feeder zones, crew positions' },
-    { icon: CloudLightning, label: 'Weather Alerts', detail: 'Hazard exposure, crew safety, weather risk' },
-    { icon: Brain, label: 'Copilot Studio', detail: 'AI analysis, guardrails, policy engine' },
-    { icon: BarChart3, label: 'Analytics', detail: 'Priority counts, policy blocks, ETR distribution' },
-    { icon: Network, label: 'Architecture', detail: 'Ingest, orchestrator, guardrails, Nemotron' },
-    { icon: Info, label: 'Governance & Settings', detail: 'Advisory-only, AI modes, integrations' },
+  // ── Domain capability sections ──
+  const domainSections = [
+    {
+      icon: Shield,
+      title: 'Deterministic Operational Policy Enforcement',
+      bullets: [
+        'Severity-based escalation (1–5 utility scale)',
+        'Crew skillset and readiness gating',
+        'Critical load protection logic',
+        'Asset maintenance and lock-state enforcement',
+        'Explicit policy blocks prior to advisory output',
+      ],
+      conclusion: 'All AI-assisted recommendations are bounded by explicit outage management rules aligned with real-world utility governance.',
+    },
+    {
+      icon: Gauge,
+      title: 'Confidence-Based ETR Modeling',
+      bullets: [
+        'ETR confidence bands (High / Medium / Low)',
+        'Uncertainty transparency (no single-point estimates)',
+        'Hazard-adjusted restoration risk',
+        'Crew availability impact on restoration timelines',
+        'Critical load runway sensitivity',
+      ],
+      conclusion: 'Restoration estimates are probabilistic, defensible, and operationally explainable — not opaque AI predictions.',
+    },
+    {
+      icon: CloudLightning,
+      title: 'Hazard-Correlated Risk Scoring',
+      bullets: [
+        'Weather hazard overlays (wind, lightning, flood, heat)',
+        'Vegetation and exposure modeling',
+        'Feeder-level vulnerability assessment',
+        'Crew safety constraints under active hazard zones',
+      ],
+      conclusion: 'Operational risk prioritization reflects real environmental exposure and infrastructure vulnerability.',
+    },
+    {
+      icon: Brain,
+      title: 'Structured AI Guardrails & Explainability',
+      bullets: [
+        'Structured output contracts (no free-form generation)',
+        'Clear separation of Allowed vs Restricted actions',
+        'Policy-based blocking with remediation guidance',
+        'Transparent reasoning pathways',
+      ],
+      conclusion: 'AI augments operator reasoning within safety boundaries — it does not override operational governance.',
+    },
+    {
+      icon: Map,
+      title: 'Geospatial Situational Awareness',
+      bullets: [
+        'Real-time outage visualization',
+        'Feeder zone mapping',
+        'Crew dispatch tracking',
+        'Critical infrastructure overlays',
+        'Lifecycle progression (Pre-Event → Event → Post-Event)',
+      ],
+      conclusion: 'The system functions as a grid resilience command interface — not just a reporting dashboard.',
+    },
+    {
+      icon: Network,
+      title: 'Governance-First Architecture',
+      bullets: [
+        'Advisory-only control posture',
+        'No live SCADA / OMS / ADMS actuation',
+        'Deterministic rule engine precedes AI inference',
+        'Observability and compliance readiness',
+        'Enterprise integration pathway (Phase-2)',
+      ],
+      conclusion: 'The architecture aligns with regulated utility operational standards and minimizes AI-related control risk.',
+    },
   ];
+
+  const aiImpactPoints = [
+    'AI-assisted triage without autonomous switching',
+    'Explainable restoration guidance',
+    'Policy-aware recommendation filtering',
+    'Hazard-informed outage prioritization',
+    'Transparent uncertainty communication',
+    'Human-in-the-loop decision governance',
+  ];
+
+  const postureSummary = [
+    { label: 'System Risk Index', value: 'Stabilized', color: 'text-green-500' },
+    { label: 'Critical Load Exposure', value: 'Reduced', color: 'text-green-500' },
+    { label: 'Policy Violations', value: 'None', color: 'text-green-500' },
+    { label: 'Crew Deployment Status', value: 'Within Threshold', color: 'text-green-500' },
+    { label: 'AI Confidence Band', value: 'High', color: 'text-primary' },
+  ];
+
+  // Greeting animation state
+  const [showGreeting, setShowGreeting] = useState(false);
+  const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (tourComplete) {
+      greetingTimerRef.current = setTimeout(() => setShowGreeting(true), 1200);
+    } else {
+      setShowGreeting(false);
+    }
+    return () => { if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current); };
+  }, [tourComplete]);
 
   // ── Tour completion celebration ──
   if (tourComplete) {
@@ -312,69 +403,214 @@ export function DemoTourHUD() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/85 backdrop-blur-md"
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            initial={{ scale: 0.92, opacity: 0, y: 30 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="w-[560px] max-w-[95vw] rounded-xl border border-border/60 bg-card shadow-2xl overflow-hidden"
+            exit={{ scale: 0.92, opacity: 0, y: 30 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+            className="w-[780px] max-w-[95vw] max-h-[92vh] rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden flex flex-col"
           >
-            {/* Header gradient */}
-            <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+            {/* Gradient header bar */}
+            <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary flex-shrink-0" />
 
-            <div className="p-6">
-              <div className="text-center mb-5">
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1 px-7 py-6 space-y-6">
+              {/* ── Title Block ── */}
+              <div className="text-center space-y-3">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.2 }}
-                  className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3"
+                  transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.15 }}
+                  className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border border-primary/20"
                 >
-                  <CheckCircle2 className="w-8 h-8 text-primary" />
+                  <CheckCircle2 className="w-9 h-9 text-primary" />
                 </motion.div>
-                <h2 className="text-lg font-semibold text-foreground">Executive Demo Complete</h2>
-                <p className="text-xs text-muted-foreground mt-1">
-                  All {tourSteps.length} steps completed — full platform walkthrough delivered
-                </p>
+                <motion.h2
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                  className="text-xl font-bold tracking-tight text-foreground"
+                >
+                  Executive Demonstration Complete
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.35 }}
+                  className="text-xs text-muted-foreground leading-relaxed max-w-lg mx-auto"
+                >
+                  AI-Constrained Decision Intelligence for Utility Outage Operations
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.45 }}
+                  className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-xl mx-auto"
+                >
+                  This guided demonstration validated the platform's ability to combine deterministic operational policy with explainable AI reasoning — without introducing autonomous control risk.
+                </motion.p>
               </div>
 
-              {/* Feature summary grid */}
-              <div className="space-y-1 mb-5 max-h-[320px] overflow-y-auto pr-1">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-2">
-                  Features Demonstrated
+              {/* ── Operational Capabilities Proven ── */}
+              <div>
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary mb-3">
+                  Operational Capabilities Proven
                 </h3>
-                {featureSummary.map((feat, i) => (
-                  <motion.div
-                    key={feat.label}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + i * 0.04 }}
-                    className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/40"
-                  >
-                    <feat.icon className="w-3.5 h-3.5 text-primary flex-shrink-0" strokeWidth={1.75} />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[11px] font-medium text-foreground">{feat.label}</span>
-                      <span className="text-[10px] text-muted-foreground ml-2">{feat.detail}</span>
-                    </div>
-                    <CheckCircle2 className="w-3 h-3 text-primary/60 flex-shrink-0" />
-                  </motion.div>
-                ))}
+                <div className="space-y-3">
+                  {domainSections.map((section, si) => (
+                    <motion.div
+                      key={section.title}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + si * 0.08 }}
+                      className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3"
+                    >
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <section.icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
+                        </div>
+                        <h4 className="text-[12px] font-semibold text-foreground">{section.title}</h4>
+                      </div>
+                      <ul className="space-y-0.5 pl-8 mb-2">
+                        {section.bullets.map((b) => (
+                          <li key={b} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
+                            <span className="text-primary/60 mt-[3px]">•</span>
+                            <span>{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="pl-8">
+                        <p className="text-[10px] italic text-accent font-medium leading-snug">
+                          Domain Conclusion: {section.conclusion}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* ── AI Impact in Utility Context ── */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-accent" />
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+                    AI Impact in Utility Context
+                  </h3>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  This platform demonstrates the responsible application of AI in grid operations:
+                </p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-1">
+                  {aiImpactPoints.map((pt) => (
+                    <div key={pt} className="flex items-start gap-1.5">
+                      <CheckCircle2 className="w-3 h-3 text-accent/70 mt-[2px] flex-shrink-0" />
+                      <span className="text-[10px] text-foreground/80">{pt}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── Operational Posture Summary ── */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.1 }}
+                className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3"
+              >
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
+                  Operational Posture Summary (Demo Scenario)
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {postureSummary.map((item) => (
+                    <div key={item.label} className="flex flex-col gap-0.5 px-2 py-1.5 rounded-md bg-card/60">
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
+                      <span className={cn('text-[11px] font-bold', item.color)}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ── Final Positioning Statement ── */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+                className="border-l-2 border-primary/50 pl-4 py-1"
+              >
+                <p className="text-[11px] text-foreground/90 leading-relaxed font-medium italic">
+                  This solution represents a defensible, AI-constrained decision-support layer for electric utility outage management — designed to enhance operator judgment, improve restoration transparency, and strengthen grid resilience without introducing automation risk.
+                </p>
+              </motion.div>
+
+              {/* ── Animated Greeting ── */}
+              <AnimatePresence>
+                {showGreeting && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+                    className="text-center py-4"
+                  >
+                    <motion.div
+                      animate={{
+                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                      }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                      className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent"
+                    >
+                      <span className="text-lg font-bold tracking-tight">
+                        Thank you for watching the Executive Demo
+                      </span>
+                    </motion.div>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className="text-[10px] text-muted-foreground mt-1"
+                    >
+                      AI-Constrained Decision Intelligence · Utility Outage Operations · Phase-1
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Sticky Action Bar ── */}
+            <div className="flex-shrink-0 border-t border-border/40 bg-card/95 backdrop-blur-sm px-7 py-4">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <Button
                   onClick={handleRestart}
-                  className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
+                  className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  Restart Tour
+                  Restart Executive Tour
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => { setTourComplete(false); navigate('/dashboard'); }}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Explore System Manually
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setTourComplete(false); navigate('/architecture'); }}
+                >
+                  <Network className="w-4 h-4 mr-2" />
+                  View Technical Architecture
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={handleDismissComplete}
-                  className="flex-1"
+                  className="ml-auto"
                 >
                   <X className="w-4 h-4 mr-2" />
                   Close
