@@ -6,9 +6,11 @@ import {
   Shield, Brain, Map, BarChart3, FileText, Layout, CloudLightning,
   Network, Info, Settings, Zap, Globe, Eye, Activity, Lock, Unlock,
   AlertTriangle, Target, Gauge, Users, Radio, Layers, Cpu, Sparkles,
+  Volume2, VolumeX, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTourNarration } from '@/hooks/useTourNarration';
 
 const STORM_EVENT_ID = '471105eb-fbf9-43c1-8cc5-ad8214abfed8';
 
@@ -159,6 +161,7 @@ export function DemoTourHUD() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const autoActionFiredRef = useRef<Set<number>>(new Set());
+  const { isMuted, isLoading: narrationLoading, toggleMute, playStepNarration, stopNarration } = useTourNarration();
 
   // Listen for tour start events from DemoScriptModal
   useEffect(() => {
@@ -195,8 +198,12 @@ export function DemoTourHUD() {
     // Show tooltip after a short delay
     setShowTooltip(false);
     const tooltipTimer = setTimeout(() => setShowTooltip(true), 1500);
-    return () => clearTimeout(tooltipTimer);
-  }, [currentStep, isPlaying, navigate]);
+    // Trigger narration after tooltip appears
+    const narrationTimer = setTimeout(() => {
+      if (!isPaused) playStepNarration(currentStep);
+    }, 2000);
+    return () => { clearTimeout(tooltipTimer); clearTimeout(narrationTimer); };
+  }, [currentStep, isPlaying, navigate, playStepNarration, isPaused]);
 
   // Progress timer + auto-actions
   useEffect(() => {
@@ -230,6 +237,7 @@ export function DemoTourHUD() {
           setIsPlaying(false);
           setStepProgress(100);
           setTourComplete(true);
+          stopNarration();
         }
       }
     }, 50);
@@ -264,10 +272,11 @@ export function DemoTourHUD() {
 
   const handleStop = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    stopNarration();
     setIsPlaying(false);
     setIsPaused(false);
     setStepProgress(0);
-  }, []);
+  }, [stopNarration]);
 
   const handleStepClick = useCallback((index: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -758,6 +767,28 @@ export function DemoTourHUD() {
 
               {/* Controls */}
               <div className="flex items-center gap-1 flex-shrink-0">
+                {/* Narration mute/unmute */}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className={cn(
+                    'h-7 w-7',
+                    isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
+                  )}
+                  onClick={toggleMute}
+                  title={isMuted ? 'Unmute narration' : 'Mute narration'}
+                >
+                  {narrationLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : isMuted ? (
+                    <VolumeX className="h-3.5 w-3.5" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+
+                <div className="w-px h-4 bg-border/40 mx-0.5" />
+
                 {isPaused ? (
                   <Button
                     size="icon"
