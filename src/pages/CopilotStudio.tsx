@@ -33,6 +33,7 @@ import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
 import { OperatorApprovalGate } from '@/components/copilot/OperatorApprovalGate';
 import { EventDecisionTimeline } from '@/components/copilot/EventDecisionTimeline';
 import { useInsertDecisionLog } from '@/hooks/useDecisionLog';
+import { SystemScopePanel } from '@/components/copilot/SystemScopePanel';
 import type { PolicyEvalResult } from '@/hooks/usePolicyEvaluation';
 
 // ─── Response history entry ──────────────────────────────────────────────────
@@ -676,6 +677,8 @@ export default function CopilotStudio() {
             </CardContent>
           </Card>
         </div>
+        {/* System Scope Panel */}
+        <SystemScopePanel className="max-w-7xl mx-auto mt-6" />
       </main>
     </div>
   );

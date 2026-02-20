@@ -43,6 +43,7 @@ import {
   import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
 import { EventDecisionTimeline } from "@/components/copilot/EventDecisionTimeline";
+import { SystemScopePanel } from "@/components/copilot/SystemScopePanel";
  import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
  
  export default function EventDetails() {
@@ -282,6 +283,9 @@ import { EventDecisionTimeline } from "@/components/copilot/EventDecisionTimelin
 
               {/* Decision Timeline */}
               <EventDecisionTimeline eventId={id ?? null} maxHeight="400px" />
+
+              {/* System Scope */}
+              <SystemScopePanel />
             </div>
  
            {/* Right Column - Sidebar (1/3) */}
