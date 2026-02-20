@@ -63,8 +63,8 @@ function triageBucket(s: Scenario): Bucket {
 // ── Tiny summary stat chip ────────────────────────────────────────────────────
 function StatChip({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return (
-    <div className={cn('rounded-lg border border-border/50 bg-card px-3 py-2 flex flex-col gap-0.5', accent)}>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+    <div className={cn('rounded-lg border border-border/40 bg-surface-1 px-3 py-2.5 flex flex-col gap-0.5', accent)}>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">{label}</p>
       <p className="text-xl font-semibold tabular-nums text-foreground">{value}</p>
     </div>
   );
@@ -166,7 +166,7 @@ function TriageSection({
   const [open, setOpen] = useState(defaultOpen ?? true);
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card overflow-hidden shadow-sm">
+    <div className="rounded-lg border border-border/40 bg-surface-1 overflow-hidden">
       {/* Section header */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -432,8 +432,8 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="mx-auto max-w-[1600px] px-4 py-5 lg:px-6 space-y-5">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-6 space-y-4">
 
         {/* ── Header ── */}
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
@@ -441,8 +441,8 @@ export default function Events() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Activity className="h-5 w-5 text-primary" />
-                <h1 className="text-xl font-bold text-foreground">Operational Events</h1>
-                <span className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase tracking-wide">
+                <h1 className="text-lg font-semibold text-foreground">Operational Events</h1>
+                <span className="rounded border border-border/50 bg-muted/30 px-2 py-0.5 text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Rule Engine Gateway
                 </span>
               </div>

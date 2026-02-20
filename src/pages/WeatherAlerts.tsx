@@ -606,15 +606,15 @@ export default function WeatherAlerts() {
   return (
     <div className="flex flex-col h-full overflow-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 shrink-0">
+        <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <CloudLightning className="w-4.5 h-4.5 text-primary" />
+            <CloudLightning className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-foreground leading-tight">Hazard Intelligence</h1>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Operational hazard impacts derived from event data and rule-engine outputs • Advisory only
+              Operational hazard impacts derived from event data and rule-engine outputs · Advisory only
             </p>
           </div>
         </div>
@@ -633,7 +633,7 @@ export default function WeatherAlerts() {
       </div>
 
       {/* Grid conditions strip */}
-      <div className="px-6 py-2 border-b border-border/30 bg-muted/20 shrink-0">
+      <div className="px-5 py-2 border-b border-border/20 bg-surface-2/50 shrink-0">
         <div className="flex items-center gap-2 overflow-x-auto">
           <span className="text-[10px] font-medium text-muted-foreground/80 whitespace-nowrap mr-1">
             Grid Conditions
@@ -661,9 +661,9 @@ export default function WeatherAlerts() {
       {/* ── Crew Safety Status Banner ── */}
       <CrewSafetyBanner hazardGroups={hazardGroups} />
 
-      <div className="p-6 space-y-5">
+      <div className="p-5 space-y-4">
         {/* ── KPI Strip ── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
           <Card className="border-amber-300/40 bg-amber-50/30 dark:border-amber-500/25 dark:bg-amber-500/[0.03] shadow-sm">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">

@@ -211,20 +211,20 @@ export default function Analytics() {
     .map(([name, count]) => ({ name, count, fill: CONFIDENCE_COLORS[name] || 'hsl(215, 20%, 65%)' }));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-6">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
+        className="mb-5"
       >
-        <h1 className="text-xl font-semibold mb-1 text-foreground">Operational Analytics</h1>
-        <p className="text-sm text-muted-foreground">
-          Rule-engine-driven KPIs derived from live event data and safety policy evaluation
+        <h1 className="text-lg font-semibold mb-0.5 text-foreground">Operational Analytics</h1>
+        <p className="text-xs text-muted-foreground">
+          Rule-engine-driven KPIs derived from event data and safety policy evaluation · Advisory only
         </p>
       </motion.div>
 
       {/* ── 6 KPI Cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <AnalyticsKPI
             label="Active Events"
@@ -294,10 +294,10 @@ export default function Analytics() {
       </div>
 
       {/* ── 2 Compact Charts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Events by Outage Type */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/40 shadow-none">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-[13px] font-medium">Events by Outage Type</CardTitle>
               <CardDescription className="text-xs">All events grouped by classification</CardDescription>
@@ -344,7 +344,7 @@ export default function Analytics() {
 
         {/* Active Events by ETR Confidence */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/40 shadow-none">
             <CardHeader className="pb-2 pt-4 px-5">
               <CardTitle className="text-[13px] font-medium">Active Events by ETR Confidence</CardTitle>
               <CardDescription className="text-xs">Confidence distribution of restoration estimates</CardDescription>
@@ -387,8 +387,8 @@ export default function Analytics() {
       </div>
 
       {/* Footer disclaimer */}
-      <p className="text-[10px] text-muted-foreground/50 mt-6 text-center">
-        Metrics derived from demo event data and deterministic rule-engine outputs. Advisory only — not for operational control.
+      <p className="text-[10px] text-muted-foreground/40 mt-5 text-center">
+        Metrics derived from demo event data and deterministic rule-engine outputs · Advisory only — not for operational control
       </p>
     </div>
   );

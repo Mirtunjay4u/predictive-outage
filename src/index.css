@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Modern SaaS palette - slate/navy with teal accents */
+    /* Enterprise war-room palette — slate/navy with teal accents */
     --background: 210 20% 98%;
     --foreground: 222 47% 11%;
 
@@ -41,7 +41,12 @@
     --input: 214 32% 91%;
     --ring: 217 91% 60%;
 
-    --radius: 0.625rem;
+    --radius: 0.5rem;
+
+    /* Surface elevation tokens */
+    --surface-0: 210 20% 98%;
+    --surface-1: 0 0% 100%;
+    --surface-2: 210 30% 96%;
 
     /* Sidebar */
     --sidebar-background: 222 47% 11%;
@@ -56,11 +61,11 @@
     /* Custom tokens */
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(173 80% 40%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
-    --shadow-card: 0 1px 3px 0 hsl(222 47% 11% / 0.08), 0 1px 2px -1px hsl(222 47% 11% / 0.08);
-    --shadow-elevated: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.1);
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 2px 6px -1px hsl(222 47% 11% / 0.06), 0 1px 3px -1px hsl(222 47% 11% / 0.06);
+    --shadow-lg: 0 6px 12px -3px hsl(222 47% 11% / 0.08), 0 3px 6px -3px hsl(222 47% 11% / 0.06);
+    --shadow-card: 0 1px 2px 0 hsl(222 47% 11% / 0.04);
+    --shadow-elevated: 0 4px 12px -2px hsl(222 47% 11% / 0.08), 0 2px 4px -2px hsl(222 47% 11% / 0.04);
   }
 
   .dark {
@@ -98,6 +103,11 @@
     --input: 217 33% 17%;
     --ring: 217 91% 60%;
 
+    /* Surface elevation tokens — subtle layering */
+    --surface-0: 222 47% 6%;
+    --surface-1: 222 47% 9%;
+    --surface-2: 222 40% 12%;
+
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
@@ -117,7 +127,15 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
   }
+
+  /* Enterprise typography scale */
+  h1 { @apply text-xl font-semibold tracking-tight leading-tight; }
+  h2 { @apply text-lg font-semibold tracking-tight leading-snug; }
+  h3 { @apply text-base font-semibold leading-snug; }
+  h4 { @apply text-sm font-semibold leading-snug; }
 
   /* Prevent layout overflow globally */
   html, body, #root {

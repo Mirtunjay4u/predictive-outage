@@ -290,31 +290,31 @@ export default function CopilotStudio() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4">
+      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-5 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bot className="w-4.5 h-4.5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Operator Copilot</h1>
-              <p className="text-sm text-muted-foreground">Strict Output Contract — Decision Support Only</p>
+              <h1 className="text-lg font-semibold text-foreground">Operator Copilot</h1>
+              <p className="text-[11px] text-muted-foreground">Strict Output Contract — Decision Support Only</p>
             </div>
-            <Badge variant="outline" className="ml-auto bg-warning/10 text-warning border-warning/30">
+            <Badge variant="outline" className="ml-auto text-[10px] bg-muted/30 text-muted-foreground border-border/50">
               Advisory Only
             </Badge>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-[380px_1fr] gap-8 max-w-7xl mx-auto">
+      <main className="container mx-auto px-5 py-6">
+        <div className="grid lg:grid-cols-[360px_1fr] gap-6 max-w-7xl mx-auto">
           {/* ─── Left: Controls ──────────────────────────────────────────── */}
           <div className="space-y-6">
             {/* Event Selector */}
-            <Card className="shadow-card border-border/50">
+            <Card className="border-border/40 shadow-none">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Activity className="w-4 h-4 text-primary" />
@@ -376,7 +376,7 @@ export default function CopilotStudio() {
             </Card>
 
             {/* Mode + Run */}
-            <Card className="shadow-card border-border/50">
+            <Card className="border-border/40 shadow-none">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
@@ -467,7 +467,7 @@ export default function CopilotStudio() {
           </div>
 
           {/* ─── Right: Strict Section Renderer ────────────────────────── */}
-          <Card className="shadow-card border-border/50">
+          <Card className="border-border/40 shadow-none">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
