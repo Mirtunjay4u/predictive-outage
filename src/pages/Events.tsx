@@ -473,7 +473,7 @@ export default function Events() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.05 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch"
           >
             <StatChip label="Total Events" value={stats.total} />
             <StatChip label="Active Outages" value={stats.active} />
