@@ -4,6 +4,7 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTi
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime, safeTruncate } from '@/lib/dashboard';
 import { cn } from '@/lib/utils';
 
@@ -54,6 +55,7 @@ export function SupportingSignalsSheet({
   const uncertaintyRef = useRef<HTMLElement | null>(null);
   const tradeoffsRef = useRef<HTMLElement | null>(null);
   const actionsRef = useRef<HTMLElement | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!open) return;
@@ -65,6 +67,7 @@ export function SupportingSignalsSheet({
   const copySummary = async () => {
     const text = `${title}\n${summary}\nSource: ${sourceLabel}\nConfidence: ${confidence}`;
     await navigator.clipboard.writeText(text);
+    toast({ title: 'Copied', description: 'Summary copied to clipboard.' });
   };
 
   return (
