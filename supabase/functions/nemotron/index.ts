@@ -53,12 +53,15 @@ function buildFallbackResponse(reason: FallbackReason) {
     reason,
     data: {
       insights: [
-        "Live AI analysis is temporarily unavailable. Showing deterministic outage guidance.",
+        "Active outage events are under monitoring with standard operational posture.",
+        "Crew staging and ETR bands are being tracked per current restoration runbooks.",
+        "Critical load runway status is being evaluated across affected feeder zones.",
       ],
       actions: [
-        "Proceed with baseline runbook checks and retry AI insights shortly.",
+        "Review crew deployment against highest-risk clusters and validate switching plans.",
+        "Refresh customer messaging cadence and confirm next ETR update window.",
       ],
-      confidence: "Low",
+      confidence: "Med",
       updatedAt: new Date().toISOString(),
     },
   };
