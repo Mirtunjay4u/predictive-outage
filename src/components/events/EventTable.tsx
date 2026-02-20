@@ -384,9 +384,9 @@ export function EventTable({
     : <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
   return (
     <div className={cn('bg-card overflow-hidden', bordered && 'rounded-xl border border-border/50 shadow-sm')}>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-[calc(100vh-260px)]">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_hsl(var(--border))]">
             <TableRow className="hover:bg-transparent bg-muted/30">
               <TableHead className="font-semibold min-w-[200px]">Event / OMS Tag</TableHead>
               <TableHead className="font-semibold min-w-[80px]">Phase</TableHead>
@@ -449,9 +449,16 @@ export function EventTable({
                         </span>
                       )}
                       {scenario.location_name && (
-                        <p className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
-                          {scenario.location_name}{scenario.service_area && ` · ${scenario.service_area}`}
-                        </p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-xs text-muted-foreground truncate max-w-[200px] mt-0.5">
+                              {scenario.location_name}{scenario.service_area && ` · ${scenario.service_area}`}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[300px]">
+                            {scenario.location_name}{scenario.service_area && ` · ${scenario.service_area}`}
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       {scenario.customers_impacted != null && (
                         <p className="text-xs text-muted-foreground tabular-nums">

@@ -1300,33 +1300,56 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
               {/* ── Policy Status Badge ──────────────────────────────── */}
-              {/* Boardroom-safe: always bg-tint + border; BLOCK adds subtle glow */}
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all duration-300',
-                  !policyView
-                    ? 'border-border/50 bg-muted/40 text-muted-foreground'
-                    : policyGate === 'BLOCK'
-                      ? 'border-red-400/35 bg-red-500/20 text-red-200 shadow-[0_0_12px_rgba(248,113,113,0.20)]'
-                      : policyGate === 'WARN'
-                        ? 'border-amber-400/30 bg-amber-500/15 text-amber-200'
-                        : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200',
-                )}
-                aria-label={`Policy gate: ${!policyView ? 'UNKNOWN' : policyGate}`}
-                title={policyView ? gateReason : 'No policy evaluation run yet.'}
-              >
-                {!policyView && <ShieldCheck className="h-2.5 w-2.5 opacity-40" />}
-                {policyView && policyGate === 'BLOCK' && <ShieldX className="h-2.5 w-2.5" />}
-                {policyView && policyGate === 'WARN' && <ShieldAlert className="h-2.5 w-2.5" />}
-                {policyView && policyGate === 'PASS' && <ShieldCheck className="h-2.5 w-2.5" />}
-                {!policyView
-                  ? 'POLICY UNKNOWN'
-                  : policyGate === 'BLOCK'
-                    ? 'POLICY BLOCKED'
-                    : policyGate === 'WARN'
-                      ? 'POLICY WARN'
-                      : 'POLICY CLEAR'}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide transition-all duration-300 cursor-default',
+                      !policyView
+                        ? 'border-border/50 bg-muted/40 text-muted-foreground'
+                        : policyGate === 'BLOCK'
+                          ? 'border-red-400/35 bg-red-500/20 text-red-200 shadow-[0_0_12px_rgba(248,113,113,0.20)]'
+                          : policyGate === 'WARN'
+                            ? 'border-amber-400/30 bg-amber-500/15 text-amber-200'
+                            : 'border-emerald-400/30 bg-emerald-500/15 text-emerald-200',
+                    )}
+                    aria-label={`Policy gate: ${!policyView ? 'UNKNOWN' : policyGate}`}
+                  >
+                    {!policyView && <ShieldCheck className="h-2.5 w-2.5 opacity-40" />}
+                    {policyView && policyGate === 'BLOCK' && <ShieldX className="h-2.5 w-2.5" />}
+                    {policyView && policyGate === 'WARN' && <ShieldAlert className="h-2.5 w-2.5" />}
+                    {policyView && policyGate === 'PASS' && <ShieldCheck className="h-2.5 w-2.5" />}
+                    {!policyView
+                      ? 'POLICY UNKNOWN'
+                      : policyGate === 'BLOCK'
+                        ? 'POLICY BLOCKED'
+                        : policyGate === 'WARN'
+                          ? 'POLICY WARN'
+                          : 'POLICY CLEAR'}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[280px] p-2.5">
+                  <p className="text-[10px] font-semibold mb-1">
+                    {!policyView ? 'No policy evaluation run yet.' : `Gate: ${policyGate}`}
+                  </p>
+                  {policyView && gateReason && (
+                    <p className="text-[10px] text-muted-foreground mb-1">Why: {gateReason}</p>
+                  )}
+                  {policyView && operationalBlockedActions.length > 0 && (
+                    <div className="text-[9px] text-muted-foreground space-y-0.5">
+                      {operationalBlockedActions.slice(0, 3).map((ba, i) => (
+                        <p key={i} className="flex items-start gap-1">
+                          <span className="text-red-400 shrink-0">✗</span>
+                          <span>{typeof ba === 'object' && ba?.action ? ba.action : String(ba)}{typeof ba === 'object' && ba?.reason ? ` — ${ba.reason}` : ''}</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {!policyView && (
+                    <p className="text-[9px] text-muted-foreground">Run Copilot to evaluate policy status.</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
               {/* ── Briefing Updated pulse ───────────────────────────── */}
               {/* 1.2 s fade-in/out; suppressed if reduced-motion is preferred */}
               {briefingPulse && (
