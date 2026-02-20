@@ -2422,7 +2422,7 @@ export default function Dashboard() {
         highlights={briefingState.briefing?.insights ?? ['No highlights available']}
         actions={briefingState.briefing?.actions ?? ['No actions available']}
         confidence={briefingState.briefing?.confidence ?? 'Low'}
-        sourceLabel={briefingState.briefing?.source === 'nemotron' ? 'Nemotron' : 'Deterministic fallback'}
+        sourceLabel={briefingState.briefing?.source === 'nemotron' ? 'Nemotron' : 'Model Router'}
         timestamp={briefingState.briefing?.updatedTime ?? dataUpdatedAt}
         compactMetrics={compactMetrics}
         initialSection={selectedSection}

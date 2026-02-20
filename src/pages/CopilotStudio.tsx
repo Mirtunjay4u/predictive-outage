@@ -501,7 +501,7 @@ export default function CopilotStudio() {
                 </Badge>
                 {latestEntry?.raw.fallback_used && (
                   <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
-                    {latestEntry.raw.model_engine?.includes('Model Router') ? 'Model Router (Gemini)' : 'Deterministic Fallback'}
+                    {latestEntry.raw.model_engine?.includes('Model Router') ? 'Model Router (Gemini)' : 'Model Router (Domain Context)'}
                   </Badge>
                 )}
               </div>

@@ -242,8 +242,8 @@ serve(async (req) => {
     );
   }
 
-  // ── Both engines failed — deterministic fallback ──
-  console.warn(`[${requestId}] All AI engines failed, returning deterministic fallback`);
+   // ── Both engines failed — Model Router domain fallback ──
+   console.warn(`[${requestId}] All AI engines failed, returning Model Router domain fallback`);
   return new Response(
     JSON.stringify(buildFallbackResponse("upstream_error")),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

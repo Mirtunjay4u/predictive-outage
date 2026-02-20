@@ -165,7 +165,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                 </Badge>
                 {response?.fallback_used && (
                   <Badge variant="outline" className="text-[10px] h-5 font-normal border-amber-500/30 text-amber-600 dark:text-amber-400">
-                    {response.model_engine?.includes('Model Router') ? 'Model Router' : 'Deterministic Fallback'}
+                    {response.model_engine?.includes('Model Router') ? 'Model Router' : 'Model Router (Domain Context)'}
                   </Badge>
                 )}
             </div>

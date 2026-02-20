@@ -69,7 +69,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
 
       <CardContent className={boardroomMode ? 'space-y-3 px-5 pb-5' : 'space-y-2 px-4 pb-4'}>
         {isLoading && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Refreshing executive signal…</div>}
-        {error && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-3.5 w-3.5" />AI signal unavailable. Showing deterministic fallback.</div>}
+        {error && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-3.5 w-3.5" />AI signal unavailable. Showing Model Router domain response.</div>}
 
         <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-3">
           <p className={boardroomMode ? 'text-2xl font-semibold tracking-tight text-foreground' : 'text-xl font-semibold tracking-tight text-foreground'}>{signal.title}</p>
