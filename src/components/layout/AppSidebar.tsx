@@ -23,7 +23,7 @@ import tcsLogo from '@/assets/tcs-logo.png';
 const navGroups = [
   {
     label: 'Operations',
-    accent: 'blue',
+    accent: 'ops',
     items: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
       { icon: FileText, label: 'Events', path: '/events' },
@@ -32,7 +32,7 @@ const navGroups = [
   },
   {
     label: 'Intelligence',
-    accent: 'teal',
+    accent: 'intel',
     items: [
       { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
       { icon: BarChart3, label: 'Analytics', path: '/analytics' },
@@ -41,7 +41,7 @@ const navGroups = [
   },
   {
     label: 'Platform',
-    accent: 'slate',
+    accent: 'platform',
     items: [
       { icon: Network, label: 'Architecture', path: '/architecture' },
       { icon: BookOpen, label: 'About', path: '/about' },
@@ -50,21 +50,42 @@ const navGroups = [
   },
 ];
 
-const accentStyles: Record<string, { active: string; border: string; glow: string }> = {
-  blue: {
-    active: 'bg-blue-500/12 text-blue-300',
-    border: 'border-l-blue-400',
-    glow: 'shadow-[0_0_12px_rgba(59,130,246,0.15)]',
+/* ── Accent bar & highlight styles per section using CSS vars ── */
+const accentConfig: Record<string, {
+  barGradient: string;
+  activeBg: string;
+  activeText: string;
+  activeGlow: string;
+  hoverBg: string;
+  iconActive: string;
+  headerColor: string;
+}> = {
+  ops: {
+    barGradient: 'bg-gradient-to-b from-[hsl(217,91%,65%)] to-[hsl(217,91%,50%)]',
+    activeBg: 'bg-[hsl(217,91%,60%,0.08)]',
+    activeText: 'text-[hsl(217,91%,75%)]',
+    activeGlow: 'shadow-[0_0_8px_hsl(217,91%,60%,0.12)]',
+    hoverBg: 'hover:bg-[hsl(217,91%,60%,0.05)]',
+    iconActive: 'text-[hsl(217,91%,72%)]',
+    headerColor: 'text-[hsl(217,60%,45%)]',
   },
-  teal: {
-    active: 'bg-teal-500/12 text-teal-300',
-    border: 'border-l-teal-400',
-    glow: 'shadow-[0_0_12px_rgba(20,184,166,0.15)]',
+  intel: {
+    barGradient: 'bg-gradient-to-b from-[hsl(173,80%,45%)] to-[hsl(173,80%,35%)]',
+    activeBg: 'bg-[hsl(173,80%,40%,0.08)]',
+    activeText: 'text-[hsl(173,70%,65%)]',
+    activeGlow: 'shadow-[0_0_8px_hsl(173,80%,40%,0.12)]',
+    hoverBg: 'hover:bg-[hsl(173,80%,40%,0.05)]',
+    iconActive: 'text-[hsl(173,70%,60%)]',
+    headerColor: 'text-[hsl(173,50%,40%)]',
   },
-  slate: {
-    active: 'bg-slate-400/10 text-slate-300',
-    border: 'border-l-slate-400',
-    glow: 'shadow-[0_0_12px_rgba(148,163,184,0.10)]',
+  platform: {
+    barGradient: 'bg-gradient-to-b from-[hsl(215,20%,60%)] to-[hsl(215,20%,48%)]',
+    activeBg: 'bg-[hsl(215,20%,55%,0.07)]',
+    activeText: 'text-[hsl(215,20%,75%)]',
+    activeGlow: 'shadow-[0_0_8px_hsl(215,20%,55%,0.10)]',
+    hoverBg: 'hover:bg-[hsl(215,20%,55%,0.04)]',
+    iconActive: 'text-[hsl(215,20%,70%)]',
+    headerColor: 'text-[hsl(215,15%,42%)]',
   },
 };
 
@@ -81,6 +102,7 @@ export function AppSidebar() {
       role="complementary"
       aria-label="Application sidebar"
     >
+      {/* ── Brand header ── */}
       <div className="flex min-h-14 items-center border-b border-sidebar-border px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-primary">
@@ -95,38 +117,73 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-2.5" role="navigation" aria-label="Main navigation">
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3" role="navigation" aria-label="Main navigation">
         {navGroups.map((group, gi) => {
-          const styles = accentStyles[group.accent];
+          const accent = accentConfig[group.accent];
           return (
-            <div key={group.label}>
-              {/* Section separator (not before first group) */}
-              {gi > 0 && <div className="mx-2 my-2 h-px bg-sidebar-border/60" />}
+            <div key={group.label} className={gi > 0 ? 'mt-1' : ''}>
+              {/* Section divider */}
+              {gi > 0 && <div className="mx-2 mb-2 h-px bg-sidebar-border/50" />}
 
+              {/* Section header */}
               {!collapsed && (
-                <div className="flex items-center gap-2 px-2 pt-1 pb-1">
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">{group.label}</span>
-                  <div className="h-px flex-1 bg-sidebar-border/40" />
+                <div className="flex items-center gap-2 px-2.5 pb-1.5 pt-1">
+                  <span className={cn(
+                    'text-[10px] font-semibold uppercase tracking-[0.16em]',
+                    accent.headerColor,
+                  )}>
+                    {group.label}
+                  </span>
+                  <div className="h-px flex-1 bg-sidebar-border/30" />
                 </div>
               )}
 
+              {/* Nav items */}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const isActive = location.pathname === item.path;
+
                   const link = (
                     <NavLink
                       key={item.path}
                       to={item.path}
                       className={cn(
-                        'group/nav-item flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none transition-all duration-200',
-                        'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar',
+                        'group/nav relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium outline-none',
+                        'transition-all duration-150 ease-out',
+                        'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-1 focus-visible:ring-offset-sidebar',
                         isActive
-                          ? cn(styles.active, styles.glow, 'border-l-2', styles.border)
-                          : 'border-l-2 border-l-transparent text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90',
+                          ? cn(accent.activeBg, accent.activeText, accent.activeGlow)
+                          : cn(
+                              'text-sidebar-foreground/55',
+                              accent.hoverBg,
+                              'hover:text-sidebar-foreground/85',
+                            ),
                       )}
                     >
-                      <item.icon className={cn('h-4 w-4 flex-shrink-0 transition-colors', isActive && 'drop-shadow-sm')} />
-                      {!collapsed && <span>{item.label}</span>}
+                      {/* 3px vertical gradient accent bar */}
+                      {isActive && (
+                        <motion.span
+                          layoutId="nav-accent-bar"
+                          className={cn(
+                            'absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full',
+                            accent.barGradient,
+                          )}
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
+
+                      <item.icon
+                        className={cn(
+                          'h-4 w-4 flex-shrink-0 transition-colors duration-150',
+                          isActive ? accent.iconActive : 'text-sidebar-foreground/45 group-hover/nav:text-sidebar-foreground/70',
+                        )}
+                        strokeWidth={1.75}
+                      />
+
+                      {!collapsed && (
+                        <span className="truncate">{item.label}</span>
+                      )}
                     </NavLink>
                   );
 
@@ -149,12 +206,13 @@ export function AppSidebar() {
         })}
       </nav>
 
+      {/* ── Footer ── */}
       <div className="border-t border-sidebar-border p-3 space-y-3">
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}>
-                <HelpCircle className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground/80" onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}>
+                <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10}>Demo Script</TooltipContent>
@@ -162,10 +220,10 @@ export function AppSidebar() {
         ) : (
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="w-full justify-start gap-3 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground/80 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}
           >
-            <HelpCircle className="h-4 w-4" />
+            <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
             <span className="text-sm font-medium">Demo Script</span>
           </Button>
         )}
@@ -181,6 +239,7 @@ export function AppSidebar() {
         </div>
       </div>
 
+      {/* ── Collapse toggle ── */}
       <Button
         variant="ghost"
         size="icon"
