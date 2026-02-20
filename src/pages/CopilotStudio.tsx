@@ -30,6 +30,7 @@ import type { Asset } from '@/types/asset';
 import { formatEtrPrimary } from '@/lib/etr-format';
 import { getEventSeverity } from '@/lib/severity';
 import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
+import { OperatorApprovalGate } from '@/components/copilot/OperatorApprovalGate';
 import type { PolicyEvalResult } from '@/hooks/usePolicyEvaluation';
 
 // ─── Response history entry ──────────────────────────────────────────────────
@@ -594,6 +595,14 @@ export default function CopilotStudio() {
                       hazardOverlap={latestEntry.hazardOverlap}
                       timestamp={latestEntry.timestamp}
                       policyEval={latestEntry.policyEval}
+                    />
+
+                    {/* Operator Approval Gate */}
+                    <OperatorApprovalGate
+                      contract={latestEntry.contract}
+                      eventName={latestEntry.eventName}
+                      timestamp={latestEntry.timestamp}
+                      modelEngine={latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}
                     />
                   </motion.div>
                 )}
