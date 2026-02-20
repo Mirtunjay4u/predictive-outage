@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bot, Sparkles, AlertTriangle, ShieldAlert, FileText, Copy, Check,
@@ -51,6 +51,7 @@ interface HistoryEntry {
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function CopilotStudio() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Data
   const { data: scenarios, isLoading: scenariosLoading } = useScenariosWithIntelligence();
@@ -473,6 +474,17 @@ export default function CopilotStudio() {
                   Operator Analysis
                 </CardTitle>
                 <div className="flex items-center gap-2">
+                  {latestEntry && !isLoading && selectedEventId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-xs"
+                      onClick={() => navigate(`/event/${selectedEventId}/situation-report`)}
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Generate Report
+                    </Button>
+                  )}
                   {latestEntry && !isLoading && (
                     <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={handleCopy}>
                       {copied ? <><Check className="w-4 h-4 text-green-500" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
