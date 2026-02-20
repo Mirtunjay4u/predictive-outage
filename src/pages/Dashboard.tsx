@@ -434,6 +434,24 @@ export default function Dashboard() {
   type PhaseId = 'detection' | 'risk-scoring' | 'policy-check' | 'ai-briefing' | 'dispatch' | 'recovery';
   const [openPhaseId, setOpenPhaseId] = useState<PhaseId | null>(null);
   const phaseStripRef = useRef<HTMLDivElement>(null);
+  const [sidebarLeftPx, setSidebarLeftPx] = useState(0);
+
+  // Keep sidebarLeftPx in sync with the sidebar's actual rendered width
+  useEffect(() => {
+    const update = () => {
+      const el = document.querySelector('aside[role="complementary"]');
+      if (el) {
+        setSidebarLeftPx(el.getBoundingClientRect().right);
+      }
+    };
+    update();
+    // Watch for sidebar width changes (collapse / expand animation)
+    const ro = new ResizeObserver(update);
+    const el = document.querySelector('aside[role="complementary"]');
+    if (el) ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, []);
 
   // Close the phase popover when clicking outside the strip
   useEffect(() => {
@@ -2098,16 +2116,11 @@ export default function Dashboard() {
         const isGateWarn  = policyGate === 'WARN';
         const POLICY_PHASE_IDX = 2;
 
-        // Detect sidebar width dynamically for portal positioning
-        const sidebarEl = document.querySelector('[data-sidebar="sidebar"]');
-        const sidebarRect = sidebarEl?.getBoundingClientRect();
-        const sidebarLeft = sidebarRect ? sidebarRect.right : 0;
-
         return createPortal(
           <div
             ref={phaseStripRef}
             className="fixed bottom-0 right-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-md shadow-elevated overflow-visible"
-            style={{ left: `${sidebarLeft}px` }}
+            style={{ left: `${sidebarLeftPx}px`, transition: 'left 0.2s ease-in-out' }}
             role="region"
             aria-label="Operational phase timeline"
           >
