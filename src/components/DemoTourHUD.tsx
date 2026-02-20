@@ -161,7 +161,7 @@ export function DemoTourHUD() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const autoActionFiredRef = useRef<Set<number>>(new Set());
-  const { isMuted, isLoading: narrationLoading, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll } = useTourNarration();
+  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll } = useTourNarration();
 
   // Listen for tour start events from DemoScriptModal
   useEffect(() => {
@@ -773,25 +773,44 @@ export function DemoTourHUD() {
 
               {/* Controls */}
               <div className="flex items-center gap-1 flex-shrink-0">
-                {/* Narration mute/unmute */}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className={cn(
-                    'h-7 w-7',
-                    isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
-                  )}
-                  onClick={toggleMute}
-                  title={isMuted ? 'Unmute narration' : 'Mute narration'}
-                >
-                  {narrationLoading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : isMuted ? (
-                    <VolumeX className="h-3.5 w-3.5" />
-                  ) : (
-                    <Volume2 className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                {/* Narration mute/unmute + waveform */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className={cn(
+                      'h-7 w-7',
+                      isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
+                    )}
+                    onClick={toggleMute}
+                    title={isMuted ? 'Unmute narration' : 'Mute narration'}
+                  >
+                    {narrationLoading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : isMuted ? (
+                      <VolumeX className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+
+                  {/* Waveform bars — visible when speaking */}
+                  <div className={cn(
+                    'flex items-center gap-[2px] h-4 transition-opacity duration-300',
+                    isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
+                  )}>
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span
+                        key={i}
+                        className="w-[2px] rounded-full bg-primary/70"
+                        style={{
+                          animation: isSpeaking && !isMuted ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
+                          height: '4px',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
 
                 <div className="w-px h-4 bg-border/40 mx-0.5" />
 
