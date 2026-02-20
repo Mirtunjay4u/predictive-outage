@@ -400,7 +400,7 @@ export default function WeatherAlerts() {
                         <tr
                           key={row.id}
                           className="border-b border-border/20 hover:bg-muted/30 transition-colors cursor-pointer"
-                          onClick={() => navigate(`/event/${row.id}`)}
+                          onClick={() => navigate(`/event/${row.id}?from=hazards`)}
                         >
                           <td className="py-2 pr-3">
                             <span className="font-medium text-foreground truncate block max-w-[180px] flex items-center gap-1.5">
