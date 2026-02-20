@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,6 +31,7 @@ import { deriveSeverity } from '@/components/events/EventDetailPanel';
 import type { Scenario, ScenarioInsert } from '@/types/scenario';
 import { fetchNWSAlerts, fetchWindGrid, type NWSAlertFeature, type WindPoint } from '@/lib/weather';
 import { computeAllWeatherRisks, type WeatherRiskResult } from '@/lib/weather-risk';
+import { useInsertDecisionLog } from '@/hooks/useDecisionLog';
 
 // ── Policy evaluation result type ────────────────────────────────────────────
 type PolicyResult = {
@@ -295,7 +296,41 @@ export default function Events() {
     return computeAllWeatherRisks(filteredScenarios, nwsAlertsData?.features ?? [], windPoints);
   }, [filteredScenarios, nwsAlertsData, windPoints]);
 
-  // Triage buckets
+  // ── Weather API decision log writes ──
+  const insertLog = useInsertDecisionLog();
+  const weatherLogRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!nwsAlertsData || !filteredScenarios.length) return;
+    // Build a fingerprint to avoid duplicate logs on re-render
+    const alertCount = nwsAlertsData.features?.length ?? 0;
+    const fingerprint = `${alertCount}-${filteredScenarios.length}-${windPoints.length}`;
+    if (weatherLogRef.current === fingerprint) return;
+    weatherLogRef.current = fingerprint;
+
+    // Find the top-risk active event to log against
+    const activeEvents = filteredScenarios.filter(s => s.lifecycle_stage === 'Event');
+    const topEvent = activeEvents.length > 0
+      ? activeEvents.reduce((best, s) => {
+          const score = weatherRiskMap.get(s.id)?.score ?? 0;
+          return score > (weatherRiskMap.get(best.id)?.score ?? 0) ? s : best;
+        })
+      : filteredScenarios[0];
+
+    if (!topEvent) return;
+
+    const risk = weatherRiskMap.get(topEvent.id);
+    const eventsWithRisk = filteredScenarios.filter(s => (weatherRiskMap.get(s.id)?.score ?? 0) > 0).length;
+
+    insertLog.mutate({
+      event_id: topEvent.id,
+      source: 'Weather API',
+      trigger: `NWS alert refresh (${alertCount} active alerts, wind grid ${windPoints.length} pts)`,
+      action_taken: `Weather data refreshed — ${eventsWithRisk} events scored. Top: ${risk?.score ?? 0}/100 (${risk?.tier ?? 'N/A'}) for "${topEvent.name}"`,
+      rule_impact: (risk?.score ?? 0) >= 60 ? 'Elevated weather exposure — operator review recommended' : null,
+      metadata: { alertCount, windPoints: windPoints.length, eventsScored: eventsWithRisk, topScore: risk?.score, topTier: risk?.tier },
+    });
+  }, [nwsAlertsData, windPoints, weatherRiskMap]); // eslint-disable-line react-hooks/exhaustive-deps
   const immediate = useMemo(() => filteredScenarios.filter((s) => triageBucket(s) === 'immediate'), [filteredScenarios]);
   const monitoring = useMemo(() => filteredScenarios.filter((s) => triageBucket(s) === 'monitoring'), [filteredScenarios]);
   const resolved = useMemo(() => filteredScenarios.filter((s) => triageBucket(s) === 'resolved'), [filteredScenarios]);
