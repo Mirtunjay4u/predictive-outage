@@ -663,7 +663,7 @@ export default function WeatherAlerts() {
 
       <div className="p-5 space-y-4">
         {/* ── KPI Strip ── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-3 items-stretch">
           <Card className="border-amber-300/40 bg-amber-50/30 dark:border-amber-500/25 dark:bg-amber-500/[0.03] shadow-sm">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
