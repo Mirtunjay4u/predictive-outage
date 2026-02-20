@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CloudLightning, Flame, Droplets, Thermometer, ShieldAlert, Wind,
   TreePine, AlertTriangle, Users, CheckCircle2, XCircle, Activity,
-  ExternalLink, RefreshCw,
+  ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -130,6 +130,65 @@ const severityFromCode = (code: number): 'green' | 'amber' | 'red' => {
   return 'green';
 };
 const dotColor = { green: 'bg-emerald-500', amber: 'bg-amber-500', red: 'bg-red-500' };
+
+/* ------------------------------------------------------------------ */
+/*  Collapsible Radar Map                                             */
+/* ------------------------------------------------------------------ */
+
+function RadarMapSection() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+      <Card className="shadow-sm border-border/50 overflow-hidden">
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 bg-muted/20 hover:bg-muted/30 transition-colors"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Radio className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="font-medium text-sm text-foreground">Live Radar</span>
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0">External</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground hidden sm:block">Windy.com embed — illustrative reference only</span>
+            {open ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+          </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="radar"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="relative w-full" style={{ height: 380 }}>
+                <iframe
+                  src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=in&metricTemp=°F&metricWind=mph&zoom=5&overlay=radar&product=radar&level=surface&lat=33.5&lon=-84.4&detailLat=33.5&detailLon=-84.4&marker=true"
+                  className="absolute inset-0 w-full h-full border-0"
+                  title="Live weather radar"
+                  loading="lazy"
+                  allowFullScreen
+                />
+              </div>
+              <div className="px-5 py-2 border-t border-border/30 bg-muted/10">
+                <p className="text-[10px] text-muted-foreground/60">
+                  External radar feed via Windy.com. For situational awareness only — not connected to operational systems.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                              */
@@ -447,6 +506,9 @@ export default function WeatherAlerts() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* ── Collapsible Live Radar Map ── */}
+        <RadarMapSection />
       </div>
 
       {/* Footer */}
