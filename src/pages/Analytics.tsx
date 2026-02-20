@@ -1,193 +1,193 @@
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Activity, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { useScenarios } from '@/hooks/useScenarios';
-import { useCrews } from '@/hooks/useCrews';
-import type { Scenario } from '@/types/scenario';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
+  AlertTriangle, Activity, ShieldAlert, Clock, ShieldOff, Users,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useScenariosWithIntelligence } from '@/hooks/useScenarios';
+import { useCrews } from '@/hooks/useCrews';
+import { getEventSeverity } from '@/lib/severity';
+import type { ScenarioWithIntelligence } from '@/types/scenario';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Cell,
 } from 'recharts';
+import { cn } from '@/lib/utils';
 
-interface ScenarioListProps {
-  scenarios: Scenario[];
-  title: string;
-  emptyMessage?: string;
+/* ------------------------------------------------------------------ */
+/*  Small reusable KPI card                                           */
+/* ------------------------------------------------------------------ */
+
+interface AnalyticsKPIProps {
+  label: string;
+  value: string | number;
+  sub?: string;
+  icon: React.ReactNode;
+  accent: 'red' | 'amber' | 'sky' | 'blue' | 'violet' | 'emerald';
 }
 
-function ScenarioList({ scenarios, title, emptyMessage = "No scenarios" }: ScenarioListProps) {
+const ACCENT = {
+  red:     'border-red-300/40 bg-red-50/40 dark:border-red-500/25 dark:bg-red-500/[0.04]',
+  amber:   'border-amber-300/40 bg-amber-50/40 dark:border-amber-500/25 dark:bg-amber-500/[0.04]',
+  sky:     'border-sky-300/40 bg-sky-50/40 dark:border-sky-500/25 dark:bg-sky-500/[0.04]',
+  blue:    'border-blue-300/40 bg-blue-50/40 dark:border-blue-500/25 dark:bg-blue-500/[0.04]',
+  violet:  'border-violet-300/40 bg-violet-50/40 dark:border-violet-500/25 dark:bg-violet-500/[0.04]',
+  emerald: 'border-emerald-300/40 bg-emerald-50/40 dark:border-emerald-500/25 dark:bg-emerald-500/[0.04]',
+} as const;
+
+const ICON_ACCENT = {
+  red:     'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400',
+  amber:   'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
+  sky:     'bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400',
+  blue:    'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+  violet:  'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
+  emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400',
+} as const;
+
+const VALUE_ACCENT = {
+  red:     'text-red-600 dark:text-red-400',
+  amber:   'text-amber-600 dark:text-amber-400',
+  sky:     'text-sky-600 dark:text-sky-400',
+  blue:    'text-blue-600 dark:text-blue-400',
+  violet:  'text-violet-600 dark:text-violet-400',
+  emerald: 'text-emerald-600 dark:text-emerald-400',
+} as const;
+
+function AnalyticsKPI({ label, value, sub, icon, accent }: AnalyticsKPIProps) {
   return (
-    <div className="w-72">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
-        <h4 className="font-semibold text-sm text-foreground">{title}</h4>
-        <Badge variant="secondary" className="text-xs">
-          {scenarios.length}
-        </Badge>
-      </div>
-      {scenarios.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-2">{emptyMessage}</p>
-      ) : (
-        <ScrollArea className="h-48">
-          <div className="space-y-2 pr-3">
-            {scenarios.map((scenario) => (
-              <div
-                key={scenario.id}
-                className="p-2.5 rounded-md bg-muted/50 border border-border/50 hover:bg-muted/80 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-medium text-foreground leading-tight truncate flex-1">
-                    {scenario.name}
-                  </p>
-                  {scenario.priority && (
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] shrink-0 ${
-                        scenario.priority === 'high'
-                          ? 'border-destructive/50 text-destructive'
-                          : scenario.priority === 'medium'
-                          ? 'border-warning/50 text-warning'
-                          : 'border-muted-foreground/50 text-muted-foreground'
-                      }`}
-                    >
-                      {scenario.priority}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs text-muted-foreground">
-                    {scenario.lifecycle_stage}
-                  </span>
-                  {scenario.customers_impacted && (
-                    <>
-                      <span className="text-muted-foreground/40">•</span>
-                      <span className="text-xs text-muted-foreground">
-                        {scenario.customers_impacted.toLocaleString()} affected
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+    <Card className={cn('shadow-sm', ACCENT[accent])}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-1">
+              {label}
+            </p>
+            <p className={cn('text-2xl font-semibold tabular-nums tracking-tight', VALUE_ACCENT[accent])}>
+              {value}
+            </p>
+            {sub && (
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-tight">{sub}</p>
+            )}
           </div>
-        </ScrollArea>
-      )}
-    </div>
+          <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', ICON_ACCENT[accent])}>
+            {icon}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-const LIFECYCLE_COLORS: Record<string, string> = {
-  'Pre-Event': 'hsl(45, 93%, 47%)',
-  'Event': 'hsl(199, 89%, 48%)',
-  'Post-Event': 'hsl(160, 84%, 39%)',
-};
+/* ------------------------------------------------------------------ */
+/*  Shared chart tooltip                                              */
+/* ------------------------------------------------------------------ */
 
-const PRIORITY_COLORS: Record<string, string> = {
-  High: 'hsl(0, 84%, 60%)',
-  Medium: 'hsl(45, 93%, 47%)',
-  Low: 'hsl(215, 20%, 65%)',
-};
-
-const SUMMARY_COLORS = [
-  'hsl(199, 89%, 48%)',
-  'hsl(142, 71%, 45%)',
-  'hsl(45, 93%, 47%)',
-  'hsl(0, 84%, 60%)',
-];
-
-function CustomBarTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border/50 bg-background px-3 py-2 text-xs shadow-xl">
       <p className="font-medium text-foreground mb-0.5">{label}</p>
-      <p className="text-muted-foreground">{payload[0].value} scenarios</p>
+      <p className="text-muted-foreground">{payload[0].value} events</p>
     </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                           */
+/* ------------------------------------------------------------------ */
+
+function computeAvgEtrUncertaintyHours(events: ScenarioWithIntelligence[]): number | null {
+  const withBoth = events.filter(e => e.etr_earliest && e.etr_latest);
+  if (withBoth.length === 0) return null;
+  const totalMs = withBoth.reduce((sum, e) => {
+    const diff = new Date(e.etr_latest!).getTime() - new Date(e.etr_earliest!).getTime();
+    return sum + Math.max(0, diff);
+  }, 0);
+  return totalMs / withBoth.length / (1000 * 60 * 60);
+}
+
+function formatHoursMinutes(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Outage type chart colors                                          */
+/* ------------------------------------------------------------------ */
+
+const OUTAGE_TYPE_COLORS: Record<string, string> = {
+  'Storm': 'hsl(199, 89%, 48%)',
+  'High Wind': 'hsl(199, 70%, 55%)',
+  'Lightning': 'hsl(270, 60%, 55%)',
+  'Snow Storm': 'hsl(200, 50%, 70%)',
+  'Wildfire': 'hsl(0, 72%, 51%)',
+  'Vegetation': 'hsl(25, 80%, 50%)',
+  'Flood': 'hsl(190, 90%, 40%)',
+  'Heavy Rain': 'hsl(190, 60%, 55%)',
+  'Heatwave': 'hsl(30, 95%, 52%)',
+  'Equipment Failure': 'hsl(45, 93%, 47%)',
+  'Ice/Snow': 'hsl(200, 50%, 70%)',
+  'Unknown': 'hsl(215, 20%, 65%)',
+  'Others': 'hsl(215, 15%, 55%)',
+};
+
+const CONFIDENCE_COLORS: Record<string, string> = {
+  'HIGH': 'hsl(142, 71%, 45%)',
+  'MEDIUM': 'hsl(45, 93%, 47%)',
+  'LOW': 'hsl(0, 84%, 60%)',
+  'N/A': 'hsl(215, 20%, 65%)',
+};
+
+/* ------------------------------------------------------------------ */
+/*  Page component                                                    */
+/* ------------------------------------------------------------------ */
+
 export default function Analytics() {
-  const { data: scenarios = [] } = useScenarios();
+  const { data: events = [] } = useScenariosWithIntelligence();
   const { data: crews = [] } = useCrews();
 
-  const byLifecycle = {
-    'Pre-Event': scenarios.filter(s => s.lifecycle_stage === 'Pre-Event'),
-    'Event': scenarios.filter(s => s.lifecycle_stage === 'Event'),
-    'Post-Event': scenarios.filter(s => s.lifecycle_stage === 'Post-Event'),
-  };
+  // --- KPI computations ---
+  const activeEvents = events.filter(e => e.lifecycle_stage === 'Event');
+  const highPriorityEvents = events.filter(e => getEventSeverity(e) >= 4);
+  const criticalAtRisk = events.filter(e =>
+    e.has_critical_load &&
+    e.backup_runtime_remaining_hours != null &&
+    e.critical_escalation_threshold_hours != null &&
+    e.backup_runtime_remaining_hours < e.critical_escalation_threshold_hours
+  );
+  const avgUncertainty = computeAvgEtrUncertaintyHours(events);
 
-  const byPriority = {
-    high: scenarios.filter(s => s.priority === 'high'),
-    medium: scenarios.filter(s => s.priority === 'medium'),
-    low: scenarios.filter(s => s.priority === 'low'),
-  };
+  // Policy blocks: events that have blocked actions flagged by rule engine (requires_escalation as proxy)
+  const policyBlockedCount = events.filter(e => e.requires_escalation).length;
 
-  const operatorScenarios = scenarios.filter(s => s.operator_role);
-  const uniqueOperatorCount = new Set(operatorScenarios.map(s => s.operator_role)).size;
+  // Crew constraints: active events with no assigned crew (crew shortage proxy)
+  const activeEventIds = new Set(activeEvents.map(e => e.id));
+  const assignedEventIds = new Set(crews.filter(c => c.assigned_event_id).map(c => c.assigned_event_id));
+  const crewConstraintCount = activeEvents.filter(e => !assignedEventIds.has(e.id)).length;
 
-  const lifecycleData = Object.entries(byLifecycle).map(([stage, s]) => ({
-    name: stage,
-    count: s.length,
-    scenarios: s,
-    fill: LIFECYCLE_COLORS[stage],
-  }));
+  // --- Chart data: Events by outage type (active only) ---
+  const outageTypeCounts: Record<string, number> = {};
+  events.forEach(e => {
+    const t = e.outage_type || 'Unknown';
+    outageTypeCounts[t] = (outageTypeCounts[t] || 0) + 1;
+  });
+  const outageTypeData = Object.entries(outageTypeCounts)
+    .map(([name, count]) => ({ name, count, fill: OUTAGE_TYPE_COLORS[name] || 'hsl(215, 20%, 65%)' }))
+    .sort((a, b) => b.count - a.count);
 
-  const priorityData = Object.entries(byPriority).map(([p, s]) => ({
-    name: p.charAt(0).toUpperCase() + p.slice(1),
-    count: s.length,
-    scenarios: s,
-    fill: PRIORITY_COLORS[p.charAt(0).toUpperCase() + p.slice(1)],
-  }));
-
-  const summaryData = [
-    { name: 'Total', count: scenarios.length, scenarios, fill: SUMMARY_COLORS[0] },
-    { name: 'Active', count: scenarios.filter(s => s.stage).length, scenarios: scenarios.filter(s => s.stage), fill: SUMMARY_COLORS[1] },
-    { name: 'Operators', count: uniqueOperatorCount, scenarios: operatorScenarios, fill: SUMMARY_COLORS[2] },
-    { name: 'High Priority', count: byPriority.high.length, scenarios: byPriority.high, fill: SUMMARY_COLORS[3] },
-  ];
-
-  // Crew metrics
-  const CREW_COLORS: Record<string, string> = {
-    'Available': 'hsl(142, 71%, 45%)',
-    'Dispatched': 'hsl(45, 93%, 47%)',
-    'En Route': 'hsl(199, 89%, 48%)',
-    'On Site': 'hsl(280, 67%, 55%)',
-    'Returning': 'hsl(215, 20%, 65%)',
-  };
-
-  const crewByStatus = {
-    'Available': crews.filter(c => c.status === 'available'),
-    'Dispatched': crews.filter(c => c.status === 'dispatched'),
-    'En Route': crews.filter(c => c.status === 'en_route'),
-    'On Site': crews.filter(c => c.status === 'on_site'),
-    'Returning': crews.filter(c => c.status === 'returning'),
-  };
-
-  const crewData = Object.entries(crewByStatus).map(([status, c]) => ({
-    name: status,
-    count: c.length,
-    fill: CREW_COLORS[status],
-  }));
-
-  const crewSummaryData = [
-    { name: 'Total Crews', count: crews.length, fill: 'hsl(199, 89%, 48%)' },
-    { name: 'Active', count: crews.filter(c => c.status !== 'available').length, fill: 'hsl(45, 93%, 47%)' },
-    { name: 'Avg Team Size', count: crews.length ? Math.round(crews.reduce((sum, c) => sum + c.team_size, 0) / crews.length) : 0, fill: 'hsl(160, 84%, 39%)' },
-    { name: 'Assigned', count: crews.filter(c => c.assigned_event_id).length, fill: 'hsl(280, 67%, 55%)' },
-  ];
-
-  const maxLifecycle = Math.max(...lifecycleData.map(d => d.count), 1);
-  const maxPriority = Math.max(...priorityData.map(d => d.count), 1);
-  const maxSummary = Math.max(...summaryData.map(d => d.count), 1);
-  const maxCrewStatus = Math.max(...crewData.map(d => d.count), 1);
-  const maxCrewSummary = Math.max(...crewSummaryData.map(d => d.count), 1);
+  // --- Chart data: Active events by ETR confidence ---
+  const confidenceCounts: Record<string, number> = { HIGH: 0, MEDIUM: 0, LOW: 0, 'N/A': 0 };
+  activeEvents.forEach(e => {
+    const c = e.etr_confidence || 'N/A';
+    if (c in confidenceCounts) confidenceCounts[c]++;
+    else confidenceCounts['N/A']++;
+  });
+  const confidenceData = Object.entries(confidenceCounts)
+    .filter(([, count]) => count > 0)
+    .map(([name, count]) => ({ name, count, fill: CONFIDENCE_COLORS[name] || 'hsl(215, 20%, 65%)' }));
 
   return (
     <div className="p-6 lg:p-8">
@@ -196,235 +196,152 @@ export default function Analytics() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-xl font-semibold mb-1 text-foreground">Analytics</h1>
-        <p className="text-sm text-muted-foreground">Insights and metrics for your scenarios</p>
+        <h1 className="text-xl font-semibold mb-1 text-foreground">Operational Analytics</h1>
+        <p className="text-sm text-muted-foreground">
+          Rule-engine-driven KPIs derived from live event data and safety policy evaluation
+        </p>
       </motion.div>
 
+      {/* ── 6 KPI Cards ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <AnalyticsKPI
+            label="Active Events"
+            value={activeEvents.length}
+            sub={`${events.length} total across all stages`}
+            icon={<Activity className="w-4 h-4" strokeWidth={1.75} />}
+            accent="sky"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <AnalyticsKPI
+            label="High Priority"
+            value={highPriorityEvents.length}
+            sub="Severity 4–5 events"
+            icon={<AlertTriangle className="w-4 h-4" strokeWidth={1.75} />}
+            accent="red"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <AnalyticsKPI
+            label="Critical Load at Risk"
+            value={criticalAtRisk.length}
+            sub="Backup below escalation threshold"
+            icon={<ShieldAlert className="w-4 h-4" strokeWidth={1.75} />}
+            accent="amber"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <AnalyticsKPI
+            label="Avg ETR Uncertainty"
+            value={avgUncertainty != null ? formatHoursMinutes(avgUncertainty) : '—'}
+            sub="Avg spread (latest − earliest)"
+            icon={<Clock className="w-4 h-4" strokeWidth={1.75} />}
+            accent="blue"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <AnalyticsKPI
+            label="Policy Blocks"
+            value={policyBlockedCount}
+            sub="Events flagged for escalation"
+            icon={<ShieldOff className="w-4 h-4" strokeWidth={1.75} />}
+            accent="violet"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <AnalyticsKPI
+            label="Crew Constraints"
+            value={crewConstraintCount}
+            sub="Active events without assigned crew"
+            icon={<Users className="w-4 h-4" strokeWidth={1.75} />}
+            accent="emerald"
+          />
+        </motion.div>
+      </div>
+
+      {/* ── 2 Compact Charts ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Lifecycle Distribution - Vertical Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        {/* Events by Outage Type */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
-                <Activity className="w-4 h-4 text-muted-foreground" />
-                Lifecycle Stage Distribution
-              </CardTitle>
-              <CardDescription className="text-xs">Scenarios by lifecycle stage</CardDescription>
+              <CardTitle className="text-[13px] font-medium">Events by Outage Type</CardTitle>
+              <CardDescription className="text-xs">All events grouped by classification</CardDescription>
             </CardHeader>
             <CardContent className="px-5 pb-4">
-              <div className="h-[200px]">
+              <div className="h-[220px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={lifecycleData} barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      domain={[0, Math.ceil(maxLifecycle * 1.2)]}
-                    />
-                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {lifecycleData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Clickable legend with popover drill-down */}
-              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
-                {lifecycleData.map((item) => (
-                  <Popover key={item.name}>
-                    <PopoverTrigger asChild>
-                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
-                        {item.name} ({item.count})
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent side="bottom" align="center" className="p-3">
-                      <ScenarioList scenarios={item.scenarios} title={`${item.name} Scenarios`} />
-                    </PopoverContent>
-                  </Popover>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Priority Distribution - Vertical Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
-                <TrendingUp className="w-4 h-4 text-muted-foreground" />
-                Priority Distribution
-              </CardTitle>
-              <CardDescription className="text-xs">Scenarios by priority level</CardDescription>
-            </CardHeader>
-            <CardContent className="px-5 pb-4">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={priorityData} barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      domain={[0, Math.ceil(maxPriority * 1.2)]}
-                    />
-                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {priorityData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
-                {priorityData.map((item) => (
-                  <Popover key={item.name}>
-                    <PopoverTrigger asChild>
-                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
-                        {item.name} ({item.count})
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent side="bottom" align="center" className="p-3">
-                      <ScenarioList scenarios={item.scenarios} title={`${item.name} Priority`} />
-                    </PopoverContent>
-                  </Popover>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Summary Metrics - Vertical Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
-                <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                Summary Metrics
-              </CardTitle>
-              <CardDescription className="text-xs">Key operational indicators at a glance</CardDescription>
-            </CardHeader>
-            <CardContent className="px-5 pb-4">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={summaryData} barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      domain={[0, Math.ceil(maxSummary * 1.2)]}
-                    />
-                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {summaryData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
-                {summaryData.map((item) => (
-                  <Popover key={item.name}>
-                    <PopoverTrigger asChild>
-                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
-                        {item.name}: {item.count}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent side="top" align="center" className="p-3">
-                      <ScenarioList scenarios={item.scenarios} title={item.name} />
-                    </PopoverContent>
-                  </Popover>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Crew Detail Metrics - Vertical Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                Crew Status Distribution
-              </CardTitle>
-              <CardDescription className="text-xs">Field crew deployment overview</CardDescription>
-            </CardHeader>
-            <CardContent className="px-5 pb-4">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={crewData} barCategoryGap="20%">
+                  <BarChart data={outageTypeData} barCategoryGap="18%">
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
                     <XAxis
                       dataKey="name"
                       tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                       axisLine={{ stroke: 'hsl(var(--border))' }}
                       tickLine={false}
+                      interval={0}
+                      angle={-30}
+                      textAnchor="end"
+                      height={50}
                     />
                     <YAxis
                       tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      domain={[0, Math.ceil(maxCrewStatus * 1.2)]}
+                      axisLine={false} tickLine={false} allowDecimals={false}
                     />
-                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                      {crewData.map((entry, i) => (
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={36}>
+                      {outageTypeData.map((entry, i) => (
                         <Cell key={i} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border/30 flex-wrap">
-                {crewData.map((item) => (
+              <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-border/30 flex-wrap">
+                {outageTypeData.slice(0, 6).map(item => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
+                    {item.name} ({item.count})
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Active Events by ETR Confidence */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="text-[13px] font-medium">Active Events by ETR Confidence</CardTitle>
+              <CardDescription className="text-xs">Confidence distribution of restoration estimates</CardDescription>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={confidenceData} barCategoryGap="30%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={{ stroke: 'hsl(var(--border))' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                      axisLine={false} tickLine={false} allowDecimals={false}
+                    />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
+                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                      {confidenceData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-5 mt-2 pt-2 border-t border-border/30">
+                {confidenceData.map(item => (
                   <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
                     {item.name} ({item.count})
@@ -434,61 +351,12 @@ export default function Analytics() {
             </CardContent>
           </Card>
         </motion.div>
-
-        {/* Crew Summary Metrics */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="lg:col-span-2"
-        >
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
-                <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                Crew Summary
-              </CardTitle>
-              <CardDescription className="text-xs">Aggregate crew operational indicators</CardDescription>
-            </CardHeader>
-            <CardContent className="px-5 pb-4">
-              <div className="h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={crewSummaryData} barCategoryGap="25%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={false}
-                      tickLine={false}
-                      allowDecimals={false}
-                      domain={[0, Math.ceil(maxCrewSummary * 1.2)]}
-                    />
-                    <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={48}>
-                      {crewSummaryData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center justify-center gap-5 mt-3 pt-2 border-t border-border/30">
-                {crewSummaryData.map((item) => (
-                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: item.fill }} />
-                    {item.name}: {item.count}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
+
+      {/* Footer disclaimer */}
+      <p className="text-[10px] text-muted-foreground/50 mt-6 text-center">
+        Metrics derived from demo event data and deterministic rule-engine outputs. Advisory only — not for operational control.
+      </p>
     </div>
   );
 }
