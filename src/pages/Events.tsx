@@ -272,8 +272,9 @@ export default function Events() {
     const f: string[] = [];
     if (lifecycleFilter !== 'all') f.push(lifecycleFilter);
     if (outageTypeFilter !== 'all') f.push(outageTypeFilter);
+    if (priorityFilter !== 'all') f.push(`Priority: ${priorityFilter}`);
     return f;
-  }, [lifecycleFilter, outageTypeFilter]);
+  }, [lifecycleFilter, outageTypeFilter, priorityFilter]);
 
   const stats = useMemo(() => ({
     total: filteredScenarios.length,
@@ -286,6 +287,7 @@ export default function Events() {
     setLifecycleFilter('all');
     setOutageTypeFilter('all');
     setStageFilter('all');
+    setPriorityFilter('all');
   };
 
   // ── Run Copilot for a single event ──────────────────────────────────────────
