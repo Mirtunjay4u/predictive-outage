@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -361,32 +362,31 @@ export default function WeatherAlerts() {
     ).length
   , [events]);
 
-  // Composite Hazard Exposure Score (0–100)
-  // Per hazard: avg severity (1-5) normalized to 0-20, then sum across 5 families
-  // Boosted by critical load presence and escalation flags
-  const hazardExposureScore = useMemo(() => {
+  // Composite Hazard Exposure Score (0–100) with per-hazard breakdown
+  const { hazardExposureScore, hazardBreakdown } = useMemo(() => {
     const hazardKeys = Object.keys(HAZARD_LABELS) as HazardKey[];
-    if (eventsInHazardZones === 0) return 0;
+    if (eventsInHazardZones === 0) return { hazardExposureScore: 0, hazardBreakdown: [] as { key: HazardKey; label: string; score: number; events: number }[] };
 
     let total = 0;
+    const breakdown: { key: HazardKey; label: string; score: number; events: number }[] = [];
     hazardKeys.forEach(key => {
       const group = hazardGroups[key];
-      if (group.length === 0) return;
-      // Average severity for this hazard (1-5 → 0-1)
+      if (group.length === 0) {
+        breakdown.push({ key, label: HAZARD_LABELS[key], score: 0, events: 0 });
+        return;
+      }
       const avgSev = group.reduce((sum, e) => sum + getEventSeverity(e), 0) / group.length / 5;
-      // Event density factor: more events → higher score, capped at 1
       const densityFactor = Math.min(1, group.length / 5);
-      // Critical load boost
       const criticalCount = group.filter(e => e.has_critical_load).length;
       const criticalBoost = criticalCount > 0 ? 0.15 : 0;
-      // Escalation boost
       const escalationCount = group.filter(e => e.requires_escalation).length;
       const escalationBoost = escalationCount > 0 ? 0.1 : 0;
-      // Per-hazard contribution (max 20 per family)
-      total += (avgSev * 0.5 + densityFactor * 0.25 + criticalBoost + escalationBoost) * 20;
+      const contribution = Math.min(20, Math.round((avgSev * 0.5 + densityFactor * 0.25 + criticalBoost + escalationBoost) * 20));
+      total += contribution;
+      breakdown.push({ key, label: HAZARD_LABELS[key], score: contribution, events: group.length });
     });
 
-    return Math.min(100, Math.round(total));
+    return { hazardExposureScore: Math.min(100, Math.round(total)), hazardBreakdown: breakdown };
   }, [hazardGroups, eventsInHazardZones]);
 
   const exposureBand = hazardExposureScore >= 75
@@ -509,31 +509,64 @@ export default function WeatherAlerts() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-primary/30 bg-primary/[0.03] shadow-sm">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="relative w-10 h-10 shrink-0">
-                {/* Circular gauge */}
-                <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
-                  <circle cx="18" cy="18" r="15.5" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-                  <circle
-                    cx="18" cy="18" r="15.5" fill="none"
-                    stroke={hazardExposureScore >= 75 ? 'hsl(0, 72%, 51%)' : hazardExposureScore >= 30 ? 'hsl(38, 92%, 50%)' : 'hsl(142, 71%, 45%)'}
-                    strokeWidth="3"
-                    strokeDasharray={`${hazardExposureScore * 0.9738} 97.38`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className={cn('absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums', exposureBand.accent)}>
-                  {hazardExposureScore}
-                </span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Card className="border-primary/30 bg-primary/[0.03] shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="relative w-10 h-10 shrink-0">
+                    <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                      <circle
+                        cx="18" cy="18" r="15.5" fill="none"
+                        stroke={hazardExposureScore >= 75 ? 'hsl(0, 72%, 51%)' : hazardExposureScore >= 30 ? 'hsl(38, 92%, 50%)' : 'hsl(142, 71%, 45%)'}
+                        strokeWidth="3"
+                        strokeDasharray={`${hazardExposureScore * 0.9738} 97.38`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className={cn('absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums', exposureBand.accent)}>
+                      {hazardExposureScore}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">Hazard Exposure Score</p>
+                    <p className={cn('text-2xl font-semibold tabular-nums', exposureBand.accent)}>{exposureBand.label}</p>
+                    <p className="text-[10px] text-muted-foreground/60">Click for per-hazard breakdown</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 p-0">
+              <div className="px-4 py-3 border-b border-border/40">
+                <p className="text-xs font-semibold text-foreground">Score Breakdown by Hazard</p>
+                <p className="text-[10px] text-muted-foreground">Max 20 pts per family · {hazardExposureScore}/100 total</p>
               </div>
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">Hazard Exposure Score</p>
-                <p className={cn('text-2xl font-semibold tabular-nums', exposureBand.accent)}>{exposureBand.label}</p>
-                <p className="text-[10px] text-muted-foreground/60">Composite across 5 hazard families</p>
+              <div className="px-4 py-3 space-y-2.5">
+                {hazardBreakdown.map(h => {
+                  const pct = (h.score / 20) * 100;
+                  return (
+                    <div key={h.key} className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-medium text-foreground">{h.label}</span>
+                        <span className="text-muted-foreground tabular-nums">{h.score}/20 · {h.events} event{h.events !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: HAZARD_COLORS[h.key] }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+              <div className="px-4 py-2 border-t border-border/30 bg-muted/20">
+                <p className="text-[9px] text-muted-foreground/60">
+                  Drivers: avg severity (50%), event density (25%), critical load (15%), escalation (10%)
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
 
         {/* ── Hazard Overview Cards + Operational Translation ── */}
