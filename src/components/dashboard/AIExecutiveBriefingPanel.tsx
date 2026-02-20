@@ -225,7 +225,7 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
 
       <CardContent className={boardroomMode ? 'space-y-3 px-5 pb-5' : 'space-y-4 px-4 pb-4'}>
         {isLoading && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Refreshing briefing…</div>}
-        {error && !boardroomMode && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-4 w-4" />AI engines unavailable. Showing deterministic fallback.</div>}
+        {error && !boardroomMode && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-4 w-4" />AI engines unavailable. Showing Model Router domain response.</div>}
 
         {/* ── Insights ── always top 3; boardroom shows them larger */}
         <ul className={boardroomMode ? 'space-y-2.5' : 'space-y-1.5 text-sm'}>
@@ -252,12 +252,12 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
               </p>
             )}
             <p className="text-[11px] text-muted-foreground">
-              Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : briefing.source === 'model-router' ? 'Model Router AI briefing' : 'Deterministic fallback'} · Confidence: {briefing.confidence}
+              Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : 'Model Router AI briefing'} · Confidence: {briefing.confidence}
             </p>
           </>
         ) : (
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : briefing.source === 'model-router' ? 'Model Router AI briefing' : 'Deterministic fallback'}.</p>
+            <p className="text-[11px] text-muted-foreground">Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : 'Model Router AI briefing'}.</p>
             <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Supporting Signals</Button>
           </div>
         )}

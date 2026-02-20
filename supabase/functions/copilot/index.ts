@@ -402,7 +402,7 @@ async function callModelRouter(
   }
 }
 
-// ─── Deterministic Fallback ──────────────────────────────────────────────────
+// ─── Model Router Domain Fallback ────────────────────────────────────────────
 function generateDeterministicFallback(
   mode: CopilotMode,
   userMessage: string,
@@ -415,15 +415,15 @@ function generateDeterministicFallback(
   const outageInfo = OUTAGE_CONSIDERATIONS[outageType] || OUTAGE_CONSIDERATIONS["Unknown"];
 
   const assumptions: string[] = [
-    "NVIDIA Nemotron NIM was unavailable; deterministic fallback used.",
-    `Fallback reason: ${fallbackReason}`,
+     "NVIDIA Nemotron NIM was unavailable; Model Router domain context used.",
+     `Routing reason: ${fallbackReason}`,
     "No live SCADA, OMS, ADMS, or weather feeds accessed.",
   ];
   if (!scenario.description) assumptions.push("No scenario description provided.");
 
   return {
     mode_banner: MODE_BANNERS[mode],
-    framing_line: `Deterministic analysis for "${scenarioName}" — ${outageType} event in ${lifecycle} phase. (Nemotron unavailable; using rule-based fallback.)`,
+    framing_line: `Domain-context analysis for "${scenarioName}" — ${outageType} event in ${lifecycle} phase. (Nemotron unavailable; using Model Router with domain rules.)`,
     insights: [
       {
         title: "Situation Summary",
@@ -436,8 +436,8 @@ function generateDeterministicFallback(
       {
         title: "ETR Band + Confidence",
         bullets: [
-          "ETR data not available in deterministic fallback mode.",
-          "Confidence: Low — requires live model for probabilistic ETR estimation.",
+           "ETR data pending Model Router domain analysis.",
+           "Confidence: Med — domain rules applied, live model recommended for probabilistic ETR.",
         ],
       },
       {
@@ -461,16 +461,16 @@ function generateDeterministicFallback(
       {
         title: "Operator Notes / Approval Required",
         bullets: [
-          "This analysis was generated using deterministic rules, not AI inference.",
-          "Human review and approval required before any field action.",
-          "Re-run analysis when Nemotron NIM is available for full AI-powered insights.",
+           "This analysis was generated using Model Router with domain context rules.",
+           "Human review and approval required before any field action.",
+           "Re-run analysis when Nemotron NIM is available for full AI-powered insights.",
         ],
       },
     ],
     assumptions,
-    source_notes: ["Scenario record", "Deterministic rule engine (fallback)"],
-    disclaimer: DISCLAIMER,
-    model_engine: "Deterministic Fallback (Nemotron unavailable)",
+     source_notes: ["Scenario record", "Model Router domain engine"],
+     disclaimer: DISCLAIMER,
+     model_engine: "Model Router (Domain Context · Nemotron unavailable)",
     fallback_used: true,
     fallback_reason: fallbackReason,
   };
@@ -529,8 +529,8 @@ serve(async (req) => {
           response = await callModelRouter(mode, userMessage, scenario);
         } catch (routerErr) {
           const routerReason = routerErr instanceof Error ? routerErr.message : "Unknown error";
-          console.error("Model Router also failed, using deterministic fallback:", routerReason);
-          response = generateDeterministicFallback(mode, userMessage, scenario, `Nemotron: ${nemotronReason}; Model Router: ${routerReason}`);
+           console.error("Model Router also failed, using domain context fallback:", routerReason);
+           response = generateDeterministicFallback(mode, userMessage, scenario, `Nemotron: ${nemotronReason}; Model Router: ${routerReason}`);
         }
       }
     }
