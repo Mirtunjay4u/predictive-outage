@@ -5,6 +5,7 @@ import {
   CloudLightning, Flame, Droplets, Thermometer, ShieldAlert, Wind,
   TreePine, AlertTriangle, Users, CheckCircle2, XCircle, Activity,
   ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio, BarChart3,
+  Zap, OctagonAlert, TrendingUp, TrendingDown, Minus, Clock, Info,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -133,6 +134,170 @@ const severityFromCode = (code: number): 'green' | 'amber' | 'red' => {
   return 'green';
 };
 const dotColor = { green: 'bg-emerald-500', amber: 'bg-amber-500', red: 'bg-red-500' };
+
+/* ------------------------------------------------------------------ */
+/*  Crew Safety Status Banner                                         */
+/* ------------------------------------------------------------------ */
+
+function CrewSafetyBanner({ hazardGroups }: { hazardGroups: Record<HazardKey, ScenarioWithIntelligence[]> }) {
+  const stormEvents = hazardGroups.storm.length;
+  const floodEvents = hazardGroups.flood.length;
+  const wildfireEvents = hazardGroups.wildfire.length;
+  const iceEvents = hazardGroups['extreme-cold'].length;
+
+  const lightningRisk = stormEvents >= 3 ? 'high' : stormEvents >= 1 ? 'elevated' : 'low';
+  const hasHighSevStorm = hazardGroups.storm.some(e => getEventSeverity(e) >= 4);
+  const hasHighSevIce = hazardGroups['extreme-cold'].some(e => getEventSeverity(e) >= 4);
+  const standDown = hasHighSevStorm || hasHighSevIce ? 'likely' : stormEvents > 0 || iceEvents > 0 ? 'possible' : 'unlikely';
+  const accessRisk = floodEvents >= 2 || wildfireEvents >= 2 ? 'restricted' : floodEvents >= 1 || wildfireEvents >= 1 ? 'limited' : 'normal';
+
+  const indicators = [
+    {
+      label: 'Lightning Risk',
+      value: lightningRisk === 'high' ? 'High' : lightningRisk === 'elevated' ? 'Elevated' : 'Low',
+      icon: <Zap className="w-3.5 h-3.5" />,
+      status: lightningRisk === 'high' ? 'block' : lightningRisk === 'elevated' ? 'warn' : 'pass',
+      constraint: 'SC-STORM-001',
+    },
+    {
+      label: 'Stand-Down',
+      value: standDown === 'likely' ? 'Likely' : standDown === 'possible' ? 'Possible' : 'Unlikely',
+      icon: <OctagonAlert className="w-3.5 h-3.5" />,
+      status: standDown === 'likely' ? 'block' : standDown === 'possible' ? 'warn' : 'pass',
+      constraint: 'SC-CREW-001',
+    },
+    {
+      label: 'Access Risk',
+      value: accessRisk === 'restricted' ? 'Restricted' : accessRisk === 'limited' ? 'Limited' : 'Normal',
+      icon: <ShieldAlert className="w-3.5 h-3.5" />,
+      status: accessRisk === 'restricted' ? 'block' : accessRisk === 'limited' ? 'warn' : 'pass',
+      constraint: 'SC-FLOOD-001',
+    },
+  ] as const;
+
+  type StatusKey = 'pass' | 'warn' | 'block';
+  const tokenStyles: Record<StatusKey, string> = {
+    pass: 'text-emerald-700 bg-emerald-50 border-emerald-300/50 dark:text-emerald-200 dark:bg-emerald-500/15 dark:border-emerald-400/30',
+    warn: 'text-amber-700 bg-amber-50 border-amber-300/50 dark:text-amber-200 dark:bg-amber-500/15 dark:border-amber-400/30',
+    block: 'text-red-700 bg-red-50 border-red-300/50 dark:text-red-200 dark:bg-red-500/20 dark:border-red-400/35 dark:shadow-[0_0_12px_rgba(248,113,113,0.20)]',
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="px-6 py-2.5 border-b border-border/30 bg-muted/10 shrink-0"
+    >
+      <div className="flex items-center gap-2 mb-1.5">
+        <ShieldAlert className="w-3.5 h-3.5 text-muted-foreground/70" />
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Crew Safety Status</span>
+      </div>
+      <div className="flex items-center gap-3 overflow-x-auto">
+        {indicators.map(ind => (
+          <div
+            key={ind.label}
+            className={cn(
+              'flex items-center gap-2 rounded-md border px-3 py-1.5 min-w-0 shrink-0',
+              tokenStyles[ind.status],
+            )}
+          >
+            <span className="shrink-0 opacity-80">{ind.icon}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[9px] font-medium uppercase tracking-wider opacity-70">{ind.label}</span>
+              <span className="text-[11px] font-semibold leading-tight">{ind.value}</span>
+            </div>
+            <span className="text-[8px] opacity-50 ml-1 shrink-0">{ind.constraint}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Next 2 Hours Risk Window Card                                     */
+/* ------------------------------------------------------------------ */
+
+function RiskWindowCard({
+  hazardExposureScore,
+  eventsInHazardZones,
+  criticalInHazard,
+}: {
+  hazardExposureScore: number;
+  eventsInHazardZones: number;
+  criticalInHazard: number;
+}) {
+  const trend = hazardExposureScore >= 60 ? 'rising' : hazardExposureScore >= 25 ? 'stable' : 'improving';
+  const TrendIcon = trend === 'rising' ? TrendingUp : trend === 'improving' ? TrendingDown : Minus;
+  const trendColor = trend === 'rising'
+    ? 'text-red-500 dark:text-red-400'
+    : trend === 'stable'
+    ? 'text-amber-500 dark:text-amber-400'
+    : 'text-emerald-500 dark:text-emerald-400';
+  const trendLabel = trend === 'rising' ? 'Rising' : trend === 'stable' ? 'Stable' : 'Improving';
+
+  const impact = hazardExposureScore >= 60
+    ? 'Crew dispatch restrictions likely; ETR extensions expected'
+    : hazardExposureScore >= 25
+    ? 'Monitoring active; selective crew constraints possible'
+    : 'Normal operations; no anticipated constraints';
+
+  const confidence = eventsInHazardZones >= 5 ? 'High' : eventsInHazardZones >= 2 ? 'Moderate' : 'Low';
+  const confidenceNote = eventsInHazardZones >= 5
+    ? 'Multiple correlated events support assessment'
+    : eventsInHazardZones >= 2
+    ? 'Limited event correlation — moderate certainty'
+    : 'Insufficient data for strong projection';
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      <Card className="shadow-sm border-border/50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Clock className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold text-foreground leading-tight">Next 2 Hours — Risk Window</p>
+              <p className="text-[9px] text-muted-foreground">Projected from current hazard state and rule-engine outputs</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60">Risk Trend</p>
+              <div className="flex items-center gap-1.5">
+                <TrendIcon className={cn('w-4 h-4', trendColor)} />
+                <span className={cn('text-sm font-semibold', trendColor)}>{trendLabel}</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground/60">Score: {hazardExposureScore}/100</p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60">Expected Impact</p>
+              <p className="text-[11px] text-foreground leading-snug">{impact}</p>
+              {criticalInHazard > 0 && (
+                <p className="text-[9px] text-red-500 dark:text-red-400 font-medium">
+                  {criticalInHazard} critical load{criticalInHazard !== 1 ? 's' : ''} at risk
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60">Confidence Band</p>
+              <Badge variant="outline" className={cn(
+                'text-[10px]',
+                confidence === 'High' && 'border-emerald-400/50 text-emerald-600 dark:text-emerald-400',
+                confidence === 'Moderate' && 'border-amber-400/50 text-amber-600 dark:text-amber-400',
+                confidence === 'Low' && 'border-muted-foreground/30 text-muted-foreground',
+              )}>
+                {confidence}
+              </Badge>
+              <p className="text-[9px] text-muted-foreground/60 leading-snug">{confidenceNote}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Hazard Timeline Chart                                             */
@@ -485,6 +650,9 @@ export default function WeatherAlerts() {
         </div>
       </div>
 
+      {/* ── Crew Safety Status Banner ── */}
+      <CrewSafetyBanner hazardGroups={hazardGroups} />
+
       <div className="p-6 space-y-5">
         {/* ── KPI Strip ── */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-4">
@@ -572,6 +740,9 @@ export default function WeatherAlerts() {
             </PopoverContent>
           </Popover>
         </motion.div>
+
+        {/* ── Next 2 Hours Risk Window ── */}
+        <RiskWindowCard hazardExposureScore={hazardExposureScore} eventsInHazardZones={eventsInHazardZones} criticalInHazard={criticalInHazard} />
 
         {/* ── Hazard Overview Cards + Operational Translation ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -781,10 +952,20 @@ export default function WeatherAlerts() {
         <RadarMapSection />
       </div>
 
-      {/* Footer */}
-      <p className="text-[10px] text-muted-foreground/50 text-center pb-4 px-6">
-        Hazard intelligence derived from event classification and rule-engine outputs. Advisory only — not for operational control.
-      </p>
+      {/* ── Operator Note Disclaimer ── */}
+      <div className="mx-6 mb-4 rounded-lg border border-border/40 bg-muted/20 px-4 py-3">
+        <div className="flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-muted-foreground/60 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-foreground/80">Operator Advisory Notice</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              This page provides decision-support information only. No live weather feed, SCADA, OMS, or ADMS integration is active.
+              All hazard assessments, crew safety indicators, and risk projections are derived from event classification and rule-engine outputs.
+              Operator review and explicit approval are required before any operational action is taken.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
