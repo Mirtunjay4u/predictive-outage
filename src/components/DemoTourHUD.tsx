@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipForward, Square, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Square, CheckCircle2, RotateCcw, X, Shield, Brain, Map, BarChart3, FileText, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 /**
@@ -78,6 +77,7 @@ export function DemoTourHUD() {
   const [currentStep, setCurrentStep] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [tourComplete, setTourComplete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -92,6 +92,7 @@ export function DemoTourHUD() {
       setCurrentStep(0);
       setStepProgress(0);
       setCompletedSteps([]);
+      setTourComplete(false);
     };
     window.addEventListener('start-demo-tour', handleStart);
     return () => window.removeEventListener('start-demo-tour', handleStart);
@@ -132,6 +133,7 @@ export function DemoTourHUD() {
           // Tour complete
           setIsPlaying(false);
           setStepProgress(100);
+          setTourComplete(true);
         }
       }
     }, 50);
@@ -161,6 +163,7 @@ export function DemoTourHUD() {
       setIsPaused(false);
     } else {
       setIsPlaying(false);
+      setTourComplete(true);
     }
   }, [currentStep]);
 
@@ -178,6 +181,113 @@ export function DemoTourHUD() {
     setIsPaused(false);
     setCompletedSteps(prev => prev.filter(s => s > index));
   }, []);
+
+  const handleRestart = useCallback(() => {
+    setTourComplete(false);
+    setIsPlaying(true);
+    setIsPaused(false);
+    setCurrentStep(0);
+    setStepProgress(0);
+    setCompletedSteps([]);
+  }, []);
+
+  const handleDismissComplete = useCallback(() => {
+    setTourComplete(false);
+  }, []);
+
+  const featureSummary = [
+    { icon: Layout, label: 'Operations Dashboard', detail: 'KPIs, alerts, crew workload, Executive Signal' },
+    { icon: BarChart3, label: 'Scenario Playback', detail: 'Pre-Event → Event → Post-Event lifecycle' },
+    { icon: Shield, label: 'Event Details', detail: 'ETR bands, critical load runway, crew assignments' },
+    { icon: Map, label: 'Outage Map', detail: 'Geospatial events, feeder zones, crew positions' },
+    { icon: Brain, label: 'Copilot Studio', detail: 'AI analysis, defensibility panels, policy engine' },
+    { icon: FileText, label: 'Situation Report', detail: 'AI-assisted SitRep, approval, communications' },
+  ];
+
+  // Tour completion celebration
+  if (tourComplete) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="w-[520px] max-w-[95vw] rounded-xl border border-border/60 bg-card shadow-2xl overflow-hidden"
+          >
+            {/* Header gradient */}
+            <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
+
+            <div className="p-6">
+              {/* Success icon + title */}
+              <div className="text-center mb-5">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.2 }}
+                  className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-3"
+                >
+                  <CheckCircle2 className="w-8 h-8 text-primary" />
+                </motion.div>
+                <h2 className="text-lg font-semibold text-foreground">Tour Complete</h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  All 8 demo steps completed successfully
+                </p>
+              </div>
+
+              {/* Feature summary grid */}
+              <div className="space-y-1.5 mb-5">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.16em] mb-2">
+                  Features Demonstrated
+                </h3>
+                {featureSummary.map((feat, i) => (
+                  <motion.div
+                    key={feat.label}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + i * 0.06 }}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/40"
+                  >
+                    <feat.icon className="w-4 h-4 text-primary flex-shrink-0" strokeWidth={1.75} />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium text-foreground">{feat.label}</span>
+                      <span className="text-[10px] text-muted-foreground ml-2">{feat.detail}</span>
+                    </div>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleRestart}
+                  className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restart Tour
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleDismissComplete}
+                  className="flex-1"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Close
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   if (!isPlaying) return null;
 
