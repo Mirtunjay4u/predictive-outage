@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, Square, CheckCircle2, RotateCcw, X, Shield, Brain, Map, BarChart3, FileText, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,9 +51,9 @@ const tourSteps = [
   {
     id: 5,
     title: 'Copilot Studio',
-    route: '/copilot-studio',
-    duration: 7000,
-    narrative: 'AI-assisted event analysis with the Nemotron / Model Router engine. Review defensibility panels and structured outputs.',
+    route: `/copilot-studio?event_id=${STORM_EVENT_ID}&auto_run=true`,
+    duration: 15000,
+    narrative: 'AI-assisted analysis of the Downtown Houston Storm event via the Nemotron / Model Router engine. Reviewing defensibility panels and structured outputs.',
   },
   {
     id: 6,
@@ -79,7 +79,6 @@ export function DemoTourHUD() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [tourComplete, setTourComplete] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const pausedAtRef = useRef<number>(0);
@@ -102,10 +101,9 @@ export function DemoTourHUD() {
   useEffect(() => {
     if (!isPlaying) return;
     const step = tourSteps[currentStep];
-    if (step && location.pathname !== step.route) {
-      navigate(step.route);
-    }
-  }, [currentStep, isPlaying, navigate, location.pathname]);
+    if (!step) return;
+    navigate(step.route);
+  }, [currentStep, isPlaying, navigate]);
 
   // Progress timer
   useEffect(() => {
