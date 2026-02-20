@@ -397,9 +397,16 @@ export default function WeatherAlerts() {
                     </thead>
                     <tbody>
                       {correlationRows.map(row => (
-                        <tr key={row.id} className="border-b border-border/20 hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={row.id}
+                          className="border-b border-border/20 hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/event/${row.id}`)}
+                        >
                           <td className="py-2 pr-3">
-                            <span className="font-medium text-foreground truncate block max-w-[180px]">{row.name}</span>
+                            <span className="font-medium text-foreground truncate block max-w-[180px] flex items-center gap-1.5">
+                              {row.name}
+                              <ExternalLink className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+                            </span>
                           </td>
                           <td className="py-2 pr-3">
                             <Badge variant="secondary" className={cn('text-[10px] font-medium', row.hazardBadge)}>
