@@ -361,6 +361,40 @@ export default function WeatherAlerts() {
     ).length
   , [events]);
 
+  // Composite Hazard Exposure Score (0–100)
+  // Per hazard: avg severity (1-5) normalized to 0-20, then sum across 5 families
+  // Boosted by critical load presence and escalation flags
+  const hazardExposureScore = useMemo(() => {
+    const hazardKeys = Object.keys(HAZARD_LABELS) as HazardKey[];
+    if (eventsInHazardZones === 0) return 0;
+
+    let total = 0;
+    hazardKeys.forEach(key => {
+      const group = hazardGroups[key];
+      if (group.length === 0) return;
+      // Average severity for this hazard (1-5 → 0-1)
+      const avgSev = group.reduce((sum, e) => sum + getEventSeverity(e), 0) / group.length / 5;
+      // Event density factor: more events → higher score, capped at 1
+      const densityFactor = Math.min(1, group.length / 5);
+      // Critical load boost
+      const criticalCount = group.filter(e => e.has_critical_load).length;
+      const criticalBoost = criticalCount > 0 ? 0.15 : 0;
+      // Escalation boost
+      const escalationCount = group.filter(e => e.requires_escalation).length;
+      const escalationBoost = escalationCount > 0 ? 0.1 : 0;
+      // Per-hazard contribution (max 20 per family)
+      total += (avgSev * 0.5 + densityFactor * 0.25 + criticalBoost + escalationBoost) * 20;
+    });
+
+    return Math.min(100, Math.round(total));
+  }, [hazardGroups, eventsInHazardZones]);
+
+  const exposureBand = hazardExposureScore >= 75
+    ? { label: 'Severe', accent: 'text-red-600 dark:text-red-400' }
+    : hazardExposureScore >= 30
+    ? { label: 'Moderate', accent: 'text-amber-600 dark:text-amber-400' }
+    : { label: 'Low', accent: 'text-emerald-600 dark:text-emerald-400' };
+
   // Correlation table rows
   const correlationRows = useMemo(() =>
     events
@@ -450,7 +484,7 @@ export default function WeatherAlerts() {
 
       <div className="p-6 space-y-5">
         {/* ── KPI Strip ── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-4">
           <Card className="border-amber-300/40 bg-amber-50/30 dark:border-amber-500/25 dark:bg-amber-500/[0.03] shadow-sm">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
@@ -472,6 +506,31 @@ export default function WeatherAlerts() {
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">Critical Loads in Hazard Zones</p>
                 <p className="text-2xl font-semibold tabular-nums text-red-600 dark:text-red-400">{criticalInHazard}</p>
                 <p className="text-[10px] text-muted-foreground/60">Backup below escalation threshold</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-primary/30 bg-primary/[0.03] shadow-sm">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="relative w-10 h-10 shrink-0">
+                {/* Circular gauge */}
+                <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
+                  <circle cx="18" cy="18" r="15.5" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+                  <circle
+                    cx="18" cy="18" r="15.5" fill="none"
+                    stroke={hazardExposureScore >= 75 ? 'hsl(0, 72%, 51%)' : hazardExposureScore >= 30 ? 'hsl(38, 92%, 50%)' : 'hsl(142, 71%, 45%)'}
+                    strokeWidth="3"
+                    strokeDasharray={`${hazardExposureScore * 0.9738} 97.38`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className={cn('absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums', exposureBand.accent)}>
+                  {hazardExposureScore}
+                </span>
+              </div>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">Hazard Exposure Score</p>
+                <p className={cn('text-2xl font-semibold tabular-nums', exposureBand.accent)}>{exposureBand.label}</p>
+                <p className="text-[10px] text-muted-foreground/60">Composite across 5 hazard families</p>
               </div>
             </CardContent>
           </Card>
