@@ -12,36 +12,36 @@ import { cn } from '@/lib/utils';
 
 const demoSteps = [
   {
+    title: 'Login & Landing',
+    description: 'Authenticate via the Login page to establish operator context and session. The landing view provides immediate orientation to system status.',
+  },
+  {
     title: 'Operations Dashboard',
-    description: 'Start on the Dashboard to review active event KPIs, high-priority alerts, crew workload, and system-wide readiness at a glance.',
+    description: 'Review active event KPIs, high-priority alerts, crew workload, and system-wide readiness. Explore the Executive Signal, AI Briefing, and Operational Phase ribbon.',
   },
   {
     title: 'Scenario Playback',
-    description: 'Use the Scenario Playback panel on the Dashboard to step through a pre-loaded hazard scenario — select a hazard type and advance through Pre-Event, Event, and Post-Event lifecycle stages.',
-  },
-  {
-    title: 'Events List',
-    description: 'Navigate to Events to browse outage events. Toggle between table and card views, and filter by lifecycle stage, priority, or outage type.',
+    description: 'Use the Scenario Playback panel on the Dashboard to step through a pre-loaded hazard scenario — advance through Pre-Event, Event, and Post-Event lifecycle stages.',
   },
   {
     title: 'Event Details',
-    description: 'Select any event to open its detail view. Review ETR confidence bands, critical-load runway, crew assignments, and supporting signals.',
-  },
-  {
-    title: 'Situation Report',
-    description: 'From Event Details, open the Situation Report panel. Generate an AI-assisted SitRep, review the content, and approve it for distribution.',
-  },
-  {
-    title: 'Customer Communications',
-    description: 'With an approved SitRep, generate the Customer Communications Pack — SMS, Email, and Web Banner drafts in utility-safe language.',
+    description: 'Select any event to open its full detail view. Review ETR confidence bands, critical-load runway, crew assignments, and supporting signals.',
   },
   {
     title: 'Outage Map',
     description: 'Navigate to the Outage Map to see events geographically. Select events, view feeder zones, and explore crew positions on the live map.',
   },
   {
-    title: 'Analytics & Copilot Studio',
-    description: 'Visit Analytics for operational performance insights, then explore Copilot Studio for AI-assisted event analysis and prioritisation recommendations.',
+    title: 'Copilot Studio',
+    description: 'Open Copilot Studio for AI-assisted event analysis. Run structured copilot analysis with the Nemotron / Model Router engine and review defensibility panels.',
+  },
+  {
+    title: 'Situation Report',
+    description: 'Generate an AI-assisted SitRep from the Situation Report panel. Review the content, approve it for distribution, and generate the Customer Communications Pack.',
+  },
+  {
+    title: 'Return to Dashboard',
+    description: 'Complete the loop by returning to the Dashboard to confirm updated KPIs, restored posture, and the narrative resolution of the demo scenario.',
   },
 ];
 
