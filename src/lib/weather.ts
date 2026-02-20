@@ -16,14 +16,33 @@ export interface RainViewerMaps {
   radar: { past: { time: number; path: string }[]; nowcast: { time: number; path: string }[] };
 }
 
+export interface RadarFrame {
+  time: number;
+  label: string; // e.g. "12:30" for display
+}
+
 export async function fetchRadarTimestamp(): Promise<number> {
   const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
   if (!res.ok) throw new Error('RainViewer API unavailable');
   const data: RainViewerMaps = await res.json();
-  // Prefer nowcast[0] if available, else latest past frame
   const nowcast = data.radar.nowcast;
   const past = data.radar.past;
   return nowcast.length > 0 ? nowcast[0].time : past[past.length - 1].time;
+}
+
+/** Fetch the last N radar frames (past + nowcast) for animation playback */
+export async function fetchRadarFrames(count = 6): Promise<RadarFrame[]> {
+  const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+  if (!res.ok) throw new Error('RainViewer API unavailable');
+  const data: RainViewerMaps = await res.json();
+  const past = data.radar.past ?? [];
+  const nowcast = data.radar.nowcast ?? [];
+  const all = [...past, ...nowcast];
+  const frames = all.slice(-count);
+  return frames.map(f => ({
+    time: f.time,
+    label: new Date(f.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  }));
 }
 
 export function radarTileUrl(time: number): string {

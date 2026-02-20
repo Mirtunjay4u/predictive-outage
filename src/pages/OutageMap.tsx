@@ -16,7 +16,8 @@ import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { useWeatherData } from '@/hooks/useWeatherData';
-import { fetchRadarTimestamp, radarTileUrl, fetchNWSAlerts, alertSeverityRank, type NWSAlertFeature } from '@/lib/weather';
+import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { fetchRadarTimestamp, fetchRadarFrames, radarTileUrl, fetchNWSAlerts, alertSeverityRank, type NWSAlertFeature, type RadarFrame } from '@/lib/weather';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
 import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useEmergencyDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
@@ -140,16 +141,48 @@ export default function OutageMap() {
   const simulateMovementMutation = useSimulateCrewMovement();
   const updateCrewStatusMutation = useUpdateCrewStatus();
 
-  // ── Radar timestamp (refreshes every 5 min) ──
-  const { data: radarTime } = useQuery({
-    queryKey: ['radar-timestamp'],
-    queryFn: fetchRadarTimestamp,
+  // ── Radar frames for animation (refreshes every 5 min) ──
+  const { data: radarFrames } = useQuery({
+    queryKey: ['radar-frames'],
+    queryFn: () => fetchRadarFrames(6),
     enabled: showRadar,
     refetchInterval: 5 * 60 * 1000,
     staleTime: 4 * 60 * 1000,
     retry: 2,
   });
-  const currentRadarUrl = radarTime ? radarTileUrl(radarTime) : null;
+
+  // Radar playback state
+  const [radarPlaying, setRadarPlaying] = useState(false);
+  const [radarFrameIdx, setRadarFrameIdx] = useState(0);
+  const frameCount = radarFrames?.length ?? 0;
+
+  // Clamp index when frames change
+  useEffect(() => {
+    if (frameCount > 0 && radarFrameIdx >= frameCount) {
+      setRadarFrameIdx(frameCount - 1);
+    }
+  }, [frameCount, radarFrameIdx]);
+
+  // Auto-advance frames when playing
+  useEffect(() => {
+    if (!radarPlaying || frameCount === 0) return;
+    const interval = setInterval(() => {
+      setRadarFrameIdx(prev => (prev + 1) % frameCount);
+    }, 800);
+    return () => clearInterval(interval);
+  }, [radarPlaying, frameCount]);
+
+  // Set to latest frame when radar is first enabled
+  useEffect(() => {
+    if (frameCount > 0 && !radarPlaying) {
+      setRadarFrameIdx(frameCount - 1);
+    }
+  }, [frameCount]);
+
+  const currentRadarUrl = radarFrames?.[radarFrameIdx]
+    ? radarTileUrl(radarFrames[radarFrameIdx].time)
+    : null;
+  const radarTime = radarFrames?.[radarFrameIdx]?.time ?? null;
 
   // ── NWS Alerts (refreshes every 2 min) ──
   const { data: nwsAlertsData, isLoading: nwsAlertsLoading, refetch: refetchNWSAlerts, isError: nwsAlertsError } = useQuery({
@@ -960,20 +993,87 @@ export default function OutageMap() {
                     />
                     
                     {showRadar && (
-                      <div className="ml-7 mt-1 mb-2 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-[10px] text-muted-foreground">Opacity</Label>
-                          <span className="text-[10px] text-muted-foreground tabular-nums">{Math.round(radarOpacity * 100)}%</span>
+                      <div className="ml-7 mt-1 mb-2 space-y-2">
+                        {/* Opacity */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{Math.round(radarOpacity * 100)}%</span>
+                          </div>
+                          <Slider
+                            min={20}
+                            max={90}
+                            step={5}
+                            value={[radarOpacity * 100]}
+                            onValueChange={([v]) => setRadarOpacity(v / 100)}
+                            className="w-full"
+                          />
                         </div>
-                        <Slider
-                          min={20}
-                          max={90}
-                          step={5}
-                          value={[radarOpacity * 100]}
-                          onValueChange={([v]) => setRadarOpacity(v / 100)}
-                          className="w-full"
-                        />
-                        {radarTime && (
+
+                        {/* Playback controls */}
+                        {radarFrames && radarFrames.length > 1 && (
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] text-muted-foreground">Storm Playback</Label>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => { setRadarPlaying(false); setRadarFrameIdx(0); }}
+                                title="First frame"
+                              >
+                                <SkipBack className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant={radarPlaying ? "default" : "outline"}
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => setRadarPlaying(p => !p)}
+                                title={radarPlaying ? "Pause" : "Play"}
+                              >
+                                {radarPlaying
+                                  ? <Pause className="w-3.5 h-3.5" />
+                                  : <Play className="w-3.5 h-3.5" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => { setRadarPlaying(false); setRadarFrameIdx(frameCount - 1); }}
+                                title="Latest frame"
+                              >
+                                <SkipForward className="w-3 h-3" />
+                              </Button>
+                              <span className="text-[10px] text-muted-foreground tabular-nums ml-1">
+                                {radarFrameIdx + 1}/{frameCount}
+                              </span>
+                            </div>
+                            {/* Frame timeline dots */}
+                            <div className="flex items-center gap-1">
+                              {radarFrames.map((frame, i) => (
+                                <button
+                                  key={frame.time}
+                                  onClick={() => { setRadarPlaying(false); setRadarFrameIdx(i); }}
+                                  className={cn(
+                                    "h-1.5 flex-1 rounded-full transition-all duration-200",
+                                    i === radarFrameIdx
+                                      ? "bg-primary scale-y-150"
+                                      : i < radarFrameIdx
+                                        ? "bg-primary/40"
+                                        : "bg-muted-foreground/30"
+                                  )}
+                                  title={frame.label}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-[9px] text-muted-foreground tabular-nums">
+                              Frame: {radarFrames[radarFrameIdx]?.label ?? '—'}
+                              {radarFrameIdx === frameCount - 1 && ' (latest)'}
+                            </p>
+                          </div>
+                        )}
+
+                        {radarTime && !radarFrames?.length && (
                           <p className="text-[9px] text-muted-foreground">
                             Frame: {new Date(radarTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
