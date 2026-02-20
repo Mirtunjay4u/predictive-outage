@@ -57,7 +57,7 @@ export function ReadinessStrip({ scenarios }: ReadinessStripProps) {
     <TooltipProvider delayDuration={200}>
       <div className="mt-3 rounded-lg border border-border/50 bg-card shadow-card px-4 py-2.5">
         <div className="flex items-center gap-4">
-          <span className="text-[11px] font-medium text-muted-foreground/80 whitespace-nowrap shrink-0">
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap shrink-0">
             Restoration Readiness (Next 6–12h)
           </span>
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -74,7 +74,7 @@ export function ReadinessStrip({ scenarios }: ReadinessStripProps) {
                   >
                     <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor[m.status])} />
                     <span className="text-lg font-bold tabular-nums text-foreground leading-none">{m.count}</span>
-                    <span className="text-[10px] text-muted-foreground/70 leading-tight truncate">{m.label}</span>
+                    <span className="text-[11px] text-muted-foreground leading-tight truncate">{m.label}</span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[240px] text-xs">

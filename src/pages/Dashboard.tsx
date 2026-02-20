@@ -1347,14 +1347,14 @@ export default function Dashboard() {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[280px] p-2.5">
-                  <p className="text-[10px] font-semibold mb-1">
+                  <p className="text-[11px] font-semibold mb-1">
                     {!policyView ? 'No policy evaluation run yet.' : `Gate: ${policyGate}`}
                   </p>
                   {policyView && gateReason && (
-                    <p className="text-[10px] text-muted-foreground mb-1">Why: {gateReason}</p>
+                    <p className="text-[11px] text-muted-foreground mb-1">Why: {gateReason}</p>
                   )}
                   {policyView && operationalBlockedActions.length > 0 && (
-                    <div className="text-[9px] text-muted-foreground space-y-0.5">
+                    <div className="text-[10px] text-muted-foreground space-y-0.5">
                       {operationalBlockedActions.slice(0, 3).map((ba, i) => (
                         <p key={i} className="flex items-start gap-1">
                           <span className="text-red-400 shrink-0">✗</span>
@@ -1364,7 +1364,7 @@ export default function Dashboard() {
                     </div>
                   )}
                   {!policyView && (
-                    <p className="text-[9px] text-muted-foreground">Run Copilot to evaluate policy status.</p>
+                    <p className="text-[10px] text-muted-foreground">Run Copilot to evaluate policy status.</p>
                   )}
                 </TooltipContent>
               </Tooltip>
@@ -1374,7 +1374,7 @@ export default function Dashboard() {
                 <span
                   key={`pulse-${demoStepIndex}-${lastEvaluatedAt}`}
                   style={prefersReducedMotion ? undefined : { animation: 'briefing-pulse-fade 1.2s ease-in-out forwards' }}
-                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
                   aria-live="polite"
                 >
                   <Sparkles className="h-2.5 w-2.5" />
@@ -1386,8 +1386,8 @@ export default function Dashboard() {
             <p className={cn('mt-1 text-muted-foreground', boardroomMode ? 'text-sm' : 'text-xs')}><span className="font-medium text-foreground">{summary}</span> · {stats.total} total tracked</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px]">{activeScenarios.length > 0 ? 'Active Event' : 'Demo'}</Badge>
-            <Badge variant="outline" className="text-[10px]">{boardroomMode ? 'Boardroom Mode On' : 'Boardroom Mode Off'}</Badge>
+            <Badge variant="outline" className="text-[11px]">{activeScenarios.length > 0 ? 'Active Event' : 'Demo'}</Badge>
+            <Badge variant="outline" className="text-[11px]">{boardroomMode ? 'Boardroom Mode On' : 'Boardroom Mode Off'}</Badge>
             <span className={DASHBOARD_TIMESTAMP_CLASS}>Updated {formatDashboardTime(dataUpdatedAt)}</span>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh data"><RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} /></Button>
             <ThemeToggle />
@@ -1470,7 +1470,7 @@ export default function Dashboard() {
                     <span className="font-semibold">{hazard.shortLabel}</span>
                     {/* Risk hint — shown only on selected pill */}
                     {isSelected && (
-                      <span className="hidden max-w-[240px] truncate text-[10px] font-normal text-primary/70 sm:block">
+                      <span className="hidden max-w-[240px] truncate text-[11px] font-normal text-primary/70 sm:block">
                         {hazard.riskHint}
                       </span>
                     )}
@@ -1481,7 +1481,7 @@ export default function Dashboard() {
 
             {/* Severity override row */}
             <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-border/30 pt-2.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 shrink-0">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 shrink-0">
                 Severity Override
               </span>
               <div className="flex gap-1.5" role="group" aria-label="Override hazard severity">
@@ -1498,7 +1498,7 @@ export default function Dashboard() {
                         setSeverityOverride(isExplicitOverride ? null : level)
                       }
                       className={cn(
-                        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide transition-colors duration-150',
+                        'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide transition-colors duration-150',
                         DASHBOARD_INTERACTIVE_BUTTON_CLASS,
                         isActive
                           ? getSeverityBadgeClass(level)
@@ -1511,7 +1511,7 @@ export default function Dashboard() {
                 })}
               </div>
               {severityOverride && (
-                <span className="text-[10px] text-muted-foreground/60 italic">
+                <span className="text-[11px] text-muted-foreground/70 italic">
                   overrides default · click active pill to reset
                 </span>
               )}
@@ -1803,8 +1803,8 @@ export default function Dashboard() {
           </div>
           {/* Item 2: Reason */}
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Reason</span>
-            <span className="truncate text-[11px] font-medium text-foreground/80">{gateReason}</span>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Reason</span>
+            <span className="truncate text-xs font-medium text-foreground/85">{gateReason}</span>
           </div>
           {/* Item 3 + 4: Latency + Timestamp */}
           <div className="flex items-center gap-x-4 gap-y-1 shrink-0 text-[11px] text-muted-foreground">
@@ -1856,7 +1856,7 @@ export default function Dashboard() {
                     ? 'border-amber-400/20 bg-amber-500/8'
                     : 'border-emerald-400/20 bg-emerald-500/8',
               )}>
-                <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   <Sparkles className="h-3 w-3" />Executive Policy Summary
                 </p>
                 <p className="mt-1.5 text-[12px] leading-relaxed text-foreground/90">{policySummary ?? summarizePolicy(policyView)}</p>
@@ -1864,7 +1864,7 @@ export default function Dashboard() {
 
               {/* Escalation Flags */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Escalation Flags</p>
                 {(policyView.escalationFlags?.length ?? 0) > 0 ? (
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {policyView.escalationFlags?.map((flag: EscalationFlag, index: number) => {
@@ -1872,7 +1872,7 @@ export default function Dashboard() {
                       const isCritical = label.includes('critical_load_at_risk') || label.includes('critical_backup_window_short');
                       return (
                         <span key={`flag-${index}`} className={cn(
-                          'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold',
+                          'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold',
                           isCritical
                             ? 'border-red-400/35 bg-red-500/15 text-red-200'
                             : 'border-amber-400/25 bg-amber-500/10 text-amber-200',
@@ -1891,7 +1891,7 @@ export default function Dashboard() {
               <div className="grid gap-3 md:grid-cols-2">
                 {/* Allowed */}
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Allowed Actions</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Allowed Actions</p>
                   {(policyView.allowedActions?.length ?? 0) > 0 ? (
                     <div className="mt-1.5 space-y-1.5">
                       {policyView.allowedActions?.map((item: PolicyAction, index: number) => (
@@ -1899,7 +1899,7 @@ export default function Dashboard() {
                           <p className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-300">
                             <CheckCircle className="h-3 w-3 shrink-0" />{toTitleCase(item?.action)}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground/80">{item?.reason ?? 'No reason returned.'}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground/80">{item?.reason ?? 'No reason returned.'}</p>
                         </div>
                       ))}
                     </div>
@@ -1909,7 +1909,7 @@ export default function Dashboard() {
                 </div>
                 {/* Blocked */}
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Blocked Actions</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Blocked Actions</p>
                   {(policyView.blockedActions?.length ?? 0) > 0 ? (
                     <div className="mt-1.5 space-y-1.5">
                       {policyView.blockedActions?.map((item: PolicyAction, index: number) => (
@@ -1917,9 +1917,9 @@ export default function Dashboard() {
                           <p className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
                             <Ban className="h-3 w-3 shrink-0" />{toTitleCase(item?.action)}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground/80">{item?.reason ?? 'No reason returned.'}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground/80">{item?.reason ?? 'No reason returned.'}</p>
                           {item?.remediation && (
-                            <p className="mt-0.5 text-[10px] text-amber-300/80">Remediation: {item.remediation}</p>
+                            <p className="mt-0.5 text-[11px] text-amber-300/80">Remediation: {item.remediation}</p>
                           )}
                         </div>
                       ))}
@@ -1933,8 +1933,8 @@ export default function Dashboard() {
               {/* ETR Band */}
               {policyView.etrBand && (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">ETR Band</span>
-                  <span className="inline-flex items-center rounded-full border border-sky-400/25 bg-sky-500/12 px-2 py-0.5 text-[10px] font-semibold text-sky-200">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">ETR Band</span>
+                  <span className="inline-flex items-center rounded-full border border-sky-400/25 bg-sky-500/12 px-2 py-0.5 text-[11px] font-semibold text-sky-200">
                     {policyView.etrBand?.band ?? 'Unknown'}
                   </span>
                   <span className="text-[11px] text-muted-foreground">{formatConfidenceFull(policyView.etrBand?.confidence)} confidence</span>
@@ -1942,7 +1942,7 @@ export default function Dashboard() {
               )}
 
               {/* Audit Stamp */}
-              <p className="border-t border-border/30 pt-2 text-[10px] font-mono text-muted-foreground/50">
+              <p className="border-t border-border/30 pt-2 text-[11px] font-mono text-muted-foreground/60">
                 Audit Stamp: Policy v1.0 · Engine hash fnv1a_{(policyLatencyMs ?? 0).toString(16).padStart(8, '0')} · Evaluated {lastEvaluatedAt ? new Date(lastEvaluatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'}
               </p>
             </div>
@@ -2129,11 +2129,11 @@ export default function Dashboard() {
             {/* ── Header bar ─────────────────────────────────────────────── */}
             <div className="flex items-center justify-between py-1.5 border-b border-border/30">
               <div className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground/50 leading-none">
+                <span className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground/60 leading-none">
                   Operational Phase
                 </span>
-                <span className="text-[9px] text-muted-foreground/30">·</span>
-                <span className="text-[9px] font-medium text-muted-foreground/40 leading-none">
+                <span className="text-[10px] text-muted-foreground/40">·</span>
+                <span className="text-[10px] font-medium text-muted-foreground/50 leading-none">
                   Click any phase to view details
                 </span>
               </div>
@@ -2208,8 +2208,9 @@ export default function Dashboard() {
                         type="button"
                         onClick={() => setOpenPhaseId(openPhaseId === phase.id ? null : phase.id as PhaseId)}
                         className={cn(
-                          'w-full h-full rounded-lg border px-3 py-2.5 text-center transition-all duration-300 cursor-pointer',
+                          'w-full h-full rounded-lg border px-3 py-2.5 text-center transition-all duration-200 cursor-pointer',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                          'hover:brightness-125 hover:scale-[1.03] hover:shadow-md hover:z-10',
                           blockBg, blockBorder, blockText,
                         )}
                         style={{ boxShadow: glowShadow }}
@@ -2217,14 +2218,14 @@ export default function Dashboard() {
                         aria-expanded={openPhaseId === phase.id}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className={cn('text-[8px] font-bold uppercase tracking-widest leading-none', blockText)}>
+                          <span className={cn('text-[9px] font-bold uppercase tracking-widest leading-none', blockText)}>
                             {String(idx + 1).padStart(2, '0')}
                           </span>
-                          <span className={cn('text-[9px] leading-none opacity-60', blockText)}>
+                          <span className={cn('text-[10px] leading-none opacity-60', blockText)}>
                             {phase.typeMark}
                           </span>
                         </div>
-                        <span className="block text-[10px] font-black uppercase tracking-[0.12em] leading-tight truncate">
+                        <span className="block text-[11px] font-black uppercase tracking-[0.1em] leading-tight truncate">
                           {phase.label}
                         </span>
                         <div className={cn(
@@ -2250,14 +2251,14 @@ export default function Dashboard() {
                               {String(idx + 1).padStart(2, '0')}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-bold uppercase tracking-wider leading-none truncate">{phase.fullLabel}</p>
-                              <p className="text-[9px] text-muted-foreground/60 mt-0.5 leading-none font-medium">
+                              <p className="text-xs font-bold uppercase tracking-wider leading-none truncate">{phase.fullLabel}</p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5 leading-none font-medium">
                                 Operational Phase {idx + 1} of {PHASES.length}
                               </p>
                             </div>
                           </div>
                           <div className="px-3.5 py-3">
-                            <p className="text-[10.5px] leading-relaxed text-muted-foreground">
+                            <p className="text-[11px] leading-relaxed text-muted-foreground/90">
                               {phase.detail}
                             </p>
                           </div>
