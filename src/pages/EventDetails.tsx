@@ -1,5 +1,5 @@
  import { useState, useMemo } from "react";
- import { useParams, useNavigate, Link } from "react-router-dom";
+ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
  import { format } from "date-fns";
 import {
   formatEtrBand,
@@ -46,8 +46,10 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
  
  export default function EventDetails() {
    const { id } = useParams<{ id: string }>();
-   const navigate = useNavigate();
-   const { data: event, isLoading, error } = useScenarioWithIntelligence(id || null);
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const fromHazards = searchParams.get('from') === 'hazards';
+    const { data: event, isLoading, error } = useScenarioWithIntelligence(id || null);
    const { data: assets = [] } = useAssets();
    const { data: linkedAssetIds = [] } = useEventAssets(id || null);
  
@@ -117,17 +119,25 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-14">
               <nav className="flex items-center gap-1.5 text-sm">
-                <Link 
-                  to="/dashboard" 
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <span className="text-muted-foreground/50">/</span>
-                <span className="text-foreground font-medium truncate max-w-[200px]">
-                  {event.name}
-                </span>
-              </nav>
+                 <Link 
+                   to={fromHazards ? "/weather-alerts" : "/dashboard"}
+                   className="text-muted-foreground hover:text-foreground transition-colors"
+                 >
+                   {fromHazards ? "Hazard Intelligence" : "Dashboard"}
+                 </Link>
+                 {fromHazards && (
+                   <>
+                     <span className="text-muted-foreground/50">/</span>
+                     <Link to="/events" className="text-muted-foreground hover:text-foreground transition-colors">
+                       Events
+                     </Link>
+                   </>
+                 )}
+                 <span className="text-muted-foreground/50">/</span>
+                 <span className="text-foreground font-medium truncate max-w-[200px]">
+                   {event.name}
+                 </span>
+               </nav>
              <div className="flex items-center gap-2">
                <Button variant="outline" size="sm" onClick={handleViewOnMap} className="gap-2">
                  <Map className="w-4 h-4" />
