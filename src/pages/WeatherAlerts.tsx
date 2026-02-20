@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CloudLightning, Flame, Droplets, Thermometer, ShieldAlert, Wind,
@@ -135,6 +136,7 @@ const dotColor = { green: 'bg-emerald-500', amber: 'bg-amber-500', red: 'bg-red-
 /* ------------------------------------------------------------------ */
 
 export default function WeatherAlerts() {
+  const navigate = useNavigate();
   const { data: events = [] } = useScenariosWithIntelligence();
   const { data: crews = [] } = useCrews();
   const { data: weather, isLoading: weatherLoading, refetch, dataUpdatedAt } = useWeatherData(true);
@@ -303,7 +305,10 @@ export default function WeatherAlerts() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * idx }}
               >
-                <Card className={cn('shadow-sm h-full', hazard.accentCard)}>
+                <Card
+                  className={cn('shadow-sm h-full cursor-pointer hover:shadow-md transition-shadow', hazard.accentCard)}
+                  onClick={() => navigate(`/events?outage_types=${hazard.outageTypes.join(',')}`)}
+                >
                   <CardHeader className="pb-2 pt-4 px-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
@@ -349,6 +354,16 @@ export default function WeatherAlerts() {
                         </div>
                       ))}
                     </div>
+
+                    {group.length > 0 && (
+                      <>
+                        <Separator className="my-3 opacity-30" />
+                        <div className="flex items-center gap-1 text-[10px] font-medium text-primary">
+                          <ExternalLink className="w-3 h-3" />
+                          View {group.length} event{group.length !== 1 ? 's' : ''} →
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
