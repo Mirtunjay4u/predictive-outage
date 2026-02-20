@@ -384,7 +384,7 @@ export function EventTable({
     : <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
   return (
     <div className={cn('bg-card overflow-hidden', bordered && 'rounded-xl border border-border/50 shadow-sm')}>
-      <div className="overflow-x-auto max-h-[calc(100vh-260px)]">
+      <div className="overflow-auto max-h-[calc(100vh-260px)]">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-card shadow-[0_1px_0_hsl(var(--border))]">
             <TableRow className="hover:bg-transparent bg-muted/30">
