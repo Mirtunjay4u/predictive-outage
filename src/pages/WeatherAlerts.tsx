@@ -272,7 +272,9 @@ function RiskWindowCard({
             <div className="space-y-1">
               <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground/60">Risk Trend</p>
               <div className="flex items-center gap-1.5">
-                <TrendIcon className={cn('w-4 h-4', trendColor)} />
+                <motion.span key={trend} initial={{ scale: 1.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 12 }}>
+                  <TrendIcon className={cn('w-4 h-4', trendColor)} />
+                </motion.span>
                 <span className={cn('text-sm font-semibold', trendColor)}>{trendLabel}</span>
               </div>
               <p className="text-[9px] text-muted-foreground/60">Score: {hazardExposureScore}/100</p>
