@@ -328,12 +328,13 @@ export default function WeatherAlerts() {
       d.setHours(0, 0, 0, 0);
       days.push(d);
     }
-    const result: Record<HazardKey, { v: number }[]> = {} as any;
+    const result: Record<HazardKey, { v: number; day: string }[]> = {} as any;
     (Object.keys(HAZARD_LABELS) as HazardKey[]).forEach(key => {
       result[key] = days.map(date => {
         const nextDay = new Date(date);
         nextDay.setDate(nextDay.getDate() + 1);
         return {
+          day: date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
           v: events.filter(e => {
             if (HAZARD_TO_KEY[e.outage_type || ''] !== key) return false;
             const start = e.event_start_time ? new Date(e.event_start_time) : e.created_at ? new Date(e.created_at) : null;
@@ -514,12 +515,26 @@ export default function WeatherAlerts() {
                         <div className="w-[56px] h-[22px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={hazardSparklines[hazard.key]}>
+                              <Tooltip
+                                cursor={false}
+                                content={({ active, payload }) => {
+                                  if (!active || !payload?.length) return null;
+                                  const d = payload[0].payload as { day: string; v: number };
+                                  return (
+                                    <div className="rounded-md border border-border/50 bg-background px-2 py-1 text-[10px] shadow-lg">
+                                      <p className="font-medium text-foreground">{d.day}</p>
+                                      <p className="text-muted-foreground">{d.v} event{d.v !== 1 ? 's' : ''}</p>
+                                    </div>
+                                  );
+                                }}
+                              />
                               <Line
                                 type="monotone"
                                 dataKey="v"
                                 stroke={HAZARD_COLORS[hazard.key]}
                                 strokeWidth={1.5}
                                 dot={false}
+                                activeDot={{ r: 2.5, strokeWidth: 0, fill: HAZARD_COLORS[hazard.key] }}
                               />
                             </LineChart>
                           </ResponsiveContainer>
