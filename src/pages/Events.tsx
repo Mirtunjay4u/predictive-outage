@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, AlertTriangle, Activity, Zap, ShieldX, ShieldAlert, ShieldCheck,
@@ -28,6 +29,8 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { deriveSeverity } from '@/components/events/EventDetailPanel';
 import type { Scenario, ScenarioInsert } from '@/types/scenario';
+import { fetchNWSAlerts, fetchWindGrid, type NWSAlertFeature, type WindPoint } from '@/lib/weather';
+import { computeAllWeatherRisks, type WeatherRiskResult } from '@/lib/weather-risk';
 
 // ── Policy evaluation result type ────────────────────────────────────────────
 type PolicyResult = {
@@ -139,6 +142,7 @@ function TriageSection({
   dot,
   scenarios,
   policyMap,
+  weatherRiskMap,
   onRowClick,
   onEdit,
   onDelete,
@@ -151,6 +155,7 @@ function TriageSection({
   dot: string;
   scenarios: Scenario[];
   policyMap: PolicyMap;
+  weatherRiskMap?: Map<string, WeatherRiskResult>;
   onRowClick: (s: Scenario) => void;
   onEdit: (s: Scenario) => void;
   onDelete: (id: string) => void;
@@ -195,6 +200,7 @@ function TriageSection({
               <EventTable
                 scenarios={scenarios}
                 policyMap={policyMap}
+                weatherRiskMap={weatherRiskMap}
                 onRowClick={onRowClick}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -267,6 +273,27 @@ export default function Events() {
       return true;
     });
   }, [scenarios, stageFilter, lifecycleFilter, outageTypeFilter, priorityFilter]);
+
+  // Weather data for risk scores (auto-fetch, no user toggle needed)
+  const { data: nwsAlertsData } = useQuery({
+    queryKey: ['nws-alerts-events'],
+    queryFn: fetchNWSAlerts,
+    refetchInterval: 3 * 60 * 1000,
+    staleTime: 90 * 1000,
+    retry: 2,
+  });
+
+  const { data: windPoints = [] } = useQuery({
+    queryKey: ['wind-grid-events'],
+    queryFn: () => fetchWindGrid(29.76, -95.37, 4, 0.35),
+    refetchInterval: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const weatherRiskMap = useMemo(() => {
+    return computeAllWeatherRisks(filteredScenarios, nwsAlertsData?.features ?? [], windPoints);
+  }, [filteredScenarios, nwsAlertsData, windPoints]);
 
   // Triage buckets
   const immediate = useMemo(() => filteredScenarios.filter((s) => triageBucket(s) === 'immediate'), [filteredScenarios]);
@@ -506,6 +533,7 @@ export default function Events() {
               dot="bg-red-500"
               scenarios={immediate}
               policyMap={policyMap}
+              weatherRiskMap={weatherRiskMap}
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={setDeleteId}
@@ -519,6 +547,7 @@ export default function Events() {
               dot="bg-amber-400"
               scenarios={monitoring}
               policyMap={policyMap}
+              weatherRiskMap={weatherRiskMap}
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={setDeleteId}
@@ -532,6 +561,7 @@ export default function Events() {
               dot="bg-muted-foreground"
               scenarios={resolved}
               policyMap={policyMap}
+              weatherRiskMap={weatherRiskMap}
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={setDeleteId}
@@ -544,6 +574,7 @@ export default function Events() {
             <EventTable
               scenarios={filteredScenarios}
               policyMap={policyMap}
+              weatherRiskMap={weatherRiskMap}
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={setDeleteId}
