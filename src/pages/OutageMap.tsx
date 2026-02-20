@@ -864,6 +864,22 @@ export default function OutageMap() {
               windPoints={windPoints}
             />
           </MapErrorBoundary>
+
+          {/* Weather Unavailable Banner */}
+          {(showNWSAlerts || showWind) && (nwsAlertsError || windError) && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] px-4 py-2 rounded-lg bg-warning/15 border border-warning/40 backdrop-blur-sm flex items-center gap-2 shadow-md">
+              <AlertTriangle className="w-4 h-4 text-warning flex-shrink-0" />
+              <span className="text-xs font-medium text-warning">Weather data temporarily unavailable</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-[10px] text-warning hover:text-warning px-2"
+                onClick={() => { if (nwsAlertsError) refetchNWSAlerts(); if (windError) refetchWind(); }}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
           
           {/* Crew Dispatch Panel */}
           {showCrews && (
