@@ -236,10 +236,12 @@ export default function Events() {
   useEffect(() => {
     const lifecycleParam = searchParams.get('lifecycle');
     const outageTypeParam = searchParams.get('outage_type');
+    const outageTypesParam = searchParams.get('outage_types');
     const priorityParam = searchParams.get('priority');
-    if (lifecycleParam || outageTypeParam || priorityParam) {
+    if (lifecycleParam || outageTypeParam || outageTypesParam || priorityParam) {
       if (lifecycleParam) setLifecycleFilter(lifecycleParam);
-      if (outageTypeParam) setOutageTypeFilter(outageTypeParam);
+      if (outageTypesParam) setOutageTypeFilter(outageTypesParam);
+      else if (outageTypeParam) setOutageTypeFilter(outageTypeParam);
       if (priorityParam) setPriorityFilter(priorityParam);
       setSearchParams({}, { replace: true });
     }
@@ -257,7 +259,10 @@ export default function Events() {
         if (stageFilter === 'inactive' && s.stage) return false;
       }
       if (lifecycleFilter !== 'all' && s.lifecycle_stage !== lifecycleFilter) return false;
-      if (outageTypeFilter !== 'all' && s.outage_type !== outageTypeFilter) return false;
+      if (outageTypeFilter !== 'all') {
+        const types = outageTypeFilter.split(',');
+        if (!types.includes(s.outage_type ?? '')) return false;
+      }
       if (priorityFilter !== 'all' && s.priority !== priorityFilter) return false;
       return true;
     });
@@ -271,7 +276,10 @@ export default function Events() {
   const activeFilters = useMemo(() => {
     const f: string[] = [];
     if (lifecycleFilter !== 'all') f.push(lifecycleFilter);
-    if (outageTypeFilter !== 'all') f.push(outageTypeFilter);
+    if (outageTypeFilter !== 'all') {
+      const types = outageTypeFilter.split(',');
+      f.push(types.length > 1 ? `${types.length} Outage Types` : outageTypeFilter);
+    }
     if (priorityFilter !== 'all') f.push(`Priority: ${priorityFilter}`);
     return f;
   }, [lifecycleFilter, outageTypeFilter, priorityFilter]);
