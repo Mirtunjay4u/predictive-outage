@@ -156,6 +156,15 @@ const policySections = [
     ],
   },
   {
+    icon: ShieldAlert, title: 'Model Output & Risk Scoring Policy',
+    items: [
+      'Risk scores, ETR confidence, and AI recommendations are advisory indicators, not ground truth.',
+      'Operators must validate against operational context, hazards, and field verification.',
+      'The system must not present probabilistic outputs as certainties.',
+      'If confidence is Low or uncertainty drivers are high, the system must recommend conservative messaging and emphasize verification.',
+    ],
+  },
+  {
     icon: Database, title: 'Data Quality & Assumption Handling',
     items: [
       'If key data is missing, the system explicitly states assumptions.',
@@ -173,11 +182,29 @@ const policySections = [
     ],
   },
   {
+    icon: Lock, title: 'Security, Privacy & Data Handling (Phase-1)',
+    items: [
+      'No customer PII is required for Phase-1 demo operation.',
+      'Any event/crew/asset data is synthetic unless explicitly labeled otherwise.',
+      'API keys and credentials are stored only in backend environment variables and never exposed in the frontend.',
+      'Audit logs (Event Decision Timeline) are used for traceability and demo validation; retention can be configured for enterprise policy.',
+    ],
+  },
+  {
     icon: ClipboardList, title: 'Auditability & Traceability',
     items: [
       'All major system decisions are logged in the Event Decision Timeline.',
       'Timeline includes weather updates, rule engine triggers, copilot reasoning, and operator approvals.',
       'This ensures transparency and explainability.',
+    ],
+  },
+  {
+    icon: Target, title: 'Operational Success Metrics (Phase-1 Demonstration KPIs)',
+    items: [
+      'Time to triage: reduce time to identify top priority events and critical load risks.',
+      'Decision transparency: clear reasoning, assumptions, and rules fired shown per event.',
+      'Communication readiness: produce operator-approved customer/regulator drafts quickly with ETR band + confidence.',
+      'Safety posture: escalation triggers surfaced consistently; unsafe recommendations blocked by rules.',
     ],
   },
 ];
