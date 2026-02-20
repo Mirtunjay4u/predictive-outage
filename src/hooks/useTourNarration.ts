@@ -54,6 +54,7 @@ const narrationScripts: string[] = [
 interface UseTourNarrationReturn {
   isMuted: boolean;
   isLoading: boolean;
+  isSpeaking: boolean;
   preCacheProgress: number; // 0-100
   toggleMute: () => void;
   playStepNarration: (stepIndex: number) => void;
@@ -87,12 +88,19 @@ async function fetchTtsAudio(text: string, signal?: AbortSignal): Promise<string
 export function useTourNarration(): UseTourNarrationReturn {
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [preCacheProgress, setPreCacheProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentStepRef = useRef<number>(-1);
   const cacheRef = useRef<Map<number, string>>(new Map());
   const abortRef = useRef<AbortController | null>(null);
   const preCacheAbortRef = useRef<AbortController | null>(null);
+
+  const attachAudioListeners = useCallback((audio: HTMLAudioElement) => {
+    audio.addEventListener('play', () => setIsSpeaking(true));
+    audio.addEventListener('pause', () => setIsSpeaking(false));
+    audio.addEventListener('ended', () => setIsSpeaking(false));
+  }, []);
 
   const stopNarration = useCallback(() => {
     if (audioRef.current) {
@@ -105,6 +113,7 @@ export function useTourNarration(): UseTourNarrationReturn {
       abortRef.current = null;
     }
     setIsLoading(false);
+    setIsSpeaking(false);
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -173,6 +182,7 @@ export function useTourNarration(): UseTourNarrationReturn {
     const cachedUrl = cacheRef.current.get(stepIndex);
     if (cachedUrl) {
       const audio = new Audio(cachedUrl);
+      attachAudioListeners(audio);
       audioRef.current = audio;
       try { await audio.play(); } catch (e) { /* autoplay blocked */ }
       return;
@@ -190,6 +200,7 @@ export function useTourNarration(): UseTourNarrationReturn {
 
     cacheRef.current.set(stepIndex, url);
     const audio = new Audio(url);
+    attachAudioListeners(audio);
     audioRef.current = audio;
     setIsLoading(false);
     try { await audio.play(); } catch (e) { /* autoplay blocked */ }
@@ -205,5 +216,5 @@ export function useTourNarration(): UseTourNarrationReturn {
     };
   }, [stopNarration]);
 
-  return { isMuted, isLoading, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll };
+  return { isMuted, isLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll };
 }
