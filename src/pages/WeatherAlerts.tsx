@@ -201,6 +201,12 @@ function CrewSafetyBanner({ hazardGroups }: { hazardGroups: Record<HazardKey, Sc
               tokenStyles[ind.status],
             )}
           >
+            {ind.status === 'block' && (
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+            )}
             <span className="shrink-0 opacity-80">{ind.icon}</span>
             <div className="flex flex-col min-w-0">
               <span className="text-[9px] font-medium uppercase tracking-wider opacity-70">{ind.label}</span>
