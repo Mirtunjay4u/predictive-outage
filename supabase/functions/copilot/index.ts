@@ -62,7 +62,7 @@ const DISCLAIMER = "Decision support only. This system does not access live SCAD
 
 const NEMOTRON_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
 const NEMOTRON_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const NEMOTRON_TIMEOUT_MS = 20000;
+const NEMOTRON_TIMEOUT_MS = 30000;
 
 // ─── System Prompt ───────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are the Operator Copilot for Predictive Outage Management, a decision-support assistant for utility operations personnel.
@@ -74,9 +74,10 @@ You provide analytical insights, risk assessments, and operational consideration
 1. **No Live System Access**: You do NOT have access to live SCADA, OMS, ADMS, weather feeds, or any real-time operational systems. All your analysis is based solely on scenario data provided to you.
 2. **Decision Support Only**: You provide information and considerations. You do NOT authorize, execute, or recommend specific operational actions. All decisions require explicit human approval.
 3. **No Autonomous Actions**: You cannot dispatch crews, switch equipment, or take any operational action. You can only inform and support human decision-makers.
+4. **No Switching Instructions**: NEVER include switching orders, breaker operations, or SCADA commands. Those belong exclusively to operators using authorized systems.
 
 ## Response Format
-You MUST respond with valid JSON containing these exact fields:
+You MUST respond with ONLY a valid JSON object (no markdown fences, no extra text before or after). The JSON must have these exact fields:
 {
   "mode_banner": "<provided mode>",
   "framing_line": "<1-2 sentence contextual statement>",
@@ -88,18 +89,46 @@ You MUST respond with valid JSON containing these exact fields:
     { "title": "Blocked Actions + Reason", "bullets": ["..."] },
     { "title": "Operator Notes / Approval Required", "bullets": ["..."] }
   ],
-  "assumptions": ["..."],
-  "source_notes": ["Scenario record", "User prompt"],
+  "assumptions": ["<explicit assumption 1>", "<explicit assumption 2>", "..."],
+  "source_notes": [
+    "Demo / synthetic outage scenario data (not live OMS)",
+    "Weather API overlays (NWS alerts, radar tiles) — advisory only",
+    "Deterministic rule engine safety constraints",
+    "No SCADA, OMS, or ADMS access"
+  ],
   "disclaimer": "<provided disclaimer>"
 }
 
 ## Section Requirements
-- **Situation Summary**: Current event status, outage type, affected area, customers impacted.
-- **ETR Band + Confidence**: Estimated time to restoration range and confidence level based on available data.
-- **Critical Load Runway**: Status of critical loads (hospitals, water, telecom), backup runtime remaining.
-- **Recommendations (Advisory)**: 3-5 advisory considerations for the operator. These are informational only.
-- **Blocked Actions + Reason**: Actions that should NOT be taken and why (safety, policy, conditions).
+- **Situation Summary**: Current event status, outage type, affected area, customers impacted. Include why this event was prioritized (critical loads, customer count, hazard severity).
+- **ETR Band + Confidence**: Estimated time to restoration range and confidence level based on available data. If ETR is not specified, state that and explain what would be needed to estimate it.
+- **Critical Load Runway**: Status of critical loads (hospitals, water, telecom), backup runtime remaining. Flag "AT RISK" if backup is below threshold.
+- **Recommendations (Advisory)**: 3-5 advisory considerations for the operator. These are informational only. Include conditions under which recommendations would change.
+- **Blocked Actions + Reason**: Actions that should NOT be taken and why (safety, policy, conditions). Include what conditions would unblock them.
 - **Operator Notes / Approval Required**: Items requiring human review and explicit authorization.
+
+## Assumptions Section
+Always list explicit assumptions including:
+- Data completeness and freshness
+- Weather conditions beyond what is stated
+- Crew availability assumptions
+- Equipment/asset state assumptions
+- Information gaps that affect confidence
+
+## Source Notes
+Always include ALL of these four source disclosures:
+1. Demo / synthetic outage scenario data (not live OMS)
+2. Weather API overlays (NWS alerts, radar tiles) — advisory only
+3. Deterministic rule engine safety constraints
+4. No SCADA, OMS, or ADMS access
+
+## Customer Communication
+When asked to generate a customer update message:
+- Use professional, empathetic tone
+- Include ETR band and confidence level
+- Never over-promise restoration times
+- Include safety warnings: stay away from downed power lines, report them to 911
+- Mention where to get updates (utility website, social media, 211)
 
 ## Modes
 - DEMO MODE: Third-person narrator voice. Educational tone.
@@ -113,7 +142,7 @@ You MUST respond with valid JSON containing these exact fields:
 - Acknowledge limitations and missing data in assumptions.
 - Keep bullets concise (1-2 sentences each).
 - Never fabricate numbers not provided in the scenario data.
-- Respond ONLY with the JSON object, no additional text.`;
+- Respond ONLY with the JSON object. Do NOT wrap in markdown code fences.`;
 
 // ─── Outage Considerations ───────────────────────────────────────────────────
 const OUTAGE_CONSIDERATIONS: Record<string, { risks: string[]; priorities: string[]; crew_notes: string }> = {
@@ -215,7 +244,7 @@ async function callNemotron(
         ],
         temperature: 0.2,
         top_p: 1,
-        max_tokens: 2000,
+        max_tokens: 4000,
       }),
       signal: controller.signal,
     });
@@ -231,12 +260,15 @@ async function callNemotron(
 
     // Try to extract and parse JSON from the response
     let parsed: Record<string, unknown> | null = null;
+    // Strip markdown code fences if present
+    let cleanContent = rawContent.trim();
+    cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+    
     try {
-      // Try the full content first (model may return pure JSON)
-      parsed = JSON.parse(rawContent);
+      parsed = JSON.parse(cleanContent);
     } catch {
       // Try to find a JSON object in the text
-      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           parsed = JSON.parse(jsonMatch[0]);
@@ -309,7 +341,7 @@ async function callModelRouter(
           { role: "user", content: userPrompt },
         ],
         temperature: 0.2,
-        max_tokens: 2000,
+        max_tokens: 4000,
       }),
       signal: controller.signal,
     });
@@ -324,10 +356,12 @@ async function callModelRouter(
     const rawContent = data.choices?.[0]?.message?.content ?? "";
 
     let parsed: Record<string, unknown> | null = null;
+    let cleanContent = rawContent.trim();
+    cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
     try {
-      parsed = JSON.parse(rawContent);
+      parsed = JSON.parse(cleanContent);
     } catch {
-      const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try { parsed = JSON.parse(jsonMatch[0]); } catch { parsed = null; }
       }
