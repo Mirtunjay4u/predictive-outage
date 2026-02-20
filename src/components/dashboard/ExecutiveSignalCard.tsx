@@ -23,7 +23,7 @@ type ExecutiveSignal = {
   detail: string;
   confidence: BriefingData['confidence'];
   updatedTime: Date;
-  source: 'nemotron' | 'fallback';
+  source: 'nemotron' | 'model-router' | 'fallback';
 };
 
 function deriveFallbackSignal(scenarios: Scenario[], dataUpdatedAt: number): ExecutiveSignal {
@@ -77,7 +77,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-muted-foreground">Source: {signal.source === 'nemotron' ? 'Derived from AI Briefing' : 'Deterministic fallback'}.</p>
+          <p className="text-[11px] text-muted-foreground">Source: {signal.source === 'nemotron' ? 'Derived from AI Briefing (Nemotron)' : signal.source === 'model-router' ? 'Derived from AI Briefing (Model Router)' : 'Deterministic fallback'}.</p>
           <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Supporting Signals</Button>
         </div>
       </CardContent>

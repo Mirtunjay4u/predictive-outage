@@ -15,7 +15,7 @@ type BriefingData = {
   actions: string[];
   confidence: ConfidenceLevel;
   updatedTime: Date;
-  source: 'nemotron' | 'fallback';
+  source: 'nemotron' | 'model-router' | 'fallback';
 };
 
 export type { BriefingData, ConfidenceLevel };
@@ -152,13 +152,14 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
       },
     }).then(({ data, error: fnError }) => {
       if (fnError) throw fnError;
-      if (data?.fallback) throw new Error(`NIM ${data.reason || 'unavailable'}`);
-      if (!data?.ok || typeof data.answer !== 'string') throw new Error('Nemotron response unavailable');
+      if (data?.fallback) throw new Error(`AI engines unavailable (${data.reason || 'unknown'})`);
+      if (!data?.ok || typeof data.answer !== 'string') throw new Error('AI response unavailable');
 
       const parsed = parseNemotronBriefing(data.answer);
-      if (!parsed) throw new Error('Nemotron returned non-structured briefing content');
+      if (!parsed) throw new Error('AI returned non-structured briefing content');
 
-      const nimBriefing = { ...parsed, updatedTime: new Date(), source: 'nemotron' as const };
+      const engineSource = (typeof data.model === 'string' && data.model.toLowerCase().includes('router')) ? 'model-router' as const : 'nemotron' as const;
+      const nimBriefing = { ...parsed, updatedTime: new Date(), source: engineSource };
       nimCache.briefing = nimBriefing;
       nimCache.fetchedAt = Date.now();
       nimCache.backoff = 0;
@@ -205,7 +206,7 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
 
       <CardContent className={boardroomMode ? 'space-y-3 px-5 pb-5' : 'space-y-4 px-4 pb-4'}>
         {isLoading && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Refreshing briefing…</div>}
-        {error && !boardroomMode && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-4 w-4" />Nemotron unavailable. Showing deterministic fallback.</div>}
+        {error && !boardroomMode && <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertCircle className="h-4 w-4" />AI engines unavailable. Showing deterministic fallback.</div>}
 
         {/* ── Insights ── always top 3; boardroom shows them larger */}
         <ul className={boardroomMode ? 'space-y-2.5' : 'space-y-1.5 text-sm'}>
@@ -232,12 +233,12 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
               </p>
             )}
             <p className="text-[11px] text-muted-foreground">
-              Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : 'Deterministic fallback'} · Confidence: {briefing.confidence}
+              Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : briefing.source === 'model-router' ? 'Model Router AI briefing' : 'Deterministic fallback'} · Confidence: {briefing.confidence}
             </p>
           </>
         ) : (
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : 'Deterministic fallback'}.</p>
+            <p className="text-[11px] text-muted-foreground">Source: {briefing.source === 'nemotron' ? 'Nemotron AI briefing' : briefing.source === 'model-router' ? 'Model Router AI briefing' : 'Deterministic fallback'}.</p>
             <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Supporting Signals</Button>
           </div>
         )}
