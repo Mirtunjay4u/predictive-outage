@@ -2,7 +2,9 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, FileText, Map, Bot, BarChart3, CloudLightning, Network,
   Shield, Bell, Users, Clock, Zap, Eye, Target, Layers, BookOpen,
-  CheckCircle2, Lightbulb, ArrowRight, Info
+  CheckCircle2, Lightbulb, ArrowRight, Info, ShieldAlert, Lock, UserCheck,
+  HeartPulse, AlertOctagon, ToggleLeft, Building2, MessageSquare, Database,
+  ClipboardList, Radio
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +80,108 @@ const untappedFeatures = [
   },
 ];
 
+const policySections = [
+  {
+    icon: ShieldAlert, title: 'Operational Authority & Accountability',
+    items: [
+      'Operator Copilot is a decision-support system only.',
+      'All operational decisions remain the responsibility of the human operator.',
+      'The system does not execute switching, dispatch, or control actions.',
+      'No autonomous actions are performed by this system.',
+    ],
+  },
+  {
+    icon: Lock, title: 'System Access Boundaries',
+    items: [
+      'Phase-1 does not integrate with live SCADA, OMS, ADMS, or DMS systems.',
+      'Event, asset, and crew data are synthetic/demo unless explicitly stated otherwise.',
+      'Live integrations are limited to public weather overlays (e.g., radar tiles and NWS alerts).',
+    ],
+  },
+  {
+    icon: UserCheck, title: 'Human-in-the-Loop Requirement',
+    items: [
+      'All recommendations are presented as options.',
+      'All communication drafts require explicit operator approval.',
+      'Outputs remain "Pending Operator Review" until confirmed.',
+    ],
+  },
+  {
+    icon: HeartPulse, title: 'Safety-First Policy (Overrides All Other Logic)',
+    items: [
+      'Field safety overrides restoration speed.',
+      'The system must not encourage unsafe field activity.',
+      'During lightning, wildfire exclusion, or flooding access restrictions, the system prioritizes planning, staging, and communication over field action acceleration.',
+    ],
+  },
+  {
+    icon: AlertOctagon, title: 'Immediate Escalation Triggers',
+    description: 'Escalate when any of the following are detected:',
+    items: [
+      'Downed wire, arcing, sparking, or fire risk',
+      'Gas odor near electrical infrastructure',
+      'Critical facility backup runtime below threshold',
+      'Wildfire proximity to energized lines',
+      'Substation flooding or water ingress risk',
+      'Public evacuation or emergency responder constraints',
+    ],
+  },
+  {
+    icon: ToggleLeft, title: 'Switching & Network Operation Boundaries',
+    items: [
+      'The system does not provide device-level switching steps.',
+      'No breaker, recloser, or protection sequence instructions are generated.',
+      'Assets marked "Under Maintenance" or "Lockout/Tagout" are treated as non-operable.',
+      'Recommendations must respect maintenance and safety flags.',
+    ],
+  },
+  {
+    icon: Building2, title: 'Critical Infrastructure Prioritization Principles',
+    description: 'Default prioritization lens:',
+    items: [
+      '1) Life safety (hospitals, emergency services)',
+      '2) Essential services (water, wastewater, telecom)',
+      '3) Public safety hazards',
+      '4) Largest restoration impact per crew-hour',
+      '5) Vulnerable or prolonged outage communities',
+    ],
+  },
+  {
+    icon: Radio, title: 'ETR Communication Policy',
+    items: [
+      'ETR is always presented as a band (Earliest–Latest).',
+      'Confidence level (High/Medium/Low) must be shown.',
+      'The system avoids guaranteeing restoration times.',
+      'Uncertainty drivers are acknowledged when applicable.',
+    ],
+  },
+  {
+    icon: Database, title: 'Data Quality & Assumption Handling',
+    items: [
+      'If key data is missing, the system explicitly states assumptions.',
+      'The system does not fabricate device states, network topology, crew location, or restoration confirmations.',
+      'Recommendations may be conditional if data confidence is low.',
+    ],
+  },
+  {
+    icon: MessageSquare, title: 'Customer & Regulator Communication Governance',
+    items: [
+      'Drafted communications require operator approval.',
+      'Messages include safety reminders regarding downed lines.',
+      'No speculative root cause statements are generated.',
+      'No absolute restoration promises are made.',
+    ],
+  },
+  {
+    icon: ClipboardList, title: 'Auditability & Traceability',
+    items: [
+      'All major system decisions are logged in the Event Decision Timeline.',
+      'Timeline includes weather updates, rule engine triggers, copilot reasoning, and operator approvals.',
+      'This ensures transparency and explainability.',
+    ],
+  },
+];
+
 export default function About() {
   return (
     <div className="p-6 space-y-8 max-w-5xl mx-auto">
@@ -115,6 +219,7 @@ export default function About() {
         <TabsList className="bg-muted/50">
           <TabsTrigger value="modules" className="text-xs gap-1.5"><Layers className="w-3.5 h-3.5" /> Modules Guide</TabsTrigger>
           <TabsTrigger value="features" className="text-xs gap-1.5"><Lightbulb className="w-3.5 h-3.5" /> Untapped Features</TabsTrigger>
+          <TabsTrigger value="policy" className="text-xs gap-1.5"><ShieldAlert className="w-3.5 h-3.5" /> Policy & Safety</TabsTrigger>
           <TabsTrigger value="howto" className="text-xs gap-1.5"><Target className="w-3.5 h-3.5" /> How to Use</TabsTrigger>
           <TabsTrigger value="builder" className="text-xs gap-1.5"><Info className="w-3.5 h-3.5" /> About the Builder</TabsTrigger>
         </TabsList>
@@ -182,6 +287,54 @@ export default function About() {
                 </Card>
               </motion.div>
             ))}
+          </motion.div>
+        </TabsContent>
+
+        {/* Policy & Safety */}
+        <TabsContent value="policy">
+          <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-2">
+            <motion.div variants={fadeIn}>
+              <Card className="border-amber-500/30 bg-amber-500/5 mb-4">
+                <CardContent className="p-4 flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-500">Operational Policy & Safety Rules (Phase-1)</p>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
+                      This section defines operational boundaries, safety constraints, and governance principles
+                      for Phase-1 of Operator Copilot. All rules are enforced at the application layer.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <Accordion type="multiple" className="space-y-2">
+              {policySections.map((section, idx) => (
+                <motion.div key={idx} variants={fadeIn}>
+                  <AccordionItem value={`policy-${idx}`} className="border border-border/50 rounded-lg overflow-hidden bg-card/40 px-1">
+                    <AccordionTrigger className="py-3 px-3 text-xs font-medium hover:no-underline gap-2">
+                      <div className="flex items-center gap-2.5 flex-1 text-left">
+                        <section.icon className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span>{section.title}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-3 pb-3">
+                      {section.description && (
+                        <p className="text-[11px] text-muted-foreground mb-2 font-medium">{section.description}</p>
+                      )}
+                      <ul className="space-y-1.5">
+                        {section.items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed">
+                            <span className="w-1 h-1 rounded-full bg-primary/60 mt-1.5 flex-shrink-0" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </AccordionContent>
+                  </AccordionItem>
+                </motion.div>
+              ))}
+            </Accordion>
           </motion.div>
         </TabsContent>
 
