@@ -2,8 +2,9 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine, AlertTriangle, CloudRain, RadioTower } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine, AlertTriangle, CloudRain, RadioTower, Thermometer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { computeAllWeatherRisks, type WeatherRiskResult } from '@/lib/weather-risk';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -290,6 +291,13 @@ export default function OutageMap() {
       return true;
     });
   }, [geoScenarios, searchQuery, lifecycleFilter, priorityFilter, outageTypeFilter, isPlaybackActive, playbackTime]);
+
+  // ── Weather risk scores per event ──
+  const weatherRiskMap = useMemo(() => {
+    if (!filteredScenarios.length) return computeAllWeatherRisks([], [], []);
+    const allAlerts = nwsAlertsData?.features ?? [];
+    return computeAllWeatherRisks(filteredScenarios, allAlerts, windPoints);
+  }, [filteredScenarios, nwsAlertsData, windPoints]);
 
   const hasActiveFilters = searchQuery || lifecycleFilter !== 'all' || priorityFilter !== 'all' || outageTypeFilter !== 'all' || isPlaybackActive;
 
@@ -740,13 +748,67 @@ export default function OutageMap() {
                       )}
                     </div>
                     
-                    {/* Customer Impact */}
-                    {scenario.customers_impacted && scenario.customers_impacted > 0 && (
-                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
-                        <span className="font-semibold text-foreground">{scenario.customers_impacted.toLocaleString()}</span>
-                        customers impacted
-                      </p>
-                    )}
+                    {/* Weather Risk + Customer Impact */}
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      {(() => {
+                        const risk = weatherRiskMap.get(scenario.id);
+                        if (!risk || (risk.score === 0 && risk.alertCount === 0)) return null;
+                        return (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold border cursor-default"
+                                style={{ borderColor: risk.tierColor, color: risk.tierColor }}
+                              >
+                                <Thermometer className="w-2.5 h-2.5" />
+                                Wx {risk.score}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-[220px] p-3">
+                              <p className="text-xs font-semibold mb-1.5" style={{ color: risk.tierColor }}>
+                                Weather Risk: {risk.tier} ({risk.score}/100)
+                              </p>
+                              <div className="space-y-1 text-[10px] text-muted-foreground">
+                                <div className="flex justify-between">
+                                  <span>Alert severity</span>
+                                  <span className="font-medium text-foreground">{risk.drivers.alertScore}/100</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-1">
+                                  <div className="bg-orange-500 h-1 rounded-full" style={{ width: `${risk.drivers.alertScore}%` }} />
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Wind speed</span>
+                                  <span className="font-medium text-foreground">{risk.drivers.windScore}/100</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-1">
+                                  <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${risk.drivers.windScore}%` }} />
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Alert density</span>
+                                  <span className="font-medium text-foreground">{risk.drivers.densityScore}/100</span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-1">
+                                  <div className="bg-yellow-500 h-1 rounded-full" style={{ width: `${risk.drivers.densityScore}%` }} />
+                                </div>
+                                {risk.alertCount > 0 && (
+                                  <p className="pt-1 text-[9px]">{risk.alertCount} alert{risk.alertCount > 1 ? 's' : ''} · {risk.maxAlertSeverity}</p>
+                                )}
+                                {risk.windSpeed !== null && (
+                                  <p className="text-[9px]">Wind: {Math.round(risk.windSpeed)} mph{risk.windGusts ? ` (gusts ${Math.round(risk.windGusts)})` : ''}</p>
+                                )}
+                              </div>
+                              <p className="text-[8px] text-muted-foreground/60 mt-2 italic">Advisory only · requires operator review</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })()}
+                      {scenario.customers_impacted && scenario.customers_impacted > 0 && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <span className="font-semibold text-foreground">{scenario.customers_impacted.toLocaleString()}</span>
+                          customers
+                        </p>
+                      )}
+                    </div>
                   </motion.div>
                 ))
               )}
