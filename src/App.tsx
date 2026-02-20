@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DashboardUiProvider } from "./contexts/DashboardUiContext";
 import { AppLayout } from "./components/layout/AppLayout";
 import { DemoScriptModal } from "./components/DemoScriptModal";
+import { DemoTourHUD } from "./components/DemoTourHUD";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -82,6 +83,7 @@ const App = () => (
             <DashboardUiProvider>
               <AppRoutes />
               <DemoScriptModal />
+              <DemoTourHUD />
             </DashboardUiProvider>
           </AuthProvider>
         </BrowserRouter>
