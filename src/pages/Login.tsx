@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import builderPhoto from '@/assets/builder-photo.png';
 import tcsLogo from '@/assets/tcs-logo.png';
+import gridWatermark from '@/assets/grid-watermark.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -68,9 +69,15 @@ export default function Login() {
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden md:flex-row">
       {/* Left Panel - Branding */}
       <div className="flex gradient-primary relative overflow-hidden md:w-1/2">
-        {/* Subtle dark overlay for improved text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-transparent to-black/20" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.08),transparent_50%)]" />
+        {/* Watermark background image – transmission grid silhouette */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-[0.045]"
+          style={{ backgroundImage: `url(${gridWatermark})` }}
+          aria-hidden="true"
+        />
+        {/* Dark gradient overlay above watermark for full text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/10 to-black/35" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.06),transparent_50%)]" />
         
         <div className="relative z-10 flex w-full flex-col justify-between py-10 px-6 text-primary-foreground sm:px-8 md:h-full md:py-12 md:px-12 xl:px-20">
           <motion.div
