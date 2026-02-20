@@ -422,12 +422,34 @@ export default function CopilotStudio() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex items-center gap-2"
+                    className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm"
                   >
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Analysis failed</p>
-                      <p className="text-xs mt-0.5">{error}</p>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="font-medium">Analysis failed</p>
+                        <p className="text-xs mt-0.5">{error}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="gap-1.5 text-xs h-7"
+                        onClick={() => { setError(null); handleRun(); }}
+                      >
+                        <Play className="w-3 h-3" />
+                        Retry
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs h-7 border-destructive/30 text-destructive hover:bg-destructive/10"
+                        onClick={() => { setError(null); setMode('DEMO'); handleRun(); }}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        Use Fallback Model
+                      </Button>
                     </div>
                   </motion.div>
                 )}
