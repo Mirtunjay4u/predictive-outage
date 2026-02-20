@@ -216,6 +216,7 @@ export default function Events() {
   const [stageFilter, setStageFilter] = useState('all');
   const [lifecycleFilter, setLifecycleFilter] = useState('all');
   const [outageTypeFilter, setOutageTypeFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
   const [triageMode, setTriageMode] = useState(true);
 
   // Policy eval map: eventId → {status, result}
@@ -231,13 +232,15 @@ export default function Events() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // URL params from dashboard
+  // URL params from dashboard / analytics
   useEffect(() => {
     const lifecycleParam = searchParams.get('lifecycle');
     const outageTypeParam = searchParams.get('outage_type');
-    if (lifecycleParam || outageTypeParam) {
+    const priorityParam = searchParams.get('priority');
+    if (lifecycleParam || outageTypeParam || priorityParam) {
       if (lifecycleParam) setLifecycleFilter(lifecycleParam);
       if (outageTypeParam) setOutageTypeFilter(outageTypeParam);
+      if (priorityParam) setPriorityFilter(priorityParam);
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -255,9 +258,10 @@ export default function Events() {
       }
       if (lifecycleFilter !== 'all' && s.lifecycle_stage !== lifecycleFilter) return false;
       if (outageTypeFilter !== 'all' && s.outage_type !== outageTypeFilter) return false;
+      if (priorityFilter !== 'all' && s.priority !== priorityFilter) return false;
       return true;
     });
-  }, [scenarios, stageFilter, lifecycleFilter, outageTypeFilter]);
+  }, [scenarios, stageFilter, lifecycleFilter, outageTypeFilter, priorityFilter]);
 
   // Triage buckets
   const immediate = useMemo(() => filteredScenarios.filter((s) => triageBucket(s) === 'immediate'), [filteredScenarios]);

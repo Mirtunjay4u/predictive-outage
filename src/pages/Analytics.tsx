@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
-  AlertTriangle, Activity, ShieldAlert, Clock, ShieldOff, Users,
+  AlertTriangle, Activity, ShieldAlert, Clock, ShieldOff, Users, ExternalLink,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useScenariosWithIntelligence } from '@/hooks/useScenarios';
 import { useCrews } from '@/hooks/useCrews';
 import { getEventSeverity } from '@/lib/severity';
@@ -24,6 +26,8 @@ interface AnalyticsKPIProps {
   sub?: string;
   icon: React.ReactNode;
   accent: 'red' | 'amber' | 'sky' | 'blue' | 'violet' | 'emerald';
+  onClick?: () => void;
+  drillLabel?: string;
 }
 
 const ACCENT = {
@@ -53,9 +57,19 @@ const VALUE_ACCENT = {
   emerald: 'text-emerald-600 dark:text-emerald-400',
 } as const;
 
-function AnalyticsKPI({ label, value, sub, icon, accent }: AnalyticsKPIProps) {
+function AnalyticsKPI({ label, value, sub, icon, accent, onClick, drillLabel }: AnalyticsKPIProps) {
   return (
-    <Card className={cn('shadow-sm', ACCENT[accent])}>
+    <Card
+      className={cn(
+        'shadow-sm',
+        ACCENT[accent],
+        onClick && 'cursor-pointer transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md group'
+      )}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -73,6 +87,12 @@ function AnalyticsKPI({ label, value, sub, icon, accent }: AnalyticsKPIProps) {
             {icon}
           </div>
         </div>
+        {onClick && drillLabel && (
+          <div className="mt-2 pt-2 border-t border-border/20 flex items-center gap-1 text-[10px] text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+            <ExternalLink className="w-3 h-3" />
+            <span>{drillLabel}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -146,6 +166,7 @@ const CONFIDENCE_COLORS: Record<string, string> = {
 /* ------------------------------------------------------------------ */
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const { data: events = [] } = useScenariosWithIntelligence();
   const { data: crews = [] } = useCrews();
 
@@ -211,6 +232,8 @@ export default function Analytics() {
             sub={`${events.length} total across all stages`}
             icon={<Activity className="w-4 h-4" strokeWidth={1.75} />}
             accent="sky"
+            onClick={() => navigate('/events?lifecycle=Event')}
+            drillLabel="View active events"
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -220,6 +243,8 @@ export default function Analytics() {
             sub="Severity 4–5 events"
             icon={<AlertTriangle className="w-4 h-4" strokeWidth={1.75} />}
             accent="red"
+            onClick={() => navigate('/events?priority=high')}
+            drillLabel="View high priority events"
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -229,6 +254,8 @@ export default function Analytics() {
             sub="Backup below escalation threshold"
             icon={<ShieldAlert className="w-4 h-4" strokeWidth={1.75} />}
             accent="amber"
+            onClick={() => navigate('/outage-map?filter=critical_load')}
+            drillLabel="View on map"
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -238,6 +265,8 @@ export default function Analytics() {
             sub="Avg spread (latest − earliest)"
             icon={<Clock className="w-4 h-4" strokeWidth={1.75} />}
             accent="blue"
+            onClick={() => navigate('/events?lifecycle=Event')}
+            drillLabel="View active ETR details"
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
@@ -247,6 +276,8 @@ export default function Analytics() {
             sub="Events flagged for escalation"
             icon={<ShieldOff className="w-4 h-4" strokeWidth={1.75} />}
             accent="violet"
+            onClick={() => navigate('/copilot-studio')}
+            drillLabel="Open Copilot Studio"
           />
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
@@ -256,6 +287,8 @@ export default function Analytics() {
             sub="Active events without assigned crew"
             icon={<Users className="w-4 h-4" strokeWidth={1.75} />}
             accent="emerald"
+            onClick={() => navigate('/outage-map?filter=crew_constraint')}
+            drillLabel="View on map"
           />
         </motion.div>
       </div>
