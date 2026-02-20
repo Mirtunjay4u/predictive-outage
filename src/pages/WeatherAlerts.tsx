@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CloudLightning, Flame, Droplets, Thermometer, ShieldAlert, Wind,
   TreePine, AlertTriangle, Users, CheckCircle2, XCircle, Activity,
-  ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio,
+  ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio, BarChart3,
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -130,6 +131,111 @@ const severityFromCode = (code: number): 'green' | 'amber' | 'red' => {
   return 'green';
 };
 const dotColor = { green: 'bg-emerald-500', amber: 'bg-amber-500', red: 'bg-red-500' };
+
+/* ------------------------------------------------------------------ */
+/*  Hazard Timeline Chart                                             */
+/* ------------------------------------------------------------------ */
+
+const HAZARD_COLORS: Record<HazardKey, string> = {
+  storm: 'hsl(199, 89%, 48%)',
+  wildfire: 'hsl(0, 72%, 51%)',
+  flood: 'hsl(187, 72%, 48%)',
+  'extreme-heat': 'hsl(25, 95%, 53%)',
+  'extreme-cold': 'hsl(239, 84%, 67%)',
+};
+
+const HAZARD_LABELS: Record<HazardKey, string> = {
+  storm: 'Storm',
+  wildfire: 'Wildfire',
+  flood: 'Flood',
+  'extreme-heat': 'Heat',
+  'extreme-cold': 'Ice',
+};
+
+function HazardTimelineChart({ events }: { events: ScenarioWithIntelligence[] }) {
+  const data = useMemo(() => {
+    const now = new Date();
+    const days: { label: string; date: Date }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      days.push({
+        label: d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+        date: d,
+      });
+    }
+
+    return days.map(({ label, date }) => {
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      const row: Record<string, string | number> = { day: label };
+      (Object.keys(HAZARD_LABELS) as HazardKey[]).forEach(key => {
+        row[key] = events.filter(e => {
+          const hk = HAZARD_TO_KEY[e.outage_type || ''];
+          if (hk !== key) return false;
+          const start = e.event_start_time ? new Date(e.event_start_time) : e.created_at ? new Date(e.created_at) : null;
+          if (!start) return false;
+          return start >= date && start < nextDay;
+        }).length;
+      });
+      return row;
+    });
+  }, [events]);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}>
+      <Card className="shadow-sm border-border/50">
+        <CardHeader className="pb-2 pt-4 px-5">
+          <CardTitle className="flex items-center gap-2 text-[13px] font-medium">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            Hazard Event Timeline — Past 7 Days
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Daily event counts by hazard family based on event start times
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-5 pb-4">
+          <div className="h-[220px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} barCategoryGap="20%">
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={28} />
+                <Tooltip
+                  contentStyle={{
+                    fontSize: 11,
+                    borderRadius: 8,
+                    border: '1px solid hsl(var(--border))',
+                    background: 'hsl(var(--background))',
+                    boxShadow: '0 4px 12px rgba(0,0,0,.12)',
+                  }}
+                />
+                <Legend
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+                />
+                {(Object.keys(HAZARD_LABELS) as HazardKey[]).map(key => (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    name={HAZARD_LABELS[key]}
+                    fill={HAZARD_COLORS[key]}
+                    radius={[3, 3, 0, 0]}
+                    stackId="hazards"
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-muted-foreground/60 mt-2">
+            Illustrative — counts derived from event start times within each 24-hour window.
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Collapsible Radar Map                                             */
@@ -506,6 +612,9 @@ export default function WeatherAlerts() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* ── Hazard Timeline Chart ── */}
+        <HazardTimelineChart events={events} />
 
         {/* ── Collapsible Live Radar Map ── */}
         <RadarMapSection />
