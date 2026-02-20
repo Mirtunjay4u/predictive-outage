@@ -14,6 +14,7 @@ import {
   CloudLightning,
   Network,
   BookOpen,
+  ClipboardCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ const navGroups = [
     accent: 'platform',
     items: [
       { icon: Network, label: 'Architecture', path: '/architecture' },
+      { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: BookOpen, label: 'About', path: '/about' },
       { icon: Settings, label: 'Settings', path: '/settings' },
     ],
