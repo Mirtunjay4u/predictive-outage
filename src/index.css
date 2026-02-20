@@ -119,6 +119,23 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  /* Prevent layout overflow globally */
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Force word-wrap on all text to prevent horizontal overflow */
+  p, span, h1, h2, h3, h4, h5, h6, td, th, li, label, a {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Ensure tables scroll horizontally when needed */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -135,6 +152,39 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/30;
+  }
+
+  /* ── Dark mode readability hardening ── */
+  .dark {
+    /* Ensure muted-foreground is legible (not ultra-low contrast) */
+    --muted-foreground: 215 20% 65%;
+  }
+
+  /* Ensure tooltips are always readable */
+  .dark [data-radix-popper-content-wrapper] [role="tooltip"],
+  .dark .leaflet-tooltip {
+    color: hsl(var(--popover-foreground));
+    background: hsl(var(--popover));
+    border-color: hsl(var(--border));
+  }
+
+  /* Ensure Recharts tooltips are readable in dark mode */
+  .dark .recharts-default-tooltip {
+    background-color: hsl(var(--popover)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  .dark .recharts-tooltip-label {
+    color: hsl(var(--foreground)) !important;
+  }
+  .dark .recharts-tooltip-item {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  /* Ensure disabled/secondary text contrast in dark mode */
+  .dark [disabled],
+  .dark .opacity-60 {
+    opacity: 0.65;
   }
 }
 

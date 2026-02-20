@@ -40,8 +40,9 @@ import {
  import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
  import { useScenarioWithIntelligence } from "@/hooks/useScenarios";
  import { useAssets, useEventAssets } from "@/hooks/useAssets";
- import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
+  import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
+import { EventDecisionTimeline } from "@/components/copilot/EventDecisionTimeline";
  import type { ScenarioWithIntelligence, EtrConfidence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
  
  export default function EventDetails() {
@@ -277,8 +278,11 @@ import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
                    </p>
                  </CardContent>
                </Card>
-             )}
-           </div>
+              )}
+
+              {/* Decision Timeline */}
+              <EventDecisionTimeline eventId={id ?? null} maxHeight="400px" />
+            </div>
  
            {/* Right Column - Sidebar (1/3) */}
            <div className="space-y-6">

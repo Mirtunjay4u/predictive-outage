@@ -37,6 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
+import { EventDecisionTimeline } from "@/components/copilot/EventDecisionTimeline";
 import { outageToHazard, type HazardOverlay } from "@/lib/severity";
 import type { ScenarioWithIntelligence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
@@ -326,6 +327,11 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, 
                     </div>
                   </section>
                 )}
+                
+                <Separator />
+
+                {/* Decision Timeline */}
+                <EventDecisionTimeline eventId={event.id ?? null} maxHeight="240px" />
                 
                 <Separator />
                 
