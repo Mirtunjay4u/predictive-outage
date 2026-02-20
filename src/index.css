@@ -431,3 +431,14 @@
   80%  { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* ── Executive Auto Tour: dim non-focused UI ── */
+body.tour-active > #root > * {
+  transition: filter 0.4s ease;
+}
+
+body.tour-active main,
+body.tour-active .flex-1 {
+  filter: brightness(0.92);
+  transition: filter 0.4s ease;
+}

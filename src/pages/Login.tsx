@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bot, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,13 @@ export default function Login() {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const { login, loginDemo } = useAuth();
+
+  // Auto-login listener for Executive Auto Tour (Step 1)
+  useEffect(() => {
+    const handleAutoLogin = () => loginDemo();
+    window.addEventListener('tour-auto-login', handleAutoLogin);
+    return () => window.removeEventListener('tour-auto-login', handleAutoLogin);
+  }, [loginDemo]);
 
   const trimmedEmail = email.trim();
   const trimmedPassword = password.trim();
