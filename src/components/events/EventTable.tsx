@@ -1,8 +1,9 @@
+import { useState, useMemo } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
   AlertTriangle, MoreVertical, Zap, Play, Loader2,
   ShieldX, ShieldAlert, ShieldCheck, Users, Wind, Flame, CloudRain,
-  Thermometer, Snowflake, HelpCircle,
+  Thermometer, Snowflake, HelpCircle, ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -12,12 +13,14 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   formatEtrBand, formatConfidencePct, confidenceBadgeClass, parseConfidence,
 } from '@/lib/etr-format';
 import { deriveSeverity } from '@/components/events/EventDetailPanel';
 import type { Scenario } from '@/types/scenario';
+import type { WeatherRiskResult } from '@/lib/weather-risk';
 
 // ── Policy state type ─────────────────────────────────────────────────────────
 type PolicyEntry = {
@@ -294,10 +297,51 @@ function PolicyCell({ entry, onRun, eventId }: { entry: PolicyEntry | undefined;
   );
 }
 
+// ── Weather Risk cell ──────────────────────────────────────────────────────────
+function WxRiskCell({ risk }: { risk: WeatherRiskResult | undefined }) {
+  if (!risk || risk.score === 0) return <span className="text-xs text-muted-foreground">—</span>;
+
+  const tierCls =
+    risk.tier === 'Severe' ? 'bg-red-500/10 text-red-700 border-red-400/30 dark:text-red-300'
+    : risk.tier === 'High' ? 'bg-orange-500/10 text-orange-700 border-orange-400/30 dark:text-orange-300'
+    : risk.tier === 'Moderate' ? 'bg-amber-500/10 text-amber-700 border-amber-400/30 dark:text-amber-300'
+    : 'bg-emerald-500/10 text-emerald-700 border-emerald-400/30 dark:text-emerald-300';
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="space-y-0.5 cursor-default">
+          <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold', tierCls)}>
+            <Thermometer className="h-2.5 w-2.5" />
+            {risk.tier}
+          </span>
+          <span className="block text-[10px] font-bold tabular-nums" style={{ color: risk.tierColor }}>
+            {risk.score}/100
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="left" className="max-w-[200px] p-2.5">
+        <p className="text-[10px] font-semibold mb-1" style={{ color: risk.tierColor }}>
+          Weather Risk: {risk.tier} ({risk.score}/100)
+        </p>
+        <div className="space-y-0.5 text-[9px] text-muted-foreground">
+          <div className="flex justify-between"><span>Alert sev.</span><span className="font-medium text-foreground">{risk.drivers.alertScore}/100</span></div>
+          <div className="flex justify-between"><span>Wind</span><span className="font-medium text-foreground">{risk.drivers.windScore}/100</span></div>
+          <div className="flex justify-between"><span>Density</span><span className="font-medium text-foreground">{risk.drivers.densityScore}/100</span></div>
+          {risk.alertCount > 0 && <p className="pt-0.5">{risk.alertCount} alert{risk.alertCount > 1 ? 's' : ''} · {risk.maxAlertSeverity}</p>}
+          {risk.windSpeed !== null && <p>Wind: {Math.round(risk.windSpeed)} mph</p>}
+        </div>
+        <p className="text-[8px] text-muted-foreground/60 mt-1.5 italic">Advisory only</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 interface EventTableProps {
   scenarios: Scenario[];
   policyMap?: Record<string, PolicyEntry>;
+  weatherRiskMap?: Map<string, WeatherRiskResult>;
   onRowClick: (scenario: Scenario) => void;
   onEdit: (scenario: Scenario) => void;
   onDelete: (id: string) => void;
@@ -305,9 +349,39 @@ interface EventTableProps {
   bordered?: boolean;
 }
 
+type SortField = 'wxRisk' | null;
+type SortDir = 'asc' | 'desc';
+
 export function EventTable({
-  scenarios, policyMap = {}, onRowClick, onEdit, onDelete, onRunCopilot, bordered = true,
+  scenarios, policyMap = {}, weatherRiskMap, onRowClick, onEdit, onDelete, onRunCopilot, bordered = true,
 }: EventTableProps) {
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDir === 'desc') setSortDir('asc');
+      else { setSortField(null); setSortDir('desc'); }
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+
+  const sortedScenarios = useMemo(() => {
+    if (!sortField || !weatherRiskMap) return scenarios;
+    const arr = [...scenarios];
+    arr.sort((a, b) => {
+      const ra = weatherRiskMap.get(a.id)?.score ?? 0;
+      const rb = weatherRiskMap.get(b.id)?.score ?? 0;
+      return sortDir === 'desc' ? rb - ra : ra - rb;
+    });
+    return arr;
+  }, [scenarios, sortField, sortDir, weatherRiskMap]);
+
+  const wxSortIcon = sortField === 'wxRisk'
+    ? (sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-primary" /> : <ArrowUp className="h-3 w-3 text-primary" />)
+    : <ArrowUpDown className="h-3 w-3 text-muted-foreground/50" />;
   return (
     <div className={cn('bg-card overflow-hidden', bordered && 'rounded-xl border border-border/50 shadow-sm')}>
       <div className="overflow-x-auto">
@@ -322,6 +396,15 @@ export function EventTable({
                 <span title="Derived: Priority score (1-3) + Customer impact tier (0-2)">Severity ⓘ</span>
               </TableHead>
               <TableHead className="font-semibold min-w-[110px]">ETR Band</TableHead>
+              <TableHead className="font-semibold min-w-[80px]">
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleSort('wxRisk'); }}
+                  className="inline-flex items-center gap-1 hover:text-primary transition-colors"
+                  title="Sort by Weather Risk"
+                >
+                  Wx Risk {wxSortIcon}
+                </button>
+              </TableHead>
               <TableHead className="font-semibold min-w-[100px]">Crit. Load</TableHead>
               <TableHead className="font-semibold min-w-[80px]">Crew</TableHead>
               <TableHead className="font-semibold min-w-[100px]">Escalation</TableHead>
@@ -331,7 +414,7 @@ export function EventTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {scenarios.map((scenario) => {
+            {sortedScenarios.map((scenario) => {
               const omsTag = scenario.feeder_id
                 ? `Feeder ${scenario.feeder_id}`
                 : scenario.fault_id
@@ -407,7 +490,11 @@ export function EventTable({
                     <EtrBandCell scenario={scenario} />
                   </TableCell>
 
-                  {/* Critical load — type breakdown */}
+                  {/* Weather Risk */}
+                  <TableCell>
+                    <WxRiskCell risk={weatherRiskMap?.get(scenario.id)} />
+                  </TableCell>
+
                   <TableCell>
                     <CritLoadCell scenario={scenario} />
                   </TableCell>
