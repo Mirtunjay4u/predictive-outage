@@ -67,6 +67,9 @@ interface OutageMapViewProps {
   showNWSAlerts?: boolean;
   nwsAlertFeatures?: import('@/lib/weather').NWSAlertFeature[];
   onNWSAlertClick?: (alert: import('@/lib/weather').NWSAlertFeature) => void;
+  // Wind overlay
+  showWind?: boolean;
+  windPoints?: import('@/lib/weather').WindPoint[];
 }
 
 // Helper: severity-colored marker icon
@@ -254,11 +257,14 @@ export function OutageMapView({
   showNWSAlerts = false,
   nwsAlertFeatures = [],
   onNWSAlertClick,
+  showWind = false,
+  windPoints = [],
 }: OutageMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const radarLayerRef = useRef<L.TileLayer | null>(null);
   const nwsLayerRef = useRef<L.LayerGroup | null>(null);
+  const windLayerRef = useRef<L.LayerGroup | null>(null);
   const layersRef = useRef<{
     scenarios: L.LayerGroup;
     polygons: L.LayerGroup;
@@ -731,6 +737,59 @@ export function OutageMapView({
       layer.addLayer(geoLayer);
     });
   }, [showNWSAlerts, nwsAlertFeatures, onNWSAlertClick]);
+
+  // ── Wind arrows overlay ───────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (!windLayerRef.current) {
+      windLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+    const layer = windLayerRef.current;
+    layer.clearLayers();
+
+    if (!showWind || windPoints.length === 0) return;
+
+    windPoints.forEach((pt) => {
+      const speed = pt.speed;
+      const dir = pt.direction; // meteorological degrees
+      // Color by speed
+      let color: string;
+      if (speed >= 50) color = '#dc2626';
+      else if (speed >= 30) color = '#f97316';
+      else if (speed >= 15) color = '#eab308';
+      else if (speed >= 5) color = '#3b82f6';
+      else color = '#6b7280';
+
+      // Arrow SVG rotated by wind direction
+      // Meteorological convention: direction wind comes FROM, arrow points in direction wind goes TO
+      const arrowRotation = dir; // CSS rotation: 0=up(N), 90=right(E)
+      const arrowSize = Math.min(36, Math.max(20, 16 + speed * 0.3));
+      const opacity = Math.min(1, Math.max(0.4, 0.3 + speed * 0.015));
+
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${arrowSize}" height="${arrowSize}" 
+             style="transform: rotate(${arrowRotation}deg); opacity: ${opacity}; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+          <path d="M12 2 L16 10 L13 9 L13 20 L11 20 L11 9 L8 10 Z" fill="${color}" stroke="${color}" stroke-width="0.5"/>
+        </svg>
+      `;
+
+      const icon = L.divIcon({
+        html: svg,
+        className: 'wind-arrow-icon',
+        iconSize: [arrowSize, arrowSize],
+        iconAnchor: [arrowSize / 2, arrowSize / 2],
+      });
+
+      const marker = L.marker([pt.lat, pt.lng], { icon, interactive: true })
+        .bindTooltip(
+          `<div style="padding:2px;"><strong>${Math.round(speed)} mph</strong><br/><span style="font-size:11px;color:#aaa;">Gusts: ${Math.round(pt.gusts)} mph<br/>Dir: ${Math.round(dir)}°</span></div>`,
+          { direction: 'top', offset: [0, -(arrowSize / 2)], opacity: 0.95 }
+        );
+
+      layer.addLayer(marker);
+    });
+  }, [showWind, windPoints]);
 
   return (
     <div 
