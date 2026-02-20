@@ -161,7 +161,7 @@ export function DemoTourHUD() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const autoActionFiredRef = useRef<Set<number>>(new Set());
-  const { isMuted, isLoading: narrationLoading, toggleMute, playStepNarration, stopNarration } = useTourNarration();
+  const { isMuted, isLoading: narrationLoading, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll } = useTourNarration();
 
   // Listen for tour start events from DemoScriptModal
   useEffect(() => {
@@ -174,6 +174,7 @@ export function DemoTourHUD() {
       setTourComplete(false);
       setShowTooltip(false);
       autoActionFiredRef.current = new Set();
+      preCacheAll();
     };
     window.addEventListener('start-demo-tour', handleStart);
     return () => window.removeEventListener('start-demo-tour', handleStart);
@@ -674,6 +675,11 @@ export function DemoTourHUD() {
           {isPaused && (
             <span className="text-[9px] font-bold uppercase tracking-wider text-warning px-1.5 py-0.5 rounded bg-warning/10">
               Paused
+            </span>
+          )}
+          {preCacheProgress > 0 && preCacheProgress < 100 && (
+            <span className="text-[9px] text-muted-foreground/70 tabular-nums">
+              Voice {preCacheProgress}%
             </span>
           )}
         </div>
