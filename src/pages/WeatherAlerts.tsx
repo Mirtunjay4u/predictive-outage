@@ -18,6 +18,7 @@ import { useWeatherData, weatherCodeToDescription } from '@/hooks/useWeatherData
 import { getEventSeverity } from '@/lib/severity';
 import { outageToHazard } from '@/lib/severity';
 import type { ScenarioWithIntelligence } from '@/types/scenario';
+import { useAnimatedNumber } from '@/hooks/useAnimatedNumber';
 import { cn } from '@/lib/utils';
 
 /* ------------------------------------------------------------------ */
@@ -395,6 +396,8 @@ export default function WeatherAlerts() {
     ? { label: 'Moderate', accent: 'text-amber-600 dark:text-amber-400' }
     : { label: 'Low', accent: 'text-emerald-600 dark:text-emerald-400' };
 
+  const animatedScore = useAnimatedNumber(hazardExposureScore, 600);
+
   // Correlation table rows
   const correlationRows = useMemo(() =>
     events
@@ -518,14 +521,15 @@ export default function WeatherAlerts() {
                       <circle cx="18" cy="18" r="15.5" fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
                       <circle
                         cx="18" cy="18" r="15.5" fill="none"
-                        stroke={hazardExposureScore >= 75 ? 'hsl(0, 72%, 51%)' : hazardExposureScore >= 30 ? 'hsl(38, 92%, 50%)' : 'hsl(142, 71%, 45%)'}
+                        stroke={animatedScore >= 75 ? 'hsl(0, 72%, 51%)' : animatedScore >= 30 ? 'hsl(38, 92%, 50%)' : 'hsl(142, 71%, 45%)'}
                         strokeWidth="3"
-                        strokeDasharray={`${hazardExposureScore * 0.9738} 97.38`}
+                        strokeDasharray={`${animatedScore * 0.9738} 97.38`}
                         strokeLinecap="round"
+                        style={{ transition: 'stroke 0.3s ease' }}
                       />
                     </svg>
                     <span className={cn('absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums', exposureBand.accent)}>
-                      {hazardExposureScore}
+                      {animatedScore}
                     </span>
                   </div>
                   <div>
