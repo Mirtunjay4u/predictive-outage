@@ -117,3 +117,77 @@ export function alertSeverityRank(severity: string): number {
     default: return 0;
   }
 }
+
+// ── Wind Data (Open-Meteo) ──────────────────────────────────
+
+export interface WindPoint {
+  lat: number;
+  lng: number;
+  speed: number;        // mph
+  direction: number;    // degrees (meteorological: 0=N, 90=E, 180=S, 270=W)
+  gusts: number;        // mph
+}
+
+/**
+ * Fetch current wind data from Open-Meteo for a grid of points.
+ * Open-Meteo is free and requires no API key.
+ * We sample a grid around the provided center to show wind arrows across the map.
+ */
+export async function fetchWindGrid(
+  centerLat: number,
+  centerLng: number,
+  gridSize = 4,
+  spacing = 0.35
+): Promise<WindPoint[]> {
+  const points: { lat: number; lng: number }[] = [];
+  const halfGrid = (gridSize - 1) / 2;
+  
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      points.push({
+        lat: centerLat + (row - halfGrid) * spacing,
+        lng: centerLng + (col - halfGrid) * spacing,
+      });
+    }
+  }
+
+  // Open-Meteo supports multiple locations via comma-separated lat/lng
+  const lats = points.map(p => p.lat.toFixed(4)).join(',');
+  const lngs = points.map(p => p.lng.toFixed(4)).join(',');
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=mph&timezone=auto`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Open-Meteo wind API unavailable');
+
+  const data = await res.json();
+
+  // Open-Meteo returns an array when multiple coords are passed
+  const results: any[] = Array.isArray(data) ? data : [data];
+
+  return results.map((r, i) => ({
+    lat: points[i].lat,
+    lng: points[i].lng,
+    speed: r.current?.wind_speed_10m ?? 0,
+    direction: r.current?.wind_direction_10m ?? 0,
+    gusts: r.current?.wind_gusts_10m ?? 0,
+  }));
+}
+
+/** Color for wind speed (mph) */
+export function windSpeedColor(speed: number): string {
+  if (speed >= 50) return '#dc2626';  // red - dangerous
+  if (speed >= 30) return '#f97316';  // orange - high
+  if (speed >= 15) return '#eab308';  // yellow - moderate
+  if (speed >= 5)  return '#3b82f6';  // blue - light
+  return '#6b7280';                   // gray - calm
+}
+
+/** Wind speed label */
+export function windSpeedLabel(speed: number): string {
+  if (speed >= 50) return 'Dangerous';
+  if (speed >= 30) return 'High';
+  if (speed >= 15) return 'Moderate';
+  if (speed >= 5)  return 'Light';
+  return 'Calm';
+}

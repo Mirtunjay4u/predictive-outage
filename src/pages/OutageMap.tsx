@@ -17,7 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { useWeatherData } from '@/hooks/useWeatherData';
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react';
-import { fetchRadarTimestamp, fetchRadarFrames, radarTileUrl, fetchNWSAlerts, alertSeverityRank, type NWSAlertFeature, type RadarFrame } from '@/lib/weather';
+import { fetchRadarTimestamp, fetchRadarFrames, radarTileUrl, fetchNWSAlerts, fetchWindGrid, alertSeverityRank, type NWSAlertFeature, type RadarFrame, type WindPoint } from '@/lib/weather';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
 import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useEmergencyDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
@@ -80,6 +80,7 @@ export default function OutageMap() {
   const [radarOpacity, setRadarOpacity] = useState(0.5);
   const [showNWSAlerts, setShowNWSAlerts] = useState(false);
   const [nwsAlertsPanelOpen, setNwsAlertsPanelOpen] = useState(false);
+  const [showWind, setShowWind] = useState(false);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -194,7 +195,26 @@ export default function OutageMap() {
     retry: 2,
   });
 
-  // Sort alerts by severity for the panel
+  // ── Wind grid data (refreshes every 10 min) ──
+  const mapCenter = useMemo(() => {
+    if (!scenarios?.length) return { lat: 29.7604, lng: -95.3698 };
+    const withGeo = scenarios.filter(s => s.geo_center);
+    if (!withGeo.length) return { lat: 29.7604, lng: -95.3698 };
+    return {
+      lat: withGeo.reduce((s, e) => s + e.geo_center!.lat, 0) / withGeo.length,
+      lng: withGeo.reduce((s, e) => s + e.geo_center!.lng, 0) / withGeo.length,
+    };
+  }, [scenarios]);
+
+  const { data: windPoints = [], isLoading: windLoading, refetch: refetchWind, isError: windError } = useQuery({
+    queryKey: ['wind-grid', mapCenter.lat.toFixed(2), mapCenter.lng.toFixed(2)],
+    queryFn: () => fetchWindGrid(mapCenter.lat, mapCenter.lng, 5, 0.3),
+    enabled: showWind,
+    refetchInterval: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
   const sortedAlerts = useMemo(() => {
     if (!nwsAlertsData?.features) return [];
     return [...nwsAlertsData.features]
@@ -778,6 +798,8 @@ export default function OutageMap() {
               showNWSAlerts={showNWSAlerts}
               nwsAlertFeatures={sortedAlerts}
               onNWSAlertClick={handleZoomToAlert}
+              showWind={showWind}
+              windPoints={windPoints}
             />
           </MapErrorBoundary>
           
@@ -1107,6 +1129,42 @@ export default function OutageMap() {
                     
                     {showNWSAlerts && nwsAlertsError && (
                       <p className="ml-7 mt-1 text-[10px] text-destructive">⚠ Weather alerts unavailable</p>
+                    )}
+                    
+                    <LayerToggle
+                      id="wind-toggle"
+                      icon={<Wind className="w-4 h-4" />}
+                      label="Wind Field"
+                      badge="Live"
+                      badgeVariant="live"
+                      checked={showWind}
+                      onCheckedChange={setShowWind}
+                      onRefresh={showWind ? () => refetchWind() : undefined}
+                      isRefreshing={windLoading}
+                    />
+                    
+                    {showWind && windError && (
+                      <p className="ml-7 mt-1 text-[10px] text-destructive">⚠ Wind data unavailable</p>
+                    )}
+                    
+                    {showWind && windPoints.length > 0 && (
+                      <div className="ml-7 mt-1 mb-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {[
+                            { color: 'bg-gray-500', label: 'Calm' },
+                            { color: 'bg-blue-500', label: '5+' },
+                            { color: 'bg-yellow-500', label: '15+' },
+                            { color: 'bg-orange-500', label: '30+' },
+                            { color: 'bg-red-500', label: '50+' },
+                          ].map(item => (
+                            <div key={item.label} className="flex items-center gap-1">
+                              <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
+                              <span className="text-[9px] text-muted-foreground">{item.label}</span>
+                            </div>
+                          ))}
+                          <span className="text-[9px] text-muted-foreground">mph</span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
