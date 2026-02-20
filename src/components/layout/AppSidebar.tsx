@@ -23,6 +23,7 @@ import tcsLogo from '@/assets/tcs-logo.png';
 const navGroups = [
   {
     label: 'Operations',
+    accent: 'blue',
     items: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
       { icon: FileText, label: 'Events', path: '/events' },
@@ -31,6 +32,7 @@ const navGroups = [
   },
   {
     label: 'Intelligence',
+    accent: 'teal',
     items: [
       { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
       { icon: BarChart3, label: 'Analytics', path: '/analytics' },
@@ -39,6 +41,7 @@ const navGroups = [
   },
   {
     label: 'Platform',
+    accent: 'slate',
     items: [
       { icon: Network, label: 'Architecture', path: '/architecture' },
       { icon: BookOpen, label: 'About', path: '/about' },
@@ -46,6 +49,24 @@ const navGroups = [
     ],
   },
 ];
+
+const accentStyles: Record<string, { active: string; border: string; glow: string }> = {
+  blue: {
+    active: 'bg-blue-500/12 text-blue-300',
+    border: 'border-l-blue-400',
+    glow: 'shadow-[0_0_12px_rgba(59,130,246,0.15)]',
+  },
+  teal: {
+    active: 'bg-teal-500/12 text-teal-300',
+    border: 'border-l-teal-400',
+    glow: 'shadow-[0_0_12px_rgba(20,184,166,0.15)]',
+  },
+  slate: {
+    active: 'bg-slate-400/10 text-slate-300',
+    border: 'border-l-slate-400',
+    glow: 'shadow-[0_0_12px_rgba(148,163,184,0.10)]',
+  },
+};
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -74,50 +95,58 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto px-2.5 py-2.5" role="navigation" aria-label="Main navigation">
-        {navGroups.map((group) => (
-          <div key={group.label} className="space-y-0.5">
-            {!collapsed && (
-              <div className="flex items-center gap-2 px-2 pt-1 pb-0.5">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">{group.label}</span>
-                <div className="h-px flex-1 bg-sidebar-border/50" />
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-2.5" role="navigation" aria-label="Main navigation">
+        {navGroups.map((group, gi) => {
+          const styles = accentStyles[group.accent];
+          return (
+            <div key={group.label}>
+              {/* Section separator (not before first group) */}
+              {gi > 0 && <div className="mx-2 my-2 h-px bg-sidebar-border/60" />}
+
+              {!collapsed && (
+                <div className="flex items-center gap-2 px-2 pt-1 pb-1">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">{group.label}</span>
+                  <div className="h-px flex-1 bg-sidebar-border/40" />
+                </div>
+              )}
+
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  const link = (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={cn(
+                        'group/nav-item flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none transition-all duration-200',
+                        'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar',
+                        isActive
+                          ? cn(styles.active, styles.glow, 'border-l-2', styles.border)
+                          : 'border-l-2 border-l-transparent text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground/90',
+                      )}
+                    >
+                      <item.icon className={cn('h-4 w-4 flex-shrink-0 transition-colors', isActive && 'drop-shadow-sm')} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </NavLink>
+                  );
+
+                  if (collapsed) {
+                    return (
+                      <Tooltip key={item.path} delayDuration={0}>
+                        <TooltipTrigger asChild>{link}</TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={10}>
+                          {item.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  }
+
+                  return link;
+                })}
               </div>
-            )}
-
-            {group.items.map((item) => {
-              const isActive = location.pathname === item.path;
-              const link = (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={cn(
-                    'group/nav-item flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium outline-none transition-colors',
-                    'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar',
-                    isActive
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                      : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-                  )}
-                >
-                  <item.icon className="h-4.5 w-4.5 flex-shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </NavLink>
-              );
-
-              if (collapsed) {
-                return (
-                  <Tooltip key={item.path} delayDuration={0}>
-                    <TooltipTrigger asChild>{link}</TooltipTrigger>
-                    <TooltipContent side="right" sideOffset={10}>
-                      {item.label}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              }
-
-              return link;
-            })}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="border-t border-sidebar-border p-3 space-y-3">
@@ -125,7 +154,7 @@ export function AppSidebar() {
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}>
-                <HelpCircle className="h-4.5 w-4.5" />
+                <HelpCircle className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10}>Demo Script</TooltipContent>
@@ -136,7 +165,7 @@ export function AppSidebar() {
             className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}
           >
-            <HelpCircle className="h-4.5 w-4.5" />
+            <HelpCircle className="h-4 w-4" />
             <span className="text-sm font-medium">Demo Script</span>
           </Button>
         )}

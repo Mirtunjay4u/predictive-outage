@@ -114,17 +114,23 @@ export default function Login() {
             <ul className="space-y-3 max-w-md">
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Monitor outages across pre-event, active, and post-event phases.</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Deterministic policy enforcement + explainable AI decisions.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Review ETR confidence and critical-load runway in real time.</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">OMS-style triage + ETR confidence banding.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Generate operator-approved updates for customers and stakeholders.</span>
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Hazard intelligence + critical load prioritization.</span>
               </li>
             </ul>
+            
+            {/* E) AI Engine Attribution */}
+            <div className="mt-6 flex items-center gap-2 opacity-70">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#76B900]" />
+              <span className="text-[11px] font-medium text-primary-foreground/60 tracking-wide">Powered by NVIDIA Nemotron (NIM)</span>
+            </div>
           </motion.div>
           
           {/* E) Safety Footer + TCS Branding */}
@@ -289,7 +295,7 @@ export default function Login() {
               </Button>
 
               <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground/70">
-                Uses pre-loaded sample outages; no live system access.
+                Uses pre-loaded scenarios — no enterprise system access.
               </p>
               
               {/* Safety Disclaimer - Compliance Style */}
