@@ -152,7 +152,26 @@ export function AIExecutiveBriefingPanel({ scenarios, dataUpdatedAt, boardroomMo
       },
     }).then(({ data, error: fnError }) => {
       if (fnError) throw fnError;
-      if (data?.fallback) throw new Error(`AI engines unavailable (${data.reason || 'unknown'})`);
+      // If both Nemotron and Model Router failed, use the edge function's domain fallback instead of client-side deterministic
+      if (data?.fallback && data.data) {
+        const fb = data.data as { insights?: string[]; actions?: string[]; confidence?: string; updatedAt?: string };
+        const confText = (fb.confidence ?? 'low').toLowerCase();
+        const nimBriefing: BriefingData = {
+          insights: (fb.insights ?? []).filter(Boolean).slice(0, 3),
+          actions: (fb.actions ?? []).filter(Boolean).slice(0, 2),
+          confidence: confText === 'high' ? 'High' : confText.includes('med') ? 'Med' : 'Low',
+          updatedTime: fb.updatedAt ? new Date(fb.updatedAt) : new Date(),
+          source: 'model-router',
+        };
+        nimCache.briefing = nimBriefing;
+        nimCache.fetchedAt = Date.now();
+        nimCache.backoff = 0;
+        nimCache.inflight = false;
+        setBriefing(nimBriefing);
+        setIsLoading(false);
+        setError(null);
+        return;
+      }
       if (!data?.ok || typeof data.answer !== 'string') throw new Error('AI response unavailable');
 
       const parsed = parseNemotronBriefing(data.answer);
