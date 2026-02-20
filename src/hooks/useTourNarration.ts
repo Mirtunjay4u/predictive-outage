@@ -54,18 +54,45 @@ const narrationScripts: string[] = [
 interface UseTourNarrationReturn {
   isMuted: boolean;
   isLoading: boolean;
+  preCacheProgress: number; // 0-100
   toggleMute: () => void;
   playStepNarration: (stepIndex: number) => void;
   stopNarration: () => void;
+  preCacheAll: () => void;
+}
+
+async function fetchTtsAudio(text: string, signal?: AbortSignal): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ text }),
+        signal,
+      }
+    );
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
 }
 
 export function useTourNarration(): UseTourNarrationReturn {
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [preCacheProgress, setPreCacheProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const currentStepRef = useRef<number>(-1);
   const cacheRef = useRef<Map<number, string>>(new Map());
   const abortRef = useRef<AbortController | null>(null);
+  const preCacheAbortRef = useRef<AbortController | null>(null);
 
   const stopNarration = useCallback(() => {
     if (audioRef.current) {
@@ -90,8 +117,50 @@ export function useTourNarration(): UseTourNarrationReturn {
     });
   }, []);
 
+  /**
+   * Pre-cache all narration clips in background.
+   * Fetches 3 at a time to avoid overwhelming the edge function.
+   */
+  const preCacheAll = useCallback(() => {
+    // Cancel any existing pre-cache
+    if (preCacheAbortRef.current) preCacheAbortRef.current.abort();
+    const controller = new AbortController();
+    preCacheAbortRef.current = controller;
+
+    const total = narrationScripts.length;
+    let completed = 0;
+    setPreCacheProgress(0);
+
+    // Process in batches of 3
+    const runBatch = async (startIdx: number) => {
+      if (controller.signal.aborted) return;
+      const batch = narrationScripts
+        .slice(startIdx, startIdx + 3)
+        .map((script, offset) => {
+          const idx = startIdx + offset;
+          if (cacheRef.current.has(idx)) {
+            completed++;
+            setPreCacheProgress(Math.round((completed / total) * 100));
+            return Promise.resolve();
+          }
+          return fetchTtsAudio(script, controller.signal).then(url => {
+            if (url) cacheRef.current.set(idx, url);
+            completed++;
+            setPreCacheProgress(Math.round((completed / total) * 100));
+          });
+        });
+
+      await Promise.all(batch);
+
+      if (startIdx + 3 < total && !controller.signal.aborted) {
+        await runBatch(startIdx + 3);
+      }
+    };
+
+    runBatch(0).catch(() => { /* aborted */ });
+  }, []);
+
   const playStepNarration = useCallback(async (stepIndex: number) => {
-    // Stop any current narration
     stopNarration();
     currentStepRef.current = stepIndex;
 
@@ -113,59 +182,28 @@ export function useTourNarration(): UseTourNarrationReturn {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    try {
-      const response = await fetch(
-        `${SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`,
-          },
-          body: JSON.stringify({ text: script }),
-          signal: controller.signal,
-        }
-      );
-
-      if (!response.ok) {
-        console.error('TTS fetch failed:', response.status);
-        setIsLoading(false);
-        return;
-      }
-
-      // Verify we're still on the same step
-      if (currentStepRef.current !== stepIndex) {
-        setIsLoading(false);
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      cacheRef.current.set(stepIndex, url);
-
-      const audio = new Audio(url);
-      audioRef.current = audio;
+    const url = await fetchTtsAudio(script, controller.signal);
+    if (!url || currentStepRef.current !== stepIndex) {
       setIsLoading(false);
-
-      try { await audio.play(); } catch (e) { /* autoplay blocked */ }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') {
-        console.error('TTS error:', e);
-      }
-      setIsLoading(false);
+      return;
     }
+
+    cacheRef.current.set(stepIndex, url);
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    setIsLoading(false);
+    try { await audio.play(); } catch (e) { /* autoplay blocked */ }
   }, [isMuted, stopNarration]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopNarration();
-      // Revoke cached URLs
+      if (preCacheAbortRef.current) preCacheAbortRef.current.abort();
       cacheRef.current.forEach(url => URL.revokeObjectURL(url));
       cacheRef.current.clear();
     };
   }, [stopNarration]);
 
-  return { isMuted, isLoading, toggleMute, playStepNarration, stopNarration };
+  return { isMuted, isLoading, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll };
 }
