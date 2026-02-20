@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine, AlertTriangle } from 'lucide-react';
+import { MapPin, ChevronRight, Map, Layers, Flame, Search, X, Cloud, RefreshCw, Box, Cable, RotateCcw, Truck, Eye, ExternalLink, ShieldAlert, Droplets, Wind, TreePine, AlertTriangle, CloudRain, RadioTower } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
 import { useWeatherData } from '@/hooks/useWeatherData';
+import { fetchRadarTimestamp, radarTileUrl, fetchNWSAlerts, alertSeverityRank, type NWSAlertFeature } from '@/lib/weather';
 import { useAssets, useEventAssets } from '@/hooks/useAssets';
 import { useFeederZones } from '@/hooks/useFeederZones';
 import { useCrewsWithAvailability, useCrewsRealtime, useDispatchCrew, useEmergencyDispatchCrew, useSimulateCrewMovement, useUpdateCrewStatus } from '@/hooks/useCrews';
@@ -70,6 +73,12 @@ export default function OutageMap() {
   const [severityHighOnly, setSeverityHighOnly] = useState(false);
   const [criticalLoadOnly, setCriticalLoadOnly] = useState(false);
   const [activeHazardOverlays, setActiveHazardOverlays] = useState<HazardOverlay[]>([]);
+  
+  // Weather radar + NWS alerts state
+  const [showRadar, setShowRadar] = useState(false);
+  const [radarOpacity, setRadarOpacity] = useState(0.5);
+  const [showNWSAlerts, setShowNWSAlerts] = useState(false);
+  const [nwsAlertsPanelOpen, setNwsAlertsPanelOpen] = useState(false);
   
   // Asset selection state
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -130,6 +139,55 @@ export default function OutageMap() {
   const emergencyDispatchMutation = useEmergencyDispatchCrew();
   const simulateMovementMutation = useSimulateCrewMovement();
   const updateCrewStatusMutation = useUpdateCrewStatus();
+
+  // ── Radar timestamp (refreshes every 5 min) ──
+  const { data: radarTime } = useQuery({
+    queryKey: ['radar-timestamp'],
+    queryFn: fetchRadarTimestamp,
+    enabled: showRadar,
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 4 * 60 * 1000,
+    retry: 2,
+  });
+  const currentRadarUrl = radarTime ? radarTileUrl(radarTime) : null;
+
+  // ── NWS Alerts (refreshes every 2 min) ──
+  const { data: nwsAlertsData, isLoading: nwsAlertsLoading, refetch: refetchNWSAlerts, isError: nwsAlertsError } = useQuery({
+    queryKey: ['nws-alerts'],
+    queryFn: fetchNWSAlerts,
+    enabled: showNWSAlerts,
+    refetchInterval: 2 * 60 * 1000,
+    staleTime: 90 * 1000,
+    retry: 2,
+  });
+
+  // Sort alerts by severity for the panel
+  const sortedAlerts = useMemo(() => {
+    if (!nwsAlertsData?.features) return [];
+    return [...nwsAlertsData.features]
+      .sort((a, b) => alertSeverityRank(b.severity) - alertSeverityRank(a.severity))
+      .slice(0, 50);
+  }, [nwsAlertsData]);
+
+  // Zoom-to-alert handler
+  const handleZoomToAlert = useCallback((alert: NWSAlertFeature) => {
+    if (!alert.geometry) return;
+    // Compute centroid from first coordinate
+    const geom = alert.geometry as any;
+    let coords: number[][] = [];
+    if (geom.type === 'Polygon') {
+      coords = geom.coordinates[0];
+    } else if (geom.type === 'MultiPolygon') {
+      coords = geom.coordinates[0][0];
+    }
+    if (coords.length === 0) return;
+    const centroid = coords.reduce(
+      (acc, [lng, lat]) => ({ lat: acc.lat + lat / coords.length, lng: acc.lng + lng / coords.length }),
+      { lat: 0, lng: 0 }
+    );
+    setZoomTarget({ lat: centroid.lat, lng: centroid.lng, zoom: 8 });
+    setTimeout(() => setZoomTarget(null), 1000);
+  }, []);
 
   // Filter scenarios with geo data
   const geoScenarios = useMemo(() => {
@@ -681,6 +739,12 @@ export default function OutageMap() {
               severityFilter={severityFilter}
               criticalLoadOnly={criticalLoadOnly}
               onCriticalLoadClick={handleCriticalLoadClick}
+              showRadar={showRadar}
+              radarOpacity={radarOpacity}
+              radarTileUrl={currentRadarUrl}
+              showNWSAlerts={showNWSAlerts}
+              nwsAlertFeatures={sortedAlerts}
+              onNWSAlertClick={handleZoomToAlert}
             />
           </MapErrorBoundary>
           
@@ -695,6 +759,55 @@ export default function OutageMap() {
               onSimulateAll={handleSimulateAll}
               isSimulating={isSimulating}
             />
+          )}
+          
+          {/* NWS Alerts Panel */}
+          {showNWSAlerts && nwsAlertsPanelOpen && sortedAlerts.length > 0 && (
+            <div className="absolute bottom-4 right-4 z-[1000] w-[320px] max-h-[50vh] bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between p-3 border-b border-border flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <RadioTower className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-foreground">NWS Weather Alerts</span>
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-primary/10 text-primary border-primary/30">
+                    {sortedAlerts.length}
+                  </Badge>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setNwsAlertsPanelOpen(false)}>
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+              <ScrollArea className="flex-1 max-h-[calc(50vh-48px)]">
+                <div className="p-2 space-y-1.5">
+                  {sortedAlerts.slice(0, 20).map((alert, idx) => {
+                    const sevColor = alert.severity === 'Extreme' ? 'text-red-400' : alert.severity === 'Severe' ? 'text-orange-400' : alert.severity === 'Moderate' ? 'text-yellow-400' : 'text-blue-400';
+                    return (
+                      <button
+                        key={alert.id || idx}
+                        onClick={() => handleZoomToAlert(alert)}
+                        className="w-full text-left p-2 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-border"
+                      >
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={`text-[10px] font-bold uppercase ${sevColor}`}>{alert.severity}</span>
+                          <span className="text-[10px] text-muted-foreground">·</span>
+                          <span className="text-xs font-medium text-foreground truncate">{alert.event}</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2">{alert.headline || alert.areaDesc}</p>
+                        {alert.expires && (
+                          <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                            Expires {new Date(alert.expires).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+              <div className="p-2 border-t border-border flex-shrink-0">
+                <p className="text-[9px] text-muted-foreground text-center">
+                  Data: NOAA/NWS · Advisory only · {nwsAlertsData?.fetchedAt ? `Updated ${new Date(nwsAlertsData.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Loading…'}
+                </p>
+              </div>
+            </div>
           )}
           
           {/* Search Bar + Legend - Positioned to avoid zoom controls */}
@@ -830,6 +943,73 @@ export default function OutageMap() {
                   checked={showCriticalLoads}
                   onCheckedChange={setShowCriticalLoads}
                 />
+                
+                {/* ── Weather Layers Section ── */}
+                <div className="pt-2 mt-2 border-t border-border">
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Weather Layers</span>
+                  
+                  <div className="mt-2">
+                    <LayerToggle
+                      id="radar-toggle"
+                      icon={<CloudRain className="w-4 h-4" />}
+                      label="Live Radar"
+                      badge="Live"
+                      badgeVariant="live"
+                      checked={showRadar}
+                      onCheckedChange={setShowRadar}
+                    />
+                    
+                    {showRadar && (
+                      <div className="ml-7 mt-1 mb-2 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+                          <span className="text-[10px] text-muted-foreground tabular-nums">{Math.round(radarOpacity * 100)}%</span>
+                        </div>
+                        <Slider
+                          min={20}
+                          max={90}
+                          step={5}
+                          value={[radarOpacity * 100]}
+                          onValueChange={([v]) => setRadarOpacity(v / 100)}
+                          className="w-full"
+                        />
+                        {radarTime && (
+                          <p className="text-[9px] text-muted-foreground">
+                            Frame: {new Date(radarTime * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    <LayerToggle
+                      id="nws-alerts-toggle"
+                      icon={<RadioTower className="w-4 h-4" />}
+                      label="NWS Alerts"
+                      badge="Live"
+                      badgeVariant="live"
+                      checked={showNWSAlerts}
+                      onCheckedChange={(checked) => {
+                        setShowNWSAlerts(checked);
+                        if (checked) setNwsAlertsPanelOpen(true);
+                      }}
+                      onRefresh={showNWSAlerts ? () => refetchNWSAlerts() : undefined}
+                      isRefreshing={nwsAlertsLoading}
+                    />
+                    
+                    {showNWSAlerts && sortedAlerts.length > 0 && (
+                      <button
+                        onClick={() => setNwsAlertsPanelOpen(!nwsAlertsPanelOpen)}
+                        className="ml-7 mt-1 text-[10px] text-primary hover:underline"
+                      >
+                        {nwsAlertsPanelOpen ? 'Hide' : 'Show'} alert list ({sortedAlerts.length})
+                      </button>
+                    )}
+                    
+                    {showNWSAlerts && nwsAlertsError && (
+                      <p className="ml-7 mt-1 text-[10px] text-destructive">⚠ Weather alerts unavailable</p>
+                    )}
+                  </div>
+                </div>
                 
                 {/* Operator Filters Section */}
                 <div className="pt-2 mt-2 border-t border-border">

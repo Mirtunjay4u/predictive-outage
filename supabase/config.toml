@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.copilot-evaluate]
 verify_jwt = false
+
+[functions.weather-alerts]
+verify_jwt = false

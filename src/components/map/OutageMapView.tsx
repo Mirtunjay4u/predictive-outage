@@ -55,12 +55,18 @@ interface OutageMapViewProps {
   crews?: Crew[];
   onCrewClick?: (crew: Crew) => void;
   onSimulateCrewMovement?: (crewId: string, targetLat: number, targetLng: number) => void;
-  // New props
   showCriticalLoads?: boolean;
   activeHazardOverlays?: HazardOverlay[];
-  severityFilter?: number | null; // minimum severity to show
+  severityFilter?: number | null;
   criticalLoadOnly?: boolean;
   onCriticalLoadClick?: (loadType: string, event: Scenario | ScenarioWithIntelligence) => void;
+  // Weather radar + NWS alerts overlays
+  showRadar?: boolean;
+  radarOpacity?: number;
+  radarTileUrl?: string | null;
+  showNWSAlerts?: boolean;
+  nwsAlertFeatures?: import('@/lib/weather').NWSAlertFeature[];
+  onNWSAlertClick?: (alert: import('@/lib/weather').NWSAlertFeature) => void;
 }
 
 // Helper: severity-colored marker icon
@@ -241,9 +247,18 @@ export function OutageMapView({
   severityFilter = null,
   criticalLoadOnly = false,
   onCriticalLoadClick,
+  // Weather overlays
+  showRadar = false,
+  radarOpacity = 0.5,
+  radarTileUrl: radarUrl = null,
+  showNWSAlerts = false,
+  nwsAlertFeatures = [],
+  onNWSAlertClick,
 }: OutageMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const radarLayerRef = useRef<L.TileLayer | null>(null);
+  const nwsLayerRef = useRef<L.LayerGroup | null>(null);
   const layersRef = useRef<{
     scenarios: L.LayerGroup;
     polygons: L.LayerGroup;
@@ -639,6 +654,83 @@ export function OutageMapView({
     if (!mapRef.current || !zoomTarget) return;
     mapRef.current.flyTo([zoomTarget.lat, zoomTarget.lng], zoomTarget.zoom || 13, { duration: 0.8 });
   }, [zoomTarget]);
+
+  // ── Radar tile overlay ──────────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing radar layer
+    if (radarLayerRef.current) {
+      mapRef.current.removeLayer(radarLayerRef.current);
+      radarLayerRef.current = null;
+    }
+
+    if (!showRadar || !radarUrl) return;
+
+    const tileLayer = L.tileLayer(radarUrl, {
+      opacity: radarOpacity,
+      zIndex: 200,
+      attribution: '&copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
+    });
+    tileLayer.addTo(mapRef.current);
+    radarLayerRef.current = tileLayer;
+  }, [showRadar, radarUrl]);
+
+  // Update radar opacity without recreating layer
+  useEffect(() => {
+    if (radarLayerRef.current) {
+      radarLayerRef.current.setOpacity(radarOpacity);
+    }
+  }, [radarOpacity]);
+
+  // ── NWS Alert polygons ────────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Lazy-create the layer group
+    if (!nwsLayerRef.current) {
+      nwsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+    const layer = nwsLayerRef.current;
+    layer.clearLayers();
+
+    if (!showNWSAlerts || nwsAlertFeatures.length === 0) return;
+
+    nwsAlertFeatures.forEach((alert) => {
+      if (!alert.geometry) return;
+
+      const { fill, stroke } = (() => {
+        switch (alert.severity) {
+          case 'Extreme': return { fill: 'rgba(220,38,38,0.15)', stroke: '#dc2626' };
+          case 'Severe': return { fill: 'rgba(249,115,22,0.15)', stroke: '#f97316' };
+          case 'Moderate': return { fill: 'rgba(234,179,8,0.15)', stroke: '#eab308' };
+          case 'Minor': return { fill: 'rgba(59,130,246,0.15)', stroke: '#3b82f6' };
+          default: return { fill: 'rgba(107,114,128,0.15)', stroke: '#6b7280' };
+        }
+      })();
+
+      const geoLayer = L.geoJSON(alert.geometry as any, {
+        style: {
+          fillColor: fill,
+          fillOpacity: 0.15,
+          color: stroke,
+          weight: 2,
+        },
+      });
+
+      geoLayer.bindPopup(`
+        <div style="padding:6px;min-width:200px;">
+          <h4 style="font-weight:700;font-size:13px;color:#fff;margin:0 0 4px">${alert.event}</h4>
+          <p style="font-size:11px;color:#aaa;margin:0 0 4px">${alert.severity} · ${alert.areaDesc}</p>
+          <p style="font-size:11px;color:#888;margin:0">${alert.headline}</p>
+          ${alert.expires ? `<p style="font-size:10px;color:#666;margin:4px 0 0">Expires: ${new Date(alert.expires).toLocaleString()}</p>` : ''}
+        </div>
+      `, { className: 'custom-popup', maxWidth: 320 });
+
+      geoLayer.on('click', () => onNWSAlertClick?.(alert));
+      layer.addLayer(geoLayer);
+    });
+  }, [showNWSAlerts, nwsAlertFeatures, onNWSAlertClick]);
 
   return (
     <div 
