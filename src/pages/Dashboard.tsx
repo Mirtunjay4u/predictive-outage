@@ -2101,7 +2101,7 @@ export default function Dashboard() {
         return createPortal(
           <div
             ref={phaseStripRef}
-            className="fixed bottom-8 left-0 right-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-md shadow-elevated overflow-visible"
+            className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/95 backdrop-blur-md shadow-elevated overflow-visible"
             role="region"
             aria-label="Operational phase timeline"
           >
