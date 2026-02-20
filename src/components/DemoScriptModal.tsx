@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, ChevronRight, X, Play } from 'lucide-react';
+import { CheckCircle2, Circle, Play, Rocket } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -56,25 +56,62 @@ export function DemoScriptModal() {
     return () => window.removeEventListener('open-demo-script', handleOpen);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'd' || e.key === 'D') {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        setOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const toggleStep = (index: number) => {
-    setCompletedSteps(prev => 
-      prev.includes(index) 
+    setCompletedSteps(prev =>
+      prev.includes(index)
         ? prev.filter(i => i !== index)
         : [...prev, index]
     );
+  };
+
+  const handleAutoPlay = () => {
+    setOpen(false);
+    // Small delay to let modal close, then dispatch start event
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('start-demo-tour'));
+    }, 300);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Play className="w-5 h-5 text-primary" />
-            Demo Script
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Play className="w-5 h-5 text-primary" />
+              Demo Script
+            </DialogTitle>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto mt-2 space-y-2 pr-1">
+        {/* Auto-Play CTA */}
+        <div className="flex-shrink-0 mb-2">
+          <Button
+            onClick={handleAutoPlay}
+            className="w-full gap-2 bg-gradient-to-r from-primary to-[hsl(173,70%,45%)] hover:from-primary/90 hover:to-[hsl(173,70%,40%)] text-primary-foreground shadow-md"
+            size="lg"
+          >
+            <Rocket className="h-4 w-4" />
+            Play Auto Demo Tour
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+            Automatically navigates through all 8 steps with the Storm scenario
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto mt-1 space-y-2 pr-1">
           {demoSteps.map((step, index) => {
             const isCompleted = completedSteps.includes(index);
             const isCurrent = currentStep === index;
@@ -87,10 +124,10 @@ export function DemoScriptModal() {
                 transition={{ delay: index * 0.05 }}
                 className={cn(
                   'p-3 rounded-lg border transition-all cursor-pointer',
-                  isCompleted 
-                    ? 'bg-success/5 border-success/20' 
-                    : isCurrent 
-                    ? 'bg-primary/5 border-primary/20' 
+                  isCompleted
+                    ? 'bg-success/5 border-success/20'
+                    : isCurrent
+                    ? 'bg-primary/5 border-primary/20'
                     : 'bg-card border-border hover:border-primary/30'
                 )}
                 onClick={() => {
