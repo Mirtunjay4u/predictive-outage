@@ -112,12 +112,12 @@ export default function CopilotStudio() {
     const hazardOverlap = searchParams.get('hazard_overlap');
     if (hazardOverlap) setMode('ACTIVE_EVENT');
 
-    if (autoRun && !autoRunTriggered.current && selectedEventId) {
+    if (autoRun && !autoRunTriggered.current && selectedEventId && selectedEvent) {
       autoRunTriggered.current = true;
-      // Delay to let state settle
-      setTimeout(() => handleRun(), 500);
+      // Delay to let all derived state settle
+      setTimeout(() => handleRun(), 800);
     }
-  }, [selectedEventId, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedEventId, selectedEvent, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Run Copilot ────────────────────────────────────────────────────────────
   const handleRun = useCallback(async () => {
