@@ -89,9 +89,9 @@ export function SupportingSignalsSheet({
             <p className="text-muted-foreground">{safeTruncate(summary, 220)}</p>
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <Badge variant="outline">Confidence: {confidence}</Badge>
-              <Badge variant="outline">Provenance: {sourceLabel}</Badge>
+              <Badge variant="outline" className={sourceLabel.toLowerCase().includes('nemotron') ? 'border-[hsl(120,60%,40%)]/40 bg-[hsl(120,60%,40%)]/10 text-[hsl(120,60%,65%)]' : ''}>Provenance: {sourceLabel}</Badge>
               <span className={DASHBOARD_TIMESTAMP_CLASS}>Updated {formatDashboardTime(timestamp)}</span>
-              <Button variant="outline" size="sm" onClick={() => void copySummary()} className={cn('h-7 text-[11px]', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}><Copy className="mr-1.5 h-3 w-3" />Copy summary</Button>
+              <Button variant="outline" size="sm" onClick={() => void copySummary()} className={cn('h-7 text-[11px] transition-colors hover:border-[hsl(120,60%,40%)]/50 hover:bg-[hsl(120,60%,40%)]/15 hover:text-[hsl(120,60%,65%)]', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}><Copy className="mr-1.5 h-3 w-3" />Copy summary</Button>
             </div>
           </section>
 
