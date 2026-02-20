@@ -426,6 +426,33 @@ export default function About() {
         </TabsContent>
       </Tabs>
 
+      {/* Domain Assumptions Disclosure */}
+      <motion.div variants={fadeIn} initial="hidden" animate="show" transition={{ delay: 0.3 }}>
+        <Card className="border-border/40">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Info className="w-4 h-4 text-muted-foreground" />
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Domain Assumptions (Demonstration)</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+              {[
+                'Synthetic outage scenarios — not connected to live systems',
+                'Severity scale aligned to industry standard 1–5',
+                'Hazard exposure modeled from overlay simulation',
+                'Crew readiness simplified for demonstration purposes',
+                'ETR bands are probabilistic, not guaranteed',
+                'Geographic data is illustrative, not production GIS',
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-1.5">
+                  <span className="text-muted-foreground/40 mt-0.5 text-[10px]">•</span>
+                  <span className="text-[11px] text-muted-foreground leading-relaxed">{item}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Footer disclaimer */}
       <p className="text-[10px] text-muted-foreground/60 text-center pt-4">
         Prototype Demo • Synthetic Data • Decision Support Only • No SCADA/OMS/ADMS Integration

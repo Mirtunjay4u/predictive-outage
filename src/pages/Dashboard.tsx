@@ -1317,6 +1317,7 @@ export default function Dashboard() {
             <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {getExtremeHazard(selectedHazardKey).label}</p>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
+              <p className="text-[11px] text-muted-foreground/60 font-medium tracking-wide mt-0.5">AI-Augmented · Policy-Constrained · Operator-Controlled</p>
               {/* ── Policy Status Badge ──────────────────────────────── */}
               <Tooltip>
                 <TooltipTrigger asChild>

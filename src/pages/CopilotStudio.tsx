@@ -627,8 +627,38 @@ export default function CopilotStudio() {
                       </ul>
                     </Section>
 
-                    {/* Disclaimer */}
+                    {/* AI Confidence Statement */}
                     <div className="pt-4 border-t border-border">
+                      <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
+                        <div className="flex items-start gap-2">
+                          <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-foreground mb-1">AI Confidence Statement</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              <span className="font-semibold text-foreground">Confidence: Structured</span> — Analysis generated from validated event data + deterministic policy compliance. All AI outputs are structured and validated against rule constraints prior to display.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Decision Flow Micro-Diagram */}
+                    <div className="pt-3">
+                      <div className="p-3 rounded-lg bg-muted/30 border border-border/40">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Decision Flow</p>
+                        <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+                          {['Event Data', 'Rule Engine', 'Guardrails', 'AI Inference', 'Validation', 'Advisory Output'].map((step, i) => (
+                            <span key={step} className="flex items-center gap-1.5">
+                              <span className="rounded border border-border/60 bg-card px-2 py-0.5 font-medium text-foreground/80">{step}</span>
+                              {i < 5 && <span className="text-muted-foreground/40">→</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Disclaimer */}
+                    <div className="pt-3">
                       <div className="p-3 rounded-lg bg-muted/50 border border-border">
                         <div className="flex items-start gap-2">
                           <ShieldAlert className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />

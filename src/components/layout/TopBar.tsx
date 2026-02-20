@@ -1,4 +1,4 @@
-import { Search, Bell, User, LogOut, FlaskConical } from 'lucide-react';
+import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -42,6 +42,15 @@ export function TopBar({ onSearch }: TopBarProps) {
           <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1">
             <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
             <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">Phase-1 Demo</span>
+          </div>
+
+          {/* Advisory Mode Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-2.5 py-1">
+            <ShieldCheck className="h-3 w-3 text-emerald-500/70" />
+            <div className="flex flex-col leading-none">
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 tracking-wide">ADVISORY MODE</span>
+              <span className="text-[8px] text-emerald-600/60 dark:text-emerald-400/50">No Autonomous Control</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
