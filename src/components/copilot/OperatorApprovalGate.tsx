@@ -8,11 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useInsertDecisionLog } from '@/hooks/useDecisionLog';
 import type { OperatorOutputContract } from '@/types/copilot';
 
 interface OperatorApprovalGateProps {
   contract: OperatorOutputContract;
   eventName: string;
+  eventId?: string | null;
   timestamp: Date;
   modelEngine: string;
 }
@@ -28,11 +30,13 @@ const CHECKLIST_ITEMS = [
 export function OperatorApprovalGate({
   contract,
   eventName,
+  eventId,
   timestamp,
   modelEngine,
 }: OperatorApprovalGateProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [reviewed, setReviewed] = useState(false);
+  const insertLog = useInsertDecisionLog();
 
   const allChecked = checked.size === CHECKLIST_ITEMS.length;
 
@@ -49,7 +53,17 @@ export function OperatorApprovalGate({
     toast.success('Marked as reviewed (demo)', {
       description: 'This is a demo governance action — no operational systems were modified.',
     });
-  }, []);
+    if (eventId) {
+      insertLog.mutate({
+        event_id: eventId,
+        source: 'Operator',
+        trigger: 'Operator marked analysis as reviewed',
+        action_taken: `Checklist completed (${CHECKLIST_ITEMS.length}/${CHECKLIST_ITEMS.length} items). Analysis marked as reviewed.`,
+        rule_impact: null,
+        metadata: { checkedItems: Array.from(checked) },
+      });
+    }
+  }, [eventId, checked, insertLog]);
 
   const handleExport = useCallback(() => {
     const lines: string[] = [
@@ -100,7 +114,18 @@ export function OperatorApprovalGate({
     toast.success('Export downloaded', {
       description: 'Operator update draft saved as text file.',
     });
-  }, [contract, eventName, timestamp, modelEngine]);
+
+    if (eventId) {
+      insertLog.mutate({
+        event_id: eventId,
+        source: 'Operator',
+        trigger: 'Operator exported update draft',
+        action_taken: `Exported ${contract.mode} analysis draft for "${eventName}"`,
+        rule_impact: null,
+        metadata: { format: 'txt', mode: contract.mode },
+      });
+    }
+  }, [contract, eventName, timestamp, modelEngine, eventId, insertLog]);
 
   return (
     <div className="mt-6 pt-6 border-t border-border">

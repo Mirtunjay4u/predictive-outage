@@ -31,6 +31,8 @@ import { formatEtrPrimary } from '@/lib/etr-format';
 import { getEventSeverity } from '@/lib/severity';
 import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
 import { OperatorApprovalGate } from '@/components/copilot/OperatorApprovalGate';
+import { EventDecisionTimeline } from '@/components/copilot/EventDecisionTimeline';
+import { useInsertDecisionLog } from '@/hooks/useDecisionLog';
 import type { PolicyEvalResult } from '@/hooks/usePolicyEvaluation';
 
 // ─── Response history entry ──────────────────────────────────────────────────
@@ -63,6 +65,7 @@ export default function CopilotStudio() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const autoRunTriggered = useRef(false);
+  const insertLog = useInsertDecisionLog();
 
   // Selected event from scenarios
   const selectedEvent = useMemo(
@@ -197,6 +200,31 @@ export default function CopilotStudio() {
       const raw = copilotResult.data as CopilotResponse;
       const contract = mapToOperatorContract(raw);
       const policyEval = policyResult.error ? null : (policyResult.data as PolicyEvalResult);
+
+      // ── Log Copilot run ──
+      insertLog.mutate({
+        event_id: selectedEvent.id,
+        source: 'Copilot',
+        trigger: `${mode} analysis requested`,
+        action_taken: `Copilot generated operator analysis (${contract.recommendations.length} recommendations, ${contract.blocked_actions.length} blocked actions)`,
+        rule_impact: contract.blocked_actions.length > 0
+          ? `Blocked: ${contract.blocked_actions.map(b => b.action).join(', ')}`
+          : null,
+        metadata: { mode, model: raw.model_engine },
+      });
+
+      // ── Log Rule Engine eval ──
+      if (policyEval) {
+        const triggered = policyEval.safetyConstraints.filter(sc => sc.triggered);
+        insertLog.mutate({
+          event_id: selectedEvent.id,
+          source: 'Rule Engine',
+          trigger: 'Policy engine evaluation',
+          action_taken: `${triggered.length} constraints triggered, ${policyEval.blockedActions.length} actions blocked`,
+          rule_impact: triggered.map(t => t.id).join(', ') || null,
+          metadata: { engineVersion: policyEval.meta?.engineVersion, hash: policyEval.meta?.deterministicHash },
+        });
+      }
 
       setHistory(prev => [
         {
@@ -597,10 +625,14 @@ export default function CopilotStudio() {
                       policyEval={latestEntry.policyEval}
                     />
 
+                    {/* Event Decision Timeline */}
+                    <EventDecisionTimeline eventId={selectedEventId} maxHeight="300px" />
+
                     {/* Operator Approval Gate */}
                     <OperatorApprovalGate
                       contract={latestEntry.contract}
                       eventName={latestEntry.eventName}
+                      eventId={selectedEventId}
                       timestamp={latestEntry.timestamp}
                       modelEngine={latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}
                     />

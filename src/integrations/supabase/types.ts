@@ -241,6 +241,39 @@ export type Database = {
           },
         ]
       }
+      event_decision_log: {
+        Row: {
+          action_taken: string
+          event_id: string
+          id: string
+          metadata: Json | null
+          rule_impact: string | null
+          source: string
+          timestamp: string
+          trigger: string
+        }
+        Insert: {
+          action_taken: string
+          event_id: string
+          id?: string
+          metadata?: Json | null
+          rule_impact?: string | null
+          source: string
+          timestamp?: string
+          trigger: string
+        }
+        Update: {
+          action_taken?: string
+          event_id?: string
+          id?: string
+          metadata?: Json | null
+          rule_impact?: string | null
+          source?: string
+          timestamp?: string
+          trigger?: string
+        }
+        Relationships: []
+      }
       event_status_history: {
         Row: {
           backup_runtime_remaining_hours: number | null
