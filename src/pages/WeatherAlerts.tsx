@@ -6,7 +6,7 @@ import {
   TreePine, AlertTriangle, Users, CheckCircle2, XCircle, Activity,
   ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio, BarChart3,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -512,9 +512,15 @@ export default function WeatherAlerts() {
                       </CardTitle>
                       <div className="flex items-center gap-2.5">
                         {/* 7-day sparkline */}
-                        <div className="w-[56px] h-[22px]">
+                        <div className="w-[80px] h-[24px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={hazardSparklines[hazard.key]}>
+                            <AreaChart data={hazardSparklines[hazard.key]}>
+                              <defs>
+                                <linearGradient id={`sparkFill-${hazard.key}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={HAZARD_COLORS[hazard.key]} stopOpacity={0.25} />
+                                  <stop offset="100%" stopColor={HAZARD_COLORS[hazard.key]} stopOpacity={0.02} />
+                                </linearGradient>
+                              </defs>
                               <Tooltip
                                 cursor={false}
                                 content={({ active, payload }) => {
@@ -528,15 +534,16 @@ export default function WeatherAlerts() {
                                   );
                                 }}
                               />
-                              <Line
+                              <Area
                                 type="monotone"
                                 dataKey="v"
                                 stroke={HAZARD_COLORS[hazard.key]}
                                 strokeWidth={1.5}
+                                fill={`url(#sparkFill-${hazard.key})`}
                                 dot={false}
                                 activeDot={{ r: 2.5, strokeWidth: 0, fill: HAZARD_COLORS[hazard.key] }}
                               />
-                            </LineChart>
+                            </AreaChart>
                           </ResponsiveContainer>
                         </div>
                         <div className="flex items-center gap-1.5">
