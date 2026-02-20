@@ -6,7 +6,7 @@ import {
   TreePine, AlertTriangle, Users, CheckCircle2, XCircle, Activity,
   ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio, BarChart3,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -318,6 +318,33 @@ export default function WeatherAlerts() {
     return groups;
   }, [events]);
 
+  // 7-day sparkline data per hazard
+  const hazardSparklines = useMemo(() => {
+    const now = new Date();
+    const days: Date[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      days.push(d);
+    }
+    const result: Record<HazardKey, { v: number }[]> = {} as any;
+    (Object.keys(HAZARD_LABELS) as HazardKey[]).forEach(key => {
+      result[key] = days.map(date => {
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+        return {
+          v: events.filter(e => {
+            if (HAZARD_TO_KEY[e.outage_type || ''] !== key) return false;
+            const start = e.event_start_time ? new Date(e.event_start_time) : e.created_at ? new Date(e.created_at) : null;
+            return start ? start >= date && start < nextDay : false;
+          }).length,
+        };
+      });
+    });
+    return result;
+  }, [events]);
+
   // KPIs
   const eventsInHazardZones = useMemo(() =>
     events.filter(e => HAZARD_TO_KEY[e.outage_type || '']).length
@@ -482,9 +509,25 @@ export default function WeatherAlerts() {
                         </span>
                         {hazard.label}
                       </CardTitle>
-                      <div className="flex items-center gap-1.5">
-                        <span className={cn('w-2 h-2 rounded-full', sev.color)} />
-                        <span className="text-[10px] font-medium text-muted-foreground">{sev.text}</span>
+                      <div className="flex items-center gap-2.5">
+                        {/* 7-day sparkline */}
+                        <div className="w-[56px] h-[22px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={hazardSparklines[hazard.key]}>
+                              <Line
+                                type="monotone"
+                                dataKey="v"
+                                stroke={HAZARD_COLORS[hazard.key]}
+                                strokeWidth={1.5}
+                                dot={false}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn('w-2 h-2 rounded-full', sev.color)} />
+                          <span className="text-[10px] font-medium text-muted-foreground">{sev.text}</span>
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
