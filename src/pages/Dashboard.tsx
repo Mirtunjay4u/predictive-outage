@@ -1663,7 +1663,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {!boardroomMode && <ImmediateAttentionStrip scenarios={highPriorityScenarios} onViewAll={() => navigate('/events?lifecycle=Event&priority=high')} onEventClick={(id) => navigate(`/events/${id}`)} />}
+      {!boardroomMode && <ImmediateAttentionStrip scenarios={highPriorityScenarios} onViewAll={() => navigate('/events?lifecycle=Event&priority=high')} onEventClick={(id) => navigate(`/event/${id}`)} />}
 
       {/* ── Executive Focus Frame: AI Briefing ───────────────────────────────
            Boardroom mode wraps the AI Briefing section in a subtle elevated
