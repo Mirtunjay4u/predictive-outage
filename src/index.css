@@ -114,8 +114,13 @@
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 12%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-border: 217 25% 14%;
     --sidebar-ring: 217 91% 60%;
+
+    /* Nav section accent tokens */
+    --nav-ops: 217 91% 60%;
+    --nav-intel: 173 80% 40%;
+    --nav-platform: 215 20% 55%;
   }
 }
 
