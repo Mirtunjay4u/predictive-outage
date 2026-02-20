@@ -26,14 +26,16 @@ export function AppLayout() {
           <Outlet />
         </main>
         
-        {/* Persistent Demo Footer */}
-        <footer className="h-7 border-t border-border/30 bg-surface-0 flex items-center justify-between px-4 shrink-0">
-          <p className="text-[10px] text-muted-foreground/60 tracking-wide font-medium">
-            Operator Copilot – Predictive Outage Management · Phase-1 Decision Intelligence Demonstrator · Synthetic Data
-          </p>
-          <p className="text-[10px] text-muted-foreground/50 tracking-wide">
-            Advisory only — no SCADA/OMS/ADMS control actions executed. Operator approval required.
-          </p>
+        {/* Persistent Demo Footer with Operational Boundaries */}
+        <footer className="border-t border-border/30 bg-surface-0 shrink-0">
+          <div className="h-7 flex items-center justify-between px-4">
+            <p className="text-[10px] text-muted-foreground/60 tracking-wide font-medium">
+              Operator Copilot – Predictive Outage Management · Phase-1 Decision Intelligence Demonstrator · Synthetic Data
+            </p>
+            <p className="text-[10px] text-muted-foreground/50 tracking-wide">
+              No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
+            </p>
+          </div>
         </footer>
       </div>
     </div>

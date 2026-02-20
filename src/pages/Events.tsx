@@ -447,7 +447,7 @@ export default function Events() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Operator decision-support layer — triage queues, policy evaluation, ETR bands, and crew readiness.
+                Operator decision-support layer — each event includes ETR confidence banding, critical load prioritization, and deterministic policy evaluation.
               </p>
             </div>
             <div className="flex items-center gap-2">

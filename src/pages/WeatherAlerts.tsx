@@ -614,7 +614,7 @@ export default function WeatherAlerts() {
           <div>
             <h1 className="text-lg font-semibold text-foreground leading-tight">Hazard Intelligence</h1>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Operational hazard impacts derived from event data and rule-engine outputs · Advisory only
+              Hazard scoring influences outage prioritization but does not automatically alter dispatch · Advisory only
             </p>
           </div>
         </div>
