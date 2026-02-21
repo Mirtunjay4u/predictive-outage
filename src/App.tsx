@@ -22,6 +22,7 @@ import OutageMap from "./pages/OutageMap";
 import EventDetails from "./pages/EventDetails";
 import SituationReport from "./pages/SituationReport";
 import WeatherAlerts from "./pages/WeatherAlerts";
+import ArtOfPossibilities from "./pages/ArtOfPossibilities";
 import About from "./pages/About";
 import ExecutiveValidation from "./pages/ExecutiveValidation";
 import NotFound from "./pages/NotFound";
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="/event/:id/situation-report" element={<SituationReport />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
+        <Route path="/art-of-possibilities" element={<ArtOfPossibilities />} />
         <Route path="/about" element={<About />} />
         <Route path="/executive-validation" element={<ExecutiveValidation />} />
         <Route path="/settings" element={<Settings />} />
