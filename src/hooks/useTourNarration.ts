@@ -62,6 +62,8 @@ interface UseTourNarrationReturn {
   toggleMute: () => void;
   playStepNarration: (stepIndex: number) => void;
   stopNarration: () => void;
+  pauseNarration: () => void;
+  resumeNarration: () => void;
   preCacheAll: () => void;
 }
 
@@ -152,6 +154,20 @@ export function useTourNarration(): UseTourNarrationReturn {
     }
     setIsLoading(false);
     setIsSpeaking(false);
+  }, []);
+
+  const pauseNarration = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.pause();
+  }, []);
+
+  const resumeNarration = useCallback(() => {
+    if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0) {
+      audioRef.current.play().catch(() => {});
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.resume();
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -257,5 +273,5 @@ export function useTourNarration(): UseTourNarrationReturn {
     };
   }, [stopNarration]);
 
-  return { isMuted, isLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll };
+  return { isMuted, isLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration, preCacheAll };
 }
