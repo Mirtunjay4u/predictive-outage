@@ -25,6 +25,7 @@ import WeatherAlerts from "./pages/WeatherAlerts";
 import ArtOfPossibilities from "./pages/ArtOfPossibilities";
 import About from "./pages/About";
 import ExecutiveValidation from "./pages/ExecutiveValidation";
+import ExecutiveSummary from "./pages/ExecutiveSummary";
 import KnowledgePolicy from "./pages/KnowledgePolicy";
 import NotFound from "./pages/NotFound";
 
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="/architecture" element={<Architecture />} />
         <Route path="/about" element={<About />} />
         <Route path="/executive-validation" element={<ExecutiveValidation />} />
+        <Route path="/executive-summary" element={<ExecutiveSummary />} />
         <Route path="/knowledge-policy" element={<KnowledgePolicy />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

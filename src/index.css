@@ -480,3 +480,16 @@ body.tour-active .flex-1 {
   0%, 100% { outline-color: hsl(var(--primary) / 0.15); outline-offset: 4px; }
   50%      { outline-color: hsl(var(--primary) / 0.5);  outline-offset: 6px; }
 }
+
+/* Print styles for executive summary */
+@media print {
+  @page {
+    size: letter;
+    margin: 0;
+  }
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .print\:hidden { display: none !important; }
+}
