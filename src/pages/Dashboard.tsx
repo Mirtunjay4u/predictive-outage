@@ -23,6 +23,7 @@ import type { BriefingData } from '@/components/dashboard/AIExecutiveBriefingPan
 import { ExecutiveSignalCard } from '@/components/dashboard/ExecutiveSignalCard';
 import { SupportingSignalsSheet } from '@/components/dashboard/SupportingSignalsSheet';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
+import { OperationalRiskPostureBar } from '@/components/dashboard/OperationalRiskPostureBar';
 import { DASHBOARD_INTERACTIVE_BUTTON_CLASS, DASHBOARD_INTERACTIVE_SURFACE_CLASS, DASHBOARD_TIMESTAMP_CLASS, formatDashboardTime } from '@/lib/dashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -1560,6 +1561,13 @@ export default function Dashboard() {
           </div>
         );
       })()}
+
+      {/* ── Operational Risk Posture Bar ──────────────────────────────────── */}
+      <OperationalRiskPostureBar
+        scenarios={scenarios}
+        hazardLabel={getExtremeHazard(selectedHazardKey).shortLabel}
+        hazardSeverity={severityOverride ?? (getExtremeHazard(selectedHazardKey).severityLabel as 'Low' | 'Moderate' | 'Severe')}
+      />
 
       <section data-tour-section="scenario-playback" className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
