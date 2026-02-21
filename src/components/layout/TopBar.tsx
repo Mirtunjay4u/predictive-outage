@@ -86,6 +86,8 @@ export function TopBar({ onSearch }: TopBarProps) {
             </Tooltip>
           </div>
 
+          <div className="hidden md:block h-5 w-px bg-border/40" />
+
           {/* Advisory Mode Indicator */}
           <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-2.5 py-1">
             <ShieldCheck className="h-3 w-3 text-emerald-500/70" />
