@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Flame, TreePine, ShieldAlert, Layers, Wind, Droplets, Bug, Radio,
   ArrowRight, Lock, Sparkles, Eye, BarChart3, AlertTriangle, CheckCircle2,
-  ArrowLeft, Mountain, PawPrint, CloudRain,
+  ArrowLeft, Mountain, PawPrint, CloudRain, ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +13,8 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 /* ── tiny helpers ── */
-const SectionTitle = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <h2 className={cn('text-lg font-semibold text-foreground tracking-tight', className)}>{children}</h2>
+const SectionTitle = ({ children, className, id }: { children: React.ReactNode; className?: string; id?: string }) => (
+  <h2 id={id} className={cn('text-xl font-bold text-foreground tracking-tight scroll-mt-20', className)}>{children}</h2>
 );
 
 const fade = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35 } };
@@ -77,48 +77,73 @@ export default function ArtOfPossibilities() {
 
   return (
     <div className="min-h-screen space-y-10 pb-16">
+      {/* ── SECTION NAVIGATION BAR ── */}
+      <nav className="sticky top-0 z-30 -mx-1 rounded-lg border border-border/30 bg-card/95 backdrop-blur-md px-4 py-2.5 flex items-center gap-1 overflow-x-auto scrollbar-none">
+        {[
+          { href: '#aop-banner', label: 'Overview', icon: Sparkles },
+          { href: '#aop-domain-cards', label: 'Why It Matters', icon: Eye },
+          { href: '#aop-fusion-map', label: 'Fusion Map', icon: Layers },
+          { href: '#aop-bio-sentinel', label: 'Bio-Sentinel', icon: Bug },
+          { href: '#aop-smoke-sensing', label: 'Smoke & Nature', icon: Flame },
+          { href: '#aop-ground-level', label: 'Ground Level', icon: Mountain },
+          { href: '#aop-phase-bridge', label: 'Phase Bridge', icon: BarChart3 },
+          { href: '#aop-governance', label: 'Governance', icon: Lock },
+        ].map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+          >
+            <link.icon className="h-3.5 w-3.5" />
+            {link.label}
+          </a>
+        ))}
+        <ChevronDown className="ml-auto h-3.5 w-3.5 text-muted-foreground/40 shrink-0 sm:hidden" />
+      </nav>
+
       {/* ── 1) TOP BANNER ── */}
       <motion.section
         {...fade}
+        id="aop-banner"
         data-tour-section="aop-banner"
-        className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-card via-card to-[hsl(var(--primary)/0.04)] px-6 py-7 sm:px-8"
+        className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-card via-card to-[hsl(var(--primary)/0.04)] px-6 py-8 sm:px-8"
       >
         {/* decorative glow */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Art of Possibilities</h1>
+              <Sparkles className="h-6 w-6 text-primary" />
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Art of Possibilities</h1>
             </div>
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-base font-medium text-muted-foreground">
               Future Environmental Intelligence for Wildfire &amp; Vegetation Risk
             </p>
-            <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+            <p className="text-[13px] leading-relaxed text-muted-foreground/80">
               Designed to augment operator situational awareness — advisory only, no control actions.
             </p>
           </div>
 
-          <Badge variant="outline" className="shrink-0 border-amber-500/40 bg-amber-500/5 text-amber-400 text-[10px] uppercase tracking-widest px-3 py-1">
+          <Badge variant="outline" className="shrink-0 border-amber-500/40 bg-amber-500/5 text-amber-400 text-[11px] uppercase tracking-widest px-3 py-1.5">
             Concept · Phase 2+ · Not Active in Phase 1
           </Badge>
         </div>
       </motion.section>
 
       {/* ── 2) WHY THIS MATTERS ── */}
-      <motion.section {...fade} transition={{ delay: 0.05 }} data-tour-section="aop-domain-cards">
-        <SectionTitle className="mb-4">Why This Matters</SectionTitle>
+      <motion.section {...fade} transition={{ delay: 0.05 }} id="aop-domain-cards" data-tour-section="aop-domain-cards">
+        <SectionTitle className="mb-4" id="aop-domain-cards-title">Why This Matters</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-3">
           {domainCards.map((c) => (
             <Card
               key={c.title}
               className="group transition-shadow duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-border/80"
             >
-              <CardContent className="flex flex-col gap-2 p-5">
-                <c.icon className={cn('h-5 w-5', c.accent)} strokeWidth={1.6} />
-                <h3 className="text-[13px] font-semibold text-foreground">{c.title}</h3>
-                <p className="text-[12px] leading-relaxed text-muted-foreground">{c.text}</p>
+              <CardContent className="flex flex-col gap-2.5 p-5">
+                <c.icon className={cn('h-6 w-6', c.accent)} strokeWidth={1.6} />
+                <h3 className="text-[15px] font-semibold text-foreground">{c.title}</h3>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{c.text}</p>
               </CardContent>
             </Card>
           ))}
@@ -126,27 +151,27 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 3) CONCEPT VISUALIZATION MAP ── */}
-      <motion.section {...fade} transition={{ delay: 0.1 }} data-tour-section="aop-fusion-map">
+      <motion.section {...fade} transition={{ delay: 0.1 }} id="aop-fusion-map" data-tour-section="aop-fusion-map">
         <Card className="overflow-hidden border-border/30">
           <div className="flex flex-col gap-3 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
               <SectionTitle>Environmental Signal Fusion Overlay</SectionTitle>
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept</span>
+              <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wider">Concept Visualization</span>
             </div>
             <ToggleGroup
               type="multiple"
               value={activeOverlays}
               onValueChange={(v) => v.length && setActiveOverlays(v)}
-              className="flex flex-wrap gap-1"
+              className="flex flex-wrap gap-1.5"
             >
               {overlayOptions.map((o) => (
                 <ToggleGroupItem
                   key={o.value}
                   value={o.value}
                   size="sm"
-                  className="gap-1.5 text-[11px] data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
+                  className="gap-1.5 text-[12px] px-3 py-1.5 data-[state=on]:bg-primary/10 data-[state=on]:text-primary"
                 >
-                  <o.icon className="h-3 w-3" />
+                  <o.icon className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">{o.label}</span>
                 </ToggleGroupItem>
               ))}
@@ -605,7 +630,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 4) BIO-SENTINEL MODULE ── */}
-      <motion.section {...fade} transition={{ delay: 0.15 }} data-tour-section="aop-biosentinel">
+      <motion.section {...fade} transition={{ delay: 0.15 }} id="aop-bio-sentinel" data-tour-section="aop-biosentinel">
         <SectionTitle className="mb-4">Bio-Sentinel Signals (Experimental) — Optional Secondary Indicator</SectionTitle>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -1026,26 +1051,26 @@ export default function ArtOfPossibilities() {
                   'Does not trigger dispatch, switching, or restoration actions.',
                   'Operator review required before any operational interpretation.',
                 ].map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/70" />
+                  <li key={b} className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400/80" />
                     {b}
                   </li>
                 ))}
               </ul>
 
               <div className="rounded-lg border border-border/30 bg-muted/30 p-4">
-                <p className="mb-3 text-[11px] font-semibold text-foreground/80">How it would work</p>
-                <div className="flex flex-col gap-2">
+                <p className="mb-3 text-[13px] font-semibold text-foreground/90">How it would work</p>
+                <div className="flex flex-col gap-2.5">
                   {bioFlow.map((f, i) => (
                     <div key={f.step} className="flex items-center gap-2.5">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
                         {f.step}
                       </span>
                       <div>
-                        <span className="text-[11px] font-medium text-foreground/90">{f.label}</span>
-                        <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
+                        <span className="text-[13px] font-medium text-foreground/90">{f.label}</span>
+                        <span className="ml-1.5 text-[11px] text-muted-foreground/70">— {f.detail}</span>
                       </div>
-                      {i < bioFlow.length - 1 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                      {i < bioFlow.length - 1 && <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/40" />}
                     </div>
                   ))}
                 </div>
@@ -1054,22 +1079,22 @@ export default function ArtOfPossibilities() {
               {/* live signal feed mockup */}
               <div className="rounded-lg border border-violet-500/20 bg-violet-950/20 p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[9px] font-semibold text-violet-300 uppercase tracking-wider">Live Signal Feed</span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                  <span className="text-[11px] font-semibold text-violet-300 uppercase tracking-wider">Live Signal Feed</span>
+                  <span className="h-2 w-2 rounded-full bg-violet-400 animate-pulse" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {[
                     { time: '14:32:18', type: 'Acoustic', val: '72%', color: 'text-violet-300' },
                     { time: '14:31:45', type: 'Behavioral', val: '58%', color: 'text-violet-300/70' },
                     { time: '14:30:02', type: 'Migration', val: '45%', color: 'text-violet-300/50' },
                     { time: '14:28:11', type: 'Acoustic', val: '31%', color: 'text-violet-300/40' },
                   ].map((s, i) => (
-                    <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
-                      <span className="text-muted-foreground/40">{s.time}</span>
+                    <div key={i} className="flex items-center gap-2 text-[11px] font-mono">
+                      <span className="text-muted-foreground/50">{s.time}</span>
                       <span className={s.color}>{s.type}</span>
-                      <span className="ml-auto text-violet-200/60">{s.val}</span>
-                      <div className="h-1 w-10 rounded-full bg-violet-950">
-                        <div className="h-full rounded-full bg-violet-500/50" style={{ width: s.val }} />
+                      <span className="ml-auto text-violet-200/70">{s.val}</span>
+                      <div className="h-1.5 w-12 rounded-full bg-violet-950">
+                        <div className="h-full rounded-full bg-violet-500/60" style={{ width: s.val }} />
                       </div>
                     </div>
                   ))}
@@ -1079,8 +1104,8 @@ export default function ArtOfPossibilities() {
               {/* ── Mini Anomaly Detection Timeline ── */}
               <div className="rounded-lg border border-violet-500/20 bg-violet-950/20 p-3">
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-[9px] font-semibold text-violet-300 uppercase tracking-wider">Recent Anomaly Detections</span>
-                  <Badge variant="outline" className="border-violet-500/30 text-violet-400 text-[8px] px-1.5 py-0">Last 24h</Badge>
+                  <span className="text-[11px] font-semibold text-violet-300 uppercase tracking-wider">Recent Anomaly Detections</span>
+                  <Badge variant="outline" className="border-violet-500/30 text-violet-400 text-[10px] px-2 py-0.5">Last 24h</Badge>
                 </div>
                 <div className="relative pl-3">
                   {/* vertical timeline line */}
@@ -1118,20 +1143,20 @@ export default function ArtOfPossibilities() {
                           }}
                         >
                           {/* timeline dot */}
-                          <div className={cn('absolute -left-[7px] top-[5px] h-2 w-2 rounded-full ring-2 ring-violet-950 transition-all', highlightedZone === e.zone ? 'ring-amber-900 scale-125' : '', dotColor)}>
+                          <div className={cn('absolute -left-[7px] top-[5px] h-2.5 w-2.5 rounded-full ring-2 ring-violet-950 transition-all', highlightedZone === e.zone ? 'ring-amber-900 scale-125' : '', dotColor)}>
                             {i === 0 && <span className={cn('absolute inset-0 rounded-full animate-ping', dotColor, 'opacity-40')} />}
                           </div>
                           <div className="ml-2 flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <span className={cn('text-[9px] font-semibold', highlightedZone === e.zone ? 'text-amber-300' : textColor)}>{e.type}</span>
-                              <span className="text-[7px] text-muted-foreground/40 font-mono">{e.ago}</span>
-                              {highlightedZone === e.zone && <span className="text-[7px] text-amber-400 animate-pulse">◉ MAP</span>}
+                              <span className={cn('text-[11px] font-semibold', highlightedZone === e.zone ? 'text-amber-300' : textColor)}>{e.type}</span>
+                              <span className="text-[9px] text-muted-foreground/50 font-mono">{e.ago}</span>
+                              {highlightedZone === e.zone && <span className="text-[9px] text-amber-400 animate-pulse">◉ MAP</span>}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className={cn('text-[8px] font-mono', highlightedZone === e.zone ? 'text-amber-300/70' : 'text-muted-foreground/50')}>{e.zone}</span>
-                              <span className="text-[8px] font-mono text-violet-300/60">{e.conf}%</span>
-                              <div className="h-1 w-8 rounded-full bg-violet-950 overflow-hidden">
-                                <div className="h-full rounded-full bg-violet-400/50" style={{ width: `${e.conf}%` }} />
+                              <span className={cn('text-[10px] font-mono', highlightedZone === e.zone ? 'text-amber-300/70' : 'text-muted-foreground/60')}>{e.zone}</span>
+                              <span className="text-[10px] font-mono text-violet-300/70">{e.conf}%</span>
+                              <div className="h-1.5 w-10 rounded-full bg-violet-950 overflow-hidden">
+                                <div className="h-full rounded-full bg-violet-400/60" style={{ width: `${e.conf}%` }} />
                               </div>
                             </div>
                           </div>
@@ -1147,17 +1172,17 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 4a-ii) SMOKE & EARLY NATURE SIGNAL SENSING ── */}
-      <motion.section {...fade} transition={{ delay: 0.16 }} data-tour-section="aop-smoke-sensing">
+      <motion.section {...fade} transition={{ delay: 0.16 }} id="aop-smoke-sensing" data-tour-section="aop-smoke-sensing">
         <Card className="overflow-hidden border-border/30">
           <div className="flex flex-col gap-2 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
               <SectionTitle className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-400" />
+                <Flame className="h-5 w-5 text-orange-400" />
                 Smoke Sensing &amp; Early Nature Signal Forecasting
               </SectionTitle>
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept · Post-Fire Smoke · Nature Precursors · Sense Forecasting</span>
+              <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wider">Concept · Post-Fire Smoke · Nature Precursors · Sense Forecasting</span>
             </div>
-            <Badge variant="outline" className="shrink-0 border-orange-500/40 bg-orange-500/5 text-orange-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
+            <Badge variant="outline" className="shrink-0 border-orange-500/40 bg-orange-500/5 text-orange-400 text-[11px] uppercase tracking-widest px-3 py-1">
               Early Warning · Phase 2+
             </Badge>
           </div>
@@ -1466,29 +1491,29 @@ export default function ArtOfPossibilities() {
             {/* right: explanation panel */}
             <Card className="border-0 rounded-none border-l border-border/20">
               <CardContent className="space-y-4 p-5">
-                <div className="space-y-1">
-                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-orange-400" />
+                <div className="space-y-1.5">
+                  <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+                    <Flame className="h-5 w-5 text-orange-400" />
                     Post-Fire Smoke Sensing
                   </h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
                     After forest fires, residual smoke carries particulate matter (PM2.5, PM10), carbon monoxide, and volatile organic compounds. Sensor arrays detect plume density, dispersion direction, and concentration thresholds to assess corridor exposure risk.
                   </p>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                    <TreePine className="h-4 w-4 text-emerald-400" />
+                <div className="space-y-1.5">
+                  <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+                    <TreePine className="h-5 w-5 text-emerald-400" />
                     Early Nature Signal Forecasting
                   </h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
                     Nature provides pre-fire indicators: erratic insect swarm patterns, sudden soil temperature anomalies, stress-induced plant VOC emissions, and rapid humidity drops. Correlating these signals helps surface fire risk before ignition — an early biological forecasting layer.
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-border/30 bg-muted/30 p-3">
-                  <p className="mb-2 text-[11px] font-semibold text-foreground/80">Nature Precursor Signals</p>
-                  <div className="flex flex-col gap-2">
+                <div className="rounded-lg border border-border/30 bg-muted/30 p-4">
+                  <p className="mb-2.5 text-[13px] font-semibold text-foreground/90">Nature Precursor Signals</p>
+                  <div className="flex flex-col gap-2.5">
                     {[
                       { step: 1, label: 'Insect Behavior', detail: 'Erratic swarm = thermal/chemical shift' },
                       { step: 2, label: 'Soil Temperature', detail: 'Subsurface heat anomaly detection' },
@@ -1497,14 +1522,14 @@ export default function ArtOfPossibilities() {
                       { step: 5, label: 'Correlated Forecast', detail: 'Multi-signal confidence → advisory' },
                     ].map((f, i) => (
                       <div key={f.step} className="flex items-center gap-2.5">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-[10px] font-bold text-orange-400">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-[11px] font-bold text-orange-400">
                           {f.step}
                         </span>
                         <div>
-                          <span className="text-[11px] font-medium text-foreground/90">{f.label}</span>
-                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
+                          <span className="text-[13px] font-medium text-foreground/90">{f.label}</span>
+                          <span className="ml-1.5 text-[11px] text-muted-foreground/70">— {f.detail}</span>
                         </div>
-                        {i < 4 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                        {i < 4 && <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/40" />}
                       </div>
                     ))}
                   </div>
@@ -1517,8 +1542,8 @@ export default function ArtOfPossibilities() {
                     'Multi-signal correlation generates a forecasting confidence score.',
                     'All outputs are advisory — operator review required before corridor action.',
                   ].map((b) => (
-                    <li key={b} className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-400/70" />
+                    <li key={b} className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-orange-400/80" />
                       {b}
                     </li>
                   ))}
@@ -1527,10 +1552,10 @@ export default function ArtOfPossibilities() {
                 {/* live nature signal feed */}
                 <div className="rounded-lg border border-orange-500/20 bg-orange-950/20 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[9px] font-semibold text-orange-300 uppercase tracking-wider">Nature Signal Feed</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
+                    <span className="text-[11px] font-semibold text-orange-300 uppercase tracking-wider">Nature Signal Feed</span>
+                    <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {[
                       { time: '14:52:08', type: 'PM2.5 Spike', val: '89%', color: 'text-red-300' },
                       { time: '14:51:30', type: 'Soil Temp ↑', val: '76%', color: 'text-orange-300' },
@@ -1538,12 +1563,12 @@ export default function ArtOfPossibilities() {
                       { time: '14:48:42', type: 'Humidity ↓', val: '71%', color: 'text-cyan-300' },
                       { time: '14:46:18', type: 'Insect Swarm', val: '54%', color: 'text-violet-300' },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
-                        <span className="text-muted-foreground/40">{s.time}</span>
+                      <div key={i} className="flex items-center gap-2 text-[11px] font-mono">
+                        <span className="text-muted-foreground/50">{s.time}</span>
                         <span className={s.color}>{s.type}</span>
-                        <span className="ml-auto text-orange-200/60">{s.val}</span>
-                        <div className="h-1 w-10 rounded-full bg-orange-950">
-                          <div className="h-full rounded-full bg-orange-500/50" style={{ width: s.val }} />
+                        <span className="ml-auto text-orange-200/70">{s.val}</span>
+                        <div className="h-1.5 w-12 rounded-full bg-orange-950">
+                          <div className="h-full rounded-full bg-orange-500/60" style={{ width: s.val }} />
                         </div>
                       </div>
                     ))}
@@ -1556,31 +1581,31 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 4b) GROUND-LEVEL ENVIRONMENTAL SENSING ── */}
-      <motion.section {...fade} transition={{ delay: 0.18 }} data-tour-section="aop-ground-level">
+      <motion.section {...fade} transition={{ delay: 0.18 }} id="aop-ground-level" data-tour-section="aop-ground-level">
         <Card className="overflow-hidden border-border/30">
           <div className="flex flex-col gap-2 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
               <SectionTitle className="flex items-center gap-2">
-                <Mountain className="h-4 w-4 text-amber-500" />
+                <Mountain className="h-5 w-5 text-amber-500" />
                 Ground-Level Environmental Sensing
               </SectionTitle>
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept · Cloudburst · Landslide · Wildlife Behavioral Shift</span>
+              <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wider">Concept · Cloudburst · Landslide · Wildlife Behavioral Shift</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <CloudRain className="h-3 w-3 text-cyan-400" />
-                <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">Intensity</span>
+                <CloudRain className="h-3.5 w-3.5 text-cyan-400" />
+                <span className="text-[11px] text-muted-foreground/80 uppercase tracking-wider">Intensity</span>
                 <input
                   type="range"
                   min={0}
                   max={100}
                   value={cloudburstIntensity}
                   onChange={(e) => setCloudburstIntensity(Number(e.target.value))}
-                  className="w-20 h-1 accent-cyan-500 cursor-pointer"
+                  className="w-24 h-1.5 accent-cyan-500 cursor-pointer"
                 />
-                <span className="text-[10px] font-mono text-cyan-400 w-7">{cloudburstIntensity}%</span>
+                <span className="text-[12px] font-mono font-semibold text-cyan-400 w-8">{cloudburstIntensity}%</span>
               </div>
-              <Badge variant="outline" className="shrink-0 border-cyan-500/40 bg-cyan-500/5 text-cyan-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
+              <Badge variant="outline" className="shrink-0 border-cyan-500/40 bg-cyan-500/5 text-cyan-400 text-[11px] uppercase tracking-widest px-3 py-1">
                 Earth-Level Scenario
               </Badge>
             </div>
@@ -1876,29 +1901,29 @@ export default function ArtOfPossibilities() {
             {/* right: contextual explanation */}
             <Card className="border-0 rounded-none border-l border-border/20">
               <CardContent className="space-y-4 p-5">
-                <div className="space-y-1">
-                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                    <CloudRain className="h-4 w-4 text-cyan-400" />
+                <div className="space-y-1.5">
+                  <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+                    <CloudRain className="h-5 w-5 text-cyan-400" />
                     Cloudburst &amp; Landslide Detection
                   </h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
                     Extreme precipitation triggers terrain instability. Ground vibration sensors detect debris flow movement before it reaches utility infrastructure corridors.
                   </p>
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-                    <PawPrint className="h-4 w-4 text-amber-400" />
+                <div className="space-y-1.5">
+                  <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2">
+                    <PawPrint className="h-5 w-5 text-amber-400" />
                     Wildlife Behavioral Shift
                   </h3>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
                     Sudden mass dispersal of ground-dwelling wildlife (deer, mammals) from a nesting/resting corridor can indicate seismic activity, debris flow, fire, or toxic gas exposure — providing an early biological warning signal.
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-border/30 bg-muted/30 p-3">
-                  <p className="mb-2 text-[11px] font-semibold text-foreground/80">Signal Integration Flow</p>
-                  <div className="flex flex-col gap-2">
+                <div className="rounded-lg border border-border/30 bg-muted/30 p-4">
+                  <p className="mb-2.5 text-[13px] font-semibold text-foreground/90">Signal Integration Flow</p>
+                  <div className="flex flex-col gap-2.5">
                     {[
                       { step: 1, label: 'Rainfall Surge', detail: 'Cloud-burst detected above threshold' },
                       { step: 2, label: 'Seismic Anomaly', detail: 'Ground vibration spike in corridor' },
@@ -1906,14 +1931,14 @@ export default function ArtOfPossibilities() {
                       { step: 4, label: 'Correlated Alert', detail: 'Multi-signal confidence score → advisory' },
                     ].map((f, i) => (
                       <div key={f.step} className="flex items-center gap-2.5">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-400">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[11px] font-bold text-amber-400">
                           {f.step}
                         </span>
                         <div>
-                          <span className="text-[11px] font-medium text-foreground/90">{f.label}</span>
-                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
+                          <span className="text-[13px] font-medium text-foreground/90">{f.label}</span>
+                          <span className="ml-1.5 text-[11px] text-muted-foreground/70">— {f.detail}</span>
                         </div>
-                        {i < 3 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                        {i < 3 && <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/40" />}
                       </div>
                     ))}
                   </div>
@@ -1926,8 +1951,8 @@ export default function ArtOfPossibilities() {
                     'Cloudburst + seismic + wildlife data are correlated for multi-signal confidence scoring.',
                     'All outputs are advisory — operator review required before action.',
                   ].map((b) => (
-                    <li key={b} className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
-                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/70" />
+                    <li key={b} className="flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400/80" />
                       {b}
                     </li>
                   ))}
@@ -1936,22 +1961,22 @@ export default function ArtOfPossibilities() {
                 {/* live feed mockup */}
                 <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[9px] font-semibold text-amber-300 uppercase tracking-wider">Ground Sensor Feed</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-[11px] font-semibold text-amber-300 uppercase tracking-wider">Ground Sensor Feed</span>
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {[
                       { time: '14:45:22', type: 'Seismic Spike', val: '84%', color: 'text-red-300' },
                       { time: '14:44:58', type: 'Debris Flow', val: '71%', color: 'text-amber-300' },
                       { time: '14:43:10', type: 'Wildlife Scatter', val: '67%', color: 'text-amber-300/70' },
                       { time: '14:41:30', type: 'Rain Intensity', val: '92%', color: 'text-cyan-300' },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
-                        <span className="text-muted-foreground/40">{s.time}</span>
+                      <div key={i} className="flex items-center gap-2 text-[11px] font-mono">
+                        <span className="text-muted-foreground/50">{s.time}</span>
                         <span className={s.color}>{s.type}</span>
-                        <span className="ml-auto text-amber-200/60">{s.val}</span>
-                        <div className="h-1 w-10 rounded-full bg-amber-950">
-                          <div className="h-full rounded-full bg-amber-500/50" style={{ width: s.val }} />
+                        <span className="ml-auto text-amber-200/70">{s.val}</span>
+                        <div className="h-1.5 w-12 rounded-full bg-amber-950">
+                          <div className="h-full rounded-full bg-amber-500/60" style={{ width: s.val }} />
                         </div>
                       </div>
                     ))}
@@ -1964,29 +1989,29 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 5) BRIDGE SECTION: PHASE 1 vs PHASE 2 ── */}
-      <motion.section {...fade} transition={{ delay: 0.2 }} data-tour-section="aop-phase-bridge">
+      <motion.section {...fade} transition={{ delay: 0.2 }} id="aop-phase-bridge" data-tour-section="aop-phase-bridge">
         <SectionTitle className="mb-4">How This Connects to Operator Copilot (Current Phase 1)</SectionTitle>
 
         <Card>
           <CardContent className="p-0">
-            <div className="grid grid-cols-2 border-b border-border/30 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <div className="border-r border-border/30 px-5 py-3">Phase 1 (Current Demo)</div>
-              <div className="px-5 py-3">Phase 2+ (Concept Extensions)</div>
+            <div className="grid grid-cols-2 border-b border-border/30 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="border-r border-border/30 px-5 py-3.5">Phase 1 (Current Demo)</div>
+              <div className="px-5 py-3.5">Phase 2+ (Concept Extensions)</div>
             </div>
             {comparisonRows.map(([p1, p2], i) => (
               <div
                 key={i}
                 className={cn(
-                  'grid grid-cols-2 text-[12px]',
+                  'grid grid-cols-2 text-[13px]',
                   i < comparisonRows.length - 1 && 'border-b border-border/20',
                 )}
               >
-                <div className="flex items-center gap-2 border-r border-border/20 px-5 py-3 text-foreground/80">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400/70" />
+                <div className="flex items-center gap-2.5 border-r border-border/20 px-5 py-3.5 text-foreground/85">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400/80" />
                   {p1}
                 </div>
-                <div className="flex items-center gap-2 px-5 py-3 text-muted-foreground">
-                  <Eye className="h-3.5 w-3.5 shrink-0 text-primary/50" />
+                <div className="flex items-center gap-2.5 px-5 py-3.5 text-muted-foreground">
+                  <Eye className="h-4 w-4 shrink-0 text-primary/60" />
                   {p2}
                 </div>
               </div>
@@ -1994,29 +2019,29 @@ export default function ArtOfPossibilities() {
           </CardContent>
         </Card>
 
-        <p className="mt-3 text-[11px] text-muted-foreground/70">
+        <p className="mt-3 text-[13px] text-muted-foreground/80">
           Phase 1 remains OMS-adjacent decision support. Phase 2 adds environmental intelligence as a bounded advisory layer.
         </p>
       </motion.section>
 
       {/* ── 6) GOVERNANCE ── */}
-      <motion.section {...fade} transition={{ delay: 0.25 }} data-tour-section="aop-governance">
+      <motion.section {...fade} transition={{ delay: 0.25 }} id="aop-governance" data-tour-section="aop-governance">
         <Card className="border-amber-500/20 bg-card">
-          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:gap-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5">
-              <Lock className="h-5 w-5 text-amber-400" />
+          <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:gap-6">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5">
+              <Lock className="h-6 w-6 text-amber-400" />
             </div>
-            <div className="space-y-2.5">
-              <h3 className="text-[14px] font-semibold text-foreground">Operational Governance</h3>
-              <ul className="space-y-1.5">
+            <div className="space-y-3">
+              <h3 className="text-base font-bold text-foreground">Operational Governance</h3>
+              <ul className="space-y-2">
                 {[
                   'Decision-support only. No autonomous control actions.',
                   'No live SCADA/OMS/ADMS integration in this demo.',
                   'Concept features require validation, sensor partnerships, and utility governance approval.',
                   'All outputs remain advisory and must be operator-approved.',
                 ].map((t) => (
-                  <li key={t} className="flex items-start gap-2 text-[12px] text-muted-foreground">
-                    <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/60" />
+                  <li key={t} className="flex items-start gap-2.5 text-[13px] text-muted-foreground">
+                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400/70" />
                     {t}
                   </li>
                 ))}
@@ -2027,10 +2052,10 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 7) CTA ── */}
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center pt-4">
         <Button
           variant="outline"
-          className="gap-2 text-sm"
+          className="gap-2 text-sm px-6 py-2.5"
           onClick={() => navigate('/dashboard')}
         >
           <ArrowLeft className="h-4 w-4" />
