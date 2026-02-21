@@ -160,7 +160,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
           {/* Model Attribution + Mode Banner */}
           <div className="px-4 py-2 border-b border-border bg-muted/20 space-y-1.5">
             <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal border-primary/30 text-primary">
+                <Badge variant="outline" className="text-[10px] h-5 gap-1 font-normal border-[hsl(80,100%,36%)]/40 text-[hsl(80,100%,36%)] bg-[hsl(80,100%,36%)]/10">
                   <Zap className="w-3 h-3" />
                   {response?.model_engine || 'NVIDIA Nemotron (NIM)'}
                 </Badge>
@@ -201,7 +201,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                     {scenario ? 'Select a mode to begin analysis' : 'Select a scenario to get started'}
                   </p>
                   <p className="text-xs text-muted-foreground mb-6">
-                    Powered by NVIDIA Nemotron NIM — all outputs are advisory only.
+                    Powered by <span className="font-semibold text-[hsl(80,100%,36%)]">NVIDIA Nemotron (NIM)</span> — all outputs are advisory only.
                   </p>
                   
                   {scenario && (
@@ -304,7 +304,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   {/* Model Attribution */}
                   <div className="p-2 rounded bg-muted/20 border border-border/50">
                     <p className="text-[11px] text-muted-foreground/80">
-                      <span className="font-medium">Model:</span> {response.model_engine || 'NVIDIA Nemotron (NIM)'}
+                      <span className="font-medium">Model:</span> <span className="text-[hsl(80,100%,36%)]">{response.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
                       {response.fallback_used && (
                         <span className="ml-2 text-amber-600 dark:text-amber-400">
                           • Fallback: {response.fallback_reason || 'Nemotron unavailable'}
@@ -342,7 +342,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span className="text-sm">Analyzing via Nemotron NIM…</span>
+                  <span className="text-sm">Analyzing via <span className="font-medium text-[hsl(80,100%,36%)]">Nemotron NIM</span>…</span>
                 </motion.div>
               )}
             </AnimatePresence>

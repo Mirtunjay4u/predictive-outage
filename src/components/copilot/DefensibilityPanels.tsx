@@ -637,7 +637,7 @@ export function DefensibilityPanels({
             {/* Model info */}
             <div className="p-2 rounded bg-muted/30 border border-border/50 text-[11px] text-muted-foreground">
               <span className="font-medium">Engine: </span>
-              {raw.model_engine || 'NVIDIA Nemotron (NIM)'}
+              <span className="font-medium text-[hsl(80,100%,36%)]">{raw.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
               {raw.fallback_used && (
                 <span className="ml-2 text-amber-600 dark:text-amber-400">
                   Fallback: {raw.fallback_reason || 'Primary unavailable'}

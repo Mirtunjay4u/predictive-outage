@@ -151,7 +151,11 @@ export function DecisionTrace({
               Model Used
             </h5>
             <p className="text-[11px] text-foreground/75">
-              {fallbackUsed ? `Model Router (Fallback)` : modelUsed}
+              {fallbackUsed ? (
+                `Model Router (Fallback)`
+              ) : (
+                <span className="font-medium text-[hsl(80,100%,36%)]">{modelUsed}</span>
+              )}
             </p>
           </section>
 

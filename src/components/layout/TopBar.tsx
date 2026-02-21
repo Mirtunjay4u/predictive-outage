@@ -47,9 +47,9 @@ export function TopBar({ onSearch }: TopBarProps) {
           <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
-                  <Brain className="h-3 w-3 shrink-0 text-sky-400/70" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-sky-300/90 hidden xl:inline">Nemotron</span>
+                <div className="flex items-center gap-1 rounded-full border border-[hsl(80,100%,36%)]/25 bg-[hsl(80,100%,36%)]/8 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Brain className="h-3 w-3 shrink-0 text-[hsl(80,100%,36%)]/80" strokeWidth={1.75} />
+                  <span className="text-[9px] font-medium text-[hsl(80,100%,36%)]/90 hidden xl:inline">Nemotron</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-52 text-xs">Primary inference model currently active.</TooltipContent>
