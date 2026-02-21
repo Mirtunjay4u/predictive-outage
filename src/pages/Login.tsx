@@ -136,7 +136,7 @@ export default function Login() {
             {/* E) AI Engine Attribution */}
             <div className="mt-8 flex items-center gap-2.5">
               <div className="w-2 h-2 rounded-full bg-[#76B900] shadow-[0_0_6px_rgba(118,185,0,0.5)]" />
-              <span className="text-sm font-semibold text-primary-foreground/90 tracking-wide">Powered by NVIDIA Nemotron (NIM)</span>
+              <span className="text-sm font-semibold tracking-wide"><span className="text-primary-foreground/70">Powered by </span><span className="text-[hsl(80,100%,36%)]">NVIDIA Nemotron (NIM)</span></span>
             </div>
           </motion.div>
           

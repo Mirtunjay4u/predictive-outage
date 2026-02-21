@@ -315,7 +315,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
 
                   {/* Decision Trace */}
                   <DecisionTrace
-                    modelUsed={response.model_engine || 'Nemotron (Primary)'}
+                    modelUsed={response.model_engine || 'NVIDIA Nemotron (NIM)'}
                     fallbackUsed={response.fallback_used}
                   />
 

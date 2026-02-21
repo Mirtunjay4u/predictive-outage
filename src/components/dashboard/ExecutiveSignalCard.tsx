@@ -77,7 +77,7 @@ export function ExecutiveSignalCard({ scenarios, dataUpdatedAt, briefing, isLoad
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-muted-foreground">Source: {signal.source === 'nemotron' ? 'Derived from AI Briefing (Nemotron)' : signal.source === 'model-router' ? 'Derived from AI Briefing (Model Router)' : 'Derived from AI Briefing (Model Router)'}.</p>
+          <p className="text-[11px] text-muted-foreground">Source: {signal.source === 'nemotron' ? <span>Derived from AI Briefing (<span className="font-medium text-[hsl(80,100%,36%)]">Nemotron</span>)</span> : signal.source === 'model-router' ? 'Derived from AI Briefing (Model Router)' : 'Derived from AI Briefing (Model Router)'}.</p>
           <Button size="sm" variant="outline" onClick={onOpenSupportingSignals} className={cn('h-8 text-xs', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Supporting Signals</Button>
         </div>
       </CardContent>
