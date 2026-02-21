@@ -1339,19 +1339,69 @@ export default function ArtOfPossibilities() {
                   <text x="0" y="15" textAnchor="middle" fill="#fbbf24" fontSize="5" fontFamily="monospace">FIRE SRC</text>
                 </g>
 
-                {/* ── RISING SMOKE PLUMES ── */}
+                {/* ── RISING SMOKE PLUMES — dense layered effect ── */}
+                {/* Layer 1: Large background haze columns */}
                 {[
-                  { cx: 170, cy: 320, r: 25, delay: 0 },
-                  { cx: 195, cy: 290, r: 30, delay: 0.4 },
-                  { cx: 180, cy: 250, r: 35, delay: 0.8 },
-                  { cx: 200, cy: 210, r: 40, delay: 1.2 },
-                  { cx: 185, cy: 170, r: 45, delay: 1.6 },
-                  { cx: 175, cy: 130, r: 50, delay: 2.0 },
+                  { cx: 165, cy: 300, r: 40, delay: 0 },
+                  { cx: 200, cy: 240, r: 50, delay: 0.5 },
+                  { cx: 180, cy: 180, r: 55, delay: 1.0 },
+                  { cx: 210, cy: 120, r: 60, delay: 1.5 },
+                  { cx: 175, cy: 80, r: 55, delay: 2.0 },
+                  { cx: 195, cy: 50, r: 50, delay: 2.5 },
                 ].map((s, si) => (
-                  <circle key={`smoke-${si}`} cx={s.cx} cy={s.cy} r={s.r} fill="url(#smokeGrad)" filter="url(#smokeBlur)" opacity="0">
-                    <animate attributeName="cy" values={`${s.cy + 20};${s.cy - 30}`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
-                    <animate attributeName="opacity" values={`0;${bioActive ? 0.5 : 0.3};${bioActive ? 0.3 : 0.15};0`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
-                    <animate attributeName="r" values={`${s.r};${s.r * 1.5}`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                  <circle key={`smoke-bg-${si}`} cx={s.cx} cy={s.cy} r={s.r} fill="url(#smokeGrad)" filter="url(#smokeBlur)" opacity="0">
+                    <animate attributeName="cy" values={`${s.cy + 30};${s.cy - 40}`} dur={bioActive ? '4s' : '6s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values={`0;${bioActive ? 0.55 : 0.3};${bioActive ? 0.35 : 0.18};0`} dur={bioActive ? '4s' : '6s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="r" values={`${s.r * 0.7};${s.r * 1.4}`} dur={bioActive ? '4s' : '6s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                  </circle>
+                ))}
+                {/* Layer 2: Mid-density wispy plumes with lateral drift */}
+                {[
+                  { cx: 150, cy: 330, r: 20, delay: 0.2 },
+                  { cx: 190, cy: 290, r: 25, delay: 0.7 },
+                  { cx: 170, cy: 250, r: 28, delay: 1.1 },
+                  { cx: 205, cy: 210, r: 30, delay: 0.3 },
+                  { cx: 185, cy: 160, r: 32, delay: 1.4 },
+                  { cx: 160, cy: 130, r: 28, delay: 0.9 },
+                  { cx: 210, cy: 100, r: 25, delay: 1.8 },
+                  { cx: 175, cy: 60, r: 22, delay: 2.2 },
+                ].map((s, si) => (
+                  <ellipse key={`smoke-mid-${si}`} cx={s.cx} cy={s.cy} rx={s.r * 1.3} ry={s.r} fill="#78716c" filter="url(#smokeBlurSm)" opacity="0">
+                    <animate attributeName="cy" values={`${s.cy + 15};${s.cy - 35}`} dur={bioActive ? '3.5s' : '5.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="cx" values={`${s.cx};${s.cx + (si % 2 === 0 ? 20 : -15)}`} dur={bioActive ? '3.5s' : '5.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values={`0;${bioActive ? 0.35 : 0.18};${bioActive ? 0.2 : 0.1};0`} dur={bioActive ? '3.5s' : '5.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="ry" values={`${s.r * 0.8};${s.r * 1.3}`} dur={bioActive ? '3.5s' : '5.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                  </ellipse>
+                ))}
+                {/* Layer 3: Small sharp smoke wisps for detail texture */}
+                {[
+                  { cx: 175, cy: 340, r: 10, delay: 0.1 },
+                  { cx: 195, cy: 310, r: 12, delay: 0.5 },
+                  { cx: 160, cy: 275, r: 14, delay: 0.9 },
+                  { cx: 210, cy: 240, r: 11, delay: 0.4 },
+                  { cx: 180, cy: 200, r: 13, delay: 1.3 },
+                  { cx: 155, cy: 170, r: 10, delay: 1.7 },
+                  { cx: 215, cy: 150, r: 12, delay: 0.6 },
+                  { cx: 190, cy: 110, r: 11, delay: 2.1 },
+                  { cx: 170, cy: 80, r: 9, delay: 1.0 },
+                  { cx: 200, cy: 55, r: 10, delay: 2.4 },
+                ].map((s, si) => (
+                  <circle key={`smoke-wisp-${si}`} cx={s.cx} cy={s.cy} r={s.r} fill="#a8a29e" opacity="0">
+                    <animate attributeName="cy" values={`${s.cy + 10};${s.cy - 25}`} dur={bioActive ? '2.5s' : '4s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="cx" values={`${s.cx};${s.cx + (si % 3 - 1) * 12}`} dur={bioActive ? '2.5s' : '4s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values={`0;${bioActive ? 0.25 : 0.12};0`} dur={bioActive ? '2.5s' : '4s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="r" values={`${s.r};${s.r * 1.8}`} dur={bioActive ? '2.5s' : '4s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                  </circle>
+                ))}
+                {/* Layer 4: Orange-tinted heat haze near fire source */}
+                {[
+                  { cx: 175, cy: 345, r: 18, delay: 0 },
+                  { cx: 195, cy: 330, r: 22, delay: 0.3 },
+                  { cx: 185, cy: 315, r: 15, delay: 0.6 },
+                ].map((s, si) => (
+                  <circle key={`heat-haze-${si}`} cx={s.cx} cy={s.cy} r={s.r} fill="#f97316" filter="url(#smokeBlur)" opacity="0">
+                    <animate attributeName="cy" values={`${s.cy};${s.cy - 30}`} dur={bioActive ? '2s' : '3.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values={`0;${bioActive ? 0.15 : 0.08};0`} dur={bioActive ? '2s' : '3.5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
                   </circle>
                 ))}
 
