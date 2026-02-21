@@ -25,6 +25,7 @@ import WeatherAlerts from "./pages/WeatherAlerts";
 import ArtOfPossibilities from "./pages/ArtOfPossibilities";
 import About from "./pages/About";
 import ExecutiveValidation from "./pages/ExecutiveValidation";
+import KnowledgePolicy from "./pages/KnowledgePolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ function AppRoutes() {
         <Route path="/architecture" element={<Architecture />} />
         <Route path="/about" element={<About />} />
         <Route path="/executive-validation" element={<ExecutiveValidation />} />
+        <Route path="/knowledge-policy" element={<KnowledgePolicy />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
