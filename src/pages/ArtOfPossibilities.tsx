@@ -217,7 +217,7 @@ export default function ArtOfPossibilities() {
                 </g>
               ))}
 
-              {/* ── Transmission Towers ── */}
+              {/* ── Transmission Towers with spark effects ── */}
               {[
                 { x: 80, y: 310 },
                 { x: 320, y: 305 },
@@ -241,6 +241,45 @@ export default function ArtOfPossibilities() {
                   <circle cx="10" cy="-28" r="1.5" fill="#60a5fa" opacity="0.4" />
                   <circle cx="-7" cy="-33" r="1" fill="#60a5fa" opacity="0.3" />
                   <circle cx="7" cy="-33" r="1" fill="#60a5fa" opacity="0.3" />
+
+                  {/* ── Spark effects at insulator points ── */}
+                  {[
+                    { cx: -10, cy: -28 },
+                    { cx: 10, cy: -28 },
+                  ].map((ins, j) => (
+                    <g key={`spark-${i}-${j}`}>
+                      {/* pulsing glow */}
+                      <circle cx={ins.cx} cy={ins.cy} r="5" fill="#60a5fa" opacity="0" filter="url(#glowBlue)">
+                        <animate attributeName="opacity" values="0;0.5;0" dur="2.2s" begin={`${i * 0.6 + j * 1.1}s`} repeatCount="indefinite" />
+                        <animate attributeName="r" values="3;8;3" dur="2.2s" begin={`${i * 0.6 + j * 1.1}s`} repeatCount="indefinite" />
+                      </circle>
+                      {/* spark lines radiating outward */}
+                      {[0, 60, 120, 180, 240, 300].map((angle, k) => {
+                        const rad = (angle * Math.PI) / 180;
+                        const len = 5 + (k % 2) * 3;
+                        return (
+                          <line
+                            key={`sl-${k}`}
+                            x1={ins.cx}
+                            y1={ins.cy}
+                            x2={ins.cx + Math.cos(rad) * len}
+                            y2={ins.cy + Math.sin(rad) * len}
+                            stroke="#93c5fd"
+                            strokeWidth="0.6"
+                            opacity="0"
+                            strokeLinecap="round"
+                          >
+                            <animate attributeName="opacity" values="0;0.7;0" dur="1.8s" begin={`${i * 0.6 + j * 1.1 + k * 0.08}s`} repeatCount="indefinite" />
+                          </line>
+                        );
+                      })}
+                      {/* tiny bright dot burst */}
+                      <circle cx={ins.cx} cy={ins.cy} r="1" fill="#dbeafe" opacity="0">
+                        <animate attributeName="opacity" values="0;1;0" dur="1.8s" begin={`${i * 0.6 + j * 1.1}s`} repeatCount="indefinite" />
+                      </circle>
+                    </g>
+                  ))}
+
                   {/* label */}
                   <text x="0" y="12" textAnchor="middle" fill="#94a3b8" opacity="0.35" fontSize="7" fontFamily="monospace">T-{i + 1}</text>
                 </g>
@@ -574,6 +613,43 @@ export default function ArtOfPossibilities() {
                   <line x1="0" y1="-6" x2="0" y2="-18" stroke="#a78bfa" strokeWidth="1" opacity="0.5" />
                   <circle cx="0" cy="-18" r="2" fill="#a78bfa" opacity="0.4" />
                 </g>
+
+                {/* ── Signal Strength Meter (right of sensor) ── */}
+                {(() => {
+                  const isActive = activeOverlays.includes('biosentinel');
+                  return (
+                    <g transform="translate(310, 130)">
+                      {/* meter background */}
+                      <rect x="0" y="0" width="48" height="56" rx="4" fill="#1e1b4b" opacity="0.6" stroke="#8b5cf6" strokeWidth="0.5" />
+                      <text x="24" y="11" textAnchor="middle" fill="#a78bfa" fontSize="6" fontFamily="monospace" opacity="0.8">SIGNAL</text>
+                      {/* 5-bar meter */}
+                      {[0, 1, 2, 3, 4].map((b) => {
+                        const barH = 4 + b * 2;
+                        const x = 6 + b * 8;
+                        const yBase = 46;
+                        const litColor = b < 2 ? '#22c55e' : b < 4 ? '#f59e0b' : '#ef4444';
+                        const lit = isActive ? true : b < 2;
+                        return (
+                          <g key={`bar-${b}`}>
+                            <rect x={x} y={yBase - barH} width="5" height={barH} rx="1" fill={lit ? litColor : '#334155'} opacity={lit ? 0.7 : 0.2}>
+                              {isActive && (
+                                <animate attributeName="opacity" values={`0.5;${0.7 + b * 0.06};0.5`} dur={`${0.9 + b * 0.15}s`} repeatCount="indefinite" />
+                              )}
+                            </rect>
+                          </g>
+                        );
+                      })}
+                      {/* dBm readout */}
+                      <text x="24" y="54" textAnchor="middle" fill={isActive ? '#a78bfa' : '#64748b'} fontSize="6" fontFamily="monospace">
+                        {isActive ? '-42 dBm' : '-78 dBm'}
+                      </text>
+                      {/* status dot */}
+                      <circle cx="42" cy="8" r="2" fill={isActive ? '#22c55e' : '#64748b'}>
+                        {isActive && <animate attributeName="opacity" values="0.5;1;0.5" dur="1.2s" repeatCount="indefinite" />}
+                      </circle>
+                    </g>
+                  );
+                })()}
 
                 {/* animated sonar rings from sensor */}
                 {[1, 2, 3].map((r) => (
