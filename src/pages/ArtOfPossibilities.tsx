@@ -174,7 +174,7 @@ export default function ArtOfPossibilities() {
               <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
 
-            {/* feeder corridor lines (always visible) */}
+            {/* ── INFRASTRUCTURE SVG LAYER (towers, lines, trees) ── */}
             <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="feederGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -182,16 +182,94 @@ export default function ArtOfPossibilities() {
                   <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
                   <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
                 </linearGradient>
+                <linearGradient id="powerLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.1" />
+                </linearGradient>
+                <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+                </filter>
               </defs>
-              {/* main feeder corridors */}
+
+              {/* ── Transmission Lines (catenary curves between towers) ── */}
+              <path d="M80,310 Q200,295 320,305" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
+              <path d="M320,305 Q480,290 620,300" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
+              <path d="M620,300 Q780,285 920,295" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
+              {/* glow duplicates */}
+              <path d="M80,310 Q200,295 320,305" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
+              <path d="M320,305 Q480,290 620,300" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
+              <path d="M620,300 Q780,285 920,295" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
+
+              {/* ── Transmission Towers ── */}
+              {[
+                { x: 80, y: 310 },
+                { x: 320, y: 305 },
+                { x: 620, y: 300 },
+                { x: 920, y: 295 },
+              ].map((t, i) => (
+                <g key={`tower-${i}`} transform={`translate(${t.x}, ${t.y})`}>
+                  {/* tower base */}
+                  <line x1="-8" y1="0" x2="8" y2="0" stroke="#94a3b8" strokeWidth="1.5" opacity="0.5" />
+                  {/* tower legs */}
+                  <line x1="-6" y1="0" x2="-3" y2="-28" stroke="#94a3b8" strokeWidth="1" opacity="0.4" />
+                  <line x1="6" y1="0" x2="3" y2="-28" stroke="#94a3b8" strokeWidth="1" opacity="0.4" />
+                  {/* tower body */}
+                  <line x1="0" y1="-5" x2="0" y2="-38" stroke="#94a3b8" strokeWidth="1.2" opacity="0.5" />
+                  {/* cross arms */}
+                  <line x1="-10" y1="-28" x2="10" y2="-28" stroke="#94a3b8" strokeWidth="1" opacity="0.4" />
+                  <line x1="-7" y1="-33" x2="7" y2="-33" stroke="#94a3b8" strokeWidth="0.8" opacity="0.35" />
+                  <line x1="-5" y1="-38" x2="5" y2="-38" stroke="#94a3b8" strokeWidth="0.8" opacity="0.35" />
+                  {/* insulators */}
+                  <circle cx="-10" cy="-28" r="1.5" fill="#60a5fa" opacity="0.4" />
+                  <circle cx="10" cy="-28" r="1.5" fill="#60a5fa" opacity="0.4" />
+                  <circle cx="-7" cy="-33" r="1" fill="#60a5fa" opacity="0.3" />
+                  <circle cx="7" cy="-33" r="1" fill="#60a5fa" opacity="0.3" />
+                  {/* label */}
+                  <text x="0" y="12" textAnchor="middle" fill="#94a3b8" opacity="0.35" fontSize="7" fontFamily="monospace">T-{i + 1}</text>
+                </g>
+              ))}
+
+              {/* ── Trees (along corridor edges) ── */}
+              {[
+                { x: 140, y: 330 }, { x: 170, y: 325 }, { x: 200, y: 335 },
+                { x: 420, y: 320 }, { x: 460, y: 328 }, { x: 500, y: 318 },
+                { x: 720, y: 315 }, { x: 760, y: 325 }, { x: 800, y: 312 },
+                { x: 140, y: 280 }, { x: 450, y: 275 }, { x: 740, y: 272 },
+              ].map((t, i) => (
+                <g key={`tree-${i}`} transform={`translate(${t.x}, ${t.y})`} opacity={0.3 + (i % 3) * 0.1}>
+                  {/* trunk */}
+                  <line x1="0" y1="0" x2="0" y2="-8" stroke="#65a30d" strokeWidth="1.2" />
+                  {/* canopy layers */}
+                  <polygon points="-6,- 6 0,-18 6,-6" fill="#22c55e" opacity="0.25" />
+                  <polygon points="-5,-10 0,-20 5,-10" fill="#16a34a" opacity="0.3" />
+                  <polygon points="-3.5,-14 0,-22 3.5,-14" fill="#15803d" opacity="0.35" />
+                </g>
+              ))}
+
+              {/* ── Feeder corridor labels ── */}
+              <text x="22%" y="44%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4401</text>
+              <text x="58%" y="37%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4402</text>
+              <text x="42%" y="68%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4403</text>
+
+              {/* ── Feeder corridor dashed lines ── */}
               <line x1="5%" y1="65%" x2="45%" y2="30%" stroke="url(#feederGrad)" strokeWidth="2" strokeDasharray="8 4" />
               <line x1="45%" y1="30%" x2="90%" y2="50%" stroke="url(#feederGrad)" strokeWidth="2" strokeDasharray="8 4" />
               <line x1="25%" y1="75%" x2="70%" y2="20%" stroke="url(#feederGrad)" strokeWidth="1.5" strokeDasharray="6 4" />
               <line x1="15%" y1="40%" x2="60%" y2="70%" stroke="url(#feederGrad)" strokeWidth="1" strokeDasharray="4 4" />
-              {/* corridor labels */}
-              <text x="22%" y="44%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4401</text>
-              <text x="58%" y="37%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4402</text>
-              <text x="42%" y="68%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4403</text>
+
+              {/* ── Substation icons ── */}
+              {[
+                { x: 80, y: 350, label: 'SUB-A' },
+                { x: 920, y: 340, label: 'SUB-B' },
+              ].map((s, i) => (
+                <g key={`sub-${i}`} transform={`translate(${s.x}, ${s.y})`}>
+                  <rect x="-10" y="-8" width="20" height="16" rx="2" fill="none" stroke="#f59e0b" strokeWidth="0.8" opacity="0.4" />
+                  <circle cx="0" cy="0" r="4" fill="none" stroke="#f59e0b" strokeWidth="0.6" opacity="0.3" />
+                  <line x1="-3" y1="0" x2="3" y2="0" stroke="#f59e0b" strokeWidth="0.6" opacity="0.3" />
+                  <text x="0" y="18" textAnchor="middle" fill="#f59e0b" opacity="0.4" fontSize="7" fontFamily="monospace">{s.label}</text>
+                </g>
+              ))}
             </svg>
 
             {/* ── SATELLITE HOTSPOTS ── */}
@@ -411,21 +489,179 @@ export default function ArtOfPossibilities() {
         <SectionTitle className="mb-4">Bio-Sentinel Signals (Experimental) — Optional Secondary Indicator</SectionTitle>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* left: illustration */}
-          <Card className="flex items-center justify-center p-6">
-            <div className="relative flex flex-col items-center gap-3 text-center">
-              <div className="relative">
-                <Radio className="h-14 w-14 text-violet-400/60" strokeWidth={1.2} />
-                <Bug className="absolute -right-2 -top-1 h-5 w-5 text-violet-300/80 animate-pulse" />
+          {/* left: animated corridor visualization */}
+          <Card className="overflow-hidden p-0">
+            <div className="relative h-[340px] bg-gradient-to-b from-[hsl(270,20%,8%)] via-[hsl(260,15%,10%)] to-[hsl(250,12%,7%)]">
+              {/* animated SVG corridor scene */}
+              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="bioGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="bioBlur" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                  </filter>
+                  <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* ground line */}
+                <line x1="0" y1="260" x2="500" y2="260" stroke="#334155" strokeWidth="0.5" opacity="0.3" />
+
+                {/* corridor trees (left side) */}
+                {[60, 100, 145].map((x, i) => (
+                  <g key={`btl-${i}`} transform={`translate(${x}, 260)`}>
+                    <line x1="0" y1="0" x2="0" y2="-20" stroke="#15803d" strokeWidth="2" opacity="0.5" />
+                    <polygon points="-12,-15 0,-42 12,-15" fill="#22c55e" opacity="0.2" />
+                    <polygon points="-9,-22 0,-48 9,-22" fill="#16a34a" opacity="0.25" />
+                    <polygon points="-6,-30 0,-52 6,-30" fill="#15803d" opacity="0.3" />
+                  </g>
+                ))}
+
+                {/* corridor trees (right side) */}
+                {[355, 400, 440].map((x, i) => (
+                  <g key={`btr-${i}`} transform={`translate(${x}, 260)`}>
+                    <line x1="0" y1="0" x2="0" y2="-20" stroke="#15803d" strokeWidth="2" opacity="0.5" />
+                    <polygon points="-12,-15 0,-42 12,-15" fill="#22c55e" opacity="0.2" />
+                    <polygon points="-9,-22 0,-48 9,-22" fill="#16a34a" opacity="0.25" />
+                    <polygon points="-6,-30 0,-52 6,-30" fill="#15803d" opacity="0.3" />
+                  </g>
+                ))}
+
+                {/* transmission tower (center) */}
+                <g transform="translate(250, 260)">
+                  <line x1="-12" y1="0" x2="12" y2="0" stroke="#94a3b8" strokeWidth="2" opacity="0.5" />
+                  <line x1="-10" y1="0" x2="-4" y2="-55" stroke="#94a3b8" strokeWidth="1.5" opacity="0.4" />
+                  <line x1="10" y1="0" x2="4" y2="-55" stroke="#94a3b8" strokeWidth="1.5" opacity="0.4" />
+                  <line x1="0" y1="-10" x2="0" y2="-70" stroke="#94a3b8" strokeWidth="1.5" opacity="0.5" />
+                  <line x1="-16" y1="-50" x2="16" y2="-50" stroke="#94a3b8" strokeWidth="1.2" opacity="0.4" />
+                  <line x1="-12" y1="-58" x2="12" y2="-58" stroke="#94a3b8" strokeWidth="1" opacity="0.35" />
+                  <line x1="-8" y1="-65" x2="8" y2="-65" stroke="#94a3b8" strokeWidth="0.8" opacity="0.3" />
+                  <circle cx="-16" cy="-50" r="2.5" fill="#60a5fa" opacity="0.5" />
+                  <circle cx="16" cy="-50" r="2.5" fill="#60a5fa" opacity="0.5" />
+                </g>
+
+                {/* power lines from tower */}
+                <path d="M60,220 Q150,210 234,210" fill="none" stroke="#60a5fa" strokeWidth="1" opacity="0.25" />
+                <path d="M266,210 Q350,210 440,220" fill="none" stroke="#60a5fa" strokeWidth="1" opacity="0.25" />
+
+                {/* central sensor device */}
+                <g transform="translate(250, 155)">
+                  {/* sensor body */}
+                  <rect x="-8" y="-6" width="16" height="12" rx="3" fill="#7c3aed" opacity="0.3" stroke="#8b5cf6" strokeWidth="0.8" />
+                  <circle cx="0" cy="0" r="3" fill="#8b5cf6" opacity="0.6" />
+                  {/* antenna */}
+                  <line x1="0" y1="-6" x2="0" y2="-18" stroke="#a78bfa" strokeWidth="1" opacity="0.5" />
+                  <circle cx="0" cy="-18" r="2" fill="#a78bfa" opacity="0.4" />
+                </g>
+
+                {/* animated sonar rings from sensor */}
+                {[1, 2, 3].map((r) => (
+                  <circle
+                    key={`ring-${r}`}
+                    cx="250" cy="155"
+                    r={25 * r}
+                    fill="none"
+                    stroke="#8b5cf6"
+                    strokeWidth="0.8"
+                    opacity="0"
+                  >
+                    <animate
+                      attributeName="r"
+                      from="10"
+                      to={60 + r * 30}
+                      dur="3s"
+                      begin={`${r * 0.8}s`}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      from="0.4"
+                      to="0"
+                      dur="3s"
+                      begin={`${r * 0.8}s`}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                ))}
+
+                {/* waveform visualization */}
+                <g transform="translate(250, 295)">
+                  {Array.from({ length: 40 }).map((_, i) => {
+                    const h = Math.sin(i * 0.5) * 8 + Math.sin(i * 0.3) * 5;
+                    return (
+                      <rect
+                        key={`wave-${i}`}
+                        x={-100 + i * 5}
+                        y={-Math.abs(h)}
+                        width="3"
+                        height={Math.abs(h) * 2 + 1}
+                        rx="1"
+                        fill="#8b5cf6"
+                        opacity={0.15 + Math.abs(h) * 0.02}
+                      >
+                        <animate
+                          attributeName="height"
+                          values={`${Math.abs(h) * 2 + 1};${Math.abs(h) * 3 + 2};${Math.abs(h) * 2 + 1}`}
+                          dur={`${1.5 + (i % 5) * 0.2}s`}
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="y"
+                          values={`${-Math.abs(h)};${-Math.abs(h) * 1.5};${-Math.abs(h)}`}
+                          dur={`${1.5 + (i % 5) * 0.2}s`}
+                          repeatCount="indefinite"
+                        />
+                      </rect>
+                    );
+                  })}
+                </g>
+
+                {/* label */}
+                <text x="250" y="330" textAnchor="middle" fill="#a78bfa" fontSize="9" fontFamily="monospace" opacity="0.5">
+                  ACOUSTIC &amp; BEHAVIORAL ANOMALY DETECTION
+                </text>
+                <text x="250" y="125" textAnchor="middle" fill="#c4b5fd" fontSize="10" fontFamily="sans-serif" fontWeight="600" opacity="0.7">
+                  Bio-Sentinel Sensor Node
+                </text>
+
+                {/* signal path indicators */}
+                {[
+                  { x1: 100, y1: 230, x2: 220, y2: 165 },
+                  { x1: 400, y1: 230, x2: 280, y2: 165 },
+                ].map((p, i) => (
+                  <g key={`sig-${i}`}>
+                    <line {...p} stroke="#8b5cf6" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.25" />
+                    <circle cx={p.x2} cy={p.y2} r="2" fill="#8b5cf6" opacity="0.4">
+                      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" begin={`${i * 0.5}s`} />
+                    </circle>
+                  </g>
+                ))}
+
+                {/* anomaly indicator badges */}
+                <g transform="translate(120, 175)">
+                  <rect x="-35" y="-8" width="70" height="16" rx="8" fill="#7c3aed" opacity="0.15" stroke="#8b5cf6" strokeWidth="0.5" />
+                  <text x="0" y="4" textAnchor="middle" fill="#c4b5fd" fontSize="7" fontFamily="monospace">ANOMALY 72%</text>
+                </g>
+                <g transform="translate(380, 180)">
+                  <rect x="-35" y="-8" width="70" height="16" rx="8" fill="#7c3aed" opacity="0.15" stroke="#8b5cf6" strokeWidth="0.5" />
+                  <text x="0" y="4" textAnchor="middle" fill="#c4b5fd" fontSize="7" fontFamily="monospace">ANOMALY 58%</text>
+                </g>
+
+                {/* ambient glow */}
+                <circle cx="250" cy="155" r="80" fill="url(#bioGlow)" />
+              </svg>
+
+              {/* corridor label */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-3">
+                <div className="h-px w-8 bg-gradient-to-r from-transparent to-violet-500/30" />
+                <span className="text-[9px] uppercase tracking-[0.2em] text-violet-400/50 font-medium">Right-of-Way Corridor</span>
+                <div className="h-px w-8 bg-gradient-to-l from-transparent to-violet-500/30" />
               </div>
-              <div className="flex items-center gap-4 text-muted-foreground/50">
-                <TreePine className="h-6 w-6" />
-                <span className="text-[10px] uppercase tracking-widest">corridor</span>
-                <TreePine className="h-6 w-6" />
-              </div>
-              <p className="max-w-[200px] text-[10px] text-muted-foreground/60">
-                Acoustic &amp; behavioral anomaly detection across right-of-way corridors
-              </p>
             </div>
           </Card>
 
@@ -459,6 +695,31 @@ export default function ArtOfPossibilities() {
                         <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
                       </div>
                       {i < bioFlow.length - 1 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* live signal feed mockup */}
+              <div className="rounded-lg border border-violet-500/20 bg-violet-950/20 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-semibold text-violet-300 uppercase tracking-wider">Live Signal Feed</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
+                </div>
+                <div className="space-y-1.5">
+                  {[
+                    { time: '14:32:18', type: 'Acoustic', val: '72%', color: 'text-violet-300' },
+                    { time: '14:31:45', type: 'Behavioral', val: '58%', color: 'text-violet-300/70' },
+                    { time: '14:30:02', type: 'Migration', val: '45%', color: 'text-violet-300/50' },
+                    { time: '14:28:11', type: 'Acoustic', val: '31%', color: 'text-violet-300/40' },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
+                      <span className="text-muted-foreground/40">{s.time}</span>
+                      <span className={s.color}>{s.type}</span>
+                      <span className="ml-auto text-violet-200/60">{s.val}</span>
+                      <div className="h-1 w-10 rounded-full bg-violet-950">
+                        <div className="h-full rounded-full bg-violet-500/50" style={{ width: s.val }} />
+                      </div>
                     </div>
                   ))}
                 </div>
