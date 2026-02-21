@@ -496,7 +496,7 @@ export default function CopilotStudio() {
               </div>
               {/* Model attribution — always visible */}
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-primary/30 text-primary">
+                <Badge variant="outline" className="text-[11px] h-5 gap-1 font-normal border-[hsl(80,100%,36%)]/40 text-[hsl(80,100%,36%)] bg-[hsl(80,100%,36%)]/10">
                   <Zap className="w-3 h-3" />
                   {latestEntry?.raw.model_engine || 'Model: NVIDIA Nemotron (NIM)'}
                 </Badge>
@@ -675,13 +675,13 @@ export default function CopilotStudio() {
 
                     {/* Decision Trace */}
                     <DecisionTrace
-                      modelUsed={latestEntry.raw.model_engine || 'Nemotron (Primary)'}
+                      modelUsed={latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}
                       fallbackUsed={latestEntry.raw.fallback_used}
                     />
 
                     {/* Model + Timestamp */}
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground/60">
-                      <span>{latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
+                      <span className="font-medium text-[hsl(80,100%,36%)]">{latestEntry.raw.model_engine || 'NVIDIA Nemotron (NIM)'}</span>
                       <span>Generated {latestEntry.timestamp.toLocaleTimeString()} for "{latestEntry.eventName}"</span>
                     </div>
 

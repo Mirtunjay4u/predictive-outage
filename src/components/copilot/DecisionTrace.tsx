@@ -63,7 +63,7 @@ function statusLabel(status: string): { text: string; color: string } {
 }
 
 export function DecisionTrace({
-  modelUsed = 'Nemotron (Primary)',
+  modelUsed = 'NVIDIA Nemotron (NIM)',
   fallbackUsed = false,
   inputs = DEFAULT_INPUTS,
   ruleChecks = DEFAULT_RULE_CHECKS,
