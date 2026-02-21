@@ -211,7 +211,7 @@ export default function Analytics() {
     .map(([name, count]) => ({ name, count, fill: CONFIDENCE_COLORS[name] || 'hsl(215, 20%, 65%)' }));
 
   return (
-    <div className="p-4 lg:p-6">
+    <div data-tour-section="analytics" className="p-4 lg:p-6">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

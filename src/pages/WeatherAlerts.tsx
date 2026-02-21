@@ -604,7 +604,7 @@ export default function WeatherAlerts() {
     : '';
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
+    <div data-tour-section="weather-alerts" className="flex flex-col h-full overflow-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border/40 shrink-0">
         <div className="flex items-center gap-2.5">

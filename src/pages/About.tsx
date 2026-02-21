@@ -211,7 +211,7 @@ const policySections = [
 
 export default function About() {
   return (
-    <div className="p-6 space-y-8 max-w-5xl mx-auto">
+    <div data-tour-section="about" className="p-6 space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <motion.div variants={fadeIn} initial="hidden" animate="show" className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">

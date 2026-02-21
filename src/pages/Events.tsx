@@ -432,7 +432,7 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-tour-section="events" className="min-h-screen bg-background">
       <div className="mx-auto max-w-[1600px] px-4 py-4 lg:px-6 space-y-4">
 
         {/* ── Header ── */}

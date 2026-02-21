@@ -450,3 +450,17 @@ body.tour-active .flex-1 {
   50%      { height: 6px; }
   75%      { height: 14px; }
 }
+
+/* ── Tour section highlight ring ── */
+.tour-highlight-section {
+  position: relative;
+  outline: 2px solid hsl(var(--primary) / 0.5);
+  outline-offset: 4px;
+  border-radius: 0.75rem;
+  animation: tour-pulse-ring 1.5s ease-in-out 2;
+}
+
+@keyframes tour-pulse-ring {
+  0%, 100% { outline-color: hsl(var(--primary) / 0.15); outline-offset: 4px; }
+  50%      { outline-color: hsl(var(--primary) / 0.5);  outline-offset: 6px; }
+}

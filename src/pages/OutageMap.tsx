@@ -533,7 +533,7 @@ export default function OutageMap() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div data-tour-section="outage-map" className="flex flex-col h-screen bg-background overflow-hidden">
       {/* ===== TOP HEADER (fixed, compact) ===== */}
       <header className="flex-shrink-0 h-12 border-b border-border/50 bg-card/80 backdrop-blur-sm px-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
