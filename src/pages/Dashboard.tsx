@@ -1303,6 +1303,7 @@ export default function Dashboard() {
 
   return (
     <motion.div
+      data-tour-section="dashboard"
       layout
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}
       animate={prefersReducedMotion ? { opacity: 1, y: 0 } : boardroomMode ? { opacity: 1, y: 0 } : { opacity: 0.98, y: 2 }}
@@ -1560,7 +1561,7 @@ export default function Dashboard() {
         );
       })()}
 
-      <section className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+      <section data-tour-section="scenario-playback" className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
              <h2 className="text-sm font-semibold">Scenario Playback</h2>
@@ -2357,7 +2358,7 @@ export default function Dashboard() {
           </div>
         );
       })() : (
-        <div className="grid grid-cols-12 items-start gap-5 lg:gap-6">
+        <div data-tour-section="dashboard-grid" className="grid grid-cols-12 items-start gap-5 lg:gap-6">
           <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
             <OperationalWorkQueue scenarios={filteredScenarios} />
             <OperationalTimeline scenarios={filteredScenarios} />

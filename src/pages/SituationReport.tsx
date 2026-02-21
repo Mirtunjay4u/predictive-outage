@@ -38,7 +38,7 @@ export default function SituationReport() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-tour-section="situation-report" className="min-h-screen bg-background">
       {/* Persistent Navigation Header */}
       <header className="sticky top-0 z-40 h-14 border-b border-border bg-card/95 backdrop-blur-sm flex items-center px-6 gap-4">
         <nav className="flex items-center gap-1.5 text-sm">

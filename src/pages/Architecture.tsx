@@ -1255,7 +1255,7 @@ function RuleCoverageTable() {
 /* ─── page ─── */
 export default function Architecture() {
   return (
-    <div className="mx-auto w-full max-w-[1400px] p-4 md:p-6 space-y-5">
+    <div data-tour-section="architecture" className="mx-auto w-full max-w-[1400px] p-4 md:p-6 space-y-5">
       <motion.div {...fadeUp} className="mb-1">
         <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-primary/80">System Design</p>
         <h1 className="text-xl font-semibold text-foreground">Technical Architecture</h1>

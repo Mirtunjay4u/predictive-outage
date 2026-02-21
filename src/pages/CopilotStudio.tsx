@@ -290,7 +290,7 @@ export default function CopilotStudio() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background">
+    <div data-tour-section="copilot-studio" className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-5 py-3">

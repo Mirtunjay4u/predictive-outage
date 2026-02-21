@@ -27,7 +27,8 @@ const tourSteps = [
     narrative: 'Establishing operator context via the Login page. The landing view provides immediate orientation to system capabilities.',
     tooltip: 'This decision-support platform integrates deterministic policy enforcement with AI-assisted operational analysis.',
     highlights: ['Platform title', 'Key capabilities', 'Demo Mode button'],
-    autoAction: 'login', // triggers auto-login at 10s
+    autoAction: 'login',
+    scrollTarget: null, // Login page — no scroll needed
   },
   {
     id: 1,
@@ -37,6 +38,7 @@ const tourSteps = [
     narrative: 'Reviewing active event KPIs, high-priority alerts, crew workload, Executive Signal, and the Operational Phase ribbon.',
     tooltip: 'The Dashboard provides real-time operational awareness combining risk scoring, event prioritization, and readiness tracking.',
     highlights: ['Active Event Banner', 'System Risk Index', 'Executive Signal', 'Operational Phase', 'Crew Readiness'],
+    scrollTarget: '[data-tour-section="dashboard"]',
   },
   {
     id: 2,
@@ -46,6 +48,7 @@ const tourSteps = [
     narrative: 'Scrolling to the Scenario Playback panel — stepping through Pre-Event, Event, and Post-Event lifecycle stages.',
     tooltip: 'Scenario Playback simulates hazard lifecycle progression to test policy validation and readiness posture.',
     highlights: ['Scenario Playback Panel'],
+    scrollTarget: '[data-tour-section="scenario-playback"]',
   },
   {
     id: 3,
@@ -55,6 +58,7 @@ const tourSteps = [
     narrative: 'Reviewing the triage queue: high-priority events, severity scales, ETR confidence bands, critical load tags, and policy status.',
     tooltip: 'Each event includes ETR confidence banding, critical load prioritization, and deterministic policy evaluation.',
     highlights: ['High Priority Event', 'Severity Scale', 'ETR Confidence Band', 'Critical Load Tag', 'Policy Status'],
+    scrollTarget: '[data-tour-section="events"]',
   },
   {
     id: 4,
@@ -64,6 +68,7 @@ const tourSteps = [
     narrative: 'Drilling into Downtown Houston Storm Damage — crew assignment, escalation state, hazard correlation, ETR confidence explanation.',
     tooltip: 'All recommendations are validated through explicit operational rules before AI advisory output.',
     highlights: ['Crew Assignment', 'Escalation State', 'Hazard Correlation', 'ETR Confidence'],
+    scrollTarget: '[data-tour-section="event-detail"]',
   },
   {
     id: 5,
@@ -73,6 +78,7 @@ const tourSteps = [
     narrative: 'Viewing events geographically — outage zones, feeder topology, hazard overlays, critical loads, and crew positioning.',
     tooltip: 'Geospatial awareness integrates outage zones, feeder topology, hazard overlays, and crew positioning.',
     highlights: ['Event Markers', 'Critical Load Layer', 'Crew Dispatch Layer', 'Weather Overlay'],
+    scrollTarget: '[data-tour-section="outage-map"]',
   },
   {
     id: 6,
@@ -82,6 +88,7 @@ const tourSteps = [
     narrative: 'Reviewing hazard exposure scoring, events in hazard zones, and crew safety status across active weather threats.',
     tooltip: 'Hazard intelligence correlates weather exposure with outage risk and crew deployment constraints.',
     highlights: ['Hazard Exposure Score', 'Events in Hazard Zones', 'Crew Safety Status'],
+    scrollTarget: '[data-tour-section="weather-alerts"]',
   },
   {
     id: 7,
@@ -91,7 +98,8 @@ const tourSteps = [
     narrative: 'AI-assisted analysis of the Downtown Houston Storm event via the Nemotron engine. Reviewing guardrails and structured outputs.',
     tooltip: 'AI analysis operates within strict guardrails and structured output contracts. No autonomous actions are executed.',
     highlights: ['Selected Event', 'Analysis Mode', 'Guardrails Panel', 'Allowed Actions', 'Blocked Actions'],
-    autoAction: 'copilot', // auto-run analysis
+    autoAction: 'copilot',
+    scrollTarget: '[data-tour-section="copilot-studio"]',
   },
   {
     id: 8,
@@ -101,6 +109,7 @@ const tourSteps = [
     narrative: 'Generating an AI-assisted SitRep. The content can be reviewed, approved, and distributed via the Communications Pack.',
     tooltip: 'Operators can generate structured situation reports for controlled communication and stakeholder updates.',
     highlights: ['SitRep Generation', 'Approval Indicator'],
+    scrollTarget: '[data-tour-section="situation-report"]',
   },
   {
     id: 9,
@@ -110,6 +119,7 @@ const tourSteps = [
     narrative: 'Reviewing operational analytics — high-priority counts, policy blocks, and ETR confidence distribution charts.',
     tooltip: 'Operational analytics are derived from live event data and deterministic rule-engine outputs.',
     highlights: ['High Priority Count', 'Policy Blocks', 'ETR Distribution Chart'],
+    scrollTarget: '[data-tour-section="analytics"]',
   },
   {
     id: 10,
@@ -119,6 +129,7 @@ const tourSteps = [
     narrative: 'Exploring the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron LLM, observability.',
     tooltip: 'The architecture separates ingestion, orchestration, inference, and governance into independent control planes.',
     highlights: ['Ingest Layer', 'Copilot Orchestrator', 'Guardrails', 'Nemotron LLM', 'Observability'],
+    scrollTarget: '[data-tour-section="architecture"]',
   },
   {
     id: 11,
@@ -128,6 +139,7 @@ const tourSteps = [
     narrative: 'Reviewing advisory-only governance, safety compliance, and the platform\'s decision-support-only boundary.',
     tooltip: 'This system provides decision support only and does not execute control actions.',
     highlights: ['Advisory Only Notice', 'Safety & Compliance'],
+    scrollTarget: '[data-tour-section="about"]',
   },
   {
     id: 12,
@@ -137,6 +149,7 @@ const tourSteps = [
     narrative: 'Reviewing configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
     tooltip: 'The platform supports configurable AI modes and enterprise integration readiness.',
     highlights: ['AI Mode Toggle', 'Dataverse Integration'],
+    scrollTarget: '[data-tour-section="settings"]',
   },
   {
     id: 13,
@@ -146,6 +159,7 @@ const tourSteps = [
     narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo.',
     tooltip: 'The operational loop closes with updated KPIs and stabilized system posture.',
     highlights: ['System Risk Index', 'Operational Phase'],
+    scrollTarget: '[data-tour-section="dashboard-grid"]',
   },
 ];
 
@@ -190,20 +204,49 @@ export function DemoTourHUD() {
     return () => document.body.classList.remove('tour-active');
   }, [isPlaying, tourComplete]);
 
-  // Navigate on step change
+  // Navigate on step change + auto-scroll to section + highlight
   useEffect(() => {
     if (!isPlaying) return;
     const step = tourSteps[currentStep];
     if (!step) return;
     navigate(step.route);
+
     // Show tooltip after a short delay
     setShowTooltip(false);
     const tooltipTimer = setTimeout(() => setShowTooltip(true), 1500);
+
     // Trigger narration after tooltip appears
     const narrationTimer = setTimeout(() => {
       if (!isPaused) playStepNarration(currentStep);
     }, 2000);
-    return () => { clearTimeout(tooltipTimer); clearTimeout(narrationTimer); };
+
+    // Auto-scroll to the target section after page renders
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+    if (step.scrollTarget) {
+      scrollTimer = setTimeout(() => {
+        const el = document.querySelector(step.scrollTarget as string);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Add pulsing highlight ring
+          el.classList.add('tour-highlight-section');
+          highlightTimer = setTimeout(() => {
+            el.classList.remove('tour-highlight-section');
+          }, 4000);
+        }
+      }, 800);
+    }
+
+    return () => {
+      clearTimeout(tooltipTimer);
+      clearTimeout(narrationTimer);
+      if (scrollTimer) clearTimeout(scrollTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+      // Clean up any remaining highlights
+      document.querySelectorAll('.tour-highlight-section').forEach(el => {
+        el.classList.remove('tour-highlight-section');
+      });
+    };
   }, [currentStep, isPlaying, navigate, playStepNarration, isPaused]);
 
   // Progress timer + auto-actions

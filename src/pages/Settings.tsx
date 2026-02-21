@@ -10,7 +10,7 @@ import { TroubleshootingFAQ } from '@/components/settings/TroubleshootingFAQ';
 
 export default function Settings() {
   return (
-    <div className="p-6 max-w-4xl">
+    <div data-tour-section="settings" className="p-6 max-w-4xl">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}

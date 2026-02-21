@@ -115,7 +115,7 @@ import { SystemScopePanel } from "@/components/copilot/SystemScopePanel";
    }
  
    return (
-     <div className="min-h-screen bg-background">
+     <div data-tour-section="event-detail" className="min-h-screen bg-background">
        {/* Top Navigation Bar */}
         <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
