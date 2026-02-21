@@ -123,7 +123,7 @@ export default function ExecutiveValidation() {
       <main className="mx-auto max-w-6xl px-6 py-8 space-y-10">
 
         {/* Section 1 — Differentiation */}
-        <section>
+        <section data-tour-section="validation-differentiation">
           <SectionHeader title="Operational Differentiation" number={1} />
           <Card>
             <CardContent className="pt-6">
@@ -149,7 +149,7 @@ export default function ExecutiveValidation() {
         </section>
 
         {/* Section 2 — Safety & Governance */}
-        <section>
+        <section data-tour-section="validation-governance">
           <SectionHeader title="AI Governance & Operational Safety" number={2} />
           <Card>
             <CardContent className="pt-6">
@@ -217,7 +217,7 @@ export default function ExecutiveValidation() {
         </section>
 
         {/* Section 5 — Phase 1 Scope */}
-        <section>
+        <section data-tour-section="validation-phase1-scope">
           <SectionHeader title="Phase 1 Operational Scope" number={5} />
           <div className="grid gap-4 sm:grid-cols-2">
             <Card>

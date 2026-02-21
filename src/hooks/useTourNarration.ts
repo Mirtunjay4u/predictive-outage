@@ -47,7 +47,10 @@ const narrationScripts: string[] = [
   // Step 12 — Settings
   `The platform supports configurable AI modes and enterprise integration readiness — including Dataverse connectivity for regulated utility data environments.`,
 
-  // Step 13 — Return to Dashboard
+  // Step 13 — Executive Validation Summary
+  `Now reviewing the Executive Validation Summary. This page compares traditional OMS capabilities against the Copilot's decision intelligence layer — highlighting confidence-based ETR modeling, hazard-correlated risk scoring, and explainable AI advisory. The AI Governance section confirms that deterministic rules precede inference, asset locks are enforced, and the system maintains an advisory-only posture with no SCADA execution. Phase 1 scope is explicitly bounded.`,
+
+  // Step 14 — Return to Dashboard
   `Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. AI-Augmented. Policy-Constrained. Operator-Controlled.`,
 ];
 

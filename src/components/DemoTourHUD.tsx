@@ -15,7 +15,7 @@ import { useTourNarration } from '@/hooks/useTourNarration';
 const STORM_EVENT_ID = '471105eb-fbf9-43c1-8cc5-ad8214abfed8';
 
 /**
- * 14-step Executive Auto Tour — GTC-grade live demo sequence.
+ * 15-step Executive Auto Tour — GTC-grade live demo sequence.
  * Each step: route, duration, narrative (HUD), tooltip (overlay), highlights (section names).
  */
 const tourSteps = [
@@ -153,10 +153,20 @@ const tourSteps = [
   },
   {
     id: 13,
+    title: 'Executive Validation Summary',
+    route: '/executive-validation',
+    duration: 25000,
+    narrative: 'Reviewing the Executive Validation Summary — comparing traditional OMS capabilities against Copilot decision intelligence, and confirming AI governance and safety boundaries.',
+    tooltip: 'This summary documents operational differentiation, safety governance, and Phase-1 scope for leadership review.',
+    highlights: ['OMS vs Copilot Comparison', 'AI Governance & Safety', 'Phase-1 Scope'],
+    scrollTarget: '[data-tour-section="validation-differentiation"]',
+  },
+  {
+    id: 14,
     title: 'Return to Dashboard',
     route: '/dashboard',
     duration: 20000,
-    narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo.',
+    narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. AI-Augmented. Policy-Constrained. Operator-Controlled.',
     tooltip: 'The operational loop closes with updated KPIs and stabilized system posture.',
     highlights: ['System Risk Index', 'Operational Phase'],
     scrollTarget: '[data-tour-section="dashboard-grid"]',
