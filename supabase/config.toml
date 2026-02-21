@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.weather-alerts]
 verify_jwt = false
+
+[functions.executive-console]
+verify_jwt = false

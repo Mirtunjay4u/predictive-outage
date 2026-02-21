@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
+import { ExecutiveIntelligenceConsole } from '@/components/executive/ExecutiveIntelligenceConsole';
 
 export function AppLayout() {
   return (
@@ -38,6 +39,7 @@ export function AppLayout() {
           </div>
         </footer>
       </div>
+      <ExecutiveIntelligenceConsole />
     </div>
   );
 }
