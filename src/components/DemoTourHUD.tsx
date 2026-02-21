@@ -784,7 +784,7 @@ export function DemoTourHUD() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-[640px] max-w-[95vw]"
+        className="fixed bottom-6 left-4 z-[9999] w-[340px] max-w-[90vw]"
       >
         <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
           {/* Step pills */}
