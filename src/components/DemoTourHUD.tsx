@@ -314,8 +314,8 @@ export function DemoTourHUD() {
     };
   }, [currentStep, isPlaying, navigate, playStepNarration, isPaused, stopNarration]);
 
-  // Track whether timer has reached 100% but is waiting for narration
-  const waitingForNarrationRef = useRef(false);
+  // Track whether timer has reached 100% — use state to trigger re-renders
+  const [timerDone, setTimerDone] = useState(false);
 
   // Progress timer + auto-actions
   useEffect(() => {
@@ -325,7 +325,7 @@ export function DemoTourHUD() {
     if (!step) return;
 
     stepStartRef.current = Date.now();
-    waitingForNarrationRef.current = false;
+    setTimerDone(false);
     const duration = step.duration;
 
     timerRef.current = setInterval(() => {
@@ -341,7 +341,7 @@ export function DemoTourHUD() {
 
       if (pct >= 100) {
         if (timerRef.current) clearInterval(timerRef.current);
-        waitingForNarrationRef.current = true;
+        setTimerDone(true);
       }
     }, 50);
 
@@ -350,14 +350,9 @@ export function DemoTourHUD() {
     };
   }, [currentStep, isPlaying, isPaused]);
 
-  // Advance step when both timer is done AND narration is done
-  useEffect(() => {
-    if (!isPlaying || isPaused) return;
-    if (!waitingForNarrationRef.current) return;
-    if (!narrationDone && !isMuted) return;
-
-    // Both conditions met — advance
-    waitingForNarrationRef.current = false;
+  // Helper to advance to next step
+  const advanceStep = useCallback(() => {
+    setTimerDone(false);
     setCompletedSteps(prev => [...prev, currentStep]);
 
     if (currentStep < tourSteps.length - 1) {
@@ -369,7 +364,25 @@ export function DemoTourHUD() {
       setTourComplete(true);
       stopNarration();
     }
-  }, [narrationDone, isPlaying, isPaused, currentStep, isMuted, stopNarration]);
+  }, [currentStep, stopNarration]);
+
+  // Advance step when both timer is done AND (narration is done OR muted)
+  useEffect(() => {
+    if (!isPlaying || isPaused || !timerDone) return;
+
+    if (narrationDone || isMuted) {
+      advanceStep();
+      return;
+    }
+
+    // Safety timeout: if narration hasn't finished 8s after timer ended, advance anyway
+    const safetyTimer = setTimeout(() => {
+      stopNarration();
+      advanceStep();
+    }, 8000);
+
+    return () => clearTimeout(safetyTimer);
+  }, [timerDone, narrationDone, isPlaying, isPaused, isMuted, advanceStep, stopNarration]);
 
   const handlePause = useCallback(() => {
     setIsPaused(true);
