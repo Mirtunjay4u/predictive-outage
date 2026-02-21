@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Map,
   CloudLightning,
+  Sparkles,
   Network,
   BookOpen,
   ClipboardCheck,
@@ -38,6 +39,7 @@ const navGroups = [
       { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
       { icon: BarChart3, label: 'Analytics', path: '/analytics' },
       { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
+      { icon: Sparkles, label: 'Art of Possibilities', path: '/art-of-possibilities' },
     ],
   },
   {
