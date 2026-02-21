@@ -12,7 +12,7 @@ const comparisonRows = [
   { traditional: 'Static ETR values', copilot: 'Confidence-based ETR band modeling' },
   { traditional: 'Manual triage escalation', copilot: 'Policy-constrained AI advisory' },
   { traditional: 'Reactive dispatch workflows', copilot: 'Hazard-informed prioritization logic' },
-  { traditional: 'Ticket management', copilot: 'Deterministic rule-backed recommendation filtering' },
+  { traditional: 'Ticket management', copilot: 'Deterministic rule-backed advisory filtering' },
 ];
 
 const governanceItems = [
@@ -59,7 +59,7 @@ const phase1Included = [
   'Advisory intelligence layer',
   'Deterministic rule enforcement',
   'Hazard-informed analysis',
-  'AI-assisted recommendations',
+  'AI-assisted advisory insights',
 ];
 
 const phase1Excluded = [

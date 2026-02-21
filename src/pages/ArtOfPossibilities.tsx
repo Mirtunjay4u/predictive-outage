@@ -56,7 +56,7 @@ const comparisonRows = [
   ['ETR confidence band', 'Vegetation stress intelligence'],
   ['Critical-load runway', 'Bio-sentinel anomaly corroboration'],
   ['Hazard overlays (current)', 'Corridor-based risk scoring'],
-  ['Operator-approved reports', 'Proactive staging recommendations (advisory)'],
+  ['Operator-approved reports', 'Proactive staging advisory insights'],
 ];
 
 /* ── bio-sentinel flow ── */

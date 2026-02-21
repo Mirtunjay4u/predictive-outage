@@ -67,7 +67,7 @@ const untappedFeatures = [
     items: [
       { title: 'Crew Overtime Tracking', desc: 'Dedicated crew_overtime_logs table captures dispatch times, authorization, and shift compliance — supporting fatigue management and labor compliance.' },
       { title: 'Event Status History', desc: 'Full audit trail of every ETR change, confidence shift, and runway status update for post-event review and regulatory reporting.' },
-      { title: 'Dispatch Recommendations', desc: 'AI-generated crew dispatch suggestions factoring proximity, specialization, shift window, and current workload.' },
+      { title: 'Dispatch Advisory Insights', desc: 'AI-generated crew dispatch insights factoring proximity, specialization, shift window, and current workload.' },
     ],
   },
   {
@@ -101,7 +101,7 @@ const policySections = [
   {
     icon: UserCheck, title: 'Human-in-the-Loop Requirement',
     items: [
-      'All recommendations are presented as options.',
+      'All advisory insights are presented as options.',
       'All communication drafts require explicit operator approval.',
       'Outputs remain "Pending Operator Review" until confirmed.',
     ],
@@ -132,7 +132,7 @@ const policySections = [
       'The system does not provide device-level switching steps.',
       'No breaker, recloser, or protection sequence instructions are generated.',
       'Assets marked "Under Maintenance" or "Lockout/Tagout" are treated as non-operable.',
-      'Recommendations must respect maintenance and safety flags.',
+      'Advisory insights must respect maintenance and safety flags.',
     ],
   },
   {
@@ -158,10 +158,10 @@ const policySections = [
   {
     icon: ShieldAlert, title: 'Model Output & Risk Scoring Policy',
     items: [
-      'Risk scores, ETR confidence, and AI recommendations are advisory indicators, not ground truth.',
+      'Risk scores, ETR confidence, and advisory insights are advisory indicators, not ground truth.',
       'Operators must validate against operational context, hazards, and field verification.',
       'The system must not present probabilistic outputs as certainties.',
-      'If confidence is Low or uncertainty drivers are high, the system must recommend conservative messaging and emphasize verification.',
+      'If confidence is Low or uncertainty drivers are high, the system must advise conservative messaging and emphasize verification.',
     ],
   },
   {
@@ -169,7 +169,7 @@ const policySections = [
     items: [
       'If key data is missing, the system explicitly states assumptions.',
       'The system does not fabricate device states, network topology, crew location, or restoration confirmations.',
-      'Recommendations may be conditional if data confidence is low.',
+      'Advisory insights may be conditional if data confidence is low.',
     ],
   },
   {

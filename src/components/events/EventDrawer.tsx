@@ -231,7 +231,7 @@ export function EventDrawer({ open, onClose, scenario, onSave, isLoading }: Even
               name="scenario_time"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Scenario Time</FormLabel>
+                  <FormLabel>Event Time</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>

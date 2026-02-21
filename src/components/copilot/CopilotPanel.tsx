@@ -234,7 +234,7 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                   {/* Context */}
                   {scenario && (
                     <p className="text-xs text-muted-foreground/70">
-                      Context: Scenario '{scenario.name}' • Outage Type: {scenario.outage_type || 'Unknown'}
+                      Context: Event '{scenario.name}' • Outage Type: {scenario.outage_type || 'Unknown'}
                     </p>
                   )}
 

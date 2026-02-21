@@ -32,13 +32,13 @@ export function TopBar({ onSearch }: TopBarProps) {
   return (
     <header className="h-14 border-b border-border/50 bg-card/80 px-5 backdrop-blur-sm" role="banner" aria-label="Application header">
       <div className="flex h-full w-full items-center justify-between gap-4">
-        <search role="search" aria-label="Search scenarios" className="relative w-full max-w-80">
+        <search role="search" aria-label="Search events" className="relative w-full max-w-80">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search scenarios..."
+            placeholder="Search events..."
             className="bg-background/50 pl-10 transition-shadow focus:shadow-md"
             onChange={(e) => onSearch?.(e.target.value)}
-            aria-label="Search scenarios"
+            aria-label="Search events"
           />
         </search>
 

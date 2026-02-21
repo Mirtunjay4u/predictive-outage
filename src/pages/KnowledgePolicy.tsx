@@ -75,8 +75,8 @@ const faqs = [
   { q: 'Can this system control the grid?', a: 'No. There is no SCADA, breaker, or switching integration. All outputs are advisory and require explicit operator approval.' },
   { q: 'What AI model is used?', a: 'The primary inference model is NVIDIA Nemotron (via NIM endpoint). A fallback model is available if the primary is unreachable. All responses pass through the deterministic rule engine before delivery.' },
   { q: 'What happens if the AI model fails?', a: 'The system fails safe. The rule engine continues to enforce constraints independently. Operators see a clear "model unavailable" status and can continue with standard procedures.' },
-  { q: 'How is data stored?', a: 'The current demo uses a managed cloud datastore with synthetic scenario data. Enterprise-grade storage (encrypted, role-based) is planned for Phase 2.' },
-  { q: 'Is the AI making decisions?', a: 'No. The AI surfaces patterns and drafts advisory outputs. Every recommendation is gated by the rule engine and requires human approval before any action.' },
+  { q: 'How is data stored?', a: 'The current demo uses a managed cloud datastore with synthetic event data. Enterprise-grade storage (encrypted, role-based) is planned for Phase 2.' },
+  { q: 'Is the AI making decisions?', a: 'No. The AI surfaces patterns and drafts advisory outputs. Every advisory insight is gated by the rule engine and requires human approval before any action.' },
   { q: 'What about data privacy?', a: 'Demo data is fully synthetic. No real customer PII, asset identifiers, or operational telemetry is used. Production deployment would require enterprise data governance review.' },
   { q: 'How do I know the AI output is trustworthy?', a: 'Every response includes its assumptions, uncertainty drivers, and which constraints were evaluated. There are no opaque outputs — explainability is a core design requirement.' },
   { q: 'Can operators override advisory insights?', a: 'Yes, always. Operator judgment takes precedence. The system is designed to inform, not to direct.' },
@@ -172,7 +172,7 @@ export default function KnowledgePolicy() {
 
         <ul className="space-y-2 pb-1">
           <Bullet>Operator approval is required for every operational decision. No autonomous actions are permitted.</Bullet>
-          <Bullet>No switching recommendations are generated when an asset is flagged as locked out, under maintenance, or tagged for inspection.</Bullet>
+          <Bullet>No switching advisory insights are generated when an asset is flagged as locked out, under maintenance, or tagged for inspection.</Bullet>
           <Bullet>Field guidance is suppressed during lightning stand-down, active wildfire proximity, or hazardous weather conditions.</Bullet>
           <Bullet>Downed-wire, arcing, or public-safety events trigger immediate escalation — AI inference is bypassed in favor of deterministic safety protocols.</Bullet>
           <Bullet>Critical facility runway breaches ({'<'} threshold hours) auto-escalate priority regardless of other scoring factors.</Bullet>
