@@ -190,6 +190,15 @@ export default function ArtOfPossibilities() {
                 <filter id="glowBlue" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
                 </filter>
+                <filter id="glowRed" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                </filter>
+                <linearGradient id="riskHeat" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+                  <stop offset="30%" stopColor="#ef4444" stopOpacity="0.6" />
+                  <stop offset="70%" stopColor="#f97316" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                </linearGradient>
               </defs>
 
               {/* ── Transmission Lines (catenary curves between towers) ── */}
@@ -216,6 +225,49 @@ export default function ArtOfPossibilities() {
                   </circle>
                 </g>
               ))}
+
+              {/* ── Corridor Risk Heat-Lines (glow when hotspots/vegetation active) ── */}
+              {(activeOverlays.includes('hotspots') || activeOverlays.includes('vegetation')) && (
+                <g className="animate-fade-in">
+                  {/* segment 1: near hotspot zone (towers 1-2) */}
+                  {activeOverlays.includes('hotspots') && (
+                    <>
+                      <path d="M80,310 Q200,295 320,305" fill="none" stroke="url(#riskHeat)" strokeWidth="6" opacity="0.4">
+                        <animate attributeName="opacity" values="0.25;0.5;0.25" dur="2s" repeatCount="indefinite" />
+                      </path>
+                      <path d="M80,310 Q200,295 320,305" fill="none" stroke="#ef4444" strokeWidth="10" opacity="0.08" filter="url(#glowRed)">
+                        <animate attributeName="opacity" values="0.05;0.12;0.05" dur="2s" repeatCount="indefinite" />
+                      </path>
+                      {/* risk label */}
+                      <g transform="translate(200, 285)">
+                        <rect x="-28" y="-7" width="56" height="14" rx="7" fill="#7f1d1d" opacity="0.7" stroke="#ef4444" strokeWidth="0.5" />
+                        <text x="0" y="3" textAnchor="middle" fill="#fca5a5" fontSize="6" fontFamily="monospace">FIRE RISK</text>
+                        <circle cx="22" cy="0" r="1.5" fill="#ef4444">
+                          <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" />
+                        </circle>
+                      </g>
+                    </>
+                  )}
+                  {/* segment 3: near vegetation zone (towers 3-4) */}
+                  {activeOverlays.includes('vegetation') && (
+                    <>
+                      <path d="M620,300 Q780,285 920,295" fill="none" stroke="#22c55e" strokeWidth="5" opacity="0.3">
+                        <animate attributeName="opacity" values="0.2;0.4;0.2" dur="2.5s" repeatCount="indefinite" />
+                      </path>
+                      <path d="M620,300 Q780,285 920,295" fill="none" stroke="#22c55e" strokeWidth="10" opacity="0.06" filter="url(#glowBlue)">
+                        <animate attributeName="opacity" values="0.04;0.1;0.04" dur="2.5s" repeatCount="indefinite" />
+                      </path>
+                      <g transform="translate(770, 278)">
+                        <rect x="-28" y="-7" width="56" height="14" rx="7" fill="#052e16" opacity="0.7" stroke="#22c55e" strokeWidth="0.5" />
+                        <text x="0" y="3" textAnchor="middle" fill="#86efac" fontSize="6" fontFamily="monospace">VEG RISK</text>
+                        <circle cx="22" cy="0" r="1.5" fill="#22c55e">
+                          <animate attributeName="opacity" values="0.4;1;0.4" dur="1.2s" repeatCount="indefinite" />
+                        </circle>
+                      </g>
+                    </>
+                  )}
+                </g>
+              )}
 
               {/* ── Transmission Towers with spark effects ── */}
               {[
@@ -837,6 +889,51 @@ export default function ArtOfPossibilities() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* ── Mini Anomaly Detection Timeline ── */}
+              <div className="rounded-lg border border-violet-500/20 bg-violet-950/20 p-3">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[9px] font-semibold text-violet-300 uppercase tracking-wider">Recent Anomaly Detections</span>
+                  <Badge variant="outline" className="border-violet-500/30 text-violet-400 text-[8px] px-1.5 py-0">Last 24h</Badge>
+                </div>
+                <div className="relative pl-3">
+                  {/* vertical timeline line */}
+                  <div className="absolute left-[5px] top-0 bottom-0 w-px bg-gradient-to-b from-violet-500/40 via-violet-500/20 to-transparent" />
+                  <div className="space-y-2.5">
+                    {[
+                      { time: '14:32', ago: '2m ago', type: 'Acoustic Spike', zone: 'FDR-4401', conf: 72, severity: 'high' },
+                      { time: '14:18', ago: '16m ago', type: 'Behavioral Shift', zone: 'FDR-4402', conf: 58, severity: 'medium' },
+                      { time: '13:45', ago: '49m ago', type: 'Migration Alert', zone: 'FDR-4403', conf: 45, severity: 'low' },
+                      { time: '12:02', ago: '2h ago', type: 'Acoustic Burst', zone: 'FDR-4401', conf: 81, severity: 'high' },
+                      { time: '09:15', ago: '5h ago', type: 'Nesting Disruption', zone: 'FDR-4402', conf: 34, severity: 'low' },
+                    ].map((e, i) => {
+                      const dotColor = e.severity === 'high' ? 'bg-red-400' : e.severity === 'medium' ? 'bg-amber-400' : 'bg-violet-400';
+                      const textColor = e.severity === 'high' ? 'text-red-300' : e.severity === 'medium' ? 'text-amber-300' : 'text-violet-300/70';
+                      return (
+                        <div key={i} className="relative flex items-start gap-2">
+                          {/* timeline dot */}
+                          <div className={cn('absolute -left-[7px] top-[3px] h-2 w-2 rounded-full ring-2 ring-violet-950', dotColor)}>
+                            {i === 0 && <span className={cn('absolute inset-0 rounded-full animate-ping', dotColor, 'opacity-40')} />}
+                          </div>
+                          <div className="ml-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className={cn('text-[9px] font-semibold', textColor)}>{e.type}</span>
+                              <span className="text-[7px] text-muted-foreground/40 font-mono">{e.ago}</span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[8px] font-mono text-muted-foreground/50">{e.zone}</span>
+                              <span className="text-[8px] font-mono text-violet-300/60">{e.conf}%</span>
+                              <div className="h-1 w-8 rounded-full bg-violet-950 overflow-hidden">
+                                <div className="h-full rounded-full bg-violet-400/50" style={{ width: `${e.conf}%` }} />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </CardContent>
