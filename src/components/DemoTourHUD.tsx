@@ -167,7 +167,7 @@ const tourSteps = [
     id: 13,
     title: 'Executive Validation Summary',
     route: '/executive-validation',
-    duration: 25000,
+    duration: 30000,
     narrative: 'Reviewing the Executive Validation Summary — comparing traditional OMS capabilities against Copilot decision intelligence, and confirming AI governance and safety boundaries.',
     tooltip: 'This summary documents operational differentiation, safety governance, and Phase-1 scope for leadership review.',
     highlights: ['OMS vs Copilot Comparison', 'AI Governance & Safety', 'Phase-1 Scope'],
