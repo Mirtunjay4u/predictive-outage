@@ -62,7 +62,7 @@ interface UseTourNarrationReturn {
   preCacheAll: () => void;
 }
 
-async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 3): Promise<string | null> {
+async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): Promise<string | null> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(
@@ -79,11 +79,14 @@ async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 3): P
         }
       );
       if (response.status === 429) {
-        // Wait with exponential backoff before retrying
-        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+        await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
         continue;
       }
-      if (!response.ok) return null;
+      // Quota exceeded or other non-retryable error — stop immediately
+      if (!response.ok) {
+        await response.text(); // consume body
+        return null;
+      }
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch {
@@ -135,11 +138,10 @@ export function useTourNarration(): UseTourNarrationReturn {
   }, []);
 
   /**
-   * Pre-cache all narration clips in background.
-   * Fetches 3 at a time to avoid overwhelming the edge function.
+   * Pre-cache narration clips sequentially (1 at a time) to stay within
+   * ElevenLabs' 2-concurrent-request limit — reserving 1 slot for on-demand playback.
    */
   const preCacheAll = useCallback(() => {
-    // Cancel any existing pre-cache
     if (preCacheAbortRef.current) preCacheAbortRef.current.abort();
     const controller = new AbortController();
     preCacheAbortRef.current = controller;
@@ -148,34 +150,26 @@ export function useTourNarration(): UseTourNarrationReturn {
     let completed = 0;
     setPreCacheProgress(0);
 
-    // Process in batches of 2 (ElevenLabs concurrent limit)
-    const BATCH_SIZE = 2;
-    const runBatch = async (startIdx: number) => {
-      if (controller.signal.aborted) return;
-      const batch = narrationScripts
-        .slice(startIdx, startIdx + BATCH_SIZE)
-        .map((script, offset) => {
-          const idx = startIdx + offset;
-          if (cacheRef.current.has(idx)) {
-            completed++;
-            setPreCacheProgress(Math.round((completed / total) * 100));
-            return Promise.resolve();
-          }
-          return fetchTtsAudio(script, controller.signal).then(url => {
-            if (url) cacheRef.current.set(idx, url);
-            completed++;
-            setPreCacheProgress(Math.round((completed / total) * 100));
-          });
-        });
-
-      await Promise.all(batch);
-
-      if (startIdx + BATCH_SIZE < total && !controller.signal.aborted) {
-        await runBatch(startIdx + BATCH_SIZE);
+    const runSequential = async () => {
+      for (let idx = 0; idx < total; idx++) {
+        if (controller.signal.aborted) return;
+        if (cacheRef.current.has(idx)) {
+          completed++;
+          setPreCacheProgress(Math.round((completed / total) * 100));
+          continue;
+        }
+        const url = await fetchTtsAudio(narrationScripts[idx], controller.signal);
+        if (url) cacheRef.current.set(idx, url);
+        completed++;
+        setPreCacheProgress(Math.round((completed / total) * 100));
+        // Small delay between requests to avoid bursts
+        if (idx < total - 1 && !controller.signal.aborted) {
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
     };
 
-    runBatch(0).catch(() => { /* aborted */ });
+    runSequential().catch(() => { /* aborted */ });
   }, []);
 
   const playStepNarration = useCallback(async (stepIndex: number) => {
