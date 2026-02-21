@@ -152,9 +152,9 @@ export default function ArtOfPossibilities() {
           </div>
 
           {/* mock map area */}
-          <div className="relative h-[340px] sm:h-[400px] bg-gradient-to-br from-[hsl(220,20%,10%)] via-[hsl(200,15%,12%)] to-[hsl(180,10%,8%)] overflow-hidden">
+          <div className="relative h-[420px] sm:h-[480px] bg-gradient-to-br from-[hsl(220,20%,10%)] via-[hsl(200,15%,12%)] to-[hsl(180,10%,8%)] overflow-hidden">
             {/* terrain texture lines */}
-            <svg className="absolute inset-0 h-full w-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+            <svg className="absolute inset-0 h-full w-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="topo" width="60" height="60" patternUnits="userSpaceOnUse">
                   <path d="M0 30Q15 10 30 30T60 30" fill="none" stroke="currentColor" strokeWidth="0.5" />
@@ -164,49 +164,238 @@ export default function ArtOfPossibilities() {
               <rect width="100%" height="100%" fill="url(#topo)" />
             </svg>
 
-            {/* heatmap blobs */}
-            {activeOverlays.includes('hotspots') && (
-              <>
-                <div className="absolute left-[18%] top-[30%] h-24 w-24 rounded-full bg-red-500/20 blur-2xl" />
-                <div className="absolute left-[55%] top-[45%] h-32 w-32 rounded-full bg-orange-500/15 blur-3xl" />
-                <div className="absolute right-[20%] top-[25%] h-20 w-20 rounded-full bg-red-600/25 blur-2xl" />
-              </>
-            )}
-            {activeOverlays.includes('wind') && (
-              <>
-                <div className="absolute left-[30%] top-[20%] h-1 w-20 rotate-[25deg] rounded bg-sky-400/30" />
-                <div className="absolute left-[50%] top-[35%] h-1 w-28 rotate-[20deg] rounded bg-sky-400/25" />
-                <div className="absolute left-[40%] top-[60%] h-1 w-16 rotate-[30deg] rounded bg-sky-300/20" />
-              </>
-            )}
-            {activeOverlays.includes('fuel') && (
-              <div className="absolute bottom-[20%] left-[25%] h-28 w-40 rounded-xl bg-amber-600/10 blur-2xl" />
-            )}
-            {activeOverlays.includes('vegetation') && (
-              <div className="absolute right-[30%] top-[40%] h-24 w-36 rounded-xl bg-emerald-500/10 blur-2xl" />
-            )}
-            {activeOverlays.includes('biosentinel') && (
-              <>
-                <div className="absolute left-[42%] top-[50%] h-3 w-3 rounded-full bg-violet-400/60 animate-pulse" />
-                <div className="absolute left-[60%] top-[30%] h-2.5 w-2.5 rounded-full bg-violet-400/50 animate-pulse" />
-              </>
-            )}
-
-            {/* feeder lines */}
-            <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
-              <line x1="10%" y1="60%" x2="45%" y2="35%" stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.15" strokeDasharray="6 4" />
-              <line x1="45%" y1="35%" x2="85%" y2="50%" stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.15" strokeDasharray="6 4" />
-              <line x1="30%" y1="70%" x2="70%" y2="25%" stroke="hsl(var(--primary))" strokeWidth="0.8" opacity="0.1" strokeDasharray="4 4" />
+            {/* grid overlay */}
+            <svg className="absolute inset-0 h-full w-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+                  <path d="M80 0L0 0 0 80" fill="none" stroke="hsl(var(--primary))" strokeWidth="0.3" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
             </svg>
 
-            {/* legend */}
-            <div className="absolute bottom-3 left-3 rounded-lg border border-border/30 bg-card/80 px-3 py-2 backdrop-blur-sm">
-              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Risk Index</p>
-              <div className="flex items-center gap-1">
-                <div className="h-2 w-16 rounded-full bg-gradient-to-r from-emerald-600 via-amber-500 to-red-600" />
-                <span className="text-[9px] text-muted-foreground">0 – 100</span>
+            {/* feeder corridor lines (always visible) */}
+            <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="feederGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                  <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              {/* main feeder corridors */}
+              <line x1="5%" y1="65%" x2="45%" y2="30%" stroke="url(#feederGrad)" strokeWidth="2" strokeDasharray="8 4" />
+              <line x1="45%" y1="30%" x2="90%" y2="50%" stroke="url(#feederGrad)" strokeWidth="2" strokeDasharray="8 4" />
+              <line x1="25%" y1="75%" x2="70%" y2="20%" stroke="url(#feederGrad)" strokeWidth="1.5" strokeDasharray="6 4" />
+              <line x1="15%" y1="40%" x2="60%" y2="70%" stroke="url(#feederGrad)" strokeWidth="1" strokeDasharray="4 4" />
+              {/* corridor labels */}
+              <text x="22%" y="44%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4401</text>
+              <text x="58%" y="37%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4402</text>
+              <text x="42%" y="68%" fill="hsl(var(--primary))" opacity="0.25" fontSize="8" fontFamily="monospace">FDR-4403</text>
+            </svg>
+
+            {/* ── SATELLITE HOTSPOTS ── */}
+            {activeOverlays.includes('hotspots') && (
+              <div className="animate-fade-in">
+                {/* primary hotspot cluster */}
+                <div className="absolute left-[16%] top-[28%]">
+                  <div className="h-28 w-28 rounded-full bg-red-500/15 blur-2xl animate-pulse" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-red-500/30 blur-md" />
+                    <Flame className="absolute h-5 w-5 text-red-400 drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]" />
+                  </div>
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-red-950/80 border border-red-500/30 px-2 py-0.5">
+                    <span className="text-[9px] font-mono text-red-300">MODIS · 412°K · 94% conf</span>
+                  </div>
+                </div>
+                {/* secondary hotspot */}
+                <div className="absolute left-[54%] top-[42%]">
+                  <div className="h-24 w-24 rounded-full bg-orange-500/12 blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-orange-500/25 blur-md" />
+                    <Flame className="absolute h-4 w-4 text-orange-400 drop-shadow-[0_0_6px_rgba(249,115,22,0.5)]" />
+                  </div>
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-orange-950/80 border border-orange-500/30 px-2 py-0.5">
+                    <span className="text-[9px] font-mono text-orange-300">VIIRS · 388°K · 78% conf</span>
+                  </div>
+                </div>
+                {/* tertiary small */}
+                <div className="absolute right-[22%] top-[22%]">
+                  <div className="h-16 w-16 rounded-full bg-red-600/18 blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Flame className="h-3.5 w-3.5 text-red-300/80 drop-shadow-[0_0_4px_rgba(239,68,68,0.4)]" />
+                  </div>
+                </div>
               </div>
-              <p className="mt-1 text-[9px] text-muted-foreground/70">Confidence: Low / Medium / High</p>
+            )}
+
+            {/* ── WIND VECTORS ── */}
+            {activeOverlays.includes('wind') && (
+              <div className="animate-fade-in">
+                {[
+                  { x: '28%', y: '18%', rot: 25, speed: 35, gust: 52 },
+                  { x: '48%', y: '32%', rot: 20, speed: 28, gust: 41 },
+                  { x: '38%', y: '55%', rot: 30, speed: 22, gust: 35 },
+                  { x: '68%', y: '40%', rot: 15, speed: 31, gust: 47 },
+                  { x: '80%', y: '25%', rot: 22, speed: 25, gust: 38 },
+                ].map((w, i) => (
+                  <div key={i} className="absolute" style={{ left: w.x, top: w.y }}>
+                    <div className="relative" style={{ transform: `rotate(${w.rot}deg)` }}>
+                      {/* animated arrow shaft */}
+                      <div className="h-[2px] w-14 bg-gradient-to-r from-transparent via-sky-400/50 to-sky-400/80 rounded">
+                        <div
+                          className="h-full w-5 bg-sky-300/60 rounded animate-[windParticle_1.5s_ease-in-out_infinite]"
+                          style={{ animationDelay: `${i * 0.3}s` }}
+                        />
+                      </div>
+                      {/* arrowhead */}
+                      <div className="absolute -right-1 -top-[3px] w-0 h-0 border-l-[6px] border-l-sky-400/80 border-y-[4px] border-y-transparent" />
+                    </div>
+                    <div className="mt-1 whitespace-nowrap rounded bg-sky-950/80 border border-sky-500/20 px-1.5 py-0.5">
+                      <span className="text-[8px] font-mono text-sky-300">{w.speed} mph · G{w.gust}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ── FUEL DRYNESS INDEX ── */}
+            {activeOverlays.includes('fuel') && (
+              <div className="animate-fade-in">
+                {/* heat zone 1 */}
+                <div className="absolute bottom-[18%] left-[22%]">
+                  <div className="h-32 w-44 rounded-2xl bg-gradient-to-br from-amber-600/15 via-orange-600/10 to-red-600/8 blur-xl" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-lg border border-amber-500/25 bg-amber-950/70 px-3 py-1.5 backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Droplets className="h-3 w-3 text-amber-400" />
+                        <span className="text-[9px] font-semibold text-amber-300 uppercase tracking-wider">Fuel Moisture</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="h-1.5 w-20 rounded-full bg-gradient-to-r from-amber-600 via-orange-500 to-red-500" />
+                        <span className="text-[9px] font-mono text-amber-200">8.2%</span>
+                      </div>
+                      <span className="text-[8px] text-red-400 font-medium">CRITICAL DRY</span>
+                    </div>
+                  </div>
+                </div>
+                {/* heat zone 2 */}
+                <div className="absolute top-[15%] right-[15%]">
+                  <div className="h-24 w-32 rounded-2xl bg-gradient-to-br from-amber-500/10 via-yellow-600/8 to-transparent blur-xl" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-lg border border-yellow-500/20 bg-yellow-950/60 px-2 py-1 backdrop-blur-sm">
+                      <div className="flex items-center gap-1 mb-0.5">
+                        <Droplets className="h-2.5 w-2.5 text-yellow-400" />
+                        <span className="text-[8px] text-yellow-300 uppercase tracking-wider">Fuel</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="h-1 w-14 rounded-full bg-gradient-to-r from-yellow-600 to-amber-500" />
+                        <span className="text-[8px] font-mono text-yellow-200">14%</span>
+                      </div>
+                      <span className="text-[7px] text-amber-300">ELEVATED</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── VEGETATION CONTACT RISK ── */}
+            {activeOverlays.includes('vegetation') && (
+              <div className="animate-fade-in">
+                {/* risk corridor 1 */}
+                <div className="absolute right-[28%] top-[35%]">
+                  <div className="h-20 w-40 rounded-xl bg-emerald-500/8 blur-lg" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/70 px-3 py-1.5 backdrop-blur-sm">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <TreePine className="h-3 w-3 text-emerald-400" />
+                        <span className="text-[9px] font-semibold text-emerald-300 uppercase tracking-wider">Veg Risk</span>
+                      </div>
+                      <div className="flex gap-0.5 mb-0.5">
+                        {[85, 72, 91, 68, 95, 80].map((v, i) => (
+                          <div key={i} className="w-2 rounded-sm bg-emerald-500/40" style={{ height: `${v / 5}px` }}>
+                            <div className="w-full rounded-sm bg-emerald-400" style={{ height: `${v}%` }} />
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[8px] text-emerald-200 font-mono">Score: 87/100 · HIGH</span>
+                    </div>
+                  </div>
+                </div>
+                {/* risk corridor 2 */}
+                <div className="absolute left-[35%] top-[60%]">
+                  <div className="h-14 w-28 rounded-xl bg-emerald-500/6 blur-lg" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded border border-emerald-500/20 bg-emerald-950/60 px-2 py-1 backdrop-blur-sm">
+                      <div className="flex items-center gap-1">
+                        <TreePine className="h-2.5 w-2.5 text-emerald-400/70" />
+                        <span className="text-[8px] text-emerald-300">Veg: 62/100</span>
+                      </div>
+                      <span className="text-[7px] text-yellow-300">MODERATE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── BIO-SENTINEL SIGNALS ── */}
+            {activeOverlays.includes('biosentinel') && (
+              <div className="animate-fade-in">
+                {[
+                  { x: '40%', y: '48%', conf: 72, label: 'Acoustic anomaly' },
+                  { x: '62%', y: '28%', conf: 58, label: 'Behavioral shift' },
+                  { x: '25%', y: '38%', conf: 45, label: 'Migration pattern' },
+                ].map((b, i) => (
+                  <div key={i} className="absolute" style={{ left: b.x, top: b.y }}>
+                    {/* pulsing rings */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-10 w-10 rounded-full border border-violet-400/20 animate-ping" style={{ animationDuration: '2s', animationDelay: `${i * 0.4}s` }} />
+                      <div className="absolute h-6 w-6 rounded-full border border-violet-400/30 animate-ping" style={{ animationDuration: '2s', animationDelay: `${i * 0.4 + 0.3}s` }} />
+                      <div className="h-3.5 w-3.5 rounded-full bg-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.5)]">
+                        <Bug className="h-3.5 w-3.5 text-violet-200 p-[2px]" />
+                      </div>
+                    </div>
+                    <div className="mt-2 whitespace-nowrap rounded bg-violet-950/80 border border-violet-500/25 px-2 py-0.5 backdrop-blur-sm">
+                      <span className="text-[8px] font-mono text-violet-300">{b.label} · {b.conf}% conf</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* legend */}
+            <div className="absolute bottom-3 left-3 rounded-lg border border-border/30 bg-card/90 px-3 py-2 backdrop-blur-sm">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Risk Index</p>
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="h-2.5 w-20 rounded-full bg-gradient-to-r from-emerald-600 via-amber-500 to-red-600" />
+                <span className="text-[9px] text-muted-foreground font-mono">0 – 100</span>
+              </div>
+              <div className="flex gap-2 text-[8px] text-muted-foreground/70">
+                <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Low</span>
+                <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" />Med</span>
+                <span className="flex items-center gap-0.5"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />High</span>
+              </div>
+            </div>
+
+            {/* active layers indicator */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1">
+              {activeOverlays.map((o) => {
+                const opt = overlayOptions.find((oo) => oo.value === o);
+                if (!opt) return null;
+                const colors: Record<string, string> = {
+                  hotspots: 'border-red-500/30 text-red-300 bg-red-950/70',
+                  wind: 'border-sky-500/30 text-sky-300 bg-sky-950/70',
+                  fuel: 'border-amber-500/30 text-amber-300 bg-amber-950/70',
+                  vegetation: 'border-emerald-500/30 text-emerald-300 bg-emerald-950/70',
+                  biosentinel: 'border-violet-500/30 text-violet-300 bg-violet-950/70',
+                };
+                return (
+                  <div key={o} className={cn('flex items-center gap-1.5 rounded-full border px-2 py-0.5 backdrop-blur-sm text-[8px] font-medium uppercase tracking-wider', colors[o])}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                    {opt.label}
+                  </div>
+                );
+              })}
             </div>
 
             {/* disclaimer pill */}

@@ -284,6 +284,13 @@
     }
   }
 
+  @keyframes windParticle {
+    0% { transform: translateX(-20px); opacity: 0; }
+    20% { opacity: 0.8; }
+    80% { opacity: 0.8; }
+    100% { transform: translateX(40px); opacity: 0; }
+  }
+
   .glass {
     @apply bg-card/80 backdrop-blur-md;
   }
