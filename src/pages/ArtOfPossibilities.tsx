@@ -610,9 +610,9 @@ export default function ArtOfPossibilities() {
         <div className="grid gap-4 lg:grid-cols-2">
           {/* left: animated corridor visualization */}
           <Card className="overflow-hidden p-0">
-            <div className="relative h-[340px] bg-gradient-to-b from-[hsl(270,20%,8%)] via-[hsl(260,15%,10%)] to-[hsl(250,12%,7%)]">
+            <div className="relative h-[580px] bg-gradient-to-b from-[hsl(270,20%,8%)] via-[hsl(260,15%,10%)] to-[hsl(250,12%,7%)]">
               {/* animated SVG corridor scene */}
-              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg">
+              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 500 580" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <radialGradient id="bioGlow" cx="50%" cy="50%" r="50%">
                     <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15" />
@@ -829,6 +829,124 @@ export default function ArtOfPossibilities() {
                 <g transform="translate(380, 180)">
                   <rect x="-35" y="-8" width="70" height="16" rx="8" fill="#7c3aed" opacity="0.15" stroke="#8b5cf6" strokeWidth="0.5" />
                   <text x="0" y="4" textAnchor="middle" fill="#c4b5fd" fontSize="7" fontFamily="monospace">ANOMALY 58%</text>
+                </g>
+
+                {/* ── AVIAN DISPERSAL EVENT VISUALIZATION ── */}
+                <g>
+                  {/* ground/habitat zone */}
+                  <rect x="60" y="370" width="380" height="180" rx="8" fill="#1a0e2e" opacity="0.4" stroke="#8b5cf6" strokeWidth="0.3" />
+                  
+                  {/* section title */}
+                  <text x="250" y="390" textAnchor="middle" fill="#c4b5fd" fontSize="8" fontFamily="sans-serif" fontWeight="600" opacity="0.7">
+                    Avian Dispersal Event — Behavioral Anomaly Indicator
+                  </text>
+                  
+                  {/* dispersal origin pulse */}
+                  <circle cx="250" cy="460" r="6" fill="#8b5cf6" opacity="0.3">
+                    <animate attributeName="r" values="4;12;4" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.4;0.1;0.4" dur="3s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="250" cy="460" r="3" fill="#a78bfa" opacity="0.6" />
+                  
+                  {/* tree canopy (habitat) */}
+                  {[120, 160, 340, 380].map((tx, ti) => (
+                    <g key={`ht-${ti}`} transform={`translate(${tx}, 530)`}>
+                      <line x1="0" y1="0" x2="0" y2="-14" stroke="#15803d" strokeWidth="1.5" opacity="0.3" />
+                      <polygon points="-8,-10 0,-28 8,-10" fill="#22c55e" opacity="0.12" />
+                      <polygon points="-5,-16 0,-32 5,-16" fill="#16a34a" opacity="0.15" />
+                    </g>
+                  ))}
+                  
+                  {/* animated bird silhouettes scattering outward from center */}
+                  {[
+                    { angle: -35,  dist: 80,  size: 1.0, dur: 3.5, delay: 0 },
+                    { angle: -65,  dist: 110, size: 0.8, dur: 4.0, delay: 0.3 },
+                    { angle: -20,  dist: 95,  size: 0.9, dur: 3.8, delay: 0.6 },
+                    { angle: -80,  dist: 70,  size: 0.7, dur: 3.2, delay: 0.9 },
+                    { angle: -50,  dist: 120, size: 0.6, dur: 4.2, delay: 0.2 },
+                    { angle: -10,  dist: 60,  size: 1.1, dur: 3.0, delay: 1.2 },
+                    { angle: -100, dist: 90,  size: 0.75, dur: 3.6, delay: 0.5 },
+                    { angle: -130, dist: 75,  size: 0.85, dur: 3.4, delay: 0.8 },
+                    { angle: -150, dist: 100, size: 0.65, dur: 4.1, delay: 0.1 },
+                    { angle: -45,  dist: 130, size: 0.55, dur: 4.5, delay: 1.0 },
+                    { angle: -160, dist: 115, size: 0.7, dur: 3.9, delay: 0.4 },
+                    { angle: -5,   dist: 85,  size: 0.9, dur: 3.3, delay: 0.7 },
+                  ].map((bird, bi) => {
+                    const rad = (bird.angle * Math.PI) / 180;
+                    const ex = 250 + Math.cos(rad) * bird.dist;
+                    const ey = 460 + Math.sin(rad) * bird.dist;
+                    // Bird silhouette: simple "V" shape representing wings
+                    const s = bird.size;
+                    return (
+                      <g key={`bird-${bi}`} opacity="0">
+                        {/* flight path trace (dashed) */}
+                        <line x1="250" y1="460" x2={ex} y2={ey} stroke="#a78bfa" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.15" />
+                        {/* bird body */}
+                        <g>
+                          <animateMotion
+                            dur={`${bird.dur}s`}
+                            begin={`${bird.delay}s`}
+                            repeatCount="indefinite"
+                            path={`M250,460 Q${250 + (ex - 250) * 0.5},${460 + (ey - 460) * 0.3 - 15} ${ex},${ey}`}
+                          />
+                          {/* wing flap animation via the V-shape */}
+                          <path
+                            d={`M${-8 * s},${2 * s} Q${-4 * s},${-4 * s} 0,0 Q${4 * s},${-4 * s} ${8 * s},${2 * s}`}
+                            fill="none"
+                            stroke="#c4b5fd"
+                            strokeWidth={1 * s}
+                            strokeLinecap="round"
+                          >
+                            <animate
+                              attributeName="d"
+                              values={`M${-8 * s},${2 * s} Q${-4 * s},${-4 * s} 0,0 Q${4 * s},${-4 * s} ${8 * s},${2 * s};M${-8 * s},${-3 * s} Q${-4 * s},${1 * s} 0,0 Q${4 * s},${1 * s} ${8 * s},${-3 * s};M${-8 * s},${2 * s} Q${-4 * s},${-4 * s} 0,0 Q${4 * s},${-4 * s} ${8 * s},${2 * s}`}
+                              dur={`${0.4 + (bi % 3) * 0.1}s`}
+                              repeatCount="indefinite"
+                            />
+                          </path>
+                          {/* tiny body dot */}
+                          <circle cx="0" cy="0" r={1.2 * s} fill="#c4b5fd" opacity="0.6" />
+                        </g>
+                        {/* fade in/out over flight cycle */}
+                        <animate attributeName="opacity" values="0;0.7;0.8;0.5;0" dur={`${bird.dur}s`} begin={`${bird.delay}s`} repeatCount="indefinite" />
+                      </g>
+                    );
+                  })}
+                  
+                  {/* explainer badge — what this means */}
+                  <g transform="translate(250, 405)">
+                    <rect x="-110" y="-8" width="220" height="16" rx="8" fill="#3b0764" opacity="0.5" stroke="#a78bfa" strokeWidth="0.4" />
+                    <text x="0" y="4" textAnchor="middle" fill="#ddd6fe" fontSize="6" fontFamily="monospace">
+                      ⚠ SUDDEN FLOCK DISPERSAL — POTENTIAL ENVIRONMENTAL STRESSOR DETECTED
+                    </text>
+                  </g>
+                  
+                  {/* interpretive annotation */}
+                  <g transform="translate(250, 540)">
+                    <rect x="-145" y="-10" width="290" height="28" rx="6" fill="#1e1b4b" opacity="0.5" stroke="#8b5cf6" strokeWidth="0.3" />
+                    <text x="0" y="-1" textAnchor="middle" fill="#a78bfa" fontSize="5.5" fontFamily="monospace" opacity="0.8">
+                      Rapid avian dispersal from a nesting corridor can indicate sudden
+                    </text>
+                    <text x="0" y="10" textAnchor="middle" fill="#a78bfa" fontSize="5.5" fontFamily="monospace" opacity="0.8">
+                      environmental change (fire, EMF surge, ground vibration) — advisory only
+                    </text>
+                  </g>
+                  
+                  {/* confidence meter */}
+                  <g transform="translate(405, 430)">
+                    <rect x="0" y="0" width="30" height="50" rx="3" fill="#1e1b4b" opacity="0.5" stroke="#8b5cf6" strokeWidth="0.3" />
+                    <text x="15" y="12" textAnchor="middle" fill="#a78bfa" fontSize="5" fontFamily="monospace">CONF</text>
+                    {[0, 1, 2, 3, 4].map((b) => {
+                      const barH = 3 + b * 1.5;
+                      const lit = b < 3;
+                      return (
+                        <rect key={`bc-${b}`} x={4 + b * 5} y={42 - barH} width="3.5" height={barH} rx="0.5" fill={lit ? '#a78bfa' : '#334155'} opacity={lit ? 0.6 : 0.2}>
+                          <animate attributeName="opacity" values={`${lit ? 0.4 : 0.2};${lit ? 0.7 : 0.2};${lit ? 0.4 : 0.2}`} dur={`${1.2 + b * 0.2}s`} repeatCount="indefinite" />
+                        </rect>
+                      );
+                    })}
+                    <text x="15" y="49" textAnchor="middle" fill="#a78bfa" fontSize="5" fontFamily="monospace" opacity="0.6">62%</text>
+                  </g>
                 </g>
 
                 {/* ambient glow */}
