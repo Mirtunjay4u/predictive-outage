@@ -784,140 +784,120 @@ export function DemoTourHUD() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed bottom-6 left-4 z-[9999] w-[340px] max-w-[90vw]"
+        className="fixed top-1/2 left-0 -translate-y-1/2 z-[9999]"
       >
-        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-          {/* Step pills */}
-          <div className="px-4 pt-3 pb-1">
-            <div className="flex items-center gap-1">
-              {tourSteps.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleStepClick(i)}
-                  className={cn(
-                    'h-1.5 flex-1 rounded-full transition-all duration-200 cursor-pointer',
-                    completedSteps.includes(i)
-                      ? 'bg-primary'
-                      : i === currentStep
-                      ? 'bg-primary/60'
-                      : 'bg-muted-foreground/15 hover:bg-muted-foreground/25'
-                  )}
-                  title={s.title}
-                />
-              ))}
-            </div>
-          </div>
+        <div className="flex flex-col items-center gap-2 rounded-r-xl border border-l-0 border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl py-3 px-1.5 w-[48px]">
+          {/* Step indicator */}
+          <span className="text-[9px] font-bold text-primary tracking-wider leading-none">
+            {currentStep + 1}/{tourSteps.length}
+          </span>
 
-          <div className="px-4 pb-3 pt-2">
-            {/* Current step info */}
-            <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-[0.14em]">
-                    Step {currentStep + 1}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/60">·</span>
-                  <span className="text-[10px] text-muted-foreground">{step.title}</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">
-                  {step.narrative}
-                </p>
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {/* Narration mute/unmute + waveform */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className={cn(
-                      'h-7 w-7',
-                      isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
-                    )}
-                    onClick={toggleMute}
-                    title={isMuted ? 'Unmute narration' : 'Mute narration'}
-                  >
-                    {narrationLoading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : isMuted ? (
-                      <VolumeX className="h-3.5 w-3.5" />
-                    ) : (
-                      <Volume2 className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-
-                  {/* Waveform bars — visible when speaking */}
-                  <div className={cn(
-                    'flex items-center gap-[2px] h-4 transition-opacity duration-300',
-                    isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
-                  )}>
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <span
-                        key={i}
-                        className="w-[2px] rounded-full bg-primary/70"
-                        style={{
-                          animation: isSpeaking && !isMuted ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
-                          height: '4px',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="w-px h-4 bg-border/40 mx-0.5" />
-
-                {isPaused ? (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-primary hover:bg-primary/10"
-                    onClick={handleResume}
-                    title="Resume"
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                  </Button>
-                ) : (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:bg-muted"
-                    onClick={handlePause}
-                    title="Pause"
-                  >
-                    <Pause className="h-3.5 w-3.5" />
-                  </Button>
+          {/* Vertical step dots */}
+          <div className="flex flex-col items-center gap-[3px]">
+            {tourSteps.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => handleStepClick(i)}
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full transition-all duration-200 cursor-pointer',
+                  completedSteps.includes(i)
+                    ? 'bg-primary'
+                    : i === currentStep
+                    ? 'bg-primary/60 scale-125'
+                    : 'bg-muted-foreground/15 hover:bg-muted-foreground/25'
                 )}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-muted-foreground hover:bg-muted"
-                  onClick={handleSkip}
-                  title="Skip to next"
-                >
-                  <SkipForward className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  onClick={handleStop}
-                  title="Stop tour"
-                >
-                  <Square className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Step progress bar */}
-            <div className="mt-2 h-[3px] rounded-full bg-muted overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-primary/70"
-                style={{ width: `${stepProgress}%` }}
-                transition={{ duration: 0.05 }}
+                title={s.title}
               />
-            </div>
+            ))}
           </div>
+
+          {/* Vertical progress bar */}
+          <div className="w-[3px] h-8 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              className="w-full rounded-full bg-primary/70"
+              style={{ height: `${stepProgress}%` }}
+              transition={{ duration: 0.05 }}
+            />
+          </div>
+
+          {/* Waveform bars — vertical orientation */}
+          <div className={cn(
+            'flex items-end gap-[2px] h-4 transition-opacity duration-300',
+            isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
+          )}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span
+                key={i}
+                className="w-[2px] rounded-full bg-primary/70"
+                style={{
+                  animation: isSpeaking && !isMuted ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
+                  height: '4px',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Controls stacked vertically */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              'h-7 w-7',
+              isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
+            )}
+            onClick={toggleMute}
+            title={isMuted ? 'Unmute narration' : 'Mute narration'}
+          >
+            {narrationLoading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : isMuted ? (
+              <VolumeX className="h-3.5 w-3.5" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5" />
+            )}
+          </Button>
+
+          {isPaused ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-primary hover:bg-primary/10"
+              onClick={handleResume}
+              title="Resume"
+            >
+              <Play className="h-3.5 w-3.5" />
+            </Button>
+          ) : (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-muted-foreground hover:bg-muted"
+              onClick={handlePause}
+              title="Pause"
+            >
+              <Pause className="h-3.5 w-3.5" />
+            </Button>
+          )}
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:bg-muted"
+            onClick={handleSkip}
+            title="Skip to next"
+          >
+            <SkipForward className="h-3.5 w-3.5" />
+          </Button>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleStop}
+            title="Stop tour"
+          >
+            <Square className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </motion.div>
     </>
