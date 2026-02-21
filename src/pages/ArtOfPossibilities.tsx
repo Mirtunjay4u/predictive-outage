@@ -77,6 +77,7 @@ export default function ArtOfPossibilities() {
 
   return (
     <div className="min-h-screen space-y-10 pb-16">
+      <p className="px-1 text-xs text-muted-foreground/70 italic">Reference concepts and roadmap ideas (non-operational).</p>
       {/* ── SECTION NAVIGATION BAR ── */}
       <nav className="sticky top-0 z-30 -mx-1 rounded-lg border border-border/30 bg-card/95 backdrop-blur-md px-4 py-2.5 flex items-center gap-1 overflow-x-auto scrollbar-none">
         {[

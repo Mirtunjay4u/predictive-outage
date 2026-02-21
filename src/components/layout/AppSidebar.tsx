@@ -16,6 +16,7 @@ import {
   Network,
   BookOpen,
   ClipboardCheck,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,14 @@ const navGroups = [
       { icon: Bot, label: 'Copilot Studio', path: '/copilot-studio' },
       { icon: BarChart3, label: 'Analytics', path: '/analytics' },
       { icon: CloudLightning, label: 'Weather Alerts', path: '/weather-alerts' },
+    ],
+  },
+  {
+    label: 'Insights & Vision',
+    accent: 'vision',
+    items: [
       { icon: Sparkles, label: 'Art of Possibilities', path: '/art-of-possibilities' },
+      { icon: ShieldCheck, label: 'Knowledge & Policy', path: '/knowledge-policy' },
     ],
   },
   {
@@ -81,6 +89,15 @@ const accentConfig: Record<string, {
     hoverBg: 'hover:bg-[hsl(173,80%,40%,0.05)]',
     iconActive: 'text-[hsl(173,70%,60%)]',
     headerColor: 'text-[hsl(173,50%,40%)]',
+  },
+  vision: {
+    barGradient: 'bg-gradient-to-b from-[hsl(280,60%,60%)] to-[hsl(280,60%,48%)]',
+    activeBg: 'bg-[hsl(280,60%,55%,0.08)]',
+    activeText: 'text-[hsl(280,50%,72%)]',
+    activeGlow: 'shadow-[0_0_8px_hsl(280,60%,55%,0.12)]',
+    hoverBg: 'hover:bg-[hsl(280,60%,55%,0.05)]',
+    iconActive: 'text-[hsl(280,50%,68%)]',
+    headerColor: 'text-[hsl(280,35%,45%)]',
   },
   platform: {
     barGradient: 'bg-gradient-to-b from-[hsl(215,20%,60%)] to-[hsl(215,20%,48%)]',
