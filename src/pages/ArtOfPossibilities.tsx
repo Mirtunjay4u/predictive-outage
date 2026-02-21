@@ -193,13 +193,29 @@ export default function ArtOfPossibilities() {
               </defs>
 
               {/* ── Transmission Lines (catenary curves between towers) ── */}
-              <path d="M80,310 Q200,295 320,305" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
-              <path d="M320,305 Q480,290 620,300" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
-              <path d="M620,300 Q780,285 920,295" fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
-              {/* glow duplicates */}
-              <path d="M80,310 Q200,295 320,305" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
-              <path d="M320,305 Q480,290 620,300" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
-              <path d="M620,300 Q780,285 920,295" fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
+              {[
+                "M80,310 Q200,295 320,305",
+                "M320,305 Q480,290 620,300",
+                "M620,300 Q780,285 920,295",
+              ].map((d, i) => (
+                <g key={`line-${i}`}>
+                  <path d={d} fill="none" stroke="url(#powerLine)" strokeWidth="1.5" />
+                  <path d={d} fill="none" stroke="#60a5fa" strokeWidth="3" opacity="0.08" filter="url(#glowBlue)" />
+                  {/* power flow particles */}
+                  {[0, 1, 2].map((p) => (
+                    <circle key={`particle-${i}-${p}`} r="2.5" fill="#60a5fa" opacity="0">
+                      <animateMotion dur={`${2.5 + p * 0.4}s`} begin={`${p * 0.8 + i * 0.3}s`} repeatCount="indefinite" path={d} />
+                      <animate attributeName="opacity" values="0;0.7;0.9;0.7;0" dur={`${2.5 + p * 0.4}s`} begin={`${p * 0.8 + i * 0.3}s`} repeatCount="indefinite" />
+                      <animate attributeName="r" values="1.5;3;1.5" dur={`${2.5 + p * 0.4}s`} begin={`${p * 0.8 + i * 0.3}s`} repeatCount="indefinite" />
+                    </circle>
+                  ))}
+                  {/* glow trail particle */}
+                  <circle r="6" fill="#60a5fa" opacity="0" filter="url(#glowBlue)">
+                    <animateMotion dur="3s" begin={`${i * 0.5}s`} repeatCount="indefinite" path={d} />
+                    <animate attributeName="opacity" values="0;0.2;0.3;0.2;0" dur="3s" begin={`${i * 0.5}s`} repeatCount="indefinite" />
+                  </circle>
+                </g>
+              ))}
 
               {/* ── Transmission Towers ── */}
               {[
@@ -589,37 +605,60 @@ export default function ArtOfPossibilities() {
                   </circle>
                 ))}
 
-                {/* waveform visualization */}
-                <g transform="translate(250, 295)">
-                  {Array.from({ length: 40 }).map((_, i) => {
-                    const h = Math.sin(i * 0.5) * 8 + Math.sin(i * 0.3) * 5;
-                    return (
-                      <rect
-                        key={`wave-${i}`}
-                        x={-100 + i * 5}
-                        y={-Math.abs(h)}
-                        width="3"
-                        height={Math.abs(h) * 2 + 1}
-                        rx="1"
-                        fill="#8b5cf6"
-                        opacity={0.15 + Math.abs(h) * 0.02}
-                      >
-                        <animate
-                          attributeName="height"
-                          values={`${Math.abs(h) * 2 + 1};${Math.abs(h) * 3 + 2};${Math.abs(h) * 2 + 1}`}
-                          dur={`${1.5 + (i % 5) * 0.2}s`}
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="y"
-                          values={`${-Math.abs(h)};${-Math.abs(h) * 1.5};${-Math.abs(h)}`}
-                          dur={`${1.5 + (i % 5) * 0.2}s`}
-                          repeatCount="indefinite"
-                        />
-                      </rect>
-                    );
-                  })}
-                </g>
+                {/* waveform visualization — reacts to biosentinel toggle */}
+                {(() => {
+                  const isActive = activeOverlays.includes('biosentinel');
+                  const intensity = isActive ? 2.8 : 1;
+                  const baseOpacity = isActive ? 0.35 : 0.15;
+                  const speedMul = isActive ? 0.6 : 1;
+                  return (
+                    <g transform="translate(250, 295)">
+                      {Array.from({ length: 40 }).map((_, i) => {
+                        const h = (Math.sin(i * 0.5) * 8 + Math.sin(i * 0.3) * 5) * (isActive ? 1.4 : 1);
+                        const absH = Math.abs(h);
+                        return (
+                          <rect
+                            key={`wave-${i}`}
+                            x={-100 + i * 5}
+                            y={-absH}
+                            width="3"
+                            height={absH * 2 + 1}
+                            rx="1"
+                            fill={isActive ? '#a78bfa' : '#8b5cf6'}
+                            opacity={baseOpacity + absH * 0.02}
+                          >
+                            <animate
+                              attributeName="height"
+                              values={`${absH * 2 + 1};${absH * intensity + 2};${absH * 2 + 1}`}
+                              dur={`${(1.5 + (i % 5) * 0.2) * speedMul}s`}
+                              repeatCount="indefinite"
+                            />
+                            <animate
+                              attributeName="y"
+                              values={`${-absH};${-absH * (intensity / 2)};${-absH}`}
+                              dur={`${(1.5 + (i % 5) * 0.2) * speedMul}s`}
+                              repeatCount="indefinite"
+                            />
+                            {isActive && (
+                              <animate
+                                attributeName="opacity"
+                                values={`${baseOpacity};${baseOpacity + 0.3};${baseOpacity}`}
+                                dur={`${0.8 + (i % 3) * 0.15}s`}
+                                repeatCount="indefinite"
+                              />
+                            )}
+                          </rect>
+                        );
+                      })}
+                      {/* active state label */}
+                      {isActive && (
+                        <text x="0" y="22" textAnchor="middle" fill="#a78bfa" fontSize="7" fontFamily="monospace" opacity="0.7">
+                          ▲ LIVE SIGNAL ACTIVE ▲
+                        </text>
+                      )}
+                    </g>
+                  );
+                })()}
 
                 {/* label */}
                 <text x="250" y="330" textAnchor="middle" fill="#a78bfa" fontSize="9" fontFamily="monospace" opacity="0.5">
