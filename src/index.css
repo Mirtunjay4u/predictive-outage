@@ -396,6 +396,15 @@
     opacity: 0.4 !important;
     cursor: not-allowed !important;
   }
+
+  /* ── Map tile visibility boost ── */
+  .map-base-tiles {
+    filter: brightness(1.35) contrast(1.1) saturate(1.15);
+  }
+
+  .dark .map-base-tiles {
+    filter: brightness(1.5) contrast(1.15) saturate(1.2);
+  }
 }
 
 @keyframes nvidiaGlowBreath {
