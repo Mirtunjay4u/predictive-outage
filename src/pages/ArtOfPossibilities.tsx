@@ -1146,6 +1146,334 @@ export default function ArtOfPossibilities() {
         </div>
       </motion.section>
 
+      {/* ── 4a-ii) SMOKE & EARLY NATURE SIGNAL SENSING ── */}
+      <motion.section {...fade} transition={{ delay: 0.16 }} data-tour-section="aop-smoke-sensing">
+        <Card className="overflow-hidden border-border/30">
+          <div className="flex flex-col gap-2 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5">
+              <SectionTitle className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-orange-400" />
+                Smoke Sensing &amp; Early Nature Signal Forecasting
+              </SectionTitle>
+              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept · Post-Fire Smoke · Nature Precursors · Sense Forecasting</span>
+            </div>
+            <Badge variant="outline" className="shrink-0 border-orange-500/40 bg-orange-500/5 text-orange-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
+              Early Warning · Phase 2+
+            </Badge>
+          </div>
+
+          <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
+            {/* left: animated SVG */}
+            <div className="relative bg-gradient-to-br from-[hsl(220,20%,10%)] via-[hsl(15,10%,10%)] to-[hsl(200,15%,8%)] overflow-hidden" style={{ minHeight: 520 }}>
+              {(() => {
+                const bioActive = activeOverlays.includes('biosentinel');
+                return (
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 520" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="smokeGrad" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#78716c" stopOpacity="0.35" />
+                    <stop offset="60%" stopColor="#57534e" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="#44403c" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="fireGlow" cx="50%" cy="80%">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+                    <stop offset="40%" stopColor="#f97316" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="smokeBlur" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+                  </filter>
+                  <filter id="smokeBlurSm" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                  </filter>
+                  <linearGradient id="heatSignature" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+                    <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.1" />
+                  </linearGradient>
+                </defs>
+
+                {/* ── SCENE TITLE ── */}
+                <text x="250" y="20" textAnchor="middle" fill="#a1a1aa" fontSize="7" fontFamily="monospace" letterSpacing="0.15em" opacity="0.6">
+                  SMOKE DETECTION &amp; EARLY NATURE SIGNAL AWARENESS
+                </text>
+
+                {/* ── FOREST SCENE ── */}
+                {/* ground terrain */}
+                <path d="M0,380 Q80,370 160,375 Q250,365 340,372 Q420,368 500,375 L500,520 L0,520 Z" fill="#1a2e05" opacity="0.5" />
+
+                {/* forest trees — some burnt, some healthy */}
+                {[
+                  { x: 40, h: 50, burnt: false },
+                  { x: 80, h: 45, burnt: false },
+                  { x: 120, h: 55, burnt: true },
+                  { x: 155, h: 48, burnt: true },
+                  { x: 190, h: 52, burnt: true },
+                  { x: 230, h: 42, burnt: false },
+                  { x: 270, h: 58, burnt: true },
+                  { x: 310, h: 44, burnt: false },
+                  { x: 350, h: 50, burnt: false },
+                  { x: 390, h: 46, burnt: false },
+                  { x: 430, h: 52, burnt: false },
+                  { x: 465, h: 40, burnt: false },
+                ].map((t, ti) => (
+                  <g key={`ftree-${ti}`} transform={`translate(${t.x}, ${375 + (ti % 3) * 2})`}>
+                    <line x1="0" y1="0" x2="0" y2={-t.h * 0.4} stroke={t.burnt ? '#57534e' : '#15803d'} strokeWidth="1.5" opacity={t.burnt ? 0.5 : 0.3} />
+                    <polygon points={`-${t.h * 0.15},-${t.h * 0.2} 0,-${t.h * 0.7} ${t.h * 0.15},-${t.h * 0.2}`} fill={t.burnt ? '#78716c' : '#22c55e'} opacity={t.burnt ? 0.15 : 0.1} />
+                    <polygon points={`-${t.h * 0.1},-${t.h * 0.4} 0,-${t.h * 0.9} ${t.h * 0.1},-${t.h * 0.4}`} fill={t.burnt ? '#57534e' : '#16a34a'} opacity={t.burnt ? 0.12 : 0.12} />
+                    {t.burnt && (
+                      <>
+                        <circle cx="0" cy={-t.h * 0.15} r="2" fill="#ef4444" opacity="0.15">
+                          <animate attributeName="opacity" values="0.1;0.25;0.1" dur="2s" begin={`${ti * 0.3}s`} repeatCount="indefinite" />
+                        </circle>
+                      </>
+                    )}
+                  </g>
+                ))}
+
+                {/* ── FIRE SOURCE (smoldering) ── */}
+                <g transform="translate(185, 355)">
+                  {/* fire glow base */}
+                  <circle cx="0" cy="0" r="20" fill="url(#fireGlow)">
+                    <animate attributeName="r" values="15;25;15" dur={bioActive ? '1.5s' : '2.5s'} repeatCount="indefinite" />
+                  </circle>
+                  {/* embers */}
+                  {[0, 1, 2, 3, 4].map((ei) => {
+                    const ea = (ei * 72) * Math.PI / 180;
+                    return (
+                      <circle key={`ember-${ei}`} cx={Math.cos(ea) * 8} cy={Math.sin(ea) * 5 - 3} r={1.2 + (ei % 2) * 0.5} fill="#ef4444" opacity="0">
+                        <animate attributeName="opacity" values="0;0.8;0.4;0" dur={`${1.2 + ei * 0.2}s`} begin={`${ei * 0.25}s`} repeatCount="indefinite" />
+                        <animate attributeName="cy" values={`${Math.sin(ea) * 5 - 3};${Math.sin(ea) * 5 - 12}`} dur={`${1.2 + ei * 0.2}s`} begin={`${ei * 0.25}s`} repeatCount="indefinite" />
+                      </circle>
+                    );
+                  })}
+                  <rect x="-18" y="8" width="36" height="10" rx="5" fill="#451a03" opacity="0.5" stroke="#d97706" strokeWidth="0.3" />
+                  <text x="0" y="15" textAnchor="middle" fill="#fbbf24" fontSize="5" fontFamily="monospace">FIRE SRC</text>
+                </g>
+
+                {/* ── RISING SMOKE PLUMES ── */}
+                {[
+                  { cx: 170, cy: 320, r: 25, delay: 0 },
+                  { cx: 195, cy: 290, r: 30, delay: 0.4 },
+                  { cx: 180, cy: 250, r: 35, delay: 0.8 },
+                  { cx: 200, cy: 210, r: 40, delay: 1.2 },
+                  { cx: 185, cy: 170, r: 45, delay: 1.6 },
+                  { cx: 175, cy: 130, r: 50, delay: 2.0 },
+                ].map((s, si) => (
+                  <circle key={`smoke-${si}`} cx={s.cx} cy={s.cy} r={s.r} fill="url(#smokeGrad)" filter="url(#smokeBlur)" opacity="0">
+                    <animate attributeName="cy" values={`${s.cy + 20};${s.cy - 30}`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values={`0;${bioActive ? 0.5 : 0.3};${bioActive ? 0.3 : 0.15};0`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                    <animate attributeName="r" values={`${s.r};${s.r * 1.5}`} dur={bioActive ? '3s' : '5s'} begin={`${s.delay}s`} repeatCount="indefinite" />
+                  </circle>
+                ))}
+
+                {/* ── SMOKE SENSOR ARRAY ── */}
+                <g transform="translate(30, 100)">
+                  <rect x="0" y="-10" width="90" height="50" rx="4" fill="#1c1917" opacity="0.5" stroke="#78716c" strokeWidth="0.3" />
+                  <text x="45" y="2" textAnchor="middle" fill="#a8a29e" fontSize="5.5" fontFamily="monospace">SMOKE SENSOR</text>
+                  {/* particulate bars */}
+                  {['PM2.5', 'PM10', 'CO', 'VOC'].map((label, bi) => {
+                    const barW = bioActive ? 12 + bi * 4 : 6 + bi * 2;
+                    const barColor = bi > 1 && bioActive ? '#ef4444' : bi > 1 ? '#f59e0b' : '#22c55e';
+                    return (
+                      <g key={`pb-${bi}`} transform={`translate(5, ${10 + bi * 8})`}>
+                        <text x="0" y="5" fill="#a8a29e" fontSize="4" fontFamily="monospace">{label}</text>
+                        <rect x="22" y="1" width={barW} height="4" rx="1" fill={barColor} opacity="0.5">
+                          <animate attributeName="width" values={`${barW};${barW + 3};${barW}`} dur={`${1.5 + bi * 0.3}s`} repeatCount="indefinite" />
+                          <animate attributeName="opacity" values="0.4;0.7;0.4" dur={`${1.5 + bi * 0.3}s`} repeatCount="indefinite" />
+                        </rect>
+                      </g>
+                    );
+                  })}
+                </g>
+
+                {/* ── SMOKE DISPERSION DIRECTION ── */}
+                {/* wind-blown smoke drift arrows */}
+                {[140, 180, 220].map((ay, ai) => (
+                  <g key={`drift-${ai}`} opacity="0">
+                    <line x1={220 + ai * 10} y1={ay} x2={280 + ai * 15} y2={ay - 8} stroke="#a8a29e" strokeWidth="0.6" strokeDasharray="3 2" />
+                    <polygon points={`${280 + ai * 15},${ay - 8} ${275 + ai * 15},${ay - 5} ${275 + ai * 15},${ay - 11}`} fill="#a8a29e" opacity="0.4" />
+                    <animate attributeName="opacity" values="0;0.4;0.2;0" dur="3s" begin={`${ai * 0.6}s`} repeatCount="indefinite" />
+                  </g>
+                ))}
+                <text x="360" y="175" textAnchor="middle" fill="#a8a29e" fontSize="5" fontFamily="monospace" opacity="0.4">WIND DRIFT →</text>
+
+                {/* ── HORIZONTAL DIVIDER ── */}
+                <line x1="20" y1="400" x2="480" y2="400" stroke="#365314" strokeWidth="0.5" opacity="0.2" strokeDasharray="4 3" />
+                <text x="250" y="415" textAnchor="middle" fill="#86efac" fontSize="5.5" fontFamily="monospace" letterSpacing="0.15em" opacity="0.4">
+                  ▼ EARLY NATURE SIGNAL INDICATORS ▼
+                </text>
+
+                {/* ── NATURE PRECURSOR SIGNALS ── */}
+                {/* Section: insect swarm behavior */}
+                <g transform="translate(70, 445)">
+                  <circle cx="0" cy="0" r="18" fill="none" stroke="#a78bfa" strokeWidth="0.4" strokeDasharray="2 2" opacity="0.3" />
+                  <text x="0" y="-22" textAnchor="middle" fill="#c4b5fd" fontSize="5" fontFamily="monospace">INSECT SWARM</text>
+                  {Array.from({ length: bioActive ? 12 : 6 }).map((_, ii) => {
+                    const ia = (ii * (360 / (bioActive ? 12 : 6))) * Math.PI / 180;
+                    const ir = 8 + (ii % 3) * 4;
+                    return (
+                      <circle key={`insect-${ii}`} cx={Math.cos(ia) * ir} cy={Math.sin(ia) * ir} r="1" fill="#c4b5fd" opacity="0">
+                        <animate attributeName="cx" values={`${Math.cos(ia) * ir};${Math.cos(ia + 0.5) * (ir + 3)};${Math.cos(ia) * ir}`} dur={`${0.8 + (ii % 4) * 0.2}s`} repeatCount="indefinite" />
+                        <animate attributeName="cy" values={`${Math.sin(ia) * ir};${Math.sin(ia + 0.5) * (ir + 3)};${Math.sin(ia) * ir}`} dur={`${0.8 + (ii % 4) * 0.2}s`} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.2;0.7;0.2" dur={`${0.8 + (ii % 4) * 0.2}s`} repeatCount="indefinite" />
+                      </circle>
+                    );
+                  })}
+                  <text x="0" y="26" textAnchor="middle" fill="#a78bfa" fontSize="4" fontFamily="monospace" opacity="0.5">Erratic Pattern</text>
+                </g>
+
+                {/* Section: soil moisture / temperature anomaly */}
+                <g transform="translate(200, 450)">
+                  <rect x="-30" y="-18" width="60" height="36" rx="4" fill="#1c1917" opacity="0.4" stroke="#f97316" strokeWidth="0.3" />
+                  <text x="0" y="-10" textAnchor="middle" fill="#fdba74" fontSize="5" fontFamily="monospace">SOIL TEMP</text>
+                  {/* heat bars rising */}
+                  {[0, 1, 2, 3, 4].map((bi) => (
+                    <rect key={`ht-${bi}`} x={-20 + bi * 9} y={-2} width="5" height={6 + bi * 2.5} rx="1" fill="url(#heatSignature)" opacity="0.4">
+                      <animate attributeName="height" values={`${6 + bi * 2.5};${9 + bi * 3};${6 + bi * 2.5}`} dur={`${1.5 + bi * 0.2}s`} repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.3;0.6;0.3" dur={`${1.5 + bi * 0.2}s`} repeatCount="indefinite" />
+                    </rect>
+                  ))}
+                  <text x="0" y="24" textAnchor="middle" fill="#f97316" fontSize="4.5" fontFamily="monospace" opacity="0.5">+4.2°C Anomaly</text>
+                </g>
+
+                {/* Section: plant VOC emission spike */}
+                <g transform="translate(330, 445)">
+                  <circle cx="0" cy="0" r="20" fill="none" stroke="#22c55e" strokeWidth="0.4" strokeDasharray="3 2" opacity="0.3" />
+                  <text x="0" y="-24" textAnchor="middle" fill="#86efac" fontSize="5" fontFamily="monospace">PLANT VOC</text>
+                  {/* gas particles rising */}
+                  {Array.from({ length: bioActive ? 8 : 4 }).map((_, vi) => {
+                    const vx = -10 + (vi % 4) * 7;
+                    return (
+                      <circle key={`voc-${vi}`} cx={vx} cy={8} r={1.5 + (vi % 2)} fill="#4ade80" opacity="0" filter="url(#smokeBlurSm)">
+                        <animate attributeName="cy" values="8;-15" dur={`${1.5 + vi * 0.2}s`} begin={`${vi * 0.3}s`} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.5;0.2;0" dur={`${1.5 + vi * 0.2}s`} begin={`${vi * 0.3}s`} repeatCount="indefinite" />
+                      </circle>
+                    );
+                  })}
+                  <text x="0" y="26" textAnchor="middle" fill="#4ade80" fontSize="4" fontFamily="monospace" opacity="0.5">Stress Emission</text>
+                </g>
+
+                {/* Section: humidity drop indicator */}
+                <g transform="translate(440, 450)">
+                  <rect x="-22" y="-16" width="44" height="32" rx="3" fill="#0c4a6e" opacity="0.3" stroke="#06b6d4" strokeWidth="0.3" />
+                  <text x="0" y="-8" textAnchor="middle" fill="#67e8f9" fontSize="5" fontFamily="monospace">HUMIDITY</text>
+                  {/* dropping arrow */}
+                  <line x1="0" y1="-2" x2="0" y2="10" stroke="#06b6d4" strokeWidth="1" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.5s" repeatCount="indefinite" />
+                  </line>
+                  <polygon points="-3,8 0,14 3,8" fill="#06b6d4" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.5s" repeatCount="indefinite" />
+                  </polygon>
+                  <text x="0" y="22" textAnchor="middle" fill="#22d3ee" fontSize="5" fontFamily="monospace" opacity="0.5">↓ 18%</text>
+                </g>
+
+                {/* ── CORRELATION BADGE ── */}
+                <g transform="translate(250, 500)">
+                  <rect x="-155" y="-8" width="310" height="16" rx="8" fill="#451a03" opacity="0.5" stroke="#f97316" strokeWidth="0.4" />
+                  <text x="0" y="3" textAnchor="middle" fill="#fed7aa" fontSize="5.5" fontFamily="monospace">
+                    {bioActive
+                      ? '⚠ MULTI-SIGNAL CONVERGENCE — SMOKE + NATURE PRECURSORS DETECTED'
+                      : '△ MONITORING — SMOKE DISPERSION + NATURE SIGNAL BASELINE'}
+                  </text>
+                </g>
+              </svg>
+              );
+              })()}
+            </div>
+
+            {/* right: explanation panel */}
+            <Card className="border-0 rounded-none border-l border-border/20">
+              <CardContent className="space-y-4 p-5">
+                <div className="space-y-1">
+                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-orange-400" />
+                    Post-Fire Smoke Sensing
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    After forest fires, residual smoke carries particulate matter (PM2.5, PM10), carbon monoxide, and volatile organic compounds. Sensor arrays detect plume density, dispersion direction, and concentration thresholds to assess corridor exposure risk.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                    <TreePine className="h-4 w-4 text-emerald-400" />
+                    Early Nature Signal Forecasting
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Nature provides pre-fire indicators: erratic insect swarm patterns, sudden soil temperature anomalies, stress-induced plant VOC emissions, and rapid humidity drops. Correlating these signals helps surface fire risk before ignition — an early biological forecasting layer.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border/30 bg-muted/30 p-3">
+                  <p className="mb-2 text-[11px] font-semibold text-foreground/80">Nature Precursor Signals</p>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { step: 1, label: 'Insect Behavior', detail: 'Erratic swarm = thermal/chemical shift' },
+                      { step: 2, label: 'Soil Temperature', detail: 'Subsurface heat anomaly detection' },
+                      { step: 3, label: 'Plant VOC Spike', detail: 'Vegetation stress gas emissions' },
+                      { step: 4, label: 'Humidity Drop', detail: 'Rapid moisture loss → ignition risk' },
+                      { step: 5, label: 'Correlated Forecast', detail: 'Multi-signal confidence → advisory' },
+                    ].map((f, i) => (
+                      <div key={f.step} className="flex items-center gap-2.5">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-500/10 text-[10px] font-bold text-orange-400">
+                          {f.step}
+                        </span>
+                        <div>
+                          <span className="text-[11px] font-medium text-foreground/90">{f.label}</span>
+                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
+                        </div>
+                        {i < 4 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <ul className="space-y-2">
+                  {[
+                    'Smoke particulate sensors detect PM2.5/PM10/CO/VOC concentrations in real-time.',
+                    'Nature precursors (insect behavior, soil temp, plant VOC, humidity) provide pre-ignition warnings.',
+                    'Multi-signal correlation generates a forecasting confidence score.',
+                    'All outputs are advisory — operator review required before corridor action.',
+                  ].map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-400/70" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* live nature signal feed */}
+                <div className="rounded-lg border border-orange-500/20 bg-orange-950/20 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-semibold text-orange-300 uppercase tracking-wider">Nature Signal Feed</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { time: '14:52:08', type: 'PM2.5 Spike', val: '89%', color: 'text-red-300' },
+                      { time: '14:51:30', type: 'Soil Temp ↑', val: '76%', color: 'text-orange-300' },
+                      { time: '14:50:15', type: 'VOC Emission', val: '63%', color: 'text-emerald-300' },
+                      { time: '14:48:42', type: 'Humidity ↓', val: '71%', color: 'text-cyan-300' },
+                      { time: '14:46:18', type: 'Insect Swarm', val: '54%', color: 'text-violet-300' },
+                    ].map((s, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
+                        <span className="text-muted-foreground/40">{s.time}</span>
+                        <span className={s.color}>{s.type}</span>
+                        <span className="ml-auto text-orange-200/60">{s.val}</span>
+                        <div className="h-1 w-10 rounded-full bg-orange-950">
+                          <div className="h-full rounded-full bg-orange-500/50" style={{ width: s.val }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </Card>
+      </motion.section>
+
       {/* ── 4b) GROUND-LEVEL ENVIRONMENTAL SENSING ── */}
       <motion.section {...fade} transition={{ delay: 0.18 }} data-tour-section="aop-ground-level">
         <Card className="overflow-hidden border-border/30">
