@@ -64,6 +64,10 @@ const demoSteps = [
     description: 'Review configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
   },
   {
+    title: 'Art of Possibilities',
+    description: 'Explore Phase 2+ concept capabilities — environmental signal fusion, wildfire corridor awareness, vegetation stress, and bio-sentinel signals.',
+  },
+  {
     title: 'Executive Validation Summary',
     description: 'Review OMS vs Copilot comparison, AI governance & safety boundaries, capabilities demonstrated, and Phase-1 scope.',
   },
