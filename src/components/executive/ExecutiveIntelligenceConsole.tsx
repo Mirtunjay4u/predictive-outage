@@ -268,7 +268,7 @@ export function ExecutiveIntelligenceConsole() {
                 {/* Decision Trace */}
                 {answer && !loading && (
                   <DecisionTrace
-                    modelUsed="Nemotron (Primary)"
+                    modelUsed="NVIDIA Nemotron (NIM)"
                     className="mt-2"
                   />
                 )}
