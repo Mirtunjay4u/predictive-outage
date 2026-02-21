@@ -152,7 +152,7 @@ export function ExecutiveIntelligenceConsole() {
                 </h2>
               </div>
               <p className="text-[10px] text-blue-300/70 mt-1 tracking-wide font-medium">
-                AI-Augmented · Deterministically Governed · Advisory Only
+                Governed AI · No Autonomous Control · Advisory Only
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-3">
@@ -289,7 +289,7 @@ export function ExecutiveIntelligenceConsole() {
         {/* Footer */}
         <div className="shrink-0 px-5 py-3 border-t border-slate-700/30">
           <p className="text-[9px] text-slate-500/70 text-center tracking-wide font-medium">
-            AI-Augmented. Deterministically Governed. Operator-Controlled.
+            Governed AI · Deterministic Rule Enforcement · Operator-Controlled
           </p>
         </div>
       </div>

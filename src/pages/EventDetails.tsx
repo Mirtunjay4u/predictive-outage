@@ -167,7 +167,8 @@ import { SystemScopePanel } from "@/components/copilot/SystemScopePanel";
          <div className="mb-8">
            <div className="flex items-start justify-between gap-4 flex-wrap">
              <div className="space-y-2">
-               <h1 className="text-2xl font-bold text-foreground">{event.name}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{event.name}</h1>
+                <p className="text-[10px] text-muted-foreground/60">Outputs are advisory and subject to operator validation.</p>
                <div className="flex items-center gap-2 flex-wrap">
                  <StatusBadge
                    variant={event.lifecycle_stage === "Event" ? "event" : event.lifecycle_stage === "Pre-Event" ? "pre-event" : "post-event"}

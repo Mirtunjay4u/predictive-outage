@@ -219,7 +219,7 @@ export default function Analytics() {
       >
         <h1 className="text-lg font-semibold mb-0.5 text-foreground">Operational Analytics</h1>
         <p className="text-xs text-muted-foreground">
-          Analytics reflect rule-engine validated event states and deterministic policy outputs — not raw AI predictions. Advisory only.
+          Analytics reflect rule-engine validated event states and deterministic policy outputs — not raw projections. Advisory only.
         </p>
       </motion.div>
 

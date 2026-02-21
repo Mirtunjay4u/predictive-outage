@@ -201,7 +201,7 @@ const tourSteps = [
     title: 'Return to Dashboard',
     route: '/dashboard',
     duration: 30000,
-    narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. AI-Augmented. Policy-Constrained. Operator-Controlled.',
+    narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. Governed AI. Policy-Constrained. Operator-Controlled.',
     tooltip: 'The operational loop closes with updated KPIs and stabilized system posture.',
     highlights: ['System Risk Index', 'Operational Phase'],
     scrollTargets: [
@@ -465,7 +465,7 @@ export function DemoTourHUD() {
         'Crew availability impact on restoration timelines',
         'Critical load runway sensitivity',
       ],
-      conclusion: 'Restoration estimates are probabilistic, defensible, and operationally explainable — not opaque AI predictions.',
+      conclusion: 'Restoration estimates are probabilistic, defensible, and operationally explainable — grounded in bounded inference, not opaque projections.',
     },
     {
       icon: CloudLightning,
