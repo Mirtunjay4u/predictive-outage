@@ -1,7 +1,12 @@
-import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck } from 'lucide-react';
+import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck, Brain, Cog, Layers, Database } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,10 +43,47 @@ export function TopBar({ onSearch }: TopBarProps) {
         </search>
 
         <div className="flex items-center gap-3" role="group" aria-label="User actions">
-          {/* Phase-1 Demo micro-indicator */}
-          <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-border/40 bg-muted/30 px-2 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
-            <span className="text-[10px] font-medium text-muted-foreground/70 tracking-wide">Phase-1 Demo</span>
+          {/* ── System Status Strip ── */}
+          <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 rounded-full border border-sky-500/20 bg-sky-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Brain className="h-3 w-3 shrink-0 text-sky-400/70" strokeWidth={1.75} />
+                  <span className="text-[9px] font-medium text-sky-300/90 hidden xl:inline">Nemotron</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-52 text-xs">Primary inference model currently active.</TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 rounded-full border border-teal-500/20 bg-teal-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Cog className="h-3 w-3 shrink-0 text-teal-400/70" strokeWidth={1.75} />
+                  <span className="text-[9px] font-medium text-teal-300/90 hidden xl:inline">Rules</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-52 text-xs">Deterministic operational constraints enforced before AI response.</TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 rounded-full border border-border/40 bg-muted/25 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Layers className="h-3 w-3 shrink-0 text-muted-foreground/60" strokeWidth={1.75} />
+                  <span className="text-[9px] font-medium text-muted-foreground/80 hidden xl:inline">Phase 1</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-52 text-xs">Phase 1 – Advisory decision-support only.</TooltipContent>
+            </Tooltip>
+
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Database className="h-3 w-3 shrink-0 text-amber-400/70" strokeWidth={1.75} />
+                  <span className="text-[9px] font-medium text-amber-300/90 hidden xl:inline">Demo</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-52 text-xs">Synthetic/demo dataset. No live SCADA or OMS integration.</TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Advisory Mode Indicator */}
@@ -57,11 +99,6 @@ export function TopBar({ onSearch }: TopBarProps) {
             <span className="text-[10px] font-medium text-muted-foreground">Boardroom</span>
             <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" className="scale-90" />
             {boardroomMode && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">ON</span>}
-          </div>
-
-          <div className="flex items-center gap-1 rounded-md border border-warning/20 bg-warning/8 px-2 py-1">
-            <FlaskConical className="h-3 w-3 text-warning/70" />
-            <span className="text-[10px] font-medium text-warning/80">Demo</span>
           </div>
 
           <div className="flex items-center gap-2 border-l border-border/50 pl-3">
