@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Flame, TreePine, ShieldAlert, Layers, Wind, Droplets, Bug, Radio,
   ArrowRight, Lock, Sparkles, Eye, BarChart3, AlertTriangle, CheckCircle2,
-  ArrowLeft,
+  ArrowLeft, Mountain, PawPrint, CloudRain,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -1143,6 +1143,371 @@ export default function ArtOfPossibilities() {
             </CardContent>
           </Card>
         </div>
+      </motion.section>
+
+      {/* ── 4b) GROUND-LEVEL ENVIRONMENTAL SENSING ── */}
+      <motion.section {...fade} transition={{ delay: 0.18 }} data-tour-section="aop-ground-level">
+        <Card className="overflow-hidden border-border/30">
+          <div className="flex flex-col gap-2 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-0.5">
+              <SectionTitle className="flex items-center gap-2">
+                <Mountain className="h-4 w-4 text-amber-500" />
+                Ground-Level Environmental Sensing
+              </SectionTitle>
+              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept · Cloudburst · Landslide · Wildlife Behavioral Shift</span>
+            </div>
+            <Badge variant="outline" className="shrink-0 border-cyan-500/40 bg-cyan-500/5 text-cyan-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
+              Earth-Level Scenario
+            </Badge>
+          </div>
+
+          <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
+            {/* left: animated SVG visualization */}
+            <div className="relative bg-gradient-to-br from-[hsl(220,20%,10%)] via-[hsl(200,15%,12%)] to-[hsl(180,10%,8%)] overflow-hidden" style={{ minHeight: 520 }}>
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 520" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="mudGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#92400e" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#78350f" stopOpacity="0.2" />
+                  </linearGradient>
+                  <linearGradient id="groundGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#365314" stopOpacity="0.4" />
+                    <stop offset="60%" stopColor="#1a2e05" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#0a0f02" stopOpacity="0.8" />
+                  </linearGradient>
+                  <filter id="glowCyan" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                  </filter>
+                  <filter id="glowAmber" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" />
+                  </filter>
+                  <radialGradient id="impactGlow" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+
+                {/* ── SCENE TITLE ── */}
+                <text x="250" y="22" textAnchor="middle" fill="#a1a1aa" fontSize="7" fontFamily="monospace" letterSpacing="0.15em" opacity="0.6">
+                  GROUND-LEVEL ENVIRONMENTAL SCENARIO — ADVISORY VISUALIZATION
+                </text>
+
+                {/* ── CLOUDBURST / RAINFALL ── */}
+                {/* dark cloud mass */}
+                <ellipse cx="130" cy="55" rx="70" ry="22" fill="#334155" opacity="0.6" />
+                <ellipse cx="145" cy="48" rx="50" ry="18" fill="#475569" opacity="0.5" />
+                <ellipse cx="115" cy="60" rx="40" ry="14" fill="#334155" opacity="0.4" />
+                {/* cloud label */}
+                <g transform="translate(130,38)">
+                  <rect x="-28" y="-7" width="56" height="14" rx="7" fill="#164e63" opacity="0.7" stroke="#06b6d4" strokeWidth="0.5" />
+                  <text x="0" y="3" textAnchor="middle" fill="#67e8f9" fontSize="5.5" fontFamily="monospace">CLOUDBURST</text>
+                </g>
+                {/* animated rain streaks */}
+                {Array.from({ length: 18 }).map((_, ri) => {
+                  const rx = 75 + (ri * 7) + (ri % 3) * 2;
+                  const rDelay = (ri * 0.15) % 1.5;
+                  const rLen = 10 + (ri % 4) * 4;
+                  return (
+                    <line key={`rain-${ri}`} x1={rx} y1={70} x2={rx - 2} y2={70 + rLen} stroke="#06b6d4" strokeWidth="0.8" strokeLinecap="round" opacity="0">
+                      <animate attributeName="y1" values="70;155" dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
+                      <animate attributeName="y2" values={`${70 + rLen};${155 + rLen}`} dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0;0.5;0.3;0" dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
+                    </line>
+                  );
+                })}
+                {/* water accumulation at base */}
+                <ellipse cx="130" cy="170" rx="60" ry="5" fill="#06b6d4" opacity="0.08">
+                  <animate attributeName="rx" values="50;65;50" dur="3s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.05;0.12;0.05" dur="3s" repeatCount="indefinite" />
+                </ellipse>
+
+                {/* ── HILLSIDE / LANDSLIDE ── */}
+                {/* mountain silhouette */}
+                <polygon points="250,80 350,180 150,180" fill="#1c1917" stroke="#78350f" strokeWidth="0.5" opacity="0.6" />
+                <polygon points="280,95 370,180 200,180" fill="#292524" stroke="#78350f" strokeWidth="0.3" opacity="0.4" />
+                {/* stable ground lines */}
+                <line x1="180" y1="180" x2="320" y2="180" stroke="#365314" strokeWidth="1" opacity="0.3" />
+
+                {/* landslide debris flow — animated */}
+                {(() => {
+                  const debrisPath = "M270,120 Q310,145 330,165 Q345,175 360,180";
+                  return (
+                    <g>
+                      {/* debris channel */}
+                      <path d={debrisPath} fill="none" stroke="#92400e" strokeWidth="12" opacity="0.15" strokeLinecap="round" />
+                      <path d={debrisPath} fill="none" stroke="#78350f" strokeWidth="6" opacity="0.25" strokeLinecap="round">
+                        <animate attributeName="opacity" values="0.15;0.3;0.15" dur="2.5s" repeatCount="indefinite" />
+                      </path>
+                      {/* moving debris particles */}
+                      {[0, 1, 2, 3, 4].map((di) => (
+                        <g key={`debris-${di}`}>
+                          <rect width={3 + (di % 2) * 2} height={2 + (di % 3)} rx="1" fill="#a16207" opacity="0">
+                            <animateMotion dur={`${1.8 + di * 0.3}s`} begin={`${di * 0.4}s`} repeatCount="indefinite" path={debrisPath} />
+                            <animate attributeName="opacity" values="0;0.7;0.5;0" dur={`${1.8 + di * 0.3}s`} begin={`${di * 0.4}s`} repeatCount="indefinite" />
+                          </rect>
+                        </g>
+                      ))}
+                      {/* impact zone glow */}
+                      <circle cx="355" cy="178" r="15" fill="url(#impactGlow)">
+                        <animate attributeName="r" values="10;20;10" dur="2s" repeatCount="indefinite" />
+                      </circle>
+                    </g>
+                  );
+                })()}
+
+                {/* landslide label */}
+                <g transform="translate(310,110)">
+                  <rect x="-28" y="-7" width="56" height="14" rx="7" fill="#451a03" opacity="0.7" stroke="#d97706" strokeWidth="0.5" />
+                  <text x="0" y="3" textAnchor="middle" fill="#fbbf24" fontSize="5.5" fontFamily="monospace">LANDSLIDE</text>
+                  <circle cx="22" cy="0" r="1.5" fill="#f59e0b">
+                    <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+
+                {/* ── GROUND SENSOR LINE ── */}
+                <line x1="30" y1="200" x2="470" y2="200" stroke="#365314" strokeWidth="1.5" opacity="0.3" strokeDasharray="4 3" />
+                <text x="250" y="215" textAnchor="middle" fill="#4ade80" fontSize="5" fontFamily="monospace" opacity="0.4" letterSpacing="0.2em">
+                  ▼ GROUND SENSOR ARRAY ▼
+                </text>
+                {/* sensor nodes */}
+                {[80, 170, 250, 330, 420].map((sx, si) => (
+                  <g key={`sensor-${si}`} transform={`translate(${sx}, 200)`}>
+                    <circle r="3" fill="#166534" stroke="#4ade80" strokeWidth="0.5" opacity="0.5" />
+                    <circle r="6" fill="#22c55e" opacity="0" filter="url(#glowCyan)">
+                      <animate attributeName="opacity" values="0;0.3;0" dur={`${2 + si * 0.3}s`} repeatCount="indefinite" />
+                      <animate attributeName="r" values="4;10;4" dur={`${2 + si * 0.3}s`} repeatCount="indefinite" />
+                    </circle>
+                  </g>
+                ))}
+
+                {/* ── SEISMIC WAVEFORM ── */}
+                <g transform="translate(30, 240)">
+                  <rect x="0" y="-15" width="440" height="30" rx="4" fill="#0f172a" opacity="0.4" stroke="#334155" strokeWidth="0.3" />
+                  <text x="5" y="-8" fill="#94a3b8" fontSize="5" fontFamily="monospace">SEISMIC / VIBRATION WAVEFORM</text>
+                  {/* waveform line */}
+                  <polyline
+                    points={Array.from({ length: 80 }).map((_, wi) => {
+                      const wx = 10 + wi * 5.3;
+                      const amp = wi > 30 && wi < 55 ? 8 + Math.sin(wi * 0.8) * 5 : 2 + Math.sin(wi * 0.5) * 1.5;
+                      const wy = (wi % 2 === 0 ? -1 : 1) * amp;
+                      return `${wx},${wy}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="#22d3ee"
+                    strokeWidth="1"
+                    opacity="0.6"
+                  >
+                    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2s" repeatCount="indefinite" />
+                  </polyline>
+                  {/* anomaly region marker */}
+                  <rect x={10 + 30 * 5.3} y="-12" width={(55 - 30) * 5.3} height="24" rx="2" fill="#ef4444" opacity="0.06" stroke="#ef4444" strokeWidth="0.3" strokeDasharray="2 2" />
+                  <text x={10 + 42 * 5.3} y="11" textAnchor="middle" fill="#fca5a5" fontSize="4.5" fontFamily="monospace">ANOMALY ZONE</text>
+                </g>
+
+                {/* ── WILDLIFE BEHAVIORAL SHIFT ── */}
+                <text x="250" y="295" textAnchor="middle" fill="#a1a1aa" fontSize="6.5" fontFamily="monospace" letterSpacing="0.1em" opacity="0.5">
+                  WILDLIFE BEHAVIORAL ANOMALY DETECTION
+                </text>
+
+                {/* terrain with vegetation */}
+                <path d="M0,430 Q50,420 100,425 Q200,415 250,420 Q350,410 400,418 Q450,425 500,420 L500,520 L0,520 Z" fill="url(#groundGrad)" opacity="0.5" />
+
+                {/* scattered trees on ground */}
+                {[60, 120, 200, 300, 380, 440].map((tx, ti) => (
+                  <g key={`gtree-${ti}`} transform={`translate(${tx}, ${420 + (ti % 3) * 3})`}>
+                    <line x1="0" y1="0" x2="0" y2="-10" stroke="#15803d" strokeWidth="1.2" opacity="0.3" />
+                    <polygon points="-5,-6 0,-20 5,-6" fill="#22c55e" opacity="0.1" />
+                    <polygon points="-3,-12 0,-24 3,-12" fill="#16a34a" opacity="0.12" />
+                  </g>
+                ))}
+
+                {/* wildlife group: deer/animals — running scatter pattern */}
+                {(() => {
+                  const animals = [
+                    { angle: -30, dist: 80, delay: 0, size: 1.1 },
+                    { angle: -60, dist: 95, delay: 0.3, size: 0.9 },
+                    { angle: 15, dist: 70, delay: 0.5, size: 1.0 },
+                    { angle: 45, dist: 100, delay: 0.2, size: 0.85 },
+                    { angle: -10, dist: 60, delay: 0.8, size: 1.05 },
+                    { angle: 70, dist: 85, delay: 0.4, size: 0.95 },
+                    { angle: -80, dist: 75, delay: 0.6, size: 0.9 },
+                    { angle: 120, dist: 90, delay: 0.1, size: 0.8 },
+                  ];
+                  const cx = 250, cy = 370;
+                  return (
+                    <g>
+                      {/* stressor epicenter */}
+                      <circle cx={cx} cy={cy} r="8" fill="#ef4444" opacity="0.1">
+                        <animate attributeName="r" values="5;15;5" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle cx={cx} cy={cy} r="3" fill="#ef4444" opacity="0.3" />
+                      {/* seismic ripple rings */}
+                      {[0, 1, 2].map((ri) => (
+                        <circle key={`ripple-${ri}`} cx={cx} cy={cy} r="5" fill="none" stroke="#f97316" strokeWidth="0.5" opacity="0">
+                          <animate attributeName="r" values="5;40;70" dur="3s" begin={`${ri}s`} repeatCount="indefinite" />
+                          <animate attributeName="opacity" values="0.4;0.15;0" dur="3s" begin={`${ri}s`} repeatCount="indefinite" />
+                        </circle>
+                      ))}
+                      {/* stressor label */}
+                      <g transform={`translate(${cx}, ${cy - 15})`}>
+                        <rect x="-30" y="-6" width="60" height="12" rx="6" fill="#7f1d1d" opacity="0.6" stroke="#ef4444" strokeWidth="0.4" />
+                        <text x="0" y="3" textAnchor="middle" fill="#fca5a5" fontSize="5" fontFamily="monospace">⚠ STRESSOR</text>
+                      </g>
+
+                      {/* animal silhouettes scattering */}
+                      {animals.map((a, ai) => {
+                        const rad = (a.angle * Math.PI) / 180;
+                        const ex = cx + Math.cos(rad) * a.dist;
+                        const ey = cy + Math.sin(rad) * a.dist * 0.6;
+                        const s = a.size;
+                        const dur = 3 + ai * 0.3;
+                        return (
+                          <g key={`animal-${ai}`} opacity="0">
+                            {/* trail line */}
+                            <line x1={cx} y1={cy} x2={ex} y2={ey} stroke="#f97316" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.15" />
+                            <g>
+                              <animateMotion
+                                dur={`${dur}s`}
+                                begin={`${a.delay}s`}
+                                repeatCount="indefinite"
+                                path={`M${cx},${cy} Q${cx + (ex - cx) * 0.5},${cy + (ey - cy) * 0.3 - 8} ${ex},${ey}`}
+                              />
+                              {/* quadruped body — simplified deer/animal */}
+                              <ellipse cx="0" cy="0" rx={5 * s} ry={2.5 * s} fill="#d97706" opacity="0.5" />
+                              {/* head */}
+                              <circle cx={5 * s} cy={-1.5 * s} r={1.8 * s} fill="#f59e0b" opacity="0.5" />
+                              {/* legs — animated running */}
+                              <g>
+                                <line x1={-2 * s} y1={2.5 * s} x2={-3 * s} y2={5 * s} stroke="#d97706" strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
+                                  <animate attributeName="x2" values={`${-3 * s};${-1 * s};${-3 * s}`} dur={`${0.3 + (ai % 3) * 0.05}s`} repeatCount="indefinite" />
+                                </line>
+                                <line x1={2 * s} y1={2.5 * s} x2={3 * s} y2={5 * s} stroke="#d97706" strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
+                                  <animate attributeName="x2" values={`${3 * s};${1 * s};${3 * s}`} dur={`${0.3 + (ai % 3) * 0.05}s`} repeatCount="indefinite" />
+                                </line>
+                              </g>
+                            </g>
+                            <animate attributeName="opacity" values="0;0.7;0.6;0.3;0" dur={`${dur}s`} begin={`${a.delay}s`} repeatCount="indefinite" />
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
+
+                {/* ── DETECTION ALERT BADGE ── */}
+                <g transform="translate(250, 315)">
+                  <rect x="-120" y="-9" width="240" height="18" rx="9" fill="#7f1d1d" opacity="0.5" stroke="#ef4444" strokeWidth="0.4" />
+                  <text x="0" y="4" textAnchor="middle" fill="#fca5a5" fontSize="6" fontFamily="monospace">
+                    ⚠ SUDDEN WILDLIFE DISPERSAL — GROUND DISTURBANCE OR SEISMIC PRECURSOR
+                  </text>
+                </g>
+
+                {/* ── INTERPRETIVE TEXT ── */}
+                <g transform="translate(250, 490)">
+                  <rect x="-170" y="-14" width="340" height="36" rx="6" fill="#1e1b4b" opacity="0.4" stroke="#8b5cf6" strokeWidth="0.3" />
+                  <text x="0" y="-2" textAnchor="middle" fill="#a78bfa" fontSize="5.5" fontFamily="monospace" opacity="0.8">
+                    After cloudburst, landslide debris and sudden wildlife flight patterns
+                  </text>
+                  <text x="0" y="9" textAnchor="middle" fill="#a78bfa" fontSize="5.5" fontFamily="monospace" opacity="0.8">
+                    help surface ground-level instability risks to utility corridors — advisory only
+                  </text>
+                </g>
+              </svg>
+            </div>
+
+            {/* right: contextual explanation */}
+            <Card className="border-0 rounded-none border-l border-border/20">
+              <CardContent className="space-y-4 p-5">
+                <div className="space-y-1">
+                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                    <CloudRain className="h-4 w-4 text-cyan-400" />
+                    Cloudburst &amp; Landslide Detection
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Extreme precipitation triggers terrain instability. Ground vibration sensors detect debris flow movement before it reaches utility infrastructure corridors.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                    <PawPrint className="h-4 w-4 text-amber-400" />
+                    Wildlife Behavioral Shift
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Sudden mass dispersal of ground-dwelling wildlife (deer, mammals) from a nesting/resting corridor can indicate seismic activity, debris flow, fire, or toxic gas exposure — providing an early biological warning signal.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border/30 bg-muted/30 p-3">
+                  <p className="mb-2 text-[11px] font-semibold text-foreground/80">Signal Integration Flow</p>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { step: 1, label: 'Rainfall Surge', detail: 'Cloud-burst detected above threshold' },
+                      { step: 2, label: 'Seismic Anomaly', detail: 'Ground vibration spike in corridor' },
+                      { step: 3, label: 'Wildlife Scatter', detail: 'Abnormal herd dispersal pattern' },
+                      { step: 4, label: 'Correlated Alert', detail: 'Multi-signal confidence score → advisory' },
+                    ].map((f, i) => (
+                      <div key={f.step} className="flex items-center gap-2.5">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-[10px] font-bold text-amber-400">
+                          {f.step}
+                        </span>
+                        <div>
+                          <span className="text-[11px] font-medium text-foreground/90">{f.label}</span>
+                          <span className="ml-1.5 text-[10px] text-muted-foreground/60">— {f.detail}</span>
+                        </div>
+                        {i < 3 && <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground/30" />}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <ul className="space-y-2">
+                  {[
+                    'Ground sensors detect vibration anomalies preceding landslide debris flow.',
+                    'Wildlife behavioral models compare real-time motion vs seasonal baselines.',
+                    'Cloudburst + seismic + wildlife data are correlated for multi-signal confidence scoring.',
+                    'All outputs are advisory — operator review required before action.',
+                  ].map((b) => (
+                    <li key={b} className="flex items-start gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-400/70" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+
+                {/* live feed mockup */}
+                <div className="rounded-lg border border-amber-500/20 bg-amber-950/20 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-semibold text-amber-300 uppercase tracking-wider">Ground Sensor Feed</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { time: '14:45:22', type: 'Seismic Spike', val: '84%', color: 'text-red-300' },
+                      { time: '14:44:58', type: 'Debris Flow', val: '71%', color: 'text-amber-300' },
+                      { time: '14:43:10', type: 'Wildlife Scatter', val: '67%', color: 'text-amber-300/70' },
+                      { time: '14:41:30', type: 'Rain Intensity', val: '92%', color: 'text-cyan-300' },
+                    ].map((s, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[9px] font-mono">
+                        <span className="text-muted-foreground/40">{s.time}</span>
+                        <span className={s.color}>{s.type}</span>
+                        <span className="ml-auto text-amber-200/60">{s.val}</span>
+                        <div className="h-1 w-10 rounded-full bg-amber-950">
+                          <div className="h-full rounded-full bg-amber-500/50" style={{ width: s.val }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </Card>
       </motion.section>
 
       {/* ── 5) BRIDGE SECTION: PHASE 1 vs PHASE 2 ── */}
