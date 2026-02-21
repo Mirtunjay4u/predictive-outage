@@ -64,6 +64,10 @@ const demoSteps = [
     description: 'Review configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
   },
   {
+    title: 'Executive Validation Summary',
+    description: 'Review OMS vs Copilot comparison, AI governance & safety boundaries, capabilities demonstrated, and Phase-1 scope.',
+  },
+  {
     title: 'Return to Dashboard & Close Loop',
     description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, and the narrative resolution of the demo scenario.',
   },
