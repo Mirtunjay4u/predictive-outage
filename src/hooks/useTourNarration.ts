@@ -47,10 +47,13 @@ const narrationScripts: string[] = [
   // Step 12 — Settings
   `The settings panel exposes configurable AI modes and enterprise integration readiness. Future integrations — including Dataverse or enterprise telemetry — are architecturally supported but not enabled in Phase One. This reflects scalable design without premature automation.`,
 
-  // Step 13 — Executive Validation Summary
+  // Step 13 — Art of Possibilities
+  `We now explore the Art of Possibilities — a conceptual roadmap for Phase Two and beyond. This layer introduces environmental signal fusion for wildfire corridor awareness, vegetation stress intelligence, and bio-sentinel anomaly corroboration. The concept visualization demonstrates how satellite hotspot data, wind vectors, fuel dryness indices, and corridor sensor signals could be fused into a unified risk overlay. Bio-sentinel signals are probabilistic and serve only to corroborate primary evidence layers such as satellite imagery and weather data. No dispatch, switching, or restoration actions are triggered from this layer. All outputs remain advisory and require explicit operator approval. Phase One remains OMS-adjacent decision support. Phase Two adds bounded environmental intelligence.`,
+
+  // Step 14 — Executive Validation Summary
   `This solution differs from traditional OMS systems by introducing policy-constrained AI reasoning within a deterministic operational framework. Capabilities demonstrated include: confidence-based ETR modeling, critical load prioritization, hazard-informed risk scoring, deterministic rule enforcement, and explainable advisory outputs. Phase One focuses strictly on decision intelligence. It does not include autonomous switching, breaker actuation, load flow automation, or SCADA execution.`,
 
-  // Step 14 — Return to Dashboard & Close Loop
+  // Step 15 — Return to Dashboard & Close Loop
   `We return to the operational dashboard. Updated KPIs reflect stabilized posture. The event lifecycle concludes with improved situational clarity and defensible decision logic. Operator Copilot represents an AI-augmented, policy-constrained decision-support layer for regulated utility outage operations. AI-Augmented. Policy-Constrained. Operator-Controlled. Thank you.`,
 ];
 
