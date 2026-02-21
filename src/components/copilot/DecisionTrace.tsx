@@ -173,7 +173,7 @@ export function DecisionTrace({
               Data Mode
             </h5>
             <p className="text-[11px] text-foreground/75">
-              {isDemo ? 'Synthetic / Scenario Simulation' : 'Integrated Source'}
+              {isDemo ? 'Synthetic / Demo Data' : 'Integrated Source'}
             </p>
           </section>
         </div>
