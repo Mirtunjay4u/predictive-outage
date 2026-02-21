@@ -23,7 +23,7 @@ const tourSteps = [
     id: 0,
     title: 'Login & Context',
     route: '/login',
-    duration: 15000,
+    duration: 28000,
     narrative: 'Establishing operator context via the Login page. The landing view provides immediate orientation to system capabilities.',
     tooltip: 'This decision-support platform integrates deterministic policy enforcement with AI-assisted operational analysis.',
     highlights: ['Platform title', 'Key capabilities', 'Demo Mode button'],
@@ -34,7 +34,7 @@ const tourSteps = [
     id: 1,
     title: 'Dashboard Orientation',
     route: '/dashboard',
-    duration: 25000,
+    duration: 38000,
     narrative: 'Reviewing active event KPIs, high-priority alerts, crew workload, Executive Signal, and the Operational Phase ribbon.',
     tooltip: 'The Dashboard provides real-time operational awareness combining risk scoring, event prioritization, and readiness tracking.',
     highlights: ['Active Event Banner', 'System Risk Index', 'Executive Signal', 'Operational Phase', 'Crew Readiness'],
@@ -48,7 +48,7 @@ const tourSteps = [
     id: 2,
     title: 'Scenario Playback Lifecycle',
     route: '/dashboard',
-    duration: 20000,
+    duration: 25000,
     narrative: 'Scrolling to the Scenario Playback panel — stepping through Pre-Event, Event, and Post-Event lifecycle stages.',
     tooltip: 'Scenario Playback simulates hazard lifecycle progression to test policy validation and readiness posture.',
     highlights: ['Scenario Playback Panel'],
@@ -58,7 +58,7 @@ const tourSteps = [
     id: 3,
     title: 'Events Page Deep Dive',
     route: '/events',
-    duration: 30000,
+    duration: 32000,
     narrative: 'Reviewing the triage queue: high-priority events, severity scales, ETR confidence bands, critical load tags, and policy status.',
     tooltip: 'Each event includes ETR confidence banding, critical load prioritization, and deterministic policy evaluation.',
     highlights: ['High Priority Event', 'Severity Scale', 'ETR Confidence Band', 'Critical Load Tag', 'Policy Status'],
@@ -68,7 +68,7 @@ const tourSteps = [
     id: 4,
     title: 'Event Detail View',
     route: `/event/${STORM_EVENT_ID}`,
-    duration: 20000,
+    duration: 32000,
     narrative: 'Drilling into Downtown Houston Storm Damage — crew assignment, escalation state, hazard correlation, ETR confidence explanation.',
     tooltip: 'All recommendations are validated through explicit operational rules before AI advisory output.',
     highlights: ['Crew Assignment', 'Escalation State', 'Hazard Correlation', 'ETR Confidence'],
@@ -78,7 +78,7 @@ const tourSteps = [
     id: 5,
     title: 'Outage Map Intelligence',
     route: '/outage-map',
-    duration: 35000,
+    duration: 30000,
     narrative: 'Viewing events geographically — outage zones, feeder topology, hazard overlays, critical loads, and crew positioning.',
     tooltip: 'Geospatial awareness integrates outage zones, feeder topology, hazard overlays, and crew positioning.',
     highlights: ['Event Markers', 'Critical Load Layer', 'Crew Dispatch Layer', 'Weather Overlay'],
@@ -88,7 +88,7 @@ const tourSteps = [
     id: 6,
     title: 'Weather Alerts Section',
     route: '/weather-alerts',
-    duration: 20000,
+    duration: 30000,
     narrative: 'Reviewing hazard exposure scoring, events in hazard zones, and crew safety status across active weather threats.',
     tooltip: 'Hazard intelligence correlates weather exposure with outage risk and crew deployment constraints.',
     highlights: ['Hazard Exposure Score', 'Events in Hazard Zones', 'Crew Safety Status'],
@@ -102,7 +102,7 @@ const tourSteps = [
     id: 7,
     title: 'Copilot Studio',
     route: `/copilot-studio?event_id=${STORM_EVENT_ID}&auto_run=true`,
-    duration: 40000,
+    duration: 45000,
     narrative: 'AI-assisted analysis of the Downtown Houston Storm event via the Nemotron engine. Reviewing guardrails and structured outputs.',
     tooltip: 'AI analysis operates within strict guardrails and structured output contracts. No autonomous actions are executed.',
     highlights: ['Selected Event', 'Analysis Mode', 'Guardrails Panel', 'Allowed Actions', 'Blocked Actions'],
@@ -113,7 +113,7 @@ const tourSteps = [
     id: 8,
     title: 'Situation Report Generation',
     route: `/event/${STORM_EVENT_ID}/situation-report`,
-    duration: 20000,
+    duration: 25000,
     narrative: 'Generating an AI-assisted SitRep. The content can be reviewed, approved, and distributed via the Communications Pack.',
     tooltip: 'Operators can generate structured situation reports for controlled communication and stakeholder updates.',
     highlights: ['SitRep Generation', 'Approval Indicator'],
@@ -123,7 +123,7 @@ const tourSteps = [
     id: 9,
     title: 'Analytics',
     route: '/analytics',
-    duration: 20000,
+    duration: 22000,
     narrative: 'Reviewing operational analytics — high-priority counts, policy blocks, and ETR confidence distribution charts.',
     tooltip: 'Operational analytics are derived from live event data and deterministic rule-engine outputs.',
     highlights: ['High Priority Count', 'Policy Blocks', 'ETR Distribution Chart'],
@@ -137,7 +137,7 @@ const tourSteps = [
     id: 10,
     title: 'Architecture Overview',
     route: '/architecture',
-    duration: 20000,
+    duration: 30000,
     narrative: 'Exploring the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron LLM, observability.',
     tooltip: 'The architecture separates ingestion, orchestration, inference, and governance into independent control planes.',
     highlights: ['Ingest Layer', 'Copilot Orchestrator', 'Guardrails', 'Nemotron LLM', 'Observability'],
@@ -147,7 +147,7 @@ const tourSteps = [
     id: 11,
     title: 'About & Governance',
     route: '/about',
-    duration: 15000,
+    duration: 20000,
     narrative: 'Reviewing advisory-only governance, safety compliance, and the platform\'s decision-support-only boundary.',
     tooltip: 'This system provides decision support only and does not execute control actions.',
     highlights: ['Advisory Only Notice', 'Safety & Compliance'],
@@ -157,7 +157,7 @@ const tourSteps = [
     id: 12,
     title: 'Settings',
     route: '/settings',
-    duration: 15000,
+    duration: 20000,
     narrative: 'Reviewing configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
     tooltip: 'The platform supports configurable AI modes and enterprise integration readiness.',
     highlights: ['AI Mode Toggle', 'Dataverse Integration'],
@@ -167,7 +167,7 @@ const tourSteps = [
     id: 13,
     title: 'Art of Possibilities',
     route: '/art-of-possibilities',
-    duration: 30000,
+    duration: 45000,
     narrative: 'Exploring Phase 2+ concept capabilities — environmental signal fusion, wildfire corridor awareness, vegetation stress intelligence, and bio-sentinel anomaly corroboration.',
     tooltip: 'This conceptual layer demonstrates future environmental intelligence capabilities — advisory only, no control actions.',
     highlights: ['Wildfire Corridor Awareness', 'Vegetation Stress Intelligence', 'Environmental Signal Fusion', 'Bio-Sentinel Signals', 'Phase 1 vs Phase 2 Bridge'],
@@ -184,7 +184,7 @@ const tourSteps = [
     id: 14,
     title: 'Executive Validation Summary',
     route: '/executive-validation',
-    duration: 30000,
+    duration: 35000,
     narrative: 'Reviewing the Executive Validation Summary — comparing traditional OMS capabilities against Copilot decision intelligence, and confirming AI governance and safety boundaries.',
     tooltip: 'This summary documents operational differentiation, safety governance, and Phase-1 scope for leadership review.',
     highlights: ['OMS vs Copilot Comparison', 'AI Governance & Safety', 'Phase-1 Scope'],
@@ -200,7 +200,7 @@ const tourSteps = [
     id: 15,
     title: 'Return to Dashboard',
     route: '/dashboard',
-    duration: 20000,
+    duration: 30000,
     narrative: 'Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. AI-Augmented. Policy-Constrained. Operator-Controlled.',
     tooltip: 'The operational loop closes with updated KPIs and stabilized system posture.',
     highlights: ['System Risk Index', 'Operational Phase'],
@@ -223,7 +223,7 @@ export function DemoTourHUD() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const autoActionFiredRef = useRef<Set<number>>(new Set());
-  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration, preCacheAll } = useTourNarration();
+  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, narrationDone, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration, preCacheAll } = useTourNarration();
 
   // Listen for tour start events from DemoScriptModal
   useEffect(() => {
@@ -314,6 +314,9 @@ export function DemoTourHUD() {
     };
   }, [currentStep, isPlaying, navigate, playStepNarration, isPaused, stopNarration]);
 
+  // Track whether timer has reached 100% but is waiting for narration
+  const waitingForNarrationRef = useRef(false);
+
   // Progress timer + auto-actions
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -322,6 +325,7 @@ export function DemoTourHUD() {
     if (!step) return;
 
     stepStartRef.current = Date.now();
+    waitingForNarrationRef.current = false;
     const duration = step.duration;
 
     timerRef.current = setInterval(() => {
@@ -337,17 +341,7 @@ export function DemoTourHUD() {
 
       if (pct >= 100) {
         if (timerRef.current) clearInterval(timerRef.current);
-        setCompletedSteps(prev => [...prev, currentStep]);
-
-        if (currentStep < tourSteps.length - 1) {
-          setCurrentStep(prev => prev + 1);
-          setStepProgress(0);
-        } else {
-          setIsPlaying(false);
-          setStepProgress(100);
-          setTourComplete(true);
-          stopNarration();
-        }
+        waitingForNarrationRef.current = true;
       }
     }, 50);
 
@@ -355,6 +349,27 @@ export function DemoTourHUD() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [currentStep, isPlaying, isPaused]);
+
+  // Advance step when both timer is done AND narration is done
+  useEffect(() => {
+    if (!isPlaying || isPaused) return;
+    if (!waitingForNarrationRef.current) return;
+    if (!narrationDone && !isMuted) return;
+
+    // Both conditions met — advance
+    waitingForNarrationRef.current = false;
+    setCompletedSteps(prev => [...prev, currentStep]);
+
+    if (currentStep < tourSteps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+      setStepProgress(0);
+    } else {
+      setIsPlaying(false);
+      setStepProgress(100);
+      setTourComplete(true);
+      stopNarration();
+    }
+  }, [narrationDone, isPlaying, isPaused, currentStep, isMuted, stopNarration]);
 
   const handlePause = useCallback(() => {
     setIsPaused(true);
