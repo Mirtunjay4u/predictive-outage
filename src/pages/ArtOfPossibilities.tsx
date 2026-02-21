@@ -72,6 +72,7 @@ const bioFlow = [
 export default function ArtOfPossibilities() {
   const navigate = useNavigate();
   const [activeOverlays, setActiveOverlays] = useState<string[]>(['hotspots', 'wind']);
+  const [highlightedZone, setHighlightedZone] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen space-y-10 pb-16">
@@ -527,24 +528,35 @@ export default function ArtOfPossibilities() {
             {activeOverlays.includes('biosentinel') && (
               <div className="animate-fade-in">
                 {[
-                  { x: '40%', y: '48%', conf: 72, label: 'Acoustic anomaly' },
-                  { x: '62%', y: '28%', conf: 58, label: 'Behavioral shift' },
-                  { x: '25%', y: '38%', conf: 45, label: 'Migration pattern' },
-                ].map((b, i) => (
-                  <div key={i} className="absolute" style={{ left: b.x, top: b.y }}>
-                    {/* pulsing rings */}
-                    <div className="relative flex items-center justify-center">
-                      <div className="absolute h-10 w-10 rounded-full border border-violet-400/20 animate-ping" style={{ animationDuration: '2s', animationDelay: `${i * 0.4}s` }} />
-                      <div className="absolute h-6 w-6 rounded-full border border-violet-400/30 animate-ping" style={{ animationDuration: '2s', animationDelay: `${i * 0.4 + 0.3}s` }} />
-                      <div className="h-3.5 w-3.5 rounded-full bg-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.5)]">
-                        <Bug className="h-3.5 w-3.5 text-violet-200 p-[2px]" />
+                  { x: '40%', y: '48%', conf: 72, label: 'Acoustic anomaly', zone: 'FDR-4401' },
+                  { x: '62%', y: '28%', conf: 58, label: 'Behavioral shift', zone: 'FDR-4402' },
+                  { x: '25%', y: '38%', conf: 45, label: 'Migration pattern', zone: 'FDR-4403' },
+                ].map((b, i) => {
+                  const isHighlighted = highlightedZone === b.zone;
+                  return (
+                    <div key={i} className={cn('absolute transition-all duration-500', isHighlighted && 'z-20')} style={{ left: b.x, top: b.y }}>
+                      {/* highlight ring */}
+                      {isHighlighted && (
+                        <>
+                          <div className="absolute -inset-6 rounded-full border-2 border-amber-400/60 animate-pulse" />
+                          <div className="absolute -inset-10 rounded-full border border-amber-400/25 animate-ping" style={{ animationDuration: '1.5s' }} />
+                        </>
+                      )}
+                      {/* pulsing rings */}
+                      <div className="relative flex items-center justify-center">
+                        <div className={cn('absolute h-10 w-10 rounded-full border animate-ping', isHighlighted ? 'border-amber-400/40' : 'border-violet-400/20')} style={{ animationDuration: '2s', animationDelay: `${i * 0.4}s` }} />
+                        <div className={cn('absolute h-6 w-6 rounded-full border animate-ping', isHighlighted ? 'border-amber-400/50' : 'border-violet-400/30')} style={{ animationDuration: '2s', animationDelay: `${i * 0.4 + 0.3}s` }} />
+                        <div className={cn('h-3.5 w-3.5 rounded-full', isHighlighted ? 'bg-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.7)]' : 'bg-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.5)]')}>
+                          <Bug className={cn('h-3.5 w-3.5 p-[2px]', isHighlighted ? 'text-amber-100' : 'text-violet-200')} />
+                        </div>
+                      </div>
+                      <div className={cn('mt-2 whitespace-nowrap rounded border px-2 py-0.5 backdrop-blur-sm', isHighlighted ? 'bg-amber-950/90 border-amber-400/50' : 'bg-violet-950/80 border-violet-500/25')}>
+                        <span className={cn('text-[8px] font-mono', isHighlighted ? 'text-amber-200 font-semibold' : 'text-violet-300')}>{b.label} · {b.conf}% conf</span>
+                        {isHighlighted && <span className="ml-1 text-[7px] text-amber-400 animate-pulse">● FOCUS</span>}
                       </div>
                     </div>
-                    <div className="mt-2 whitespace-nowrap rounded bg-violet-950/80 border border-violet-500/25 px-2 py-0.5 backdrop-blur-sm">
-                      <span className="text-[8px] font-mono text-violet-300">{b.label} · {b.conf}% conf</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -912,18 +924,39 @@ export default function ArtOfPossibilities() {
                       const dotColor = e.severity === 'high' ? 'bg-red-400' : e.severity === 'medium' ? 'bg-amber-400' : 'bg-violet-400';
                       const textColor = e.severity === 'high' ? 'text-red-300' : e.severity === 'medium' ? 'text-amber-300' : 'text-violet-300/70';
                       return (
-                        <div key={i} className="relative flex items-start gap-2">
+                        <div
+                          key={i}
+                          className={cn(
+                            'relative flex items-start gap-2 cursor-pointer rounded-md px-1 py-0.5 -mx-1 transition-all duration-200',
+                            highlightedZone === e.zone
+                              ? 'bg-amber-500/10 ring-1 ring-amber-400/30'
+                              : 'hover:bg-violet-500/5'
+                          )}
+                          onClick={() => {
+                            // toggle: click again to clear
+                            if (highlightedZone === e.zone) {
+                              setHighlightedZone(null);
+                            } else {
+                              setHighlightedZone(e.zone);
+                              // auto-enable biosentinel overlay
+                              if (!activeOverlays.includes('biosentinel')) {
+                                setActiveOverlays((prev) => [...prev, 'biosentinel']);
+                              }
+                            }
+                          }}
+                        >
                           {/* timeline dot */}
-                          <div className={cn('absolute -left-[7px] top-[3px] h-2 w-2 rounded-full ring-2 ring-violet-950', dotColor)}>
+                          <div className={cn('absolute -left-[7px] top-[5px] h-2 w-2 rounded-full ring-2 ring-violet-950 transition-all', highlightedZone === e.zone ? 'ring-amber-900 scale-125' : '', dotColor)}>
                             {i === 0 && <span className={cn('absolute inset-0 rounded-full animate-ping', dotColor, 'opacity-40')} />}
                           </div>
                           <div className="ml-2 flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <span className={cn('text-[9px] font-semibold', textColor)}>{e.type}</span>
+                              <span className={cn('text-[9px] font-semibold', highlightedZone === e.zone ? 'text-amber-300' : textColor)}>{e.type}</span>
                               <span className="text-[7px] text-muted-foreground/40 font-mono">{e.ago}</span>
+                              {highlightedZone === e.zone && <span className="text-[7px] text-amber-400 animate-pulse">◉ MAP</span>}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[8px] font-mono text-muted-foreground/50">{e.zone}</span>
+                              <span className={cn('text-[8px] font-mono', highlightedZone === e.zone ? 'text-amber-300/70' : 'text-muted-foreground/50')}>{e.zone}</span>
                               <span className="text-[8px] font-mono text-violet-300/60">{e.conf}%</span>
                               <div className="h-1 w-8 rounded-full bg-violet-950 overflow-hidden">
                                 <div className="h-full rounded-full bg-violet-400/50" style={{ width: `${e.conf}%` }} />
