@@ -62,7 +62,11 @@ interface UseTourNarrationReturn {
   preCacheAll: () => void;
 }
 
+/** Persistent flag — once quota is exhausted, skip all future ElevenLabs calls */
+let quotaExhausted = false;
+
 async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): Promise<string | null> {
+  if (quotaExhausted) return null;
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await fetch(
@@ -82,8 +86,9 @@ async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): P
         await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
         continue;
       }
-      // Quota exceeded or other non-retryable error — stop immediately
-      if (!response.ok) {
+      // Quota exceeded — stop permanently
+      if (response.status === 401 || !response.ok) {
+        if (response.status === 401) quotaExhausted = true;
         await response.text(); // consume body
         return null;
       }
@@ -94,6 +99,24 @@ async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): P
     }
   }
   return null;
+}
+
+/** Browser SpeechSynthesis fallback — works offline, no quota needed */
+function speakWithBrowserTTS(text: string, onEnd: () => void): SpeechSynthesisUtterance | null {
+  if (!('speechSynthesis' in window)) return null;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 0.92;
+  utt.pitch = 0.95;
+  // Prefer a deep English voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))
+    || voices.find(v => v.lang.startsWith('en'));
+  if (preferred) utt.voice = preferred;
+  utt.onend = onEnd;
+  utt.onerror = onEnd;
+  window.speechSynthesis.speak(utt);
+  return utt;
 }
 
 export function useTourNarration(): UseTourNarrationReturn {
@@ -119,6 +142,7 @@ export function useTourNarration(): UseTourNarrationReturn {
       audioRef.current.currentTime = 0;
       audioRef.current = null;
     }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
@@ -130,8 +154,10 @@ export function useTourNarration(): UseTourNarrationReturn {
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const next = !prev;
-      if (next && audioRef.current) {
-        audioRef.current.pause();
+      if (next) {
+        if (audioRef.current) audioRef.current.pause();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        setIsSpeaking(false);
       }
       return next;
     });
@@ -196,18 +222,27 @@ export function useTourNarration(): UseTourNarrationReturn {
     abortRef.current = controller;
 
     const url = await fetchTtsAudio(script, controller.signal);
-    if (!url || currentStepRef.current !== stepIndex) {
+    if (currentStepRef.current !== stepIndex) {
       setIsLoading(false);
       return;
     }
 
-    cacheRef.current.set(stepIndex, url);
-    const audio = new Audio(url);
-    attachAudioListeners(audio);
-    audioRef.current = audio;
-    setIsLoading(false);
-    try { await audio.play(); } catch (e) { /* autoplay blocked */ }
-  }, [isMuted, stopNarration]);
+    if (url) {
+      cacheRef.current.set(stepIndex, url);
+      const audio = new Audio(url);
+      attachAudioListeners(audio);
+      audioRef.current = audio;
+      setIsLoading(false);
+      try { await audio.play(); } catch { /* autoplay blocked */ }
+    } else {
+      // Fallback to browser SpeechSynthesis
+      setIsLoading(false);
+      setIsSpeaking(true);
+      speakWithBrowserTTS(script, () => {
+        if (currentStepRef.current === stepIndex) setIsSpeaking(false);
+      });
+    }
+  }, [isMuted, stopNarration, attachAudioListeners]);
 
   // Cleanup on unmount
   useEffect(() => {
