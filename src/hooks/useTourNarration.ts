@@ -9,49 +9,49 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
  */
 const narrationScripts: string[] = [
   // Step 0 — Login & Context
-  `Welcome to Operator Copilot — Predictive Outage Management. This platform is an AI-constrained operational decision-support layer designed for regulated utility outage environments. It augments operator judgment while preserving human authority and strict safety enforcement. The system operates strictly in advisory mode — it does not execute switching, SCADA actions, or field operations.`,
+  `Operator Copilot is an AI-constrained decision-support platform designed for regulated outage management environments. Authentication establishes operator context and operational session boundaries. In demo mode, preloaded outage scenarios simulate high-impact grid events without live SCADA integration. The system operates strictly in advisory mode. No switching commands, breaker actuation, or field dispatch actions are executed automatically. Human authority is preserved at all times.`,
 
   // Step 1 — Dashboard Orientation
-  `The dashboard represents a real-time operational war-room view. Active events are displayed with restoration confidence ranges rather than single-point estimates. Critical infrastructure — such as hospitals and water facilities — is visibly tagged and prioritized. Crew positioning and availability are displayed to support redeployment insight. All AI recommendations are policy-constrained and clearly labeled as advisory.`,
+  `The dashboard provides a command-center overview of active outage conditions. Here we observe: severity-classified events, confidence-based ETR bands, crew workload distribution, and operational phase indicators. Unlike traditional OMS systems that present fixed restoration times, Operator Copilot models uncertainty explicitly through confidence intervals. This enhances communication accuracy and escalation planning.`,
 
-  // Step 2 — Scenario Playback
-  `The Scenario Playback panel steps through Pre-Event, Event, and Post-Event lifecycle stages. This simulates hazard lifecycle progression to test policy validation and readiness posture across the full operational timeline.`,
+  // Step 2 — Scenario Playback Lifecycle
+  `The scenario playback module simulates the full outage lifecycle: Pre-Event monitoring, Active Event response, and Post-Event stabilization. This demonstrates how hazard exposure, crew allocation, and confidence metrics evolve over time. The lifecycle view supports operational rehearsal and resilience planning.`,
 
-  // Step 3 — Events Page
-  `Reviewing the triage queue: high-priority events, severity scales, ETR confidence bands, critical load tags, and policy status. Each event includes ETR confidence banding, critical load prioritization, and deterministic policy evaluation.`,
+  // Step 3 — Events Page Deep Dive
+  `The events queue provides structured triage visibility. Each event includes: severity classification, ETR confidence band, critical load tagging, and policy enforcement status. Policy flags indicate whether operational constraints affect potential recommendations. This creates transparency between system logic and operator awareness.`,
 
   // Step 4 — Event Detail View
-  `Each event provides a confidence-based restoration band reflecting uncertainty drivers such as weather exposure and asset condition. Critical load runway indicators show backup runtime remaining relative to escalation thresholds. If any asset is under maintenance or locked, recommendations are automatically filtered before reaching the operator.`,
+  `Drilling into an event reveals detailed operational context. We observe: crew assignment state, escalation phase, hazard correlation, and ETR confidence explanation. Confidence ranges reflect multiple factors including weather exposure, asset condition, and crew readiness. If maintenance locks or safety constraints exist, recommendation pathways are automatically restricted.`,
 
-  // Step 5 — Outage Map
-  `The outage map correlates feeder topology, impacted downstream infrastructure, environmental hazards, and crew proximity. Live weather layers — including wind, precipitation, and storm tracking — inform risk modeling and crew safety awareness. This enhances situational context without automating operational decisions.`,
+  // Step 5 — Outage Map Intelligence
+  `The outage map integrates feeder topology with real-time situational overlays. We correlate: downstream impact zones, critical infrastructure nodes, crew proximity, and hazard exposure layers. This spatial intelligence strengthens restoration prioritization while preserving operational control boundaries. No switching actions are executed from this interface.`,
 
-  // Step 6 — Weather Alerts
-  `Weather intelligence integrates live environmental data to correlate hazard exposure with infrastructure risk. This allows operators to anticipate compounding outage risk before restoration windows close.`,
+  // Step 6 — Weather Alerts Section
+  `The weather intelligence layer incorporates live environmental signals including wind velocity, precipitation intensity, storm cell tracking, and exposure scoring. Events within hazard zones are dynamically correlated. This enhances predictive risk modeling and crew safety planning. Environmental awareness informs — but does not automate — decision logic.`,
 
   // Step 7 — Copilot Studio
-  `Copilot Studio provides structured, explainable advisory outputs. AI responses are generated using NVIDIA Nemotron under a deterministic rule engine. If a breaker is under maintenance or flagged as non-operable, the system blocks that switching pathway automatically. Recommendations include justification — not just suggestions. All actions remain human-in-the-loop.`,
+  `Copilot Studio delivers AI-assisted advisory analysis powered by NVIDIA Nemotron. However, inference is executed only after deterministic rule validation. Operational constraints such as asset maintenance flags, crew skillset mismatches, and critical load thresholds are evaluated prior to advisory output generation. Allowed and blocked recommendations are explicitly identified. This ensures explainability and policy compliance.`,
 
-  // Step 8 — Situation Report
-  `Operators can generate AI-assisted situation reports. The content can be reviewed, approved, and distributed via the Communications Pack — maintaining operator authority over external communications.`,
+  // Step 8 — Situation Report Generation
+  `The system generates structured AI-assisted Situation Reports. These reports consolidate: event status, confidence bands, critical load exposure, and operational actions taken. Approval indicators ensure human validation before distribution. This improves communication clarity without removing operator oversight.`,
 
   // Step 9 — Analytics
-  `The analytics layer surfaces historical outage patterns, restoration timelines, and variability in ETR confidence modeling. This strengthens escalation planning and resource forecasting while preserving real-time operational authority.`,
+  `The analytics layer visualizes: high-priority event distributions, policy block frequency, ETR confidence variability, and restoration trend patterns. These metrics strengthen resilience planning and post-event analysis. Analytics inform decision-making — they do not override it.`,
 
-  // Step 10 — Architecture
-  `The system architecture separates ingestion, orchestration, inference, and governance into independent control planes. The deterministic rule engine precedes AI inference at every stage.`,
+  // Step 10 — Architecture Overview
+  `The system architecture consists of: data ingestion layer, operational rule engine, copilot orchestration layer, NVIDIA Nemotron inference engine, guardrail enforcement module, and observability components. AI reasoning is downstream of deterministic policy validation. This layered design ensures bounded intelligence within regulatory constraints.`,
 
   // Step 11 — About & Governance
-  `This system provides decision support only and does not execute control actions. Advisory-only governance and safety compliance are foundational to the platform's architecture.`,
+  `Governance documentation clearly defines system boundaries. The platform is: advisory-only, human-in-the-loop, non-autonomous, and non-actuating. No SCADA integration is active in Phase One. This preserves compliance with regulated grid operations.`,
 
   // Step 12 — Settings
-  `The platform supports configurable AI modes and enterprise integration readiness — including Dataverse connectivity for regulated utility data environments.`,
+  `The settings panel exposes configurable AI modes and enterprise integration readiness. Future integrations — including Dataverse or enterprise telemetry — are architecturally supported but not enabled in Phase One. This reflects scalable design without premature automation.`,
 
   // Step 13 — Executive Validation Summary
-  `Now reviewing the Executive Validation Summary. This page compares traditional OMS capabilities against the Copilot's decision intelligence layer — highlighting confidence-based ETR modeling, hazard-correlated risk scoring, and explainable AI advisory. The AI Governance section confirms that deterministic rules precede inference, asset locks are enforced, and the system maintains an advisory-only posture with no SCADA execution. Phase 1 scope is explicitly bounded.`,
+  `This solution differs from traditional OMS systems by introducing policy-constrained AI reasoning within a deterministic operational framework. Capabilities demonstrated include: confidence-based ETR modeling, critical load prioritization, hazard-informed risk scoring, deterministic rule enforcement, and explainable advisory outputs. Phase One focuses strictly on decision intelligence. It does not include autonomous switching, breaker actuation, load flow automation, or SCADA execution.`,
 
-  // Step 14 — Return to Dashboard
-  `Completing the operational loop — confirming updated KPIs, stabilized posture, and the narrative resolution of the demo. AI-Augmented. Policy-Constrained. Operator-Controlled.`,
+  // Step 14 — Return to Dashboard & Close Loop
+  `We return to the operational dashboard. Updated KPIs reflect stabilized posture. The event lifecycle concludes with improved situational clarity and defensible decision logic. Operator Copilot represents an AI-augmented, policy-constrained decision-support layer for regulated utility outage operations. AI-Augmented. Policy-Constrained. Operator-Controlled. Thank you.`,
 ];
 
 interface UseTourNarrationReturn {
