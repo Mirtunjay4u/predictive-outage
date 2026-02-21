@@ -659,7 +659,9 @@ export default function WeatherAlerts() {
       </div>
 
       {/* ── Crew Safety Status Banner ── */}
-      <CrewSafetyBanner hazardGroups={hazardGroups} />
+      <div data-tour-section="weather-crew-safety">
+        <CrewSafetyBanner hazardGroups={hazardGroups} />
+      </div>
 
       <div className="p-5 space-y-4">
         {/* ── KPI Strip ── */}
@@ -753,7 +755,7 @@ export default function WeatherAlerts() {
         <RiskWindowCard hazardExposureScore={hazardExposureScore} eventsInHazardZones={eventsInHazardZones} criticalInHazard={criticalInHazard} />
 
         {/* ── Hazard Overview Cards + Operational Translation ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div data-tour-section="weather-hazard-cards" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {HAZARDS.map((hazard, idx) => {
             const group = hazardGroups[hazard.key];
             const highCount = group.filter(e => getEventSeverity(e) >= 4).length;

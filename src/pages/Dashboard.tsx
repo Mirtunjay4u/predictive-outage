@@ -1419,7 +1419,7 @@ export default function Dashboard() {
         const SEVERITY_OPTIONS: SeverityOverride[] = ['Low', 'Moderate', 'Severe'];
 
         return (
-          <div className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+          <div data-tour-section="dashboard-active-event" className="rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm">
             {/* Top row: active event label + severity badge */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
