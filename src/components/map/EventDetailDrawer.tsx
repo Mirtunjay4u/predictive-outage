@@ -38,6 +38,7 @@ import { useAssets, useEventAssets } from "@/hooks/useAssets";
 import { EtrRunwayExplainer } from "@/components/map/EtrRunwayExplainer";
 import { EtrMovementExplainer } from "@/components/map/EtrMovementExplainer";
 import { EventDecisionTimeline } from "@/components/copilot/EventDecisionTimeline";
+import { DecisionTrace } from "@/components/copilot/DecisionTrace";
 import { outageToHazard, type HazardOverlay } from "@/lib/severity";
 import type { ScenarioWithIntelligence, EtrRiskLevel, CriticalRunwayStatus } from "@/types/scenario";
 
@@ -333,6 +334,18 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, 
                 {/* Decision Timeline */}
                 <EventDecisionTimeline eventId={event.id ?? null} maxHeight="240px" />
                 
+                {/* Decision Trace for AI-derived insights */}
+                <DecisionTrace
+                  inputs={[
+                    `Hazard: ${event.outage_type || 'Unknown'}`,
+                    `Customers impacted: ${event.customers_impacted?.toLocaleString() || 'N/A'}`,
+                    `Critical load: ${event.has_critical_load ? 'Yes' : 'No'}`,
+                    `Lifecycle: ${event.lifecycle_stage}`,
+                    'Crew availability and skill match',
+                    'Maintenance / lockout flag status',
+                  ]}
+                />
+
                 <Separator />
                 
                 {/* SECTION: Notes */}
