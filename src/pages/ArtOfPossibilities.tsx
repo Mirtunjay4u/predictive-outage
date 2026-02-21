@@ -78,6 +78,7 @@ export default function ArtOfPossibilities() {
       {/* ── 1) TOP BANNER ── */}
       <motion.section
         {...fade}
+        data-tour-section="aop-banner"
         className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-card via-card to-[hsl(var(--primary)/0.04)] px-6 py-7 sm:px-8"
       >
         {/* decorative glow */}
@@ -104,7 +105,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 2) WHY THIS MATTERS ── */}
-      <motion.section {...fade} transition={{ delay: 0.05 }}>
+      <motion.section {...fade} transition={{ delay: 0.05 }} data-tour-section="aop-domain-cards">
         <SectionTitle className="mb-4">Why This Matters</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-3">
           {domainCards.map((c) => (
@@ -123,7 +124,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 3) CONCEPT VISUALIZATION MAP ── */}
-      <motion.section {...fade} transition={{ delay: 0.1 }}>
+      <motion.section {...fade} transition={{ delay: 0.1 }} data-tour-section="aop-fusion-map">
         <Card className="overflow-hidden border-border/30">
           <div className="flex flex-col gap-3 border-b border-border/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-0.5">
@@ -217,7 +218,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 4) BIO-SENTINEL MODULE ── */}
-      <motion.section {...fade} transition={{ delay: 0.15 }}>
+      <motion.section {...fade} transition={{ delay: 0.15 }} data-tour-section="aop-biosentinel">
         <SectionTitle className="mb-4">Bio-Sentinel Signals (Experimental) — Optional Secondary Indicator</SectionTitle>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -279,7 +280,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 5) BRIDGE SECTION: PHASE 1 vs PHASE 2 ── */}
-      <motion.section {...fade} transition={{ delay: 0.2 }}>
+      <motion.section {...fade} transition={{ delay: 0.2 }} data-tour-section="aop-phase-bridge">
         <SectionTitle className="mb-4">How This Connects to Operator Copilot (Current Phase 1)</SectionTitle>
 
         <Card>
@@ -315,7 +316,7 @@ export default function ArtOfPossibilities() {
       </motion.section>
 
       {/* ── 6) GOVERNANCE ── */}
-      <motion.section {...fade} transition={{ delay: 0.25 }}>
+      <motion.section {...fade} transition={{ delay: 0.25 }} data-tour-section="aop-governance">
         <Card className="border-amber-500/20 bg-card">
           <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:gap-6">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/5">

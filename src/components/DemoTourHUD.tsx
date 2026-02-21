@@ -15,7 +15,7 @@ import { useTourNarration } from '@/hooks/useTourNarration';
 const STORM_EVENT_ID = '471105eb-fbf9-43c1-8cc5-ad8214abfed8';
 
 /**
- * 15-step Executive Auto Tour — GTC-grade live demo sequence.
+ * 16-step Executive Auto Tour — GTC-grade live demo sequence.
  * Each step: route, duration, narrative (HUD), tooltip (overlay), highlights (section names).
  */
 const tourSteps = [
@@ -165,6 +165,23 @@ const tourSteps = [
   },
   {
     id: 13,
+    title: 'Art of Possibilities',
+    route: '/art-of-possibilities',
+    duration: 30000,
+    narrative: 'Exploring Phase 2+ concept capabilities — environmental signal fusion, wildfire corridor awareness, vegetation stress intelligence, and bio-sentinel anomaly corroboration.',
+    tooltip: 'This conceptual layer demonstrates future environmental intelligence capabilities — advisory only, no control actions.',
+    highlights: ['Wildfire Corridor Awareness', 'Vegetation Stress Intelligence', 'Environmental Signal Fusion', 'Bio-Sentinel Signals', 'Phase 1 vs Phase 2 Bridge'],
+    scrollTargets: [
+      '[data-tour-section="aop-banner"]',
+      '[data-tour-section="aop-domain-cards"]',
+      '[data-tour-section="aop-fusion-map"]',
+      '[data-tour-section="aop-biosentinel"]',
+      '[data-tour-section="aop-phase-bridge"]',
+      '[data-tour-section="aop-governance"]',
+    ],
+  },
+  {
+    id: 14,
     title: 'Executive Validation Summary',
     route: '/executive-validation',
     duration: 30000,
@@ -180,7 +197,7 @@ const tourSteps = [
     ],
   },
   {
-    id: 14,
+    id: 15,
     title: 'Return to Dashboard',
     route: '/dashboard',
     duration: 20000,
