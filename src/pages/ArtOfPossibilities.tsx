@@ -73,6 +73,7 @@ export default function ArtOfPossibilities() {
   const navigate = useNavigate();
   const [activeOverlays, setActiveOverlays] = useState<string[]>(['hotspots', 'wind']);
   const [highlightedZone, setHighlightedZone] = useState<string | null>(null);
+  const [cloudburstIntensity, setCloudburstIntensity] = useState(50); // 0-100
 
   return (
     <div className="min-h-screen space-y-10 pb-16">
@@ -1156,9 +1157,24 @@ export default function ArtOfPossibilities() {
               </SectionTitle>
               <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">Concept · Cloudburst · Landslide · Wildlife Behavioral Shift</span>
             </div>
-            <Badge variant="outline" className="shrink-0 border-cyan-500/40 bg-cyan-500/5 text-cyan-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
-              Earth-Level Scenario
-            </Badge>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <CloudRain className="h-3 w-3 text-cyan-400" />
+                <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">Intensity</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={cloudburstIntensity}
+                  onChange={(e) => setCloudburstIntensity(Number(e.target.value))}
+                  className="w-20 h-1 accent-cyan-500 cursor-pointer"
+                />
+                <span className="text-[10px] font-mono text-cyan-400 w-7">{cloudburstIntensity}%</span>
+              </div>
+              <Badge variant="outline" className="shrink-0 border-cyan-500/40 bg-cyan-500/5 text-cyan-400 text-[9px] uppercase tracking-widest px-2 py-0.5">
+                Earth-Level Scenario
+              </Badge>
+            </div>
           </div>
 
           <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
@@ -1206,23 +1222,28 @@ export default function ArtOfPossibilities() {
                   <rect x="-28" y="-7" width="56" height="14" rx="7" fill="#164e63" opacity="0.7" stroke="#06b6d4" strokeWidth="0.5" />
                   <text x="0" y="3" textAnchor="middle" fill="#67e8f9" fontSize="5.5" fontFamily="monospace">CLOUDBURST</text>
                 </g>
-                {/* animated rain streaks */}
-                {Array.from({ length: 18 }).map((_, ri) => {
-                  const rx = 75 + (ri * 7) + (ri % 3) * 2;
-                  const rDelay = (ri * 0.15) % 1.5;
-                  const rLen = 10 + (ri % 4) * 4;
-                  return (
-                    <line key={`rain-${ri}`} x1={rx} y1={70} x2={rx - 2} y2={70 + rLen} stroke="#06b6d4" strokeWidth="0.8" strokeLinecap="round" opacity="0">
-                      <animate attributeName="y1" values="70;155" dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
-                      <animate attributeName="y2" values={`${70 + rLen};${155 + rLen}`} dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0;0.5;0.3;0" dur="0.8s" begin={`${rDelay}s`} repeatCount="indefinite" />
-                    </line>
-                  );
-                })}
-                {/* water accumulation at base */}
-                <ellipse cx="130" cy="170" rx="60" ry="5" fill="#06b6d4" opacity="0.08">
-                  <animate attributeName="rx" values="50;65;50" dur="3s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.05;0.12;0.05" dur="3s" repeatCount="indefinite" />
+                {/* animated rain streaks — reactive to intensity slider */}
+                {(() => {
+                  const rainCount = Math.max(4, Math.round(18 * (cloudburstIntensity / 50)));
+                  const rainSpeed = Math.max(0.3, 0.8 * (50 / Math.max(cloudburstIntensity, 10)));
+                  const rainOpacity = 0.2 + (cloudburstIntensity / 100) * 0.6;
+                  return Array.from({ length: rainCount }).map((_, ri) => {
+                    const rx = 75 + (ri * (130 / rainCount)) + (ri % 3) * 2;
+                    const rDelay = (ri * 0.12) % 1.5;
+                    const rLen = 8 + (ri % 4) * 4 + (cloudburstIntensity / 100) * 6;
+                    return (
+                      <line key={`rain-${ri}`} x1={rx} y1={70} x2={rx - 2} y2={70 + rLen} stroke="#06b6d4" strokeWidth={0.6 + (cloudburstIntensity / 100) * 0.8} strokeLinecap="round" opacity="0">
+                        <animate attributeName="y1" values="70;155" dur={`${rainSpeed}s`} begin={`${rDelay}s`} repeatCount="indefinite" />
+                        <animate attributeName="y2" values={`${70 + rLen};${155 + rLen}`} dur={`${rainSpeed}s`} begin={`${rDelay}s`} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values={`0;${rainOpacity};${rainOpacity * 0.6};0`} dur={`${rainSpeed}s`} begin={`${rDelay}s`} repeatCount="indefinite" />
+                      </line>
+                    );
+                  });
+                })()}
+                {/* water accumulation at base — reactive */}
+                <ellipse cx="130" cy="170" rx="60" ry="5" fill="#06b6d4" opacity={0.04 + (cloudburstIntensity / 100) * 0.15}>
+                  <animate attributeName="rx" values={`${40 + cloudburstIntensity * 0.3};${55 + cloudburstIntensity * 0.3};${40 + cloudburstIntensity * 0.3}`} dur={`${Math.max(1.5, 3 - cloudburstIntensity * 0.015)}s`} repeatCount="indefinite" />
+                  <animate attributeName="opacity" values={`${0.04 + cloudburstIntensity * 0.001};${0.08 + cloudburstIntensity * 0.002};${0.04 + cloudburstIntensity * 0.001}`} dur={`${Math.max(1.5, 3 - cloudburstIntensity * 0.015)}s`} repeatCount="indefinite" />
                 </ellipse>
 
                 {/* ── HILLSIDE / LANDSLIDE ── */}
@@ -1232,28 +1253,31 @@ export default function ArtOfPossibilities() {
                 {/* stable ground lines */}
                 <line x1="180" y1="180" x2="320" y2="180" stroke="#365314" strokeWidth="1" opacity="0.3" />
 
-                {/* landslide debris flow — animated */}
+                {/* landslide debris flow — reactive to intensity slider */}
                 {(() => {
                   const debrisPath = "M270,120 Q310,145 330,165 Q345,175 360,180";
+                  const debrisSpeed = Math.max(0.8, 1.8 * (50 / Math.max(cloudburstIntensity, 10)));
+                  const debrisCount = Math.max(2, Math.round(5 * (cloudburstIntensity / 50)));
+                  const channelOpacity = 0.1 + (cloudburstIntensity / 100) * 0.2;
                   return (
                     <g>
                       {/* debris channel */}
-                      <path d={debrisPath} fill="none" stroke="#92400e" strokeWidth="12" opacity="0.15" strokeLinecap="round" />
-                      <path d={debrisPath} fill="none" stroke="#78350f" strokeWidth="6" opacity="0.25" strokeLinecap="round">
-                        <animate attributeName="opacity" values="0.15;0.3;0.15" dur="2.5s" repeatCount="indefinite" />
+                      <path d={debrisPath} fill="none" stroke="#92400e" strokeWidth={8 + (cloudburstIntensity / 100) * 8} opacity={channelOpacity} strokeLinecap="round" />
+                      <path d={debrisPath} fill="none" stroke="#78350f" strokeWidth={4 + (cloudburstIntensity / 100) * 4} opacity="0.25" strokeLinecap="round">
+                        <animate attributeName="opacity" values={`${0.1 + channelOpacity * 0.5};${0.2 + channelOpacity};${0.1 + channelOpacity * 0.5}`} dur={`${Math.max(1.2, 2.5 - cloudburstIntensity * 0.013)}s`} repeatCount="indefinite" />
                       </path>
                       {/* moving debris particles */}
-                      {[0, 1, 2, 3, 4].map((di) => (
+                      {Array.from({ length: debrisCount }).map((_, di) => (
                         <g key={`debris-${di}`}>
                           <rect width={3 + (di % 2) * 2} height={2 + (di % 3)} rx="1" fill="#a16207" opacity="0">
-                            <animateMotion dur={`${1.8 + di * 0.3}s`} begin={`${di * 0.4}s`} repeatCount="indefinite" path={debrisPath} />
-                            <animate attributeName="opacity" values="0;0.7;0.5;0" dur={`${1.8 + di * 0.3}s`} begin={`${di * 0.4}s`} repeatCount="indefinite" />
+                            <animateMotion dur={`${debrisSpeed + di * 0.2}s`} begin={`${di * 0.3}s`} repeatCount="indefinite" path={debrisPath} />
+                            <animate attributeName="opacity" values="0;0.7;0.5;0" dur={`${debrisSpeed + di * 0.2}s`} begin={`${di * 0.3}s`} repeatCount="indefinite" />
                           </rect>
                         </g>
                       ))}
                       {/* impact zone glow */}
-                      <circle cx="355" cy="178" r="15" fill="url(#impactGlow)">
-                        <animate attributeName="r" values="10;20;10" dur="2s" repeatCount="indefinite" />
+                      <circle cx="355" cy="178" r={10 + (cloudburstIntensity / 100) * 10} fill="url(#impactGlow)">
+                        <animate attributeName="r" values={`${8 + cloudburstIntensity * 0.1};${18 + cloudburstIntensity * 0.15};${8 + cloudburstIntensity * 0.1}`} dur={`${Math.max(1, 2 - cloudburstIntensity * 0.01)}s`} repeatCount="indefinite" />
                       </circle>
                     </g>
                   );
@@ -1325,9 +1349,10 @@ export default function ArtOfPossibilities() {
                   </g>
                 ))}
 
-                {/* wildlife group: deer/animals — running scatter pattern */}
+                {/* wildlife group: deer/animals — reactive to biosentinel toggle */}
                 {(() => {
-                  const animals = [
+                  const bioActive = activeOverlays.includes('biosentinel');
+                  const allAnimals = [
                     { angle: -30, dist: 80, delay: 0, size: 1.1 },
                     { angle: -60, dist: 95, delay: 0.3, size: 0.9 },
                     { angle: 15, dist: 70, delay: 0.5, size: 1.0 },
@@ -1336,40 +1361,52 @@ export default function ArtOfPossibilities() {
                     { angle: 70, dist: 85, delay: 0.4, size: 0.95 },
                     { angle: -80, dist: 75, delay: 0.6, size: 0.9 },
                     { angle: 120, dist: 90, delay: 0.1, size: 0.8 },
+                    { angle: -120, dist: 88, delay: 0.15, size: 0.85 },
+                    { angle: 160, dist: 72, delay: 0.7, size: 1.0 },
+                    { angle: -150, dist: 105, delay: 0.35, size: 0.75 },
                   ];
+                  const visibleAnimals = bioActive ? allAnimals : allAnimals.slice(0, 4);
+                  const speedFactor = bioActive ? 0.5 : 1;
+                  const distFactor = bioActive ? 1.4 : 1;
+                  const animalOpacity = bioActive ? 0.8 : 0.5;
                   const cx = 250, cy = 370;
                   return (
                     <g>
                       {/* stressor epicenter */}
                       <circle cx={cx} cy={cy} r="8" fill="#ef4444" opacity="0.1">
-                        <animate attributeName="r" values="5;15;5" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.15;0.05;0.15" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="r" values={bioActive ? "5;20;5" : "5;15;5"} dur={bioActive ? "1.5s" : "2s"} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.15;0.05;0.15" dur={bioActive ? "1.5s" : "2s"} repeatCount="indefinite" />
                       </circle>
-                      <circle cx={cx} cy={cy} r="3" fill="#ef4444" opacity="0.3" />
-                      {/* seismic ripple rings */}
-                      {[0, 1, 2].map((ri) => (
-                        <circle key={`ripple-${ri}`} cx={cx} cy={cy} r="5" fill="none" stroke="#f97316" strokeWidth="0.5" opacity="0">
-                          <animate attributeName="r" values="5;40;70" dur="3s" begin={`${ri}s`} repeatCount="indefinite" />
-                          <animate attributeName="opacity" values="0.4;0.15;0" dur="3s" begin={`${ri}s`} repeatCount="indefinite" />
+                      <circle cx={cx} cy={cy} r="3" fill="#ef4444" opacity={bioActive ? 0.5 : 0.3} />
+                      {/* seismic ripple rings — more when active */}
+                      {(bioActive ? [0, 0.7, 1.4, 2.1] : [0, 1, 2]).map((ri, idx) => (
+                        <circle key={`ripple-${idx}`} cx={cx} cy={cy} r="5" fill="none" stroke="#f97316" strokeWidth={bioActive ? "0.8" : "0.5"} opacity="0">
+                          <animate attributeName="r" values={bioActive ? "5;50;80" : "5;40;70"} dur={bioActive ? "2s" : "3s"} begin={`${ri}s`} repeatCount="indefinite" />
+                          <animate attributeName="opacity" values={bioActive ? "0.5;0.2;0" : "0.4;0.15;0"} dur={bioActive ? "2s" : "3s"} begin={`${ri}s`} repeatCount="indefinite" />
                         </circle>
                       ))}
-                      {/* stressor label */}
+                      {/* stressor label — reactive */}
                       <g transform={`translate(${cx}, ${cy - 15})`}>
-                        <rect x="-30" y="-6" width="60" height="12" rx="6" fill="#7f1d1d" opacity="0.6" stroke="#ef4444" strokeWidth="0.4" />
-                        <text x="0" y="3" textAnchor="middle" fill="#fca5a5" fontSize="5" fontFamily="monospace">⚠ STRESSOR</text>
+                        <rect x="-38" y="-6" width="76" height="12" rx="6" fill={bioActive ? "#7f1d1d" : "#451a03"} opacity="0.6" stroke={bioActive ? "#ef4444" : "#d97706"} strokeWidth="0.4" />
+                        <text x="0" y="3" textAnchor="middle" fill={bioActive ? "#fca5a5" : "#fbbf24"} fontSize="5" fontFamily="monospace">
+                          {bioActive ? '⚠ HIGH ALERT' : '△ STRESSOR'}
+                        </text>
+                        {bioActive && <circle cx="32" cy="0" r="1.5" fill="#ef4444"><animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite" /></circle>}
                       </g>
 
-                      {/* animal silhouettes scattering */}
-                      {animals.map((a, ai) => {
+                      {/* animal silhouettes scattering — reactive */}
+                      {visibleAnimals.map((a, ai) => {
                         const rad = (a.angle * Math.PI) / 180;
-                        const ex = cx + Math.cos(rad) * a.dist;
-                        const ey = cy + Math.sin(rad) * a.dist * 0.6;
+                        const d = a.dist * distFactor;
+                        const ex = cx + Math.cos(rad) * d;
+                        const ey = cy + Math.sin(rad) * d * 0.6;
                         const s = a.size;
-                        const dur = 3 + ai * 0.3;
+                        const dur = (3 + ai * 0.3) * speedFactor;
+                        const legSpeed = (0.3 + (ai % 3) * 0.05) * (bioActive ? 0.5 : 1);
                         return (
                           <g key={`animal-${ai}`} opacity="0">
                             {/* trail line */}
-                            <line x1={cx} y1={cy} x2={ex} y2={ey} stroke="#f97316" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.15" />
+                            <line x1={cx} y1={cy} x2={ex} y2={ey} stroke="#f97316" strokeWidth="0.3" strokeDasharray="2 3" opacity={bioActive ? 0.25 : 0.1} />
                             <g>
                               <animateMotion
                                 dur={`${dur}s`}
@@ -1377,21 +1414,21 @@ export default function ArtOfPossibilities() {
                                 repeatCount="indefinite"
                                 path={`M${cx},${cy} Q${cx + (ex - cx) * 0.5},${cy + (ey - cy) * 0.3 - 8} ${ex},${ey}`}
                               />
-                              {/* quadruped body — simplified deer/animal */}
-                              <ellipse cx="0" cy="0" rx={5 * s} ry={2.5 * s} fill="#d97706" opacity="0.5" />
+                              {/* quadruped body */}
+                              <ellipse cx="0" cy="0" rx={5 * s} ry={2.5 * s} fill={bioActive ? '#f59e0b' : '#d97706'} opacity={bioActive ? 0.6 : 0.5} />
                               {/* head */}
-                              <circle cx={5 * s} cy={-1.5 * s} r={1.8 * s} fill="#f59e0b" opacity="0.5" />
-                              {/* legs — animated running */}
+                              <circle cx={5 * s} cy={-1.5 * s} r={1.8 * s} fill={bioActive ? '#fbbf24' : '#f59e0b'} opacity={bioActive ? 0.6 : 0.5} />
+                              {/* legs — running speed reactive */}
                               <g>
-                                <line x1={-2 * s} y1={2.5 * s} x2={-3 * s} y2={5 * s} stroke="#d97706" strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
-                                  <animate attributeName="x2" values={`${-3 * s};${-1 * s};${-3 * s}`} dur={`${0.3 + (ai % 3) * 0.05}s`} repeatCount="indefinite" />
+                                <line x1={-2 * s} y1={2.5 * s} x2={-3 * s} y2={5 * s} stroke={bioActive ? '#f59e0b' : '#d97706'} strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
+                                  <animate attributeName="x2" values={`${-3 * s};${-1 * s};${-3 * s}`} dur={`${legSpeed}s`} repeatCount="indefinite" />
                                 </line>
-                                <line x1={2 * s} y1={2.5 * s} x2={3 * s} y2={5 * s} stroke="#d97706" strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
-                                  <animate attributeName="x2" values={`${3 * s};${1 * s};${3 * s}`} dur={`${0.3 + (ai % 3) * 0.05}s`} repeatCount="indefinite" />
+                                <line x1={2 * s} y1={2.5 * s} x2={3 * s} y2={5 * s} stroke={bioActive ? '#f59e0b' : '#d97706'} strokeWidth={0.8 * s} strokeLinecap="round" opacity="0.5">
+                                  <animate attributeName="x2" values={`${3 * s};${1 * s};${3 * s}`} dur={`${legSpeed}s`} repeatCount="indefinite" />
                                 </line>
                               </g>
                             </g>
-                            <animate attributeName="opacity" values="0;0.7;0.6;0.3;0" dur={`${dur}s`} begin={`${a.delay}s`} repeatCount="indefinite" />
+                            <animate attributeName="opacity" values={`0;${animalOpacity};${animalOpacity * 0.85};${animalOpacity * 0.4};0`} dur={`${dur}s`} begin={`${a.delay}s`} repeatCount="indefinite" />
                           </g>
                         );
                       })}
@@ -1399,13 +1436,20 @@ export default function ArtOfPossibilities() {
                   );
                 })()}
 
-                {/* ── DETECTION ALERT BADGE ── */}
-                <g transform="translate(250, 315)">
-                  <rect x="-120" y="-9" width="240" height="18" rx="9" fill="#7f1d1d" opacity="0.5" stroke="#ef4444" strokeWidth="0.4" />
-                  <text x="0" y="4" textAnchor="middle" fill="#fca5a5" fontSize="6" fontFamily="monospace">
-                    ⚠ SUDDEN WILDLIFE DISPERSAL — GROUND DISTURBANCE OR SEISMIC PRECURSOR
-                  </text>
-                </g>
+                {/* ── DETECTION ALERT BADGE — reactive ── */}
+                {(() => {
+                  const bioActive = activeOverlays.includes('biosentinel');
+                  return (
+                    <g transform="translate(250, 315)">
+                      <rect x="-120" y="-9" width="240" height="18" rx="9" fill={bioActive ? '#7f1d1d' : '#451a03'} opacity="0.5" stroke={bioActive ? '#ef4444' : '#d97706'} strokeWidth="0.4" />
+                      <text x="0" y="4" textAnchor="middle" fill={bioActive ? '#fca5a5' : '#fde68a'} fontSize="6" fontFamily="monospace">
+                        {bioActive
+                          ? '⚠ MASS WILDLIFE DISPERSAL — ELEVATED GROUND STRESSOR DETECTED'
+                          : '△ WILDLIFE MOVEMENT BASELINE — MONITORING'}
+                      </text>
+                    </g>
+                  );
+                })()}
 
                 {/* ── INTERPRETIVE TEXT ── */}
                 <g transform="translate(250, 490)">
