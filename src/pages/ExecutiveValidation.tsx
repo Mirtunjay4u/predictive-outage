@@ -167,7 +167,7 @@ export default function ExecutiveValidation() {
         </section>
 
         {/* Section 3 — Capabilities */}
-        <section>
+        <section data-tour-section="validation-capabilities">
           <SectionHeader title="Capabilities Demonstrated" number={3} />
           <div className="grid gap-4 sm:grid-cols-2">
             {capabilities.map((cap) => (
@@ -195,7 +195,7 @@ export default function ExecutiveValidation() {
         </section>
 
         {/* Section 4 — Business Impact */}
-        <section>
+        <section data-tour-section="validation-business-impact">
           <SectionHeader title="Operational & Strategic Value" number={4} />
           <Card>
             <CardContent className="pt-6">
