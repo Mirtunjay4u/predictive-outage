@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Loader2, ChevronRight, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +39,8 @@ function parseAnswer(raw: string): StructuredAnswer | null {
 }
 
 export function ExecutiveIntelligenceConsole() {
+  const location = useLocation();
+  const isOutageMap = location.pathname === '/outage-map';
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState<string | null>(null);
@@ -88,10 +91,11 @@ export function ExecutiveIntelligenceConsole() {
           <button
             onClick={() => setOpen(true)}
             className={cn(
-              'fixed bottom-6 right-6 z-50 flex items-center justify-center rounded-full',
+              'fixed z-50 flex items-center justify-center rounded-full',
               'w-14 h-14 shadow-lg transition-all duration-200',
               'hover:shadow-xl hover:scale-105',
               'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background',
+              isOutageMap ? 'bottom-20 left-6' : 'bottom-6 right-6',
               open && 'scale-0 opacity-0 pointer-events-none'
             )}
             style={{
