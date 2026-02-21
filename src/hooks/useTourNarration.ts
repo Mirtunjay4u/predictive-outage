@@ -62,27 +62,35 @@ interface UseTourNarrationReturn {
   preCacheAll: () => void;
 }
 
-async function fetchTtsAudio(text: string, signal?: AbortSignal): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/elevenlabs-tts`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({ text }),
-        signal,
+async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 3): Promise<string | null> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+          },
+          body: JSON.stringify({ text }),
+          signal,
+        }
+      );
+      if (response.status === 429) {
+        // Wait with exponential backoff before retrying
+        await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+        continue;
       }
-    );
-    if (!response.ok) return null;
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  } catch {
-    return null;
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch {
+      return null;
+    }
   }
+  return null;
 }
 
 export function useTourNarration(): UseTourNarrationReturn {
@@ -140,11 +148,12 @@ export function useTourNarration(): UseTourNarrationReturn {
     let completed = 0;
     setPreCacheProgress(0);
 
-    // Process in batches of 3
+    // Process in batches of 2 (ElevenLabs concurrent limit)
+    const BATCH_SIZE = 2;
     const runBatch = async (startIdx: number) => {
       if (controller.signal.aborted) return;
       const batch = narrationScripts
-        .slice(startIdx, startIdx + 3)
+        .slice(startIdx, startIdx + BATCH_SIZE)
         .map((script, offset) => {
           const idx = startIdx + offset;
           if (cacheRef.current.has(idx)) {
@@ -161,8 +170,8 @@ export function useTourNarration(): UseTourNarrationReturn {
 
       await Promise.all(batch);
 
-      if (startIdx + 3 < total && !controller.signal.aborted) {
-        await runBatch(startIdx + 3);
+      if (startIdx + BATCH_SIZE < total && !controller.signal.aborted) {
+        await runBatch(startIdx + BATCH_SIZE);
       }
     };
 
