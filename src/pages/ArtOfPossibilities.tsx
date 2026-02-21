@@ -1287,6 +1287,87 @@ export default function ArtOfPossibilities() {
                   })}
                 </g>
 
+                {/* ── SMOKE DENSITY GAUGE — reactive to biosentinel ── */}
+                <g transform="translate(400, 120)">
+                  {/* gauge background */}
+                  <rect x="-38" y="-45" width="76" height="90" rx="5" fill="#1c1917" opacity="0.5" stroke={bioActive ? '#ef4444' : '#78716c'} strokeWidth="0.4" />
+                  <text x="0" y="-36" textAnchor="middle" fill={bioActive ? '#fca5a5' : '#a8a29e'} fontSize="5" fontFamily="monospace">SMOKE DENSITY</text>
+                  {/* circular arc gauge */}
+                  {(() => {
+                    const pct = bioActive ? 82 : 38;
+                    const r = 22;
+                    const startAngle = -225;
+                    const endAngle = 45;
+                    const totalArc = endAngle - startAngle; // 270°
+                    const filledArc = totalArc * (pct / 100);
+                    const toRad = (d: number) => (d * Math.PI) / 180;
+                    // background arc
+                    const bgX1 = Math.cos(toRad(startAngle)) * r;
+                    const bgY1 = Math.sin(toRad(startAngle)) * r;
+                    const bgX2 = Math.cos(toRad(endAngle)) * r;
+                    const bgY2 = Math.sin(toRad(endAngle)) * r;
+                    // filled arc
+                    const fillEnd = startAngle + filledArc;
+                    const fX2 = Math.cos(toRad(fillEnd)) * r;
+                    const fY2 = Math.sin(toRad(fillEnd)) * r;
+                    const largeArcBg = totalArc > 180 ? 1 : 0;
+                    const largeArcFill = filledArc > 180 ? 1 : 0;
+                    const gaugeColor = pct > 70 ? '#ef4444' : pct > 40 ? '#f59e0b' : '#22c55e';
+                    return (
+                      <g transform="translate(0, -5)">
+                        {/* bg arc */}
+                        <path
+                          d={`M${bgX1},${bgY1} A${r},${r} 0 ${largeArcBg} 1 ${bgX2},${bgY2}`}
+                          fill="none" stroke="#334155" strokeWidth="5" strokeLinecap="round" opacity="0.4"
+                        />
+                        {/* filled arc */}
+                        <path
+                          d={`M${bgX1},${bgY1} A${r},${r} 0 ${largeArcFill} 1 ${fX2},${fY2}`}
+                          fill="none" stroke={gaugeColor} strokeWidth="5" strokeLinecap="round" opacity="0.7"
+                        >
+                          <animate attributeName="opacity" values="0.5;0.8;0.5" dur={bioActive ? '1.2s' : '2.5s'} repeatCount="indefinite" />
+                        </path>
+                        {/* glow on active */}
+                        {bioActive && (
+                          <path
+                            d={`M${bgX1},${bgY1} A${r},${r} 0 ${largeArcFill} 1 ${fX2},${fY2}`}
+                            fill="none" stroke={gaugeColor} strokeWidth="10" strokeLinecap="round" opacity="0.15" filter="url(#smokeBlur)"
+                          />
+                        )}
+                        {/* center text */}
+                        <text x="0" y="5" textAnchor="middle" fill={gaugeColor} fontSize="12" fontFamily="monospace" fontWeight="bold">{pct}%</text>
+                        <text x="0" y="14" textAnchor="middle" fill="#a8a29e" fontSize="4.5" fontFamily="monospace">
+                          {pct > 70 ? 'HAZARDOUS' : pct > 40 ? 'MODERATE' : 'LOW'}
+                        </text>
+                        {/* tick marks */}
+                        {[0, 25, 50, 75, 100].map((tick) => {
+                          const tickAngle = startAngle + totalArc * (tick / 100);
+                          const ix = Math.cos(toRad(tickAngle)) * (r + 5);
+                          const iy = Math.sin(toRad(tickAngle)) * (r + 5);
+                          const ox = Math.cos(toRad(tickAngle)) * (r + 8);
+                          const oy = Math.sin(toRad(tickAngle)) * (r + 8);
+                          return (
+                            <g key={`tick-${tick}`}>
+                              <line x1={ix} y1={iy} x2={ox} y2={oy} stroke="#64748b" strokeWidth="0.5" opacity="0.5" />
+                              <text x={Math.cos(toRad(tickAngle)) * (r + 13)} y={Math.sin(toRad(tickAngle)) * (r + 13) + 1.5} textAnchor="middle" fill="#64748b" fontSize="3.5" fontFamily="monospace">{tick}</text>
+                            </g>
+                          );
+                        })}
+                      </g>
+                    );
+                  })()}
+                  {/* status indicator */}
+                  <g transform="translate(0, 32)">
+                    <rect x="-20" y="-5" width="40" height="10" rx="5" fill={bioActive ? '#7f1d1d' : '#1e293b'} opacity="0.6" stroke={bioActive ? '#ef4444' : '#475569'} strokeWidth="0.3" />
+                    <circle cx="-14" cy="0" r="1.5" fill={bioActive ? '#ef4444' : '#22c55e'}>
+                      {bioActive && <animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite" />}
+                    </circle>
+                    <text x="2" y="2.5" textAnchor="middle" fill={bioActive ? '#fca5a5' : '#94a3b8'} fontSize="4" fontFamily="monospace">
+                      {bioActive ? 'ALERT' : 'NORMAL'}
+                    </text>
+                  </g>
+                </g>
+
                 {/* ── SMOKE DISPERSION DIRECTION ── */}
                 {/* wind-blown smoke drift arrows */}
                 {[140, 180, 220].map((ay, ai) => (
@@ -1296,7 +1377,7 @@ export default function ArtOfPossibilities() {
                     <animate attributeName="opacity" values="0;0.4;0.2;0" dur="3s" begin={`${ai * 0.6}s`} repeatCount="indefinite" />
                   </g>
                 ))}
-                <text x="360" y="175" textAnchor="middle" fill="#a8a29e" fontSize="5" fontFamily="monospace" opacity="0.4">WIND DRIFT →</text>
+                <text x="330" y="175" textAnchor="middle" fill="#a8a29e" fontSize="5" fontFamily="monospace" opacity="0.4">WIND DRIFT →</text>
 
                 {/* ── HORIZONTAL DIVIDER ── */}
                 <line x1="20" y1="400" x2="480" y2="400" stroke="#365314" strokeWidth="0.5" opacity="0.2" strokeDasharray="4 3" />
