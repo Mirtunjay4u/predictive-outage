@@ -2390,7 +2390,7 @@ export default function Dashboard() {
                 <button onClick={() => setActiveFilters([])} className={cn('rounded-full border border-border/60 px-2.5 py-1 text-[11px] text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Clear filters</button>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4 lg:gap-5 xl:grid-cols-3">
+            <div data-tour-section="dashboard-kpi" className="grid grid-cols-2 gap-4 lg:gap-5 xl:grid-cols-3">
               {kpiCards.slice(0, 5).map((card) => {
                 const config = KPI_CONFIG[card.key];
                 return (
@@ -2417,9 +2417,9 @@ export default function Dashboard() {
             <ReadinessStrip scenarios={filteredScenarios} />
           </div>
 
-          <div className="col-span-12 flex flex-col gap-4 lg:col-span-3">
+          <div data-tour-section="safety-risk" className="col-span-12 flex flex-col gap-4 lg:col-span-3">
             <SafetyRiskPanel scenarios={filteredScenarios} />
-            <CrewWorkloadPanel scenarios={filteredScenarios} />
+            <div data-tour-section="crew-workload"><CrewWorkloadPanel scenarios={filteredScenarios} /></div>
           </div>
         </div>
       )}

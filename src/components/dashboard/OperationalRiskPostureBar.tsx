@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Wind, Gauge, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -6,16 +7,10 @@ import type { Scenario } from '@/types/scenario';
 
 type PostureLevel = 'Stable' | 'Elevated' | 'Critical';
 
-function deriveLevel(value: number, thresholds: [number, number]): PostureLevel {
-  if (value >= thresholds[1]) return 'Critical';
-  if (value >= thresholds[0]) return 'Elevated';
-  return 'Stable';
-}
-
 const LEVEL_CLASS: Record<PostureLevel, string> = {
-  Stable: 'text-sky-300 dark:text-sky-300 text-sky-700',
-  Elevated: 'text-amber-300 dark:text-amber-300 text-amber-700',
-  Critical: 'text-red-300 dark:text-red-300 text-red-700',
+  Stable: 'text-sky-700 dark:text-sky-300',
+  Elevated: 'text-amber-700 dark:text-amber-300',
+  Critical: 'text-red-700 dark:text-red-300',
 };
 
 const DOT_CLASS: Record<PostureLevel, string> = {
@@ -29,14 +24,13 @@ interface Indicator {
   value: string;
   level: PostureLevel;
   icon: React.ElementType;
-  path: string;
+  /** data-tour-section id to scroll to, OR a route path */
+  target: string;
 }
 
 interface OperationalRiskPostureBarProps {
   scenarios: Scenario[];
-  /** Optional active hazard label for Hazard Exposure value */
   hazardLabel?: string;
-  /** Optional hazard severity for deriving hazard exposure level */
   hazardSeverity?: 'Low' | 'Moderate' | 'Severe';
   className?: string;
 }
@@ -50,19 +44,34 @@ export function OperationalRiskPostureBar({
   const navigate = useNavigate();
   const activeEvents = scenarios.filter((s) => s.lifecycle_stage === 'Event');
 
-  // 1. Critical Load Risk
-  const criticalLoadCount = activeEvents.filter((s) => s.has_critical_load).length;
-  const criticalLevel = deriveLevel(criticalLoadCount, [1, 3]);
-  const criticalValue = criticalLoadCount === 0 ? 'None' : criticalLoadCount >= 3 ? 'Critical' : 'Elevated';
+  // ── 1. Critical Load Risk ─────────────────────────────────────────────
+  // Stable  → No critical loads under threshold
+  // Elevated → At least one critical load nearing runway threshold
+  // Critical → Any load below escalation threshold
+  const loadsAtRisk = activeEvents.filter(
+    (s) =>
+      s.has_critical_load &&
+      s.backup_runtime_remaining_hours != null &&
+      s.critical_escalation_threshold_hours != null &&
+      s.backup_runtime_remaining_hours < s.critical_escalation_threshold_hours,
+  );
+  const loadsNearing = activeEvents.filter(
+    (s) =>
+      s.has_critical_load &&
+      s.backup_runtime_remaining_hours != null &&
+      s.critical_escalation_threshold_hours != null &&
+      s.backup_runtime_remaining_hours >= s.critical_escalation_threshold_hours &&
+      s.backup_runtime_remaining_hours < s.critical_escalation_threshold_hours * 1.5,
+  );
+  const criticalLevel: PostureLevel = loadsAtRisk.length > 0 ? 'Critical' : loadsNearing.length > 0 ? 'Elevated' : 'Stable';
+  const criticalValue = criticalLevel === 'Critical' ? 'Critical' : criticalLevel === 'Elevated' ? 'Elevated' : 'Stable';
 
-  // 2. Hazard Exposure
+  // ── 2. Hazard Exposure ────────────────────────────────────────────────
   const hazardLevel: PostureLevel =
     hazardSeverity === 'Severe' ? 'Critical' : hazardSeverity === 'Moderate' ? 'Elevated' : 'Stable';
-  const hazardValue = hazardLabel
-    ? `${hazardLevel === 'Critical' ? 'High' : hazardLevel === 'Elevated' ? 'Moderate' : 'Low'}${hazardLabel ? ` (${hazardLabel})` : ''}`
-    : hazardLevel === 'Critical' ? 'High' : hazardLevel === 'Elevated' ? 'Moderate' : 'Low';
+  const hazardValue = `${hazardLevel === 'Critical' ? 'High' : hazardLevel === 'Elevated' ? 'Moderate' : 'Low'}${hazardLabel ? ` (${hazardLabel})` : ''}`;
 
-  // 3. ETR Confidence Distribution
+  // ── 3. ETR Confidence Distribution ────────────────────────────────────
   const confidenceCounts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
   activeEvents.forEach((s) => {
     const c = (s.etr_confidence ?? '').toUpperCase();
@@ -70,50 +79,77 @@ export function OperationalRiskPostureBar({
     else if (c === 'MEDIUM') confidenceCounts.MEDIUM++;
     else if (c === 'LOW') confidenceCounts.LOW++;
   });
+  const hasLow = confidenceCounts.LOW > 0;
   const dominantBand =
     confidenceCounts.HIGH >= confidenceCounts.MEDIUM && confidenceCounts.HIGH >= confidenceCounts.LOW
       ? 'High'
       : confidenceCounts.MEDIUM >= confidenceCounts.LOW
         ? 'Medium'
         : 'Low';
-  const etrLevel: PostureLevel = dominantBand === 'Low' ? 'Critical' : dominantBand === 'Medium' ? 'Elevated' : 'Stable';
-  const etrValue = activeEvents.length === 0 ? 'No Active ETRs' : `${dominantBand} Band Dominant`;
+  const etrLevel: PostureLevel = hasLow ? 'Critical' : dominantBand === 'Medium' ? 'Elevated' : 'Stable';
+  const etrValue =
+    activeEvents.length === 0
+      ? 'No Active ETRs'
+      : hasLow
+        ? 'Low Confidence Present'
+        : `${dominantBand} Confidence Dominant`;
 
-  // 4. Crew Readiness
+  // ── 4. Crew Readiness ─────────────────────────────────────────────────
+  // Adequate → low high-priority pressure
+  // Constrained → moderate pressure
+  // Critical → heavy pressure (proxy for insufficient crews)
   const highPriorityCount = activeEvents.filter((s) => s.priority === 'high').length;
-  const crewLevel = deriveLevel(highPriorityCount, [3, 6]);
-  const crewValue = crewLevel === 'Critical' ? 'Constrained' : crewLevel === 'Elevated' ? 'Stretched' : 'Adequate';
+  const totalActive = activeEvents.length;
+  const crewLevel: PostureLevel =
+    highPriorityCount >= 5 || totalActive >= 10 ? 'Critical' : highPriorityCount >= 2 || totalActive >= 5 ? 'Elevated' : 'Stable';
+  const crewValue = crewLevel === 'Critical' ? 'Critical' : crewLevel === 'Elevated' ? 'Constrained' : 'Adequate';
 
   const indicators: Indicator[] = [
-    { label: 'Critical Load Risk', value: criticalValue, level: criticalLevel, icon: Shield, path: '/events?lifecycle=Event&critical_load=true' },
-    { label: 'Hazard Exposure', value: hazardValue, level: hazardLevel, icon: Wind, path: '/weather-alerts' },
-    { label: 'ETR Confidence', value: etrValue, level: etrLevel, icon: Gauge, path: '/events?lifecycle=Event' },
-    { label: 'Crew Readiness', value: crewValue, level: crewLevel, icon: Users, path: '/outage-map' },
+    { label: 'Critical Load Risk', value: criticalValue, level: criticalLevel, icon: Shield, target: 'safety-risk' },
+    { label: 'Hazard Exposure', value: hazardValue, level: hazardLevel, icon: Wind, target: '/weather-alerts' },
+    { label: 'ETR Confidence', value: etrValue, level: etrLevel, icon: Gauge, target: 'dashboard-kpi' },
+    { label: 'Crew Readiness', value: crewValue, level: crewLevel, icon: Users, target: 'crew-workload' },
   ];
 
+  const handleClick = useCallback(
+    (target: string) => {
+      if (target.startsWith('/')) {
+        navigate(target);
+        return;
+      }
+      // Scroll to section by data-tour-section attribute
+      const el = document.querySelector(`[data-tour-section="${target}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    },
+    [navigate],
+  );
+
   return (
-    <div className={cn('rounded-xl border border-border/60 bg-card px-4 py-2.5 shadow-sm', className)}>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 shrink-0 sm:mr-4">
+    <div className={cn('rounded-xl border border-border/60 bg-card px-4 py-2 shadow-sm max-h-16 overflow-hidden', className)}>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-0 h-full">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 shrink-0 sm:mr-3 leading-none">
           Operational Risk Posture
         </span>
-        <div className="flex flex-wrap items-center gap-1 sm:gap-0 sm:divide-x sm:divide-border/40 flex-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:divide-x sm:divide-border/40 flex-1 gap-0.5 sm:gap-0">
           {indicators.map((ind) => {
             const Icon = ind.icon;
             return (
               <button
                 key={ind.label}
                 type="button"
-                onClick={() => navigate(ind.path)}
+                onClick={() => handleClick(ind.target)}
                 className={cn(
-                  'flex items-center gap-2 rounded-md px-3 py-1.5 text-left min-w-0',
+                  'flex items-center gap-1.5 rounded-md px-2 py-1 text-left min-w-0',
                   DASHBOARD_INTERACTIVE_BUTTON_CLASS,
                 )}
               >
                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', DOT_CLASS[ind.level])} />
                 <Icon className="h-3 w-3 shrink-0 text-muted-foreground/60" strokeWidth={1.75} />
-                <span className="text-[11px] text-muted-foreground/80 shrink-0">{ind.label}:</span>
-                <span className={cn('text-[11px] font-semibold truncate', LEVEL_CLASS[ind.level])}>
+                <span className="text-[10px] text-muted-foreground/80 shrink-0 hidden lg:inline">{ind.label}:</span>
+                <span className="text-[10px] text-muted-foreground/80 shrink-0 lg:hidden">{ind.label.split(' ')[0]}:</span>
+                <span className={cn('text-[10px] font-semibold truncate', LEVEL_CLASS[ind.level])}>
                   {ind.value}
                 </span>
               </button>
