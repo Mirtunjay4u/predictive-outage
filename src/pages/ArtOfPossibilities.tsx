@@ -634,6 +634,8 @@ export default function ArtOfPossibilities() {
         <SectionTitle className="mb-4">Bio-Sentinel Signals (Experimental) — Optional Secondary Indicator</SectionTitle>
 
         <div className="grid gap-4 lg:grid-cols-2">
+          {/* left column wrapper */}
+          <div className="flex flex-col gap-4">
           {/* left: animated corridor visualization */}
           <Card className="overflow-hidden p-0">
             <div className="relative h-[580px] bg-gradient-to-b from-[hsl(270,20%,8%)] via-[hsl(260,15%,10%)] to-[hsl(250,12%,7%)]">
@@ -1040,6 +1042,67 @@ export default function ArtOfPossibilities() {
               </div>
             </div>
           </Card>
+
+          {/* Sensor Network Status — fills blank space below corridor SVG */}
+          <Card className="border-violet-500/15 bg-gradient-to-b from-violet-950/30 to-transparent">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-violet-300 uppercase tracking-wider">Sensor Network Status</span>
+                <Badge variant="outline" className="border-violet-500/30 text-violet-400 text-[10px] px-2 py-0.5">
+                  {activeOverlays.includes('biosentinel') ? '● Live' : '○ Standby'}
+                </Badge>
+              </div>
+              {/* sensor grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'SN-4401', loc: 'Corridor North', status: 'online', battery: 87 },
+                  { id: 'SN-4402', loc: 'Corridor South', status: 'online', battery: 72 },
+                  { id: 'SN-4403', loc: 'Feeder Junction', status: activeOverlays.includes('biosentinel') ? 'alert' : 'online', battery: 91 },
+                  { id: 'SN-4404', loc: 'Nesting Zone', status: 'online', battery: 64 },
+                ].map((sensor) => (
+                  <div key={sensor.id} className={cn(
+                    'rounded-md border p-2.5 transition-all',
+                    sensor.status === 'alert'
+                      ? 'border-amber-500/40 bg-amber-500/5'
+                      : 'border-violet-500/15 bg-violet-950/20'
+                  )}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono font-semibold text-foreground/80">{sensor.id}</span>
+                      <span className={cn('h-1.5 w-1.5 rounded-full', sensor.status === 'alert' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400')} />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground/60 block mb-1.5">{sensor.loc}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1 flex-1 rounded-full bg-violet-950">
+                        <div className="h-full rounded-full bg-violet-400/50" style={{ width: `${sensor.battery}%` }} />
+                      </div>
+                      <span className="text-[9px] text-muted-foreground/50 font-mono">{sensor.battery}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* deployment summary */}
+              <div className="rounded-md border border-violet-500/15 bg-violet-950/15 p-3">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: 'Active Nodes', value: '4/4' },
+                    { label: 'Avg Signal', value: activeOverlays.includes('biosentinel') ? '-42 dBm' : '-78 dBm' },
+                    { label: 'Uptime', value: '99.2%' },
+                  ].map((m) => (
+                    <div key={m.label}>
+                      <div className="text-[13px] font-semibold text-foreground/80">{m.value}</div>
+                      <div className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">{m.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* coverage note */}
+              <p className="text-[10px] text-muted-foreground/50 italic leading-relaxed">
+                Sensor coverage spans 2.4 km of right-of-way corridor. Acoustic + behavioral anomaly detection operates as a secondary corroboration layer — advisory only.
+              </p>
+            </CardContent>
+          </Card>
+
+          </div>
 
           {/* right: explanation */}
           <Card>
