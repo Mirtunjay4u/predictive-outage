@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { OutageTypeBadge } from '@/components/ui/outage-type-badge';
+import { DecisionTrace } from '@/components/copilot/DecisionTrace';
 import type { Scenario } from '@/types/scenario';
 import type { CopilotResponse, CopilotMode, CopilotRequest } from '@/types/copilot';
 
@@ -311,6 +312,12 @@ export function CopilotPanel({ scenario, isOpen, onToggle }: CopilotPanelProps) 
                       )}
                     </p>
                   </div>
+
+                  {/* Decision Trace */}
+                  <DecisionTrace
+                    modelUsed={response.model_engine || 'Nemotron (Primary)'}
+                    fallbackUsed={response.fallback_used}
+                  />
 
                   {/* Disclaimer */}
                   <div className="p-3 rounded border border-border/60 bg-muted/20">

@@ -28,6 +28,7 @@ import type { ScenarioWithIntelligence } from '@/types/scenario';
 import type { Crew } from '@/types/crew';
 import type { Asset } from '@/types/asset';
 import { formatEtrPrimary } from '@/lib/etr-format';
+import { DecisionTrace } from '@/components/copilot/DecisionTrace';
 import { getEventSeverity } from '@/lib/severity';
 import { DefensibilityPanels } from '@/components/copilot/DefensibilityPanels';
 import { OperatorApprovalGate } from '@/components/copilot/OperatorApprovalGate';
@@ -671,6 +672,12 @@ export default function CopilotStudio() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Decision Trace */}
+                    <DecisionTrace
+                      modelUsed={latestEntry.raw.model_engine || 'Nemotron (Primary)'}
+                      fallbackUsed={latestEntry.raw.fallback_used}
+                    />
 
                     {/* Model + Timestamp */}
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground/60">

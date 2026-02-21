@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DecisionTrace } from '@/components/copilot/DecisionTrace';
 
 const QUICK_PROMPTS = [
   'How is ETR confidence calculated?',
@@ -262,6 +263,14 @@ export function ExecutiveIntelligenceConsole() {
                       {answer.strategic_value}
                     </p>
                   </section>
+                )}
+
+                {/* Decision Trace */}
+                {answer && !loading && (
+                  <DecisionTrace
+                    modelUsed="Nemotron (Primary)"
+                    className="mt-2"
+                  />
                 )}
               </div>
             )}
