@@ -206,7 +206,7 @@ export function DemoTourHUD() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stepStartRef = useRef<number>(0);
   const autoActionFiredRef = useRef<Set<number>>(new Set());
-  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, preCacheAll } = useTourNarration();
+  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration, preCacheAll } = useTourNarration();
 
   // Listen for tour start events from DemoScriptModal
   useEffect(() => {
@@ -288,12 +288,14 @@ export function DemoTourHUD() {
       clearTimeout(tooltipTimer);
       clearTimeout(narrationTimer);
       scrollTimers.forEach(t => clearTimeout(t));
+      // Stop any in-flight narration immediately on step change to prevent overlap
+      stopNarration();
       // Clean up any remaining highlights
       document.querySelectorAll('.tour-highlight-section').forEach(el => {
         el.classList.remove('tour-highlight-section');
       });
     };
-  }, [currentStep, isPlaying, navigate, playStepNarration, isPaused]);
+  }, [currentStep, isPlaying, navigate, playStepNarration, isPaused, stopNarration]);
 
   // Progress timer + auto-actions
   useEffect(() => {
@@ -340,14 +342,18 @@ export function DemoTourHUD() {
   const handlePause = useCallback(() => {
     setIsPaused(true);
     if (timerRef.current) clearInterval(timerRef.current);
-  }, []);
+    pauseNarration();
+  }, [pauseNarration]);
 
   const handleResume = useCallback(() => {
     setIsPaused(false);
-  }, []);
+    resumeNarration();
+  }, [resumeNarration]);
 
   const handleSkip = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    // Stop narration immediately on skip to prevent overlap with next step
+    stopNarration();
     setCompletedSteps(prev => [...prev, currentStep]);
 
     if (currentStep < tourSteps.length - 1) {
@@ -358,7 +364,7 @@ export function DemoTourHUD() {
       setIsPlaying(false);
       setTourComplete(true);
     }
-  }, [currentStep]);
+  }, [currentStep, stopNarration]);
 
   const handleStop = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
