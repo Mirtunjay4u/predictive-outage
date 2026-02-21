@@ -79,7 +79,7 @@ const faqs = [
   { q: 'Is the AI making decisions?', a: 'No. The AI surfaces patterns and drafts advisory outputs. Every recommendation is gated by the rule engine and requires human approval before any action.' },
   { q: 'What about data privacy?', a: 'Demo data is fully synthetic. No real customer PII, asset identifiers, or operational telemetry is used. Production deployment would require enterprise data governance review.' },
   { q: 'How do I know the AI output is trustworthy?', a: 'Every response includes its assumptions, uncertainty drivers, and which constraints were evaluated. There are no opaque outputs — explainability is a core design requirement.' },
-  { q: 'Can operators override AI suggestions?', a: 'Yes, always. Operator judgment takes precedence. The system is designed to inform, not to direct.' },
+  { q: 'Can operators override advisory insights?', a: 'Yes, always. Operator judgment takes precedence. The system is designed to inform, not to direct.' },
   { q: 'What is the roadmap beyond Phase 1?', a: 'Phase 2 targets OMS/SCADA read-only integration, Dataverse connectivity, expanded crew optimization, and regulatory reporting — all subject to governance review.' },
 ];
 
@@ -254,7 +254,7 @@ export default function KnowledgePolicy() {
         <SectionHeading id="runway" icon={Activity}>Critical Load Runway</SectionHeading>
 
         <p className="pb-3 text-[13px] leading-relaxed text-foreground/80">
-          <strong className="text-foreground/95">Runway</strong> is the estimated time remaining before a critical facility's backup power is exhausted. When runway drops below the escalation threshold, the event is automatically elevated in priority — this is an advisory escalation, not an automated control action.
+          <strong className="text-foreground/95">Runway</strong> is the estimated time remaining before a critical facility's backup power is exhausted. When runway drops below the escalation threshold, the event is elevated in priority as an advisory escalation — not a direct control action.
         </p>
 
         <div className="overflow-x-auto rounded-lg border border-border/30 mb-4">

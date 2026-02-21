@@ -302,6 +302,7 @@ export default function CopilotStudio() {
             <div>
               <h1 className="text-lg font-semibold text-foreground">Operator Copilot</h1>
               <p className="text-[11px] text-muted-foreground">Strict Output Contract — Decision Support Only</p>
+              <p className="text-[10px] text-muted-foreground/60">Outputs are advisory and subject to operator validation.</p>
             </div>
             <Badge variant="outline" className="ml-auto text-[10px] bg-muted/30 text-muted-foreground border-border/50">
               Advisory Only
