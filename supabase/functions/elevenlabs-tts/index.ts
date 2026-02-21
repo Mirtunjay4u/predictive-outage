@@ -53,7 +53,12 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`ElevenLabs API error [${response.status}]:`, errorText);
-      throw new Error(`ElevenLabs API call failed [${response.status}]: ${errorText}`);
+      // Return the upstream status (429/401) instead of 500 so the client can handle gracefully
+      const status = response.status === 401 || response.status === 429 ? response.status : 502;
+      return new Response(JSON.stringify({ error: `ElevenLabs error`, status: response.status, detail: errorText }), {
+        status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const audioBuffer = await response.arrayBuffer();
