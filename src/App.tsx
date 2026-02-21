@@ -42,8 +42,6 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/copilot-studio" element={<CopilotStudio />} />
-      <Route path="/architecture" element={<Architecture />} />
       <Route
         path="/app"
         element={
@@ -67,6 +65,8 @@ function AppRoutes() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/weather-alerts" element={<WeatherAlerts />} />
         <Route path="/art-of-possibilities" element={<ArtOfPossibilities />} />
+        <Route path="/copilot-studio" element={<CopilotStudio />} />
+        <Route path="/architecture" element={<Architecture />} />
         <Route path="/about" element={<About />} />
         <Route path="/executive-validation" element={<ExecutiveValidation />} />
         <Route path="/settings" element={<Settings />} />
