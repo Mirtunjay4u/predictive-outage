@@ -76,14 +76,14 @@ export default function Login() {
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden md:flex-row">
       {/* Left Panel - Branding */}
       <div className="flex gradient-primary relative overflow-hidden md:w-1/2">
-        {/* Watermark background image – transmission grid silhouette */}
+        {/* Watermark background image – transmission grid silhouette (subtle 15-20%) */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.15]"
           style={{ backgroundImage: `url(${gridWatermark})` }}
           aria-hidden="true"
         />
-        {/* Dark gradient overlay above watermark for full text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/10 to-black/35" />
+        {/* Dark gradient overlay — deep navy to controlled electric blue */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(222,47%,8%)]/40 via-[hsl(220,40%,12%)]/20 to-[hsl(217,50%,18%)]/35" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.06),transparent_50%)]" />
         
         <div className="relative z-10 flex w-full flex-col justify-between py-10 px-6 text-primary-foreground sm:px-8 md:h-full md:py-12 md:px-12 xl:px-20">
@@ -106,38 +106,41 @@ export default function Login() {
             
             {/* B) Primary Headline */}
             <h2 className="text-3xl font-bold leading-[1.15] tracking-tight mb-4 sm:text-[2.2rem] xl:text-[2.75rem] max-w-lg">
-              Predictive Outage Management
+              Governed AI Decision Intelligence
+              <span className="block text-[0.65em] font-semibold text-primary-foreground/80 mt-1">for Utility Outage Operations</span>
             </h2>
             
             {/* C) Sub-headline */}
-            <p className="text-base text-primary-foreground/90 font-medium mb-8 max-w-md leading-relaxed sm:text-[17px]">
-              AI Decision Support for Utility Outage Operations
+            <p className="text-base text-primary-foreground/80 font-medium mb-8 max-w-md leading-relaxed sm:text-[17px]">
+              Explainable, deterministic decision-support aligned to operational policy and safety constraints.
             </p>
             
-            {/* D) Capabilities - 3 Bullets */}
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground/70 mb-3">
+            {/* D) Capabilities - 5 Bullets */}
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground/60 mb-3">
               Key capabilities
             </p>
-            <ul className="space-y-3 max-w-md">
+            <ul className="space-y-2.5 max-w-md">
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Deterministic policy enforcement + explainable AI decisions.</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Deterministic rule enforcement with transparent AI reasoning</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">OMS-style triage + ETR confidence banding.</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Structured ETR confidence band modeling — not single-point estimates</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Hazard intelligence + critical load prioritization.</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Hazard-aware triage with critical-load prioritization</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Operational risk posture and executive intelligence synthesis</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Powered by NVIDIA Nemotron (NIM) for bounded inference</span>
               </li>
             </ul>
-            
-            {/* E) AI Engine Attribution */}
-            <div className="mt-8 flex items-center gap-2.5">
-              <div className="w-2 h-2 rounded-full bg-[#76B900] shadow-[0_0_6px_rgba(118,185,0,0.5)]" />
-              <span className="text-sm font-semibold tracking-wide"><span className="text-primary-foreground/70">Powered by </span><span className="text-[hsl(80,100%,36%)]">NVIDIA Nemotron (NIM)</span></span>
-            </div>
           </motion.div>
           
           {/* E) Safety Footer + TCS Branding */}
@@ -156,9 +159,9 @@ export default function Login() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-[11px] text-primary-foreground/50 font-medium tracking-wide"
+              className="text-[11px] text-primary-foreground/50 font-medium tracking-wide leading-relaxed"
             >
-              Decision-support only. No autonomous actions. No live SCADA/OMS/ADMS access in demo mode.
+              Advisory-only platform. No autonomous control actions. No live SCADA / OMS / ADMS integration in Phase 1 demo.
             </motion.p>
           </div>
         </div>
@@ -312,7 +315,7 @@ export default function Login() {
                     <span className="text-[10px] text-muted-foreground/60 font-bold">i</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                    Decision-support only. No control actions. No live SCADA/OMS/ADMS integration.
+                    Advisory-only platform. No autonomous control actions. No live SCADA / OMS / ADMS integration in Phase 1 demo.
                   </p>
                 </div>
               </div>
