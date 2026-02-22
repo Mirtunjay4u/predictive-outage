@@ -138,7 +138,7 @@ export default function Login() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/50 mt-2 flex-shrink-0" />
-                <span className="text-primary-foreground/75 text-[14px] leading-relaxed">Powered by NVIDIA Nemotron (NIM) for bounded inference</span>
+                <span className="text-[hsl(80,100%,36%)] text-[14px] leading-relaxed">Powered by NVIDIA Nemotron (NIM) for bounded inference</span>
               </li>
             </ul>
           </motion.div>
