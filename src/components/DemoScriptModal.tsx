@@ -13,11 +13,11 @@ import { cn } from '@/lib/utils';
 const demoSteps = [
   {
     title: 'Login & Context',
-    description: 'Authenticate via the Login page to establish operator context. Auto-clicks "Continue in Demo Mode" to begin.',
+    description: 'Authenticate via the Login page. The landing view establishes governed AI positioning and advisory-only boundaries.',
   },
   {
     title: 'Dashboard Orientation',
-    description: 'Review active event KPIs, high-priority alerts, crew workload, Executive Signal, and the Operational Phase ribbon.',
+    description: 'Review active event KPIs, high-priority alerts, crew workload, Executive Signal, Operational Risk Posture, and the governance header strip.',
   },
   {
     title: 'Scenario Playback Lifecycle',
@@ -41,7 +41,7 @@ const demoSteps = [
   },
   {
     title: 'Copilot Studio',
-    description: 'Open Copilot Studio for AI-assisted analysis. Auto-run analysis and review guardrails, allowed/blocked actions, and explainability.',
+    description: 'Open Copilot Studio for governed AI analysis. Review guardrails, allowed/blocked actions, decision trace, and structured reasoning outputs.',
   },
   {
     title: 'Situation Report Generation',
@@ -53,15 +53,19 @@ const demoSteps = [
   },
   {
     title: 'Architecture Overview',
-    description: 'Explore the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron LLM, and observability layer.',
-  },
-  {
-    title: 'Solution Roadmap',
-    description: 'Review the Solution Evolution Blueprint — three-phase timeline, capability lanes, acceptance markers, and governance non-claims.',
+    description: 'Explore the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron inference, and observability layer.',
   },
   {
     title: 'About & Governance',
-    description: 'Review the advisory-only governance notice, safety & compliance information, and the platform\'s decision-support boundary.',
+    description: 'Review advisory-only governance notice, safety & compliance information, and the decision-support-only boundary.',
+  },
+  {
+    title: 'Solution Roadmap',
+    description: 'Review the Solution Evolution Blueprint — three-phase timeline with progress connectors, capability lanes, acceptance markers, and governance non-claims.',
+  },
+  {
+    title: 'Knowledge & Policy',
+    description: 'Review operational governance rules, Phase-1 scope boundaries, and deterministic constraint definitions.',
   },
   {
     title: 'Glossary',
@@ -81,7 +85,7 @@ const demoSteps = [
   },
   {
     title: 'Return to Dashboard & Close Loop',
-    description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, and the narrative resolution of the demo scenario.',
+    description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, version stamp, and narrative resolution.',
   },
 ];
 
