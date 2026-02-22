@@ -1,5 +1,6 @@
-import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck, Brain, Cog, Layers, Database, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck, Brain, Cog, Layers, Database, BookOpen, LayoutDashboard, FileText, Map, Bot, BarChart3, CloudLightning, Network, Route, Sparkles, Library, ClipboardCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -19,8 +20,25 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardUi } from '@/contexts/DashboardUiContext';
+import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import builderPhoto from '@/assets/builder-photo.png';
 import tcsLogo from '@/assets/tcs-logo.png';
+
+const pageResults = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, section: 'Pages' },
+  { label: 'Events', path: '/events', icon: FileText, section: 'Pages' },
+  { label: 'Outage Map', path: '/outage-map', icon: Map, section: 'Pages' },
+  { label: 'Copilot Studio', path: '/copilot-studio', icon: Bot, section: 'Pages' },
+  { label: 'Analytics', path: '/analytics', icon: BarChart3, section: 'Pages' },
+  { label: 'Weather Alerts', path: '/weather-alerts', icon: CloudLightning, section: 'Pages' },
+  { label: 'Architecture', path: '/architecture', icon: Network, section: 'Pages' },
+  { label: 'Solution Roadmap', path: '/solution-roadmap', icon: Route, section: 'Pages' },
+  { label: 'Art of Possibilities', path: '/art-of-possibilities', icon: Sparkles, section: 'Pages' },
+  { label: 'Knowledge & Policy', path: '/knowledge-policy', icon: ShieldCheck, section: 'Pages' },
+  { label: 'Glossary', path: '/glossary', icon: Library, section: 'Pages' },
+  { label: 'Validation Summary', path: '/executive-validation', icon: ClipboardCheck, section: 'Pages' },
+];
 
 interface TopBarProps {
   onSearch?: (query: string) => void;
@@ -29,19 +47,121 @@ interface TopBarProps {
 export function TopBar({ onSearch }: TopBarProps) {
   const { user, logout } = useAuth();
   const { boardroomMode, setBoardroomMode } = useDashboardUi();
+  const navigate = useNavigate();
+
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [eventResults, setEventResults] = useState<Array<{ id: string; name: string; location_name: string | null; priority: string | null }>>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter pages
+  const filteredPages = query.length > 0
+    ? pageResults.filter(p => p.label.toLowerCase().includes(query.toLowerCase()))
+    : [];
+
+  // Search events from DB
+  useEffect(() => {
+    if (query.length < 2) { setEventResults([]); return; }
+    const timeout = setTimeout(async () => {
+      const { data } = await supabase
+        .from('scenarios')
+        .select('id, name, location_name, priority')
+        .ilike('name', `%${query}%`)
+        .limit(6);
+      setEventResults(data || []);
+    }, 250);
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const allResults = [
+    ...filteredPages.map(p => ({ type: 'page' as const, ...p })),
+    ...eventResults.map(e => ({ type: 'event' as const, label: e.name, path: `/events/${e.id}`, icon: FileText, section: 'Events', meta: e.location_name, priority: e.priority })),
+  ];
+
+  useEffect(() => { setActiveIndex(0); }, [allResults.length]);
+
+  const handleSelect = useCallback((path: string) => {
+    navigate(path);
+    setQuery('');
+    setOpen(false);
+    inputRef.current?.blur();
+  }, [navigate]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, allResults.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
+    else if (e.key === 'Enter' && allResults[activeIndex]) { e.preventDefault(); handleSelect(allResults[activeIndex].path); }
+    else if (e.key === 'Escape') { setQuery(''); setOpen(false); inputRef.current?.blur(); }
+  };
+
+  // Close on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   return (
     <header className="h-14 border-b border-border/50 bg-card/80 px-5 backdrop-blur-sm" role="banner" aria-label="Application header">
       <div className="flex h-full w-full items-center justify-between gap-4">
-        <search role="search" aria-label="Search events" className="relative w-full max-w-52 shrink-0">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <div ref={containerRef} className="relative w-full max-w-56 shrink-0">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none" />
           <Input
-            placeholder="Search events..."
+            ref={inputRef}
+            placeholder="Search events, pages…"
             className="h-8 bg-background/50 pl-8 text-xs transition-shadow focus:shadow-md"
-            onChange={(e) => onSearch?.(e.target.value)}
-            aria-label="Search events"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true); onSearch?.(e.target.value); }}
+            onFocus={() => query.length > 0 && setOpen(true)}
+            onKeyDown={handleKeyDown}
+            aria-label="Global search"
           />
-        </search>
+          {open && allResults.length > 0 && (
+            <div className="absolute top-full left-0 mt-1 w-72 max-h-80 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+              {/* Pages section */}
+              {filteredPages.length > 0 && (
+                <div className="px-2 pt-2 pb-1">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-2">Pages</span>
+                </div>
+              )}
+              {allResults.map((item, idx) => {
+                const showEventHeader = item.type === 'event' && (idx === 0 || allResults[idx - 1].type !== 'event');
+                const Icon = item.icon;
+                return (
+                  <div key={item.path + idx}>
+                    {showEventHeader && (
+                      <div className="px-2 pt-2 pb-1">
+                        <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-2">Events</span>
+                      </div>
+                    )}
+                    <button
+                      className={cn(
+                        'flex w-full items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors rounded-md mx-1',
+                        idx === activeIndex ? 'bg-primary/10 text-primary' : 'text-foreground/80 hover:bg-muted/50'
+                      )}
+                      style={{ width: 'calc(100% - 8px)' }}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onClick={() => handleSelect(item.path)}
+                    >
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate font-medium">{item.label}</span>
+                      {'meta' in item && item.meta && (
+                        <span className="ml-auto text-[10px] text-muted-foreground/60 truncate max-w-20">{item.meta}</span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
+              {query.length >= 2 && eventResults.length === 0 && filteredPages.length === 0 && (
+                <div className="px-4 py-3 text-xs text-muted-foreground text-center">No results found</div>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-2" role="group" aria-label="User actions">
           {/* ── System Status Strip ── */}
