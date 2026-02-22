@@ -60,6 +60,10 @@ const demoSteps = [
     description: 'Review the advisory-only governance notice, safety & compliance information, and the platform\'s decision-support boundary.',
   },
   {
+    title: 'Glossary',
+    description: 'Browse standardized definitions for utility domain and AI terminology — search-enabled, regulator-ready reference for all stakeholders.',
+  },
+  {
     title: 'Settings',
     description: 'Review configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
   },
