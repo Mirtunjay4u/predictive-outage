@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Play, Rocket } from 'lucide-react';
+import { CheckCircle2, Circle, Play, Rocket, Printer } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -111,6 +111,42 @@ export function DemoScriptModal() {
     }, 300);
   };
 
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const stepsHtml = demoSteps
+      .map(
+        (step, i) =>
+          `<div style="margin-bottom:18px;padding:12px 16px;border:1px solid #d1d5db;border-radius:8px;page-break-inside:avoid;">
+            <h3 style="margin:0 0 4px;font-size:14px;color:#1e293b;">Step ${i + 1}: ${step.title}</h3>
+            <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${step.description}</p>
+          </div>`
+      )
+      .join('');
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Executive Demo Script</title>
+      <style>
+        @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 700px; margin: 0 auto; padding: 32px 24px; color: #1e293b; }
+        .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #1e293b; padding-bottom: 16px; }
+        .header h1 { font-size: 20px; margin: 0 0 4px; }
+        .header p { font-size: 11px; color: #64748b; margin: 0; }
+        .footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #d1d5db; font-size: 10px; color: #94a3b8; text-align: center; }
+      </style></head><body>
+      <div class="header">
+        <h1>Operator Copilot — Executive Demo Script</h1>
+        <p>Governed AI Decision Intelligence · ${demoSteps.length} Steps · ~9 min walkthrough</p>
+        <p style="margin-top:4px;">v1.0 – Decision Intelligence Prototype · Generated ${new Date().toLocaleDateString()}</p>
+      </div>
+      ${stepsHtml}
+      <div class="footer">Advisory-Only · Operator Validation Required · Demo Data Mode</div>
+    </body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+  }, []);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col">
@@ -195,9 +231,15 @@ export function DemoScriptModal() {
           <span className="text-xs text-muted-foreground">
             {completedSteps.length} of {demoSteps.length} completed
           </span>
-          <Button size="sm" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handlePrint} className="gap-1.5">
+              <Printer className="h-3.5 w-3.5" />
+              Print Script
+            </Button>
+            <Button size="sm" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
