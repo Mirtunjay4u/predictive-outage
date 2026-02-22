@@ -9,62 +9,50 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
  * Index matches tourSteps[].id in DemoTourHUD.
  */
 export const narrationScripts: string[] = [
-  // Step 0 — Login & Context
-  `Welcome to Operator Copilot... a governed AI decision layer built for regulated utility outage operations. This login screen establishes your operator context and session boundaries. In demo mode, we load pre-built storm scenarios... no live SCADA integration is active. The system is strictly advisory. No switching commands, no breaker actuation, no automatic dispatch. Human authority is preserved at all times.`,
+  // Step 0 — Login & Context (includes opening)
+  `Welcome to Operator Copilot... a governed AI decision intelligence layer designed for utility outage operations. This platform augments operator decision-making through structured reasoning, deterministic policy enforcement, and explainable AI... while maintaining strict advisory-only boundaries. We begin by establishing operator context. In this Phase One environment, we are operating in demo data mode... clearly indicated in the system status. No live SCADA, OMS, or ADMS systems are connected. This ensures a controlled and safe demonstration environment.`,
 
   // Step 1 — Dashboard Orientation
-  `This is your operational command center. At the top, you'll see severity-classified events and the System Risk Index. Below that... Executive Signal cards highlight what matters most right now. The KPI grid shows active outages, customers impacted, crew deployment status, and ETR confidence levels. Notice the governance header strip... Governed AI, Advisory-Only, Operator Validation Required. This reinforces operational discipline at every level.`,
+  `The dashboard provides a consolidated operational overview. At the top, the Operational Risk Posture synthesizes outage severity, hazard exposure, crew readiness, and ETR confidence bands into a single governed view. This is not an automation layer... it is a structured decision-support summary designed to reduce operator cognitive load. The System Status clearly indicates AI mode, data mode, and Phase scope... reinforcing transparency at every level.`,
 
   // Step 2 — Scenario Playback Lifecycle
-  `Now we're looking at the Scenario Playback panel. This module simulates the full outage lifecycle... Pre-Event monitoring, Active Event response, and Post-Event stabilization. Watch how hazard exposure, crew allocation, and confidence metrics evolve through each phase. This is designed for operational rehearsal... and resilience planning.`,
+  `We can dynamically navigate through the outage lifecycle... Pre-Event, Active Event, and Post-Event. This reflects how utilities manage evolving operational states during severe weather or grid disturbance.`,
 
   // Step 3 — Events Page Deep Dive
-  `Here is the events triage queue. Each row gives you structured visibility into the event... severity classification, ETR confidence band, critical load tags, and policy enforcement status. Notice the policy flags on the right... these indicate whether operational constraints are affecting potential advisory insights. This creates full transparency between system logic and your awareness as an operator.`,
+  `Here we review active events using structured triage. Each event displays severity, affected feeder, critical load impact, and ETR confidence bands. Importantly, we do not present a single deterministic ETR... instead we expose uncertainty bands, reinforcing operational realism.`,
 
   // Step 4 — Event Detail View
-  `We've drilled into the Downtown Houston Storm Damage event. This view reveals the full operational context... crew assignment state, escalation phase, hazard correlation, and ETR confidence explanation. The confidence range reflects multiple factors... weather exposure, asset condition, and crew readiness. If maintenance locks or safety constraints are present... advisory pathways are automatically restricted. Everything is explainable.`,
+  `This event detail view combines crew assignment, hazard exposure correlation, escalation status, and structured reasoning outputs. Every advisory insight is constrained by a deterministic rule engine. The Decision Trace provides full transparency... including rule checks, inference drivers, and scope validation.`,
 
   // Step 5 — Outage Map Intelligence
-  `The outage map integrates feeder topology with situational overlays. Here we can correlate downstream impact zones... critical infrastructure nodes... crew proximity... and hazard exposure layers. This spatial intelligence strengthens restoration prioritization while preserving clear operational boundaries. No switching actions are triggered from this interface.`,
+  `The outage map overlays event markers with feeder zones, critical load layers, and hazard exposure. This enables spatial situational awareness without executing any operational control actions.`,
 
   // Step 6 — Weather Alerts Section
-  `This is the weather intelligence layer. We incorporate environmental signals... wind velocity, precipitation intensity, storm cell tracking, and exposure scoring. Events within hazard zones are dynamically correlated with weather data. This enhances predictive risk modeling and crew safety planning. Environmental awareness informs decision logic... but does not automate it.`,
+  `We integrate hazard context to improve operational awareness... correlating weather severity with affected infrastructure. This improves prioritization without automating dispatch decisions.`,
 
   // Step 7 — Copilot Studio
-  `Welcome to Copilot Studio... the governed AI advisory engine powered by NVIDIA Nemotron. But here's the key... inference is only executed after deterministic rule validation. The system evaluates asset maintenance flags, crew skillset mismatches, and critical load thresholds before generating any advisory output. You'll see allowed and blocked recommendations clearly separated. This ensures explainability... and full policy compliance.`,
+  `Copilot Studio provides structured AI-assisted analysis powered by NVIDIA Nemotron. All outputs remain advisory and policy-constrained. This reasoning is bounded by deterministic guardrails and validated before presentation.`,
 
   // Step 8 — Situation Report Generation
-  `The system generates structured Situation Reports consolidating event status, confidence bands, critical load exposure, and actions taken. Notice the approval indicators... ensuring human validation before any distribution. This improves communication clarity across stakeholders... without removing operator oversight.`,
+  `Here we generate structured situation reports for executive and customer communication. Outputs remain subject to operator approval.`,
 
   // Step 9 — Analytics
-  `The analytics layer visualizes high-priority event distributions... policy block frequency... ETR confidence variability... and restoration trend patterns. These metrics strengthen your resilience planning and post-event analysis. Analytics inform decision-making. They do not override it.`,
+  `The Analytics section summarizes high-priority counts, policy blocks, and ETR distribution trends. These metrics support operational review without claiming predictive calibration in Phase One.`,
 
   // Step 10 — Architecture Overview
-  `Now let's review the system architecture. It consists of a data ingestion layer... operational rule engine... copilot orchestration layer... NVIDIA Nemotron inference layer... guardrail enforcement module... and observability components. Notice the critical design principle... AI reasoning is always downstream of deterministic policy validation. This layered architecture ensures bounded intelligence within regulatory constraints.`,
+  `This architecture illustrates the layered design... Ingest, Rule Engine, Bounded AI Inference, Explainability, and Operator Interface. Governance is enforced before and after AI reasoning.`,
 
-  // Step 11 — About & Governance
-  `The governance documentation clearly defines our system boundaries. The platform is advisory-only... human-in-the-loop... non-autonomous... and non-actuating. No SCADA integration is active in Phase One. This preserves full compliance with regulated grid operations.`,
+  // Step 11 — Knowledge & Policy
+  `This section defines operational policies and advisory boundaries... ensuring regulatory defensibility and transparent operational discipline.`,
 
-  // Step 12 — Solution Roadmap
-  `This is the Solution Evolution Blueprint. It visualizes a structured evolution plan aligned to utility operational governance and predictive validation milestones. Phase One establishes governed decision support. Phase Two introduces calibrated predictive analytics and enterprise integration. Phase Three targets production hardening. Notice the progress connectors between phases... and the acceptance markers that define clear transition criteria.`,
+  // Step 12 — Glossary
+  `To eliminate ambiguity, all domain and AI terminology is standardized here... supporting cross-functional clarity across stakeholders.`,
 
-  // Step 13 — Knowledge & Policy
-  `This page defines the operational governance rules that constrain system behavior. Every deterministic rule, escalation trigger, and safety policy is documented and auditable. Phase One scope boundaries are explicitly stated. This ensures regulatory defensibility and transparent operational discipline.`,
+  // Step 13 — Solution Roadmap Blueprint
+  `This blueprint outlines structured evolution from Phase One decision intelligence to Phase Two calibrated predictive capabilities. Phase Two introduces probabilistic risk scoring, ETR distribution modeling, historical backtesting, and production hardening... without compromising governance. This roadmap avoids false commitments and clearly separates implemented capabilities from planned milestones.`,
 
-  // Step 14 — Glossary
-  `The Glossary provides standardized definitions for all key operational and AI terms used throughout the platform. It's search-enabled, regulator-ready, and ensures terminology consistency across stakeholders... from field operators to executive leadership.`,
-
-  // Step 15 — Settings
-  `The settings panel exposes configurable AI modes and enterprise integration readiness. Future integrations including Dataverse and enterprise telemetry are architecturally supported... but not enabled in Phase One. This reflects scalable design... without premature automation.`,
-
-  // Step 16 — Art of Possibilities
-  `Now we explore the Art of Possibilities... a conceptual roadmap for Phase Two and beyond. This layer introduces environmental signal fusion... wildfire corridor awareness... vegetation stress intelligence... and bio-sentinel anomaly corroboration. The visualization shows how satellite hotspot data, wind vectors, fuel dryness indices, and corridor sensor signals could be fused into a unified risk overlay. Bio-sentinel signals are probabilistic... and serve only to corroborate primary evidence. No dispatch or switching actions are triggered from this layer. All outputs remain advisory.`,
-
-  // Step 17 — Executive Validation Summary
-  `This is the Executive Validation Summary. It documents how this solution differs from traditional OMS systems. We've demonstrated confidence-based ETR modeling... critical load prioritization... hazard-informed risk scoring... deterministic rule enforcement... and explainable advisory outputs. Phase One focuses strictly on decision intelligence. It does not include autonomous switching, breaker actuation, or SCADA execution.`,
-
-  // Step 18 — Return to Dashboard & Close Loop
-  `We return to the operational dashboard. Updated KPIs reflect a stabilized posture. The event lifecycle concludes with improved situational clarity... and defensible decision logic. Operator Copilot is a governed AI decision layer... advisory-only, policy-constrained, operator-controlled. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
+  // Step 14 — Executive Validation & Close
+  `In summary, Operator Copilot does not replace OMS or ADMS. It augments operator reasoning through governed AI, explainability, and structured operational insight. It is designed for critical infrastructure domains... where safety, transparency, and human validation remain paramount. Operator Copilot represents a disciplined evolution toward calibrated predictive operations... grounded in governance, structured AI, and utility-domain alignment. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
 ];
 
 interface UseTourNarrationReturn {
