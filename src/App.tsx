@@ -29,6 +29,7 @@ import ExecutiveSummary from "./pages/ExecutiveSummary";
 import KnowledgePolicy from "./pages/KnowledgePolicy";
 import Glossary from "./pages/Glossary";
 import SolutionRoadmap from "./pages/SolutionRoadmap";
+import UseCases from "./pages/UseCases";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="/knowledge-policy" element={<KnowledgePolicy />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/solution-roadmap" element={<SolutionRoadmap />} />
+        <Route path="/use-cases" element={<UseCases />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
