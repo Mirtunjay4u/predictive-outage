@@ -80,12 +80,18 @@ export function DemoTourHUD() {
 
   // ── Body class for dim ──
   useEffect(() => {
+    const main = document.getElementById('main-content');
     if (isPlaying && !tourComplete) {
       document.body.classList.add('tour-active');
+      if (main) main.style.paddingBottom = '100px';
     } else {
       document.body.classList.remove('tour-active');
+      if (main) main.style.paddingBottom = '';
     }
-    return () => document.body.classList.remove('tour-active');
+    return () => {
+      document.body.classList.remove('tour-active');
+      if (main) main.style.paddingBottom = '';
+    };
   }, [isPlaying, tourComplete]);
 
   // ── Clear beats ──
@@ -536,7 +542,7 @@ export function DemoTourHUD() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[9999]"
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999]"
       >
         <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-4 py-2 min-w-[460px] max-w-[560px]">
           {/* Header row with step title inline */}
