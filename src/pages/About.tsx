@@ -418,6 +418,9 @@ export default function About() {
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">15+ Years Experience</Badge>
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">NVIDIA Certified</Badge>
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">Azure AI Engineer</Badge>
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">Citizen Data Scientist</Badge>
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">Asset Reliability Leader</Badge>
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">SAFe Scrum Master</Badge>
                       </div>
                       <div className="flex justify-center sm:justify-start gap-2 mt-3">
                         <a href="https://www.linkedin.com/in/mirtunjay4u" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 border border-primary-foreground/20 px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary-foreground/25 transition-colors">
