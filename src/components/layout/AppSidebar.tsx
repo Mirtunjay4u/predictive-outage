@@ -101,7 +101,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(280,60%,55%,0.12)]',
     hoverBg: 'hover:bg-[hsl(280,60%,55%,0.05)]',
     iconActive: 'text-[hsl(280,50%,68%)]',
-    headerColor: 'text-[hsl(280,50%,65%)]',
+    headerColor: 'text-[hsl(280,55%,72%)]',
   },
   platform: {
     barGradient: 'bg-gradient-to-b from-[hsl(215,20%,60%)] to-[hsl(215,20%,48%)]',
@@ -110,7 +110,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(215,20%,55%,0.10)]',
     hoverBg: 'hover:bg-[hsl(215,20%,55%,0.04)]',
     iconActive: 'text-[hsl(215,20%,70%)]',
-    headerColor: 'text-[hsl(215,25%,62%)]',
+    headerColor: 'text-[hsl(215,30%,72%)]',
   },
 };
 
