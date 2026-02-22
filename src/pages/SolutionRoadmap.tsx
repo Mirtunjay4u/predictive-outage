@@ -7,162 +7,88 @@ import {
   ShieldCheck,
   AlertTriangle,
   XCircle,
-  ChevronRight,
   Zap,
   Radio,
   Target,
   Users,
   Eye,
   ArrowRight,
+  Circle,
+  Sparkles,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 /* ── Phase definitions ── */
 const phases = [
   {
     id: 'p1',
+    idx: 0,
     label: 'Phase 1',
     title: 'Governed Decision Intelligence',
     tag: 'Current',
-    status: 'Complete',
+    tagColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+    accent: 'emerald',
+    summary: 'Advisory decision-support layer with deterministic rules, explainable AI reasoning, and full governance transparency.',
     progress: 100,
-    statusColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    dotColor: 'bg-emerald-500',
-    barColor: 'from-emerald-600 to-emerald-400',
   },
   {
     id: 'p2a',
+    idx: 1,
     label: 'Phase 2A',
     title: 'Predictive MVP',
     tag: 'Committed',
-    status: 'In Design',
+    tagColor: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+    accent: 'blue',
+    summary: 'Calibrated probabilistic predictions with live data ingestion, historical backtesting, and auditable model outputs.',
     progress: 25,
-    statusColor: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    dotColor: 'bg-blue-500',
-    barColor: 'from-blue-600 to-blue-400',
   },
   {
     id: 'p2b',
+    idx: 2,
     label: 'Phase 2B',
     title: 'Utility-Grade Platform',
     tag: 'Planned',
-    status: 'Strategic Planning',
+    tagColor: 'bg-slate-500/20 text-slate-400 border-slate-500/40',
+    accent: 'slate',
+    summary: 'Enterprise production hardening with topology-aware modeling, drift governance, and continuous performance monitoring.',
     progress: 0,
-    statusColor: 'bg-slate-500/15 text-slate-400 border-slate-500/30',
-    dotColor: 'bg-slate-500',
-    barColor: 'from-slate-600 to-slate-400',
   },
 ];
 
-/* ── Condensed lane data with short labels ── */
-const lanes: {
+/* ── Lane data per phase ── */
+type LaneDef = {
   title: string;
   icon: typeof Database;
-  defaultOpen: boolean;
   phases: { items: string[]; gate?: string; warn?: string }[];
-}[] = [
+};
+
+const lanes: LaneDef[] = [
   {
     title: 'Data & Integration',
     icon: Database,
-    defaultOpen: true,
     phases: [
-      {
-        items: [
-          'Structured event modeling',
-          'Hazard overlay correlation',
-          'Crew & asset abstraction',
-          'Dataverse placeholder',
-        ],
-      },
-      {
-        items: [
-          'OMS event ingestion',
-          'Weather feed (NWS/NOAA)',
-          'Asset registry ingestion',
-          'Crew status + history archive',
-        ],
-        gate: 'Feature store established',
-      },
-      {
-        items: [
-          'Topology-aware feeders',
-          'Vegetation risk layers',
-          'Work mgmt integration',
-          'Drift detection',
-        ],
-        gate: 'Production pipeline w/ monitoring',
-      },
+      { items: ['Structured event modeling', 'Hazard overlay correlation', 'Crew & asset abstraction', 'Dataverse placeholder'] },
+      { items: ['OMS event ingestion', 'Weather feed (NWS/NOAA)', 'Asset registry ingestion', 'Crew status + history archive'], gate: 'Feature store established' },
+      { items: ['Topology-aware feeders', 'Vegetation risk layers', 'Work mgmt integration', 'Drift detection'], gate: 'Production pipeline w/ monitoring' },
     ],
   },
   {
     title: 'AI & Analytics',
     icon: Brain,
-    defaultOpen: true,
     phases: [
-      {
-        items: [
-          'Deterministic rule engine',
-          'Advisory AI (Nemotron NIM)',
-          'ETR confidence bands',
-          'Risk posture synthesis',
-          'Decision Trace',
-        ],
-        warn: 'No autonomous switching or predictive calibration',
-      },
-      {
-        items: [
-          'Probabilistic risk scoring',
-          'ETR distribution (P50/P80)',
-          'Historical backtesting',
-          'Explainability attribution',
-        ],
-        gate: 'Predictions calibrated on historical data',
-      },
-      {
-        items: [
-          'Propagation modeling',
-          'Crew-aware ETR',
-          'What-if simulation',
-          'Advisory crew allocation',
-        ],
-        gate: 'Validated performance w/ drift governance',
-      },
+      { items: ['Deterministic rule engine', 'Advisory AI (Nemotron NIM)', 'ETR confidence bands', 'Risk posture synthesis', 'Decision Trace'], warn: 'No autonomous switching or predictive calibration' },
+      { items: ['Probabilistic risk scoring', 'ETR distribution (P50/P80)', 'Historical backtesting', 'Explainability attribution'], gate: 'Predictions calibrated on historical data' },
+      { items: ['Propagation modeling', 'Crew-aware ETR', 'What-if simulation', 'Advisory crew allocation'], gate: 'Validated performance w/ drift governance' },
     ],
   },
   {
     title: 'Governance & Hardening',
     icon: ShieldCheck,
-    defaultOpen: false,
     phases: [
-      {
-        items: [
-          'Advisory-only boundary',
-          'System status transparency',
-          'Decision Trace',
-          'Glossary & policy alignment',
-        ],
-      },
-      {
-        items: [
-          'Model versioning',
-          'Audit trail',
-          'Output contracts',
-          'Latency monitoring',
-          'RBAC planning',
-        ],
-        gate: 'AI outputs auditable & traceable',
-      },
-      {
-        items: [
-          'Drift detection (data + model)',
-          'Fallback automation',
-          'Feature flags',
-          'SLO + compliance review',
-        ],
-        gate: 'Enterprise production readiness',
-      },
+      { items: ['Advisory-only boundary', 'System status transparency', 'Decision Trace', 'Glossary & policy alignment'] },
+      { items: ['Model versioning', 'Audit trail', 'Output contracts', 'Latency monitoring', 'RBAC planning'], gate: 'AI outputs auditable & traceable' },
+      { items: ['Drift detection (data + model)', 'Fallback automation', 'Feature flags', 'SLO + compliance review'], gate: 'Enterprise production readiness' },
     ],
   },
 ];
@@ -183,208 +109,261 @@ const nonClaims = [
   'No ungoverned data integration',
 ];
 
-function CollapsibleLane({
-  lane,
-  defaultOpen,
-}: {
-  lane: (typeof lanes)[0];
-  defaultOpen: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  const Icon = lane.icon;
+/* ── Accent color helpers ── */
+const accentMap = {
+  emerald: {
+    border: 'border-emerald-500/30',
+    bg: 'bg-emerald-500/5',
+    chipBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300',
+    glow: 'shadow-emerald-500/10',
+    stepBorder: 'border-emerald-400',
+    stepBg: 'bg-emerald-500/15',
+    icon: 'text-emerald-400',
+    gateBorder: 'border-emerald-500/25',
+    gateBg: 'bg-emerald-500/8',
+    gateText: 'text-emerald-400/90',
+  },
+  blue: {
+    border: 'border-blue-500/30',
+    bg: 'bg-blue-500/5',
+    chipBg: 'bg-blue-500/10 border-blue-500/20 text-blue-300',
+    glow: 'shadow-blue-500/10',
+    stepBorder: 'border-blue-400',
+    stepBg: 'bg-blue-500/15',
+    icon: 'text-blue-400',
+    gateBorder: 'border-blue-500/25',
+    gateBg: 'bg-blue-500/8',
+    gateText: 'text-blue-400/90',
+  },
+  slate: {
+    border: 'border-slate-500/25',
+    bg: 'bg-slate-500/5',
+    chipBg: 'bg-slate-500/10 border-slate-500/20 text-slate-300',
+    glow: 'shadow-slate-500/10',
+    stepBorder: 'border-slate-500',
+    stepBg: 'bg-slate-500/15',
+    icon: 'text-slate-400',
+    gateBorder: 'border-slate-500/20',
+    gateBg: 'bg-slate-500/8',
+    gateText: 'text-slate-400/90',
+  },
+};
+
+export default function SolutionRoadmap() {
+  const [activePhase, setActivePhase] = useState(0);
+  const phase = phases[activePhase];
+  const colors = accentMap[phase.accent as keyof typeof accentMap];
 
   return (
-    <div className="space-y-1.5">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-1 w-full group cursor-pointer"
+    <div className="min-h-screen space-y-5 px-4 py-6 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
+      {/* ── Header ── */}
+      <motion.header
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        <Icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.75} />
-        <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-          {lane.title}
-        </h3>
-        <div className="h-px flex-1 bg-border/30" />
-        <motion.div
-          animate={{ rotate: open ? 90 : 0 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
-        >
-          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
-        </motion.div>
-      </button>
+        <h1 className="text-[1.35rem] font-bold tracking-tight text-foreground">
+          Solution Evolution Blueprint
+        </h1>
+        <p className="text-sm text-muted-foreground/80 mt-1">
+          From governed decision support → calibrated predictive operations
+        </p>
+      </motion.header>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-              {lane.phases.map((phaseData, pi) => (
-                <div
-                  key={pi}
-                  className={cn(
-                    'rounded-lg border border-border/30 bg-card/40 px-3 py-2.5 space-y-2',
-                    pi === 0 && 'border-emerald-500/20',
-                    pi === 1 && 'border-blue-500/15',
-                    pi === 2 && 'border-slate-500/15',
-                  )}
-                >
-                  {/* Compact chip list */}
-                <div className="flex flex-wrap gap-1">
+      {/* ── Phase Stepper (horizontal) ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+      >
+        <div className="flex items-stretch gap-2">
+          {phases.map((p, i) => {
+            const c = accentMap[p.accent as keyof typeof accentMap];
+            const isActive = i === activePhase;
+            const isComplete = p.progress === 100;
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => setActivePhase(i)}
+                className={cn(
+                  'relative flex-1 rounded-xl border px-4 py-3 text-left transition-all duration-200 cursor-pointer',
+                  isActive
+                    ? cn(c.border, c.bg, 'shadow-lg', c.glow, 'ring-1 ring-inset', c.border)
+                    : 'border-border/20 bg-card/30 hover:bg-card/50 hover:border-border/40',
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Step indicator */}
+                  <div
+                    className={cn(
+                      'h-9 w-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
+                      isActive ? cn(c.stepBorder, c.stepBg) : 'border-border/30 bg-card/40',
+                    )}
+                  >
+                    {isComplete ? (
+                      <CheckCircle2 className={cn('h-5 w-5', isActive ? 'text-emerald-400' : 'text-emerald-500/50')} />
+                    ) : p.progress > 0 ? (
+                      <Sparkles className={cn('h-4 w-4', isActive ? 'text-blue-400' : 'text-blue-400/40')} />
+                    ) : (
+                      <Circle className={cn('h-4 w-4', isActive ? 'text-slate-400' : 'text-slate-500/40')} />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn('text-[10px] font-bold uppercase tracking-[0.12em]', isActive ? c.icon : 'text-muted-foreground/50')}>
+                        {p.label}
+                      </span>
+                      <Badge variant="outline" className={cn('text-[8px] border', isActive ? p.tagColor : 'border-border/20 text-muted-foreground/40')}>
+                        {p.tag}
+                      </Badge>
+                    </div>
+                    <p className={cn('text-[12px] font-semibold leading-tight mt-0.5 truncate', isActive ? 'text-foreground/90' : 'text-muted-foreground/50')}>
+                      {p.title}
+                    </p>
+                  </div>
+                </div>
+
+                {/* "YOU ARE HERE" pulse for Phase 1 */}
+                {i === 0 && isActive && (
+                  <div className="absolute -top-1.5 -right-1.5">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-50" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-emerald-400/50" />
+                    </span>
+                  </div>
+                )}
+
+                {/* Connector arrow between cards */}
+                {i < phases.length - 1 && (
+                  <div className="absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 hidden md:block">
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/20" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </motion.section>
+
+      {/* ── Active Phase Detail Panel ── */}
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={activePhase}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.25 }}
+          className={cn('rounded-xl border p-5 space-y-4', colors.border, colors.bg)}
+        >
+          {/* Phase summary */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-[15px] font-bold text-foreground/90 flex items-center gap-2">
+                {phase.label}: {phase.title}
+                {phase.progress === 100 && (
+                  <Badge variant="outline" className="text-[9px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                    ✓ Delivered
+                  </Badge>
+                )}
+              </h2>
+              <p className="text-[12px] text-muted-foreground/70 mt-1 max-w-2xl leading-relaxed">
+                {phase.summary}
+              </p>
+            </div>
+
+            {/* Progress ring */}
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="relative h-12 w-12">
+                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-border/20" />
+                  <circle
+                    cx="18" cy="18" r="14" fill="none" strokeWidth="2.5"
+                    strokeDasharray={`${phase.progress * 0.88} 88`}
+                    strokeLinecap="round"
+                    className={cn(
+                      phase.progress === 100 ? 'text-emerald-400' : phase.progress > 0 ? 'text-blue-400' : 'text-slate-500',
+                    )}
+                    stroke="currentColor"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground/70">
+                  {phase.progress}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Capability lanes for this phase */}
+          <div className="space-y-3">
+            {lanes.map((lane) => {
+              const Icon = lane.icon;
+              const phaseData = lane.phases[activePhase];
+              return (
+                <div key={lane.title} className="rounded-lg border border-border/20 bg-background/30 px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <Icon className={cn('h-4 w-4', colors.icon)} strokeWidth={1.75} />
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
+                      {lane.title}
+                    </h3>
+                    <div className="h-px flex-1 bg-border/20" />
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
                     {phaseData.items.map((item, i) => (
                       <motion.span
-                        initial={{ opacity: 0, scale: 0.9 }}
+                        key={item}
+                        initial={{ opacity: 0, scale: 0.92 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.2, delay: i * 0.03 }}
-                        key={i}
+                        transition={{ duration: 0.2, delay: i * 0.04 }}
                         className={cn(
-                          'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight',
-                          pi === 0
-                            ? 'bg-emerald-500/8 text-emerald-300/90 border border-emerald-500/15'
-                            : pi === 1
-                              ? 'bg-blue-500/8 text-blue-300/90 border border-blue-500/15'
-                              : 'bg-slate-500/8 text-slate-300/90 border border-slate-500/15',
+                          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                          colors.chipBg,
                         )}
                       >
+                        {phase.progress === 100 && (
+                          <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
+                        )}
                         {item}
                       </motion.span>
                     ))}
                   </div>
 
                   {phaseData.warn && (
-                    <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2 py-1">
+                    <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-1.5 mt-2.5">
                       <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                      <span className="text-[9px] font-medium text-amber-400/80">{phaseData.warn}</span>
+                      <span className="text-[10px] font-medium text-amber-400/80">{phaseData.warn}</span>
                     </div>
                   )}
 
                   {phaseData.gate && (
-                    <div className="flex items-center gap-1.5 rounded border border-emerald-500/20 bg-emerald-500/5 px-2 py-1">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-400 flex-shrink-0" />
-                      <span className="text-[9px] font-semibold text-emerald-400/80">{phaseData.gate}</span>
+                    <div className={cn('flex items-center gap-1.5 rounded border px-2.5 py-1.5 mt-2.5', colors.gateBorder, colors.gateBg)}>
+                      <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', colors.gateText)} />
+                      <span className={cn('text-[10px] font-semibold', colors.gateText)}>Gate: {phaseData.gate}</span>
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+              );
+            })}
+          </div>
+        </motion.section>
       </AnimatePresence>
-    </div>
-  );
-}
 
-export default function SolutionRoadmap() {
-  return (
-    <div className="min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
-      {/* ── Compact Header ── */}
-      <motion.header
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="space-y-2"
-      >
-        <h1 className="text-[1.35rem] font-bold tracking-tight text-foreground">
-          Solution Evolution Blueprint
-        </h1>
-        <p className="text-sm text-muted-foreground/80 max-w-2xl">
-          From governed decision support → calibrated predictive operations
-        </p>
-      </motion.header>
-
-      {/* ── Visual Phase Timeline ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
-        className="rounded-xl border border-border/30 bg-card/50 p-4"
-      >
-        <div className="flex items-center gap-0">
-          {phases.map((p, i) => (
-            <div key={p.id} className="flex items-center flex-1 last:flex-none">
-              {/* Phase node */}
-              <div className="flex flex-col items-center gap-1.5 min-w-[140px]">
-                {/* Circle + progress */}
-                <div className="relative">
-                  <div
-                    className={cn(
-                      'h-10 w-10 rounded-full border-2 flex items-center justify-center',
-                      p.progress === 100
-                        ? 'border-emerald-500/60 bg-emerald-500/10'
-                        : p.progress > 0
-                          ? 'border-blue-500/60 bg-blue-500/10'
-                          : 'border-slate-500/40 bg-slate-500/5',
-                    )}
-                  >
-                    {p.progress === 100 ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                    ) : (
-                      <span className="text-[11px] font-bold text-muted-foreground/70">
-                        {p.progress}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60">
-                    {p.label}
-                  </span>
-                  <p className="text-[12px] font-semibold text-foreground/90 leading-tight mt-0.5">
-                    {p.title}
-                  </p>
-                  <Badge
-                    variant="outline"
-                    className={cn('mt-1 text-[9px] border', p.statusColor)}
-                  >
-                    {p.tag}
-                  </Badge>
-                </div>
-              </div>
-              {/* Connector arrow */}
-              {i < phases.length - 1 && (
-                <div className="flex-1 flex items-center px-2 -mt-8">
-                  <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/20 to-muted-foreground/10" />
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/25 -ml-0.5" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* ── Collapsible Capability Lanes ── */}
+      {/* ── Bottom strip: Impact + Non-Claims ── */}
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-        className="space-y-3"
-      >
-        {lanes.map((lane) => (
-          <CollapsibleLane key={lane.title} lane={lane} defaultOpen={lane.defaultOpen} />
-        ))}
-      </motion.section>
-
-      {/* ── Bottom strip: Impact + Non-Claims side by side ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.2 }}
+        transition={{ duration: 0.35, delay: 0.15 }}
         className="grid grid-cols-1 md:grid-cols-2 gap-3"
       >
-        {/* Impact */}
         <div className="rounded-lg border border-border/30 bg-card/50 px-4 py-3">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 mb-2">
             Impact Domains
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {impactAreas.map((a) => (
-              <span
-                key={a.text}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1 text-[10px] font-medium text-primary/80"
-              >
+              <span key={a.text} className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-2.5 py-1 text-[10px] font-medium text-primary/80">
                 <a.icon className="h-3 w-3" strokeWidth={1.75} />
                 {a.text}
               </span>
@@ -392,17 +371,13 @@ export default function SolutionRoadmap() {
           </div>
         </div>
 
-        {/* Non-claims */}
         <div className="rounded-lg border border-amber-500/15 bg-amber-500/[0.03] px-4 py-3">
           <h3 className="text-[11px] font-bold uppercase tracking-[0.1em] text-amber-400/60 mb-2">
             Explicit Non-Claims
           </h3>
           <div className="flex flex-wrap gap-1.5">
             {nonClaims.map((c) => (
-              <span
-                key={c}
-                className="inline-flex items-center gap-1 rounded-full border border-amber-500/15 bg-amber-500/5 px-2.5 py-1 text-[10px] font-medium text-amber-400/70"
-              >
+              <span key={c} className="inline-flex items-center gap-1 rounded-full border border-amber-500/15 bg-amber-500/5 px-2.5 py-1 text-[10px] font-medium text-amber-400/70">
                 <XCircle className="h-3 w-3 flex-shrink-0" />
                 {c}
               </span>
@@ -411,7 +386,7 @@ export default function SolutionRoadmap() {
         </div>
       </motion.section>
 
-      {/* ── Governance footer ── */}
+      {/* ── Footer ── */}
       <footer className="pb-4 pt-1 text-center">
         <p className="text-[10px] text-muted-foreground/40 tracking-wide">
           Advisory-only · No autonomous control · No live SCADA/OMS/ADMS in Phase 1
