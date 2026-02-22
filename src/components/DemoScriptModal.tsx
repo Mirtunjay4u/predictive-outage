@@ -56,6 +56,10 @@ const demoSteps = [
     description: 'Explore the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron LLM, and observability layer.',
   },
   {
+    title: 'Solution Roadmap',
+    description: 'Review the Solution Evolution Blueprint — three-phase timeline, capability lanes, acceptance markers, and governance non-claims.',
+  },
+  {
     title: 'About & Governance',
     description: 'Review the advisory-only governance notice, safety & compliance information, and the platform\'s decision-support boundary.',
   },
