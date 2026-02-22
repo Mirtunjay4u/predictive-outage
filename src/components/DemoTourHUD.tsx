@@ -2,251 +2,83 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Play, Pause, SkipForward, Square, CheckCircle2, RotateCcw, X,
-  Shield, Brain, Map, BarChart3, FileText, Layout, CloudLightning,
-  Network, Info, Settings, Zap, Globe, Eye, Activity, Lock, Unlock,
-  AlertTriangle, Target, Gauge, Users, Radio, Layers, Cpu, Sparkles,
-  Volume2, VolumeX, Loader2,
+  Play, Pause, SkipForward, CheckCircle2, RotateCcw, X,
+  Shield, Brain, Map, CloudLightning, Network, Eye,
+  Gauge, Sparkles, Volume2, VolumeX, Loader2, Bug,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useTourNarration } from '@/hooks/useTourNarration';
+import { TourSpotlight } from '@/components/tour/TourSpotlight';
+import {
+  tourSteps,
+  safeScroll,
+  safeClick,
+  waitForStepReady,
+  enableDebugMode,
+  getDebugLogs,
+  clearDebugLogs,
+  type TourBeat,
+} from '@/lib/tour-engine';
 
-const STORM_EVENT_ID = '471105eb-fbf9-43c1-8cc5-ad8214abfed8';
+// ── Types ──
 
-/**
- * 15-step Executive Auto Tour — refined executive narration sequence.
- * Each step: route, duration, narrative (HUD), tooltip (overlay), highlights (section names).
- */
-const tourSteps = [
-  {
-    id: 0,
-    title: 'Login & Context',
-    route: '/login',
-    duration: 45000,
-    narrative: 'Establishing operator context in demo data mode. No live SCADA, OMS, or ADMS connected — controlled and safe demonstration environment.',
-    tooltip: 'This governed AI decision intelligence layer augments operator decision-making through structured reasoning and deterministic policy enforcement.',
-    highlights: ['Platform title', 'Key capabilities', 'Demo Mode button'],
-    autoAction: 'login',
-    scrollTargets: [],
-  },
-  {
-    id: 1,
-    title: 'Dashboard Orientation',
-    route: '/dashboard',
-    duration: 45000,
-    narrative: 'Reviewing Operational Risk Posture, severity events, hazard exposure, crew readiness, ETR confidence bands, and the governance header strip.',
-    tooltip: 'The dashboard is a structured decision-support summary — not an automation layer — designed to reduce operator cognitive load.',
-    highlights: ['Operational Risk Posture', 'System Status', 'Executive Signal', 'KPI Grid'],
-    scrollTargets: [
-      '[data-tour-section="dashboard"]',
-      '[data-tour-section="dashboard-active-event"]',
-      '[data-tour-section="dashboard-grid"]',
-    ],
-  },
-  {
-    id: 2,
-    title: 'Scenario Playback Lifecycle',
-    route: '/dashboard',
-    duration: 30000,
-    narrative: 'Navigating through Pre-Event, Active Event, and Post-Event lifecycle phases — reflecting how utilities manage evolving operational states.',
-    tooltip: 'Scenario Playback simulates hazard lifecycle progression for operational rehearsal and resilience planning.',
-    highlights: ['Scenario Playback Panel'],
-    scrollTargets: ['[data-tour-section="scenario-playback"]'],
-  },
-  {
-    id: 3,
-    title: 'Events Page Deep Dive',
-    route: '/events',
-    duration: 45000,
-    narrative: 'Reviewing structured triage: severity, affected feeder, critical load impact, and ETR uncertainty bands — reinforcing operational realism.',
-    tooltip: 'We expose uncertainty bands rather than a single deterministic ETR — reinforcing operational realism.',
-    highlights: ['Severity', 'Affected Feeder', 'Critical Load', 'ETR Confidence Band'],
-    scrollTargets: ['[data-tour-section="events"]'],
-  },
-  {
-    id: 4,
-    title: 'Event Detail View',
-    route: `/event/${STORM_EVENT_ID}`,
-    duration: 45000,
-    narrative: 'Examining crew assignment, hazard exposure correlation, escalation status, structured reasoning, and the Decision Trace for full transparency.',
-    tooltip: 'Every advisory insight is constrained by a deterministic rule engine. The Decision Trace provides full transparency.',
-    highlights: ['Crew Assignment', 'Escalation State', 'Hazard Correlation', 'Decision Trace'],
-    scrollTargets: ['[data-tour-section="event-detail"]'],
-  },
-  {
-    id: 5,
-    title: 'Outage Map Intelligence',
-    route: '/outage-map',
-    duration: 45000,
-    narrative: 'Overlaying event markers with feeder zones, critical load layers, and hazard exposure — spatial situational awareness without operational control actions.',
-    tooltip: 'Spatial intelligence strengthens restoration prioritization while preserving clear operational boundaries.',
-    highlights: ['Event Markers', 'Critical Load Layer', 'Feeder Zones', 'Hazard Overlay'],
-    scrollTargets: ['[data-tour-section="outage-map"]'],
-  },
-  {
-    id: 6,
-    title: 'Weather Alerts Section',
-    route: '/weather-alerts',
-    duration: 30000,
-    narrative: 'Correlating weather severity with affected infrastructure to improve prioritization — without automating dispatch decisions.',
-    tooltip: 'Hazard intelligence improves prioritization without automating dispatch decisions.',
-    highlights: ['Hazard Exposure Score', 'Events in Hazard Zones', 'Crew Safety Status'],
-    scrollTargets: [
-      '[data-tour-section="weather-alerts"]',
-      '[data-tour-section="weather-crew-safety"]',
-    ],
-  },
-  {
-    id: 7,
-    title: 'Copilot Studio',
-    route: `/copilot-studio?event_id=${STORM_EVENT_ID}&auto_run=true`,
-    duration: 60000,
-    narrative: 'Structured AI-assisted analysis via NVIDIA Nemotron. All outputs advisory and policy-constrained. Reasoning bounded by deterministic guardrails.',
-    tooltip: 'AI analysis operates within strict guardrails and structured output contracts. All outputs are advisory only.',
-    highlights: ['Selected Event', 'Analysis Mode', 'Guardrails Panel', 'Decision Trace'],
-    autoAction: 'copilot',
-    scrollTargets: ['[data-tour-section="copilot-studio"]'],
-  },
-  {
-    id: 8,
-    title: 'Situation Report Generation',
-    route: `/event/${STORM_EVENT_ID}/situation-report`,
-    duration: 30000,
-    narrative: 'Generating structured situation reports for executive and customer communication — outputs subject to operator approval.',
-    tooltip: 'Operators can generate structured situation reports. All outputs remain subject to operator approval.',
-    highlights: ['SitRep Generation', 'Approval Indicator'],
-    scrollTargets: ['[data-tour-section="situation-report"]'],
-  },
-  {
-    id: 9,
-    title: 'Analytics',
-    route: '/analytics',
-    duration: 30000,
-    narrative: 'Summarizing high-priority counts, policy blocks, and ETR distribution trends — supporting operational review without claiming predictive calibration.',
-    tooltip: 'Metrics support operational review without claiming predictive calibration in Phase 1.',
-    highlights: ['High Priority Count', 'Policy Blocks', 'ETR Distribution Chart'],
-    scrollTargets: [
-      '[data-tour-section="analytics"]',
-      '[data-tour-section="analytics-kpis"]',
-    ],
-  },
-  {
-    id: 10,
-    title: 'Architecture Overview',
-    route: '/architecture',
-    duration: 30000,
-    narrative: 'Layered design: Ingest → Rule Engine → Bounded AI Inference → Explainability → Operator Interface. Governance enforced before and after AI reasoning.',
-    tooltip: 'The architecture separates ingestion, orchestration, inference, and governance into independent control planes.',
-    highlights: ['Ingest Layer', 'Rule Engine', 'Bounded AI Inference', 'Explainability'],
-    scrollTargets: ['[data-tour-section="architecture"]'],
-  },
-  {
-    id: 11,
-    title: 'About',
-    route: '/about',
-    duration: 25000,
-    narrative: 'Project context, team background, and the design philosophy behind Operator Copilot — grounded in utility-domain expertise and governed AI principles.',
-    tooltip: 'About provides project provenance, team context, and the strategic rationale behind this decision intelligence platform.',
-    highlights: ['Project Context', 'Team', 'Design Philosophy'],
-    scrollTargets: ['[data-tour-section="about"]'],
-  },
-  {
-    id: 12,
-    title: 'Solution Roadmap Blueprint',
-    route: '/solution-roadmap',
-    duration: 45000,
-    narrative: 'Structured evolution from Phase 1 decision intelligence to Phase 2 calibrated predictive capabilities — clearly separating implemented from planned milestones.',
-    tooltip: 'This roadmap avoids false commitments and clearly separates implemented capabilities from planned milestones.',
-    highlights: ['Phase Timeline', 'Capability Lanes', 'Acceptance Markers'],
-    scrollTargets: ['[data-tour-section="solution-roadmap"]'],
-  },
-  {
-    id: 13,
-    title: 'Knowledge & Policy',
-    route: '/knowledge-policy',
-    duration: 25000,
-    narrative: 'Defining operational policies and advisory boundaries — ensuring regulatory defensibility and transparent operational discipline.',
-    tooltip: 'Governance rules define what the system can and cannot do. All constraints are deterministic and auditable.',
-    highlights: ['Policy Rules', 'Phase-1 Scope', 'Operational Constraints'],
-    scrollTargets: ['[data-tour-section="knowledge-policy"]'],
-  },
-  {
-    id: 14,
-    title: 'Glossary',
-    route: '/glossary',
-    duration: 20000,
-    narrative: 'Standardized definitions for all domain and AI terminology — eliminating ambiguity and supporting cross-functional clarity.',
-    tooltip: 'Glossary ensures terminology consistency, regulatory readiness, and executive clarity.',
-    highlights: ['Search', 'Definitions', 'Domain Terms'],
-    scrollTargets: ['[data-tour-section="glossary"]'],
-  },
-  {
-    id: 15,
-    title: 'Settings',
-    route: '/settings',
-    duration: 20000,
-    narrative: 'Platform configuration, system preferences, and operational tuning parameters — ensuring the demonstration environment is transparent and adjustable.',
-    tooltip: 'Settings provides visibility into platform configuration and operational parameters.',
-    highlights: ['Configuration', 'System Preferences'],
-    scrollTargets: ['[data-tour-section="settings"]'],
-  },
-  {
-    id: 16,
-    title: 'Art of Possibilities',
-    route: '/art-of-possibilities',
-    duration: 35000,
-    narrative: 'Exploring the future vision — advanced capabilities, predictive analytics, and next-generation decision intelligence concepts that extend beyond Phase One.',
-    tooltip: 'Art of Possibilities showcases future capabilities and the strategic vision for advanced utility intelligence.',
-    highlights: ['Future Vision', 'Advanced Capabilities', 'Next-Generation Concepts'],
-    scrollTargets: ['[data-tour-section="art-of-possibilities"]'],
-  },
-  {
-    id: 17,
-    title: 'Executive Validation & Close',
-    route: '/executive-validation',
-    duration: 35000,
-    narrative: 'Operator Copilot augments operator reasoning through governed AI, explainability, and structured operational insight. v1.0 – Decision Intelligence Prototype.',
-    tooltip: 'Operator Copilot represents a disciplined evolution toward calibrated predictive operations — grounded in governance and utility-domain alignment.',
-    highlights: ['System Risk Index', 'Operational Risk Posture', 'Version Stamp'],
-    scrollTargets: [
-      '[data-tour-section="executive-validation"]',
-    ],
-  },
-];
+interface BeatState {
+  selector: string | null;
+  caption: string | null;
+}
 
 export function DemoTourHUD() {
+  // ── Core state ──
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [stepProgress, setStepProgress] = useState(0);
+  const [stepComplete, setStepComplete] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [tourComplete, setTourComplete] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const navigate = useNavigate();
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const stepStartRef = useRef<number>(0);
-  const autoActionFiredRef = useRef<Set<number>>(new Set());
-  const { isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress, narrationDone, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration, preCacheAll } = useTourNarration();
 
-  // Listen for tour start events from DemoScriptModal
+  // ── Beat state ──
+  const [activeBeat, setActiveBeat] = useState<BeatState>({ selector: null, caption: null });
+  const beatIndexRef = useRef(0);
+  const beatTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const pausedBeatIndexRef = useRef(0);
+
+  // ── Debug ──
+  const [debugMode, setDebugMode] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // ── Narration ──
+  const {
+    isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress,
+    narrationDone, toggleMute, playStepNarration, stopNarration,
+    pauseNarration, resumeNarration, preCacheAll,
+  } = useTourNarration();
+
+  const navigate = useNavigate();
+  const autoActionFiredRef = useRef<Set<number>>(new Set());
+
+  // ── Sync debug mode ──
+  useEffect(() => { enableDebugMode(debugMode); }, [debugMode]);
+
+  // ── Listen for tour start from DemoScriptModal ──
   useEffect(() => {
     const handleStart = () => {
       setIsPlaying(true);
       setIsPaused(false);
       setCurrentStep(0);
-      setStepProgress(0);
+      setStepComplete(false);
       setCompletedSteps([]);
       setTourComplete(false);
-      setShowTooltip(false);
       autoActionFiredRef.current = new Set();
+      clearDebugLogs();
       preCacheAll();
     };
     window.addEventListener('start-demo-tour', handleStart);
     return () => window.removeEventListener('start-demo-tour', handleStart);
-  }, []);
+  }, [preCacheAll]);
 
-  // Toggle body class for dimming non-focused UI
+  // ── Body class for dim ──
   useEffect(() => {
     if (isPlaying && !tourComplete) {
       document.body.classList.add('tour-active');
@@ -256,196 +88,198 @@ export function DemoTourHUD() {
     return () => document.body.classList.remove('tour-active');
   }, [isPlaying, tourComplete]);
 
-  // Navigate on step change + auto-scroll to section + highlight
-  useEffect(() => {
-    if (!isPlaying) return;
-    const step = tourSteps[currentStep];
-    if (!step) return;
-    navigate(step.route);
+  // ── Clear beats ──
+  const clearBeats = useCallback(() => {
+    beatTimersRef.current.forEach(t => clearTimeout(t));
+    beatTimersRef.current = [];
+    setActiveBeat({ selector: null, caption: null });
+  }, []);
 
-    // Show tooltip after a short delay
-    setShowTooltip(false);
-    const tooltipTimer = setTimeout(() => setShowTooltip(true), 1500);
+  // ── Execute beats for a step ──
+  const executeBeats = useCallback((step: typeof tourSteps[0], startFromBeat = 0) => {
+    clearBeats();
+    const beats = step.beats;
+    if (!beats.length) return;
 
-    // Trigger narration after tooltip appears
-    const narrationTimer = setTimeout(() => {
-      if (!isPaused) playStepNarration(currentStep);
-    }, 2000);
+    // Calculate timing: spread beats across ~25s (estimated narration length)
+    const estimatedDuration = 25000;
+    const beatInterval = estimatedDuration / beats.length;
 
-    // Auto-scroll sequentially through all target sections after page renders
-    const scrollTimers: ReturnType<typeof setTimeout>[] = [];
-    const targets = step.scrollTargets ?? [];
-    if (targets.length > 0) {
-      // Calculate delay between each sub-scroll based on step duration
-      const scrollStartDelay = 800;
-      const totalScrollWindow = step.duration - scrollStartDelay - 2000; // leave 2s buffer at end
-      const intervalPerTarget = targets.length > 1
-        ? Math.min(totalScrollWindow / targets.length, 6000) // max 6s per subsection
-        : totalScrollWindow;
+    beats.forEach((beat, idx) => {
+      if (idx < startFromBeat) return;
+      const delay = (idx - startFromBeat) * beatInterval;
 
-      targets.forEach((selector, idx) => {
-        const delay = scrollStartDelay + idx * intervalPerTarget;
-        const timer = setTimeout(() => {
-          // Remove previous highlights
-          document.querySelectorAll('.tour-highlight-section').forEach(el => {
-            el.classList.remove('tour-highlight-section');
-          });
-          const el = document.querySelector(selector);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.classList.add('tour-highlight-section');
-            // Remove highlight after 3.5s or before next scroll
-            const removeTimer = setTimeout(() => {
-              el.classList.remove('tour-highlight-section');
-            }, Math.min(intervalPerTarget - 500, 3500));
-            scrollTimers.push(removeTimer);
+      const timer = setTimeout(() => {
+        beatIndexRef.current = idx;
+
+        // Scroll to element
+        safeScroll(beat.selector, step.id, idx);
+
+        // Execute action
+        if (beat.action === 'click') {
+          // Don't actually click unless it's the login button
+          if (step.autoAction === 'login' && idx === 1) {
+            // Login click handled by auto-action system
           }
-        }, delay);
-        scrollTimers.push(timer);
-      });
-    }
+        }
 
-    return () => {
-      clearTimeout(tooltipTimer);
-      clearTimeout(narrationTimer);
-      scrollTimers.forEach(t => clearTimeout(t));
-      // Stop any in-flight narration immediately on step change to prevent overlap
-      stopNarration();
-      // Clean up any remaining highlights
-      document.querySelectorAll('.tour-highlight-section').forEach(el => {
-        el.classList.remove('tour-highlight-section');
-      });
-    };
-  }, [currentStep, isPlaying, navigate, playStepNarration, isPaused, stopNarration]);
+        // Set spotlight
+        setActiveBeat({ selector: beat.selector, caption: beat.caption });
 
-  // Track whether timer has reached 100% — use state to trigger re-renders
-  const [timerDone, setTimerDone] = useState(false);
+        // Clear spotlight before next beat (or at end)
+        const clearTimer = setTimeout(() => {
+          if (beatIndexRef.current === idx) {
+            setActiveBeat({ selector: null, caption: null });
+          }
+        }, beatInterval - 800);
+        beatTimersRef.current.push(clearTimer);
+      }, delay);
 
-  // Progress timer + auto-actions
+      beatTimersRef.current.push(timer);
+    });
+  }, [clearBeats]);
+
+  // ── Run step orchestration ──
   useEffect(() => {
     if (!isPlaying || isPaused) return;
 
     const step = tourSteps[currentStep];
     if (!step) return;
 
-    stepStartRef.current = Date.now();
-    setTimerDone(false);
-    const duration = step.duration;
+    setStepComplete(false);
+    clearBeats();
+    beatIndexRef.current = 0;
 
-    timerRef.current = setInterval(() => {
-      const elapsed = Date.now() - stepStartRef.current;
-      const pct = Math.min((elapsed / duration) * 100, 100);
-      setStepProgress(pct);
+    // Navigate to route
+    navigate(step.route);
 
-      // Auto-action: login at 66% of step 0
-      if (step.autoAction === 'login' && elapsed > duration * 0.66 && !autoActionFiredRef.current.has(currentStep)) {
+    // Wait for readiness, then start narration + beats
+    const runStep = async () => {
+      // Wait for route to settle
+      await new Promise(r => setTimeout(r, 800));
+
+      // Wait for DOM readiness
+      await waitForStepReady(step);
+
+      // Auto-login for step 0
+      if (step.autoAction === 'login' && !autoActionFiredRef.current.has(currentStep)) {
         autoActionFiredRef.current.add(currentStep);
-        window.dispatchEvent(new CustomEvent('tour-auto-login'));
+        // Fire login after a beat delay
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('tour-auto-login'));
+        }, 4000);
       }
 
-      if (pct >= 100) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setTimerDone(true);
+      // Start narration
+      if (!isPaused) {
+        playStepNarration(currentStep);
       }
-    }, 50);
+
+      // Execute beats
+      if (!isPaused) {
+        executeBeats(step);
+      }
+    };
+
+    runStep();
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      stopNarration();
+      clearBeats();
     };
-  }, [currentStep, isPlaying, isPaused]);
+  }, [currentStep, isPlaying, navigate, playStepNarration, stopNarration, clearBeats, executeBeats, isPaused]);
 
-  // Helper to advance to next step
-  const advanceStep = useCallback(() => {
-    setTimerDone(false);
-    setCompletedSteps(prev => [...prev, currentStep]);
-
-    if (currentStep < tourSteps.length - 1) {
-      setCurrentStep(prev => prev + 1);
-      setStepProgress(0);
-    } else {
-      setIsPlaying(false);
-      setStepProgress(100);
-      setTourComplete(true);
-      stopNarration();
-    }
-  }, [currentStep, stopNarration]);
-
-  // Advance step when both timer is done AND (narration is done OR muted)
+  // ── Mark step complete when narration ends ──
   useEffect(() => {
-    if (!isPlaying || isPaused || !timerDone) return;
-
+    if (!isPlaying || isPaused) return;
     if (narrationDone || isMuted) {
-      advanceStep();
-      return;
+      // Small delay after narration to let final beat finish
+      const timer = setTimeout(() => {
+        setStepComplete(true);
+        clearBeats();
+      }, 1200);
+      return () => clearTimeout(timer);
     }
+  }, [narrationDone, isMuted, isPlaying, isPaused, clearBeats]);
 
-    // Safety timeout: if narration hasn't finished 8s after timer ended, advance anyway
-    const safetyTimer = setTimeout(() => {
-      stopNarration();
-      advanceStep();
-    }, 8000);
-
-    return () => clearTimeout(safetyTimer);
-  }, [timerDone, narrationDone, isPlaying, isPaused, isMuted, advanceStep, stopNarration]);
-
+  // ── Pause handler ──
   const handlePause = useCallback(() => {
     setIsPaused(true);
-    if (timerRef.current) clearInterval(timerRef.current);
     pauseNarration();
+    pausedBeatIndexRef.current = beatIndexRef.current;
+    // Cancel queued beat timers
+    beatTimersRef.current.forEach(t => clearTimeout(t));
+    beatTimersRef.current = [];
   }, [pauseNarration]);
 
+  // ── Resume handler ──
   const handleResume = useCallback(() => {
     setIsPaused(false);
     resumeNarration();
-  }, [resumeNarration]);
+    // Resume beats from where we left off
+    const step = tourSteps[currentStep];
+    if (step) {
+      executeBeats(step, pausedBeatIndexRef.current + 1);
+    }
+  }, [resumeNarration, currentStep, executeBeats]);
 
-  const handleSkip = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    // Stop narration immediately on skip to prevent overlap with next step
+  // ── Next step (manual only) ──
+  const handleNext = useCallback(() => {
+    if (!stepComplete && !isPaused) return; // Disabled unless complete or paused (skip)
     stopNarration();
+    clearBeats();
     setCompletedSteps(prev => [...prev, currentStep]);
 
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(prev => prev + 1);
-      setStepProgress(0);
+      setStepComplete(false);
+      setIsPaused(false);
+    } else {
+      setIsPlaying(false);
+      setTourComplete(true);
+      stopNarration();
+    }
+  }, [stepComplete, isPaused, currentStep, stopNarration, clearBeats]);
+
+  // ── Skip (force next even if not complete) ──
+  const handleSkip = useCallback(() => {
+    stopNarration();
+    clearBeats();
+    setCompletedSteps(prev => [...prev, currentStep]);
+
+    if (currentStep < tourSteps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+      setStepComplete(false);
       setIsPaused(false);
     } else {
       setIsPlaying(false);
       setTourComplete(true);
     }
-  }, [currentStep, stopNarration]);
+  }, [currentStep, stopNarration, clearBeats]);
 
-  const handleStop = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    stopNarration();
-    setIsPlaying(false);
-    setIsPaused(false);
-    setStepProgress(0);
-  }, [stopNarration]);
-
-  const handleStepClick = useCallback((index: number) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setCurrentStep(index);
-    setStepProgress(0);
-    setIsPaused(false);
-    setCompletedSteps(prev => prev.filter(s => s > index));
-  }, []);
-
+  // ── Restart ──
   const handleRestart = useCallback(() => {
+    stopNarration();
+    clearBeats();
     setTourComplete(false);
     setIsPlaying(true);
     setIsPaused(false);
     setCurrentStep(0);
-    setStepProgress(0);
+    setStepComplete(false);
     setCompletedSteps([]);
     autoActionFiredRef.current = new Set();
-  }, []);
+    clearDebugLogs();
+  }, [stopNarration, clearBeats]);
 
-  const handleDismissComplete = useCallback(() => {
-    setTourComplete(false);
-  }, []);
+  // ── Stop ──
+  const handleStop = useCallback(() => {
+    stopNarration();
+    clearBeats();
+    setIsPlaying(false);
+    setIsPaused(false);
+  }, [stopNarration, clearBeats]);
 
-  // ── Domain capability sections ──
+  // ── Completion Screen ──
   const domainSections = [
     {
       icon: Shield,
@@ -454,10 +288,8 @@ export function DemoTourHUD() {
         'Severity-based escalation (1–5 utility scale)',
         'Crew skillset and readiness gating',
         'Critical load protection logic',
-        'Asset maintenance and lock-state enforcement',
         'Explicit policy blocks prior to advisory output',
       ],
-      conclusion: 'All AI-assisted recommendations are bounded by explicit outage management rules aligned with real-world utility governance.',
     },
     {
       icon: Gauge,
@@ -466,90 +298,55 @@ export function DemoTourHUD() {
         'ETR confidence bands (High / Medium / Low)',
         'Uncertainty transparency (no single-point estimates)',
         'Hazard-adjusted restoration risk',
-        'Crew availability impact on restoration timelines',
-        'Critical load runway sensitivity',
       ],
-      conclusion: 'Restoration estimates are probabilistic, defensible, and operationally explainable — grounded in bounded inference, not opaque projections.',
     },
     {
       icon: CloudLightning,
       title: 'Hazard-Correlated Risk Scoring',
       bullets: [
         'Weather hazard overlays (wind, lightning, flood, heat)',
-        'Vegetation and exposure modeling',
         'Feeder-level vulnerability assessment',
         'Crew safety constraints under active hazard zones',
       ],
-      conclusion: 'Operational risk prioritization reflects real environmental exposure and infrastructure vulnerability.',
     },
     {
       icon: Brain,
       title: 'Structured AI Guardrails & Explainability',
       bullets: [
         'Structured output contracts (no free-form generation)',
-        'Clear separation of Allowed vs Restricted actions',
         'Policy-based blocking with remediation guidance',
         'Transparent reasoning pathways',
       ],
-      conclusion: 'AI augments operator reasoning within safety boundaries — it does not override operational governance.',
     },
     {
       icon: Map,
       title: 'Geospatial Situational Awareness',
       bullets: [
         'Real-time outage visualization',
-        'Feeder zone mapping',
-        'Crew dispatch tracking',
-        'Critical infrastructure overlays',
+        'Feeder zone mapping with critical infrastructure',
         'Lifecycle progression (Pre-Event → Event → Post-Event)',
       ],
-      conclusion: 'The system functions as a grid resilience command interface — not just a reporting dashboard.',
     },
     {
       icon: Network,
       title: 'Governance-First Architecture',
       bullets: [
         'Advisory-only control posture',
-        'No live SCADA / OMS / ADMS actuation',
         'Deterministic rule engine precedes AI inference',
-        'Observability and compliance readiness',
         'Enterprise integration pathway (Phase-2)',
       ],
-      conclusion: 'The architecture aligns with regulated utility operational standards and minimizes AI-related control risk.',
     },
-  ];
-
-  const aiImpactPoints = [
-    'AI-assisted triage without autonomous switching',
-    'Explainable restoration guidance',
-    'Policy-aware recommendation filtering',
-    'Hazard-informed outage prioritization',
-    'Transparent uncertainty communication',
-    'Human-in-the-loop decision governance',
   ];
 
   const postureSummary = [
     { label: 'System Risk Index', value: 'Stabilized', color: 'text-green-500' },
     { label: 'Critical Load Exposure', value: 'Reduced', color: 'text-green-500' },
     { label: 'Policy Violations', value: 'None', color: 'text-green-500' },
-    { label: 'Crew Deployment Status', value: 'Within Threshold', color: 'text-green-500' },
+    { label: 'Crew Deployment', value: 'Within Threshold', color: 'text-green-500' },
     { label: 'AI Confidence Band', value: 'High', color: 'text-primary' },
   ];
 
-  // Greeting animation state
-  const [showGreeting, setShowGreeting] = useState(false);
-  const greetingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (tourComplete) {
-      greetingTimerRef.current = setTimeout(() => setShowGreeting(true), 1200);
-    } else {
-      setShowGreeting(false);
-    }
-    return () => { if (greetingTimerRef.current) clearTimeout(greetingTimerRef.current); };
-  }, [tourComplete]);
-
-  // ── Tour completion celebration ──
+  // ── Tour Completion Screen ──
   if (tourComplete) {
     return (
       <AnimatePresence>
@@ -562,16 +359,13 @@ export function DemoTourHUD() {
           <motion.div
             initial={{ scale: 0.92, opacity: 0, y: 30 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.92, opacity: 0, y: 30 }}
             transition={{ type: 'spring', stiffness: 260, damping: 22 }}
             className="w-[780px] max-w-[95vw] max-h-[92vh] rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden flex flex-col"
           >
-            {/* Gradient header bar */}
             <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary flex-shrink-0" />
 
-            {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 px-7 py-6 space-y-6">
-              {/* ── Title Block ── */}
+            <div className="overflow-y-auto flex-1 px-7 py-6 space-y-5">
+              {/* Title */}
               <div className="text-center space-y-3">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -581,105 +375,56 @@ export function DemoTourHUD() {
                 >
                   <CheckCircle2 className="w-9 h-9 text-primary" />
                 </motion.div>
-                <motion.h2
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                  className="text-xl font-bold tracking-tight text-foreground"
-                >
+                <h2 className="text-xl font-bold tracking-tight text-foreground">
                   Executive Demonstration Complete
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.35 }}
-                  className="text-xs text-muted-foreground leading-relaxed max-w-lg mx-auto"
-                >
+                </h2>
+                <p className="text-xs text-muted-foreground max-w-lg mx-auto">
                   AI-Constrained Decision Intelligence for Utility Outage Operations
-                </motion.p>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.45 }}
-                  className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-xl mx-auto"
-                >
-                  This guided demonstration validated the platform's ability to combine deterministic operational policy with explainable AI reasoning — without introducing autonomous control risk.
-                </motion.p>
+                </p>
               </div>
 
-              {/* ── Operational Capabilities Proven ── */}
+              {/* Capabilities recap */}
               <div>
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary mb-3">
-                  Operational Capabilities Proven
+                  Capabilities Demonstrated
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {domainSections.map((section, si) => (
                     <motion.div
                       key={section.title}
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + si * 0.08 }}
-                      className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3"
+                      transition={{ delay: 0.3 + si * 0.06 }}
+                      className="rounded-lg border border-border/40 bg-muted/30 px-3.5 py-2.5"
                     >
-                      <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <section.icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <section.icon className="w-3 h-3 text-primary" strokeWidth={1.75} />
                         </div>
-                        <h4 className="text-[12px] font-semibold text-foreground">{section.title}</h4>
+                        <h4 className="text-[11px] font-semibold text-foreground">{section.title}</h4>
                       </div>
-                      <ul className="space-y-0.5 pl-8 mb-2">
+                      <ul className="space-y-0.5 pl-7">
                         {section.bullets.map((b) => (
-                          <li key={b} className="text-[10px] text-muted-foreground flex items-start gap-1.5">
-                            <span className="text-primary/60 mt-[3px]">•</span>
+                          <li key={b} className="text-[9px] text-muted-foreground flex items-start gap-1">
+                            <span className="text-primary/60 mt-[2px]">•</span>
                             <span>{b}</span>
                           </li>
                         ))}
                       </ul>
-                      <div className="pl-8">
-                        <p className="text-[10px] italic text-accent font-medium leading-snug">
-                          Domain Conclusion: {section.conclusion}
-                        </p>
-                      </div>
                     </motion.div>
                   ))}
                 </div>
               </div>
 
-              {/* ── AI Impact in Utility Context ── */}
+              {/* Posture Summary */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-                className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-accent" />
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
-                    AI Impact in Utility Context
-                  </h3>
-                </div>
-                <p className="text-[10px] text-muted-foreground mb-2">
-                  This platform demonstrates the responsible application of AI in grid operations:
-                </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-1">
-                  {aiImpactPoints.map((pt) => (
-                    <div key={pt} className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3 h-3 text-accent/70 mt-[2px] flex-shrink-0" />
-                      <span className="text-[10px] text-foreground/80">{pt}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* ── Operational Posture Summary ── */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.1 }}
+                transition={{ delay: 0.8 }}
                 className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3"
               >
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                  Operational Posture Summary (Demo Scenario)
+                  Operational Posture Summary
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {postureSummary.map((item) => (
@@ -691,53 +436,36 @@ export function DemoTourHUD() {
                 </div>
               </motion.div>
 
-              {/* ── Final Positioning Statement ── */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="border-l-2 border-primary/50 pl-4 py-1"
-              >
+              {/* Final statement */}
+              <div className="border-l-2 border-primary/50 pl-4 py-1">
                 <p className="text-[11px] text-foreground/90 leading-relaxed font-medium italic">
-                  This solution represents a defensible, AI-constrained decision-support layer for electric utility outage management — designed to enhance operator judgment, improve restoration transparency, and strengthen grid resilience without introducing automation risk.
+                  This solution represents a defensible, AI-constrained decision-support layer for electric utility outage management — designed to enhance operator judgment without introducing automation risk.
+                </p>
+              </div>
+
+              {/* Thank you */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1 }}
+                className="text-center py-3"
+              >
+                <motion.div
+                  animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                  className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent"
+                >
+                  <span className="text-lg font-bold tracking-tight">
+                    Thank you for watching the Executive Demo
+                  </span>
+                </motion.div>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  AI-Constrained Decision Intelligence · Phase-1 Prototype
                 </p>
               </motion.div>
-
-              {/* ── Animated Greeting ── */}
-              <AnimatePresence>
-                {showGreeting && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-                    className="text-center py-4"
-                  >
-                    <motion.div
-                      animate={{
-                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                      }}
-                      transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                      className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent"
-                    >
-                      <span className="text-lg font-bold tracking-tight">
-                        Thank you for watching the Executive Demo
-                      </span>
-                    </motion.div>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                      className="text-[10px] text-muted-foreground mt-1"
-                    >
-                      AI-Constrained Decision Intelligence · Utility Outage Operations · Phase-1
-                    </motion.p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
 
-            {/* ── Sticky Action Bar ── */}
+            {/* Action bar */}
             <div className="flex-shrink-0 border-t border-border/40 bg-card/95 backdrop-blur-sm px-7 py-4">
               <div className="flex flex-wrap items-center gap-2.5">
                 <Button
@@ -745,25 +473,18 @@ export function DemoTourHUD() {
                   className="gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  Restart Executive Tour
+                  Restart Tour
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => { setTourComplete(false); navigate('/dashboard'); }}
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  Explore System Manually
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => { setTourComplete(false); navigate('/architecture'); }}
-                >
-                  <Network className="w-4 h-4 mr-2" />
-                  View Technical Architecture
+                  Explore Manually
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={handleDismissComplete}
+                  onClick={() => setTourComplete(false)}
                   className="ml-auto"
                 >
                   <X className="w-4 h-4 mr-2" />
@@ -781,16 +502,17 @@ export function DemoTourHUD() {
 
   const step = tourSteps[currentStep];
   const overallProgress = ((completedSteps.length) / tourSteps.length) * 100;
-
-  // Build block progress bar
   const totalSteps = tourSteps.length;
-  const filledBlocks = completedSteps.length;
-  const progressBlocks = Array.from({ length: totalSteps }, (_, i) =>
-    i < filledBlocks ? '■' : i === currentStep ? '▶' : '□'
-  ).join('');
 
   return (
     <>
+      {/* ── Spotlight Overlay ── */}
+      <TourSpotlight
+        selector={activeBeat.selector}
+        caption={activeBeat.caption}
+        visible={!isPaused && activeBeat.selector !== null}
+      />
+
       {/* ── TOP PROGRESS BAR ── */}
       <motion.div
         initial={{ y: -40, opacity: 0 }}
@@ -806,191 +528,249 @@ export function DemoTourHUD() {
             transition={{ duration: 0.3 }}
           />
         </div>
-        <div className="flex items-center justify-center gap-3 py-1.5 bg-card/90 backdrop-blur-sm border-b border-border/30">
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
-            Executive Auto Tour
-          </span>
-          <span className="text-[10px] font-mono text-muted-foreground tracking-wider">
-            {progressBlocks}
-          </span>
-          <span className="text-[10px] font-semibold text-foreground">
-            Step {currentStep + 1} of {totalSteps}
-          </span>
-          {isPaused && (
-            <span className="text-[9px] font-bold uppercase tracking-wider text-warning px-1.5 py-0.5 rounded bg-warning/10">
-              Paused
-            </span>
-          )}
-          {preCacheProgress > 0 && preCacheProgress < 100 && (
-            <span className="text-[9px] text-muted-foreground/70 tabular-nums">
-              Voice {preCacheProgress}%
-            </span>
-          )}
-        </div>
       </motion.div>
 
-      {/* ── FLOATING TOOLTIP OVERLAY ── */}
-      <AnimatePresence>
-        {showTooltip && step.tooltip && (
-          <motion.div
-            key={`tooltip-${currentStep}`}
-            initial={{ opacity: 0, y: -10, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.96 }}
-            transition={{ duration: 0.3 }}
-            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9997] max-w-xl pointer-events-none"
-          >
-            <div className="relative rounded-lg border border-primary/30 bg-card/95 backdrop-blur-xl shadow-lg px-5 py-3.5">
-              {/* Gradient accent top */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] rounded-t-lg bg-gradient-to-r from-primary via-accent to-primary" />
-              
-              {/* Highlight chips */}
-              {step.highlights && step.highlights.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {step.highlights.map((h) => (
-                    <span
-                      key={h}
-                      className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[9px] font-semibold text-primary uppercase tracking-wider"
-                    >
-                      {h}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-xs text-foreground/90 leading-relaxed font-medium">
-                {step.tooltip}
-              </p>
-
-              {/* Down arrow */}
-              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-card/95 border-r border-b border-primary/30" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── BOTTOM HUD ── */}
+      {/* ── FLOATING HUD PANEL ── */}
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
+        initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
+        exit={{ y: 60, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed top-1/2 left-0 -translate-y-1/2 z-[9999]"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]"
       >
-        <div className="flex flex-col items-center gap-2 rounded-r-xl border border-l-0 border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl py-3 px-1.5 w-[48px]">
-          {/* Step indicator */}
-          <span className="text-[9px] font-bold text-primary tracking-wider leading-none">
-            {currentStep + 1}/{tourSteps.length}
-          </span>
+        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-5 py-3 min-w-[480px] max-w-[600px]">
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+                Executive Guided Tour
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-foreground tabular-nums">
+                Step {currentStep + 1} of {totalSteps}
+              </span>
+              {isPaused && (
+                <span className="text-[9px] font-bold uppercase tracking-wider text-warning px-1.5 py-0.5 rounded bg-warning/10 border border-warning/20">
+                  Paused
+                </span>
+              )}
+              {stepComplete && !isPaused && (
+                <span className="text-[9px] font-bold uppercase tracking-wider text-green-500 px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20">
+                  Ready
+                </span>
+              )}
+              {preCacheProgress > 0 && preCacheProgress < 100 && (
+                <span className="text-[9px] text-muted-foreground/70 tabular-nums">
+                  Voice {preCacheProgress}%
+                </span>
+              )}
+            </div>
+          </div>
 
-          {/* Vertical step dots */}
-          <div className="flex flex-col items-center gap-[3px]">
-            {tourSteps.map((s, i) => (
-              <button
+          {/* Step title + narrative */}
+          <div className="mb-2.5">
+            <h3 className="text-xs font-semibold text-foreground mb-0.5">{step.title}</h3>
+            <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
+              {step.narrative}
+            </p>
+          </div>
+
+          {/* Step progress dots */}
+          <div className="flex items-center gap-1 mb-3">
+            {tourSteps.map((_, i) => (
+              <div
                 key={i}
-                onClick={() => handleStepClick(i)}
                 className={cn(
-                  'w-1.5 h-1.5 rounded-full transition-all duration-200 cursor-pointer',
+                  'h-1 flex-1 rounded-full transition-all duration-300',
                   completedSteps.includes(i)
                     ? 'bg-primary'
                     : i === currentStep
-                    ? 'bg-primary/60 scale-125'
-                    : 'bg-muted-foreground/15 hover:bg-muted-foreground/25'
+                    ? 'bg-primary/50'
+                    : 'bg-muted-foreground/15'
                 )}
-                title={s.title}
               />
             ))}
           </div>
 
-          {/* Vertical progress bar */}
-          <div className="w-[3px] h-8 rounded-full bg-muted overflow-hidden">
-            <motion.div
-              className="w-full rounded-full bg-primary/70"
-              style={{ height: `${stepProgress}%` }}
-              transition={{ duration: 0.05 }}
-            />
-          </div>
-
-          {/* Waveform bars — vertical orientation */}
-          <div className={cn(
-            'flex items-end gap-[2px] h-4 transition-opacity duration-300',
-            isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
-          )}>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <span
-                key={i}
-                className="w-[2px] rounded-full bg-primary/70"
-                style={{
-                  animation: isSpeaking && !isMuted ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
-                  height: '4px',
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Controls stacked vertically */}
-          <Button
-            size="icon"
-            variant="ghost"
-            className={cn(
-              'h-7 w-7',
-              isMuted ? 'text-muted-foreground/50 hover:bg-muted' : 'text-primary hover:bg-primary/10'
-            )}
-            onClick={toggleMute}
-            title={isMuted ? 'Unmute narration' : 'Mute narration'}
-          >
-            {narrationLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : isMuted ? (
-              <VolumeX className="h-3.5 w-3.5" />
+          {/* Controls row */}
+          <div className="flex items-center gap-1.5">
+            {/* Play / Pause */}
+            {isPaused ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 text-primary border-primary/30 hover:bg-primary/10"
+                onClick={handleResume}
+              >
+                <Play className="h-3.5 w-3.5" />
+                Resume
+              </Button>
             ) : (
-              <Volume2 className="h-3.5 w-3.5" />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5"
+                onClick={handlePause}
+              >
+                <Pause className="h-3.5 w-3.5" />
+                Pause
+              </Button>
             )}
-          </Button>
 
-          {isPaused ? (
+            {/* Next Step */}
+            <Button
+              size="sm"
+              className={cn(
+                'h-8 gap-1.5 transition-all',
+                stepComplete
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'bg-muted text-muted-foreground cursor-not-allowed opacity-50'
+              )}
+              onClick={handleNext}
+              disabled={!stepComplete}
+            >
+              <SkipForward className="h-3.5 w-3.5" />
+              Next Step
+            </Button>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Waveform indicator */}
+            <div className={cn(
+              'flex items-end gap-[2px] h-4 transition-opacity duration-300 mr-1',
+              isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
+            )}>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <span
+                  key={i}
+                  className="w-[2px] rounded-full bg-primary/70"
+                  style={{
+                    animation: isSpeaking && !isMuted
+                      ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite`
+                      : 'none',
+                    height: '4px',
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Mute */}
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7 text-primary hover:bg-primary/10"
-              onClick={handleResume}
-              title="Resume"
+              className={cn('h-8 w-8', isMuted ? 'text-muted-foreground/50' : 'text-primary')}
+              onClick={toggleMute}
+              title={isMuted ? 'Unmute narration' : 'Mute narration'}
             >
-              <Play className="h-3.5 w-3.5" />
+              {narrationLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : isMuted ? (
+                <VolumeX className="h-3.5 w-3.5" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5" />
+              )}
             </Button>
-          ) : (
+
+            {/* Skip */}
             <Button
               size="icon"
               variant="ghost"
-              className="h-7 w-7 text-muted-foreground hover:bg-muted"
-              onClick={handlePause}
-              title="Pause"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={handleSkip}
+              title="Skip step"
             >
-              <Pause className="h-3.5 w-3.5" />
+              <SkipForward className="h-3.5 w-3.5" />
             </Button>
-          )}
 
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-muted-foreground hover:bg-muted"
-            onClick={handleSkip}
-            title="Skip to next"
-          >
-            <SkipForward className="h-3.5 w-3.5" />
-          </Button>
+            {/* Restart */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              onClick={handleRestart}
+              title="Restart tour"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
 
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-            onClick={handleStop}
-            title="Stop tour"
-          >
-            <Square className="h-3.5 w-3.5" />
-          </Button>
+            {/* Stop */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              onClick={handleStop}
+              title="End tour"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+
+            {/* Debug toggle (hidden) */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-muted-foreground/30 hover:text-muted-foreground"
+              onClick={() => { setDebugMode(d => !d); setShowDebugPanel(p => !p); }}
+              title="Toggle debug"
+            >
+              <Bug className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
+
+        {/* Debug panel */}
+        <AnimatePresence>
+          {showDebugPanel && debugMode && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mt-2 rounded-lg border border-border/40 bg-card/95 backdrop-blur-xl shadow-lg px-4 py-3 max-h-48 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Debug Log
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-5 text-[9px] px-1.5"
+                  onClick={clearDebugLogs}
+                >
+                  Clear
+                </Button>
+              </div>
+              <div className="space-y-0.5 font-mono text-[9px]">
+                {getDebugLogs().slice(-20).map((log, i) => (
+                  <div key={i} className={cn(
+                    'text-[9px]',
+                    log.type === 'error' ? 'text-destructive' :
+                    log.type === 'warn' ? 'text-warning' : 'text-muted-foreground'
+                  )}>
+                    S{log.stepId}B{log.beatIndex}: {log.message}
+                  </div>
+                ))}
+                {getDebugLogs().length === 0 && (
+                  <span className="text-muted-foreground/50">No logs yet</span>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
+
+      {/* ── Step fade transition overlay ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`step-transition-${currentStep}`}
+          initial={{ opacity: 0.3 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="fixed inset-0 z-[9989] pointer-events-none bg-background/20"
+        />
+      </AnimatePresence>
     </>
   );
 }

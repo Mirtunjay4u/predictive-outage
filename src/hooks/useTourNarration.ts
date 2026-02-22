@@ -4,64 +4,54 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 /**
- * Narration scripts — rewritten for natural ElevenLabs George voice delivery.
- * Short sentences. Natural pauses via commas and ellipses. Briefing tone.
- * Index matches tourSteps[].id in DemoTourHUD.
+ * 15-step narration scripts — concise, governance-aligned, under 30 seconds each.
+ * ElevenLabs George voice. Briefing tone. No marketing adjectives.
  */
 export const narrationScripts: string[] = [
-  // Step 0 — Login & Context (includes opening)
-  `Welcome to Operator Copilot... a governed AI decision intelligence layer designed for utility outage operations. This platform augments operator decision-making through structured reasoning, deterministic policy enforcement, and explainable AI... while maintaining strict advisory-only boundaries. We begin by establishing operator context. In this Phase One environment, we are operating in demo data mode... clearly indicated in the system status. No live SCADA, OMS, or ADMS systems are connected. This ensures a controlled and safe demonstration environment.`,
+  // Step 0 — Login
+  `Welcome to Operator Copilot... a governed AI decision intelligence layer for utility outage operations. This platform augments operator decision-making through structured reasoning and deterministic policy enforcement. We are operating in demo data mode... no live SCADA, OMS, or ADMS connections. Let's enter the controlled demonstration environment.`,
 
-  // Step 1 — Dashboard Orientation
-  `The dashboard provides a consolidated operational overview. At the top, the Operational Risk Posture synthesizes outage severity, hazard exposure, crew readiness, and ETR confidence bands into a single governed view. This is not an automation layer... it is a structured decision-support summary designed to reduce operator cognitive load. The System Status clearly indicates AI mode, data mode, and Phase scope... reinforcing transparency at every level.`,
+  // Step 1 — Dashboard
+  `The dashboard provides a consolidated operational overview. The Risk Posture bar synthesizes severity, hazard exposure, crew readiness, and ETR confidence. Each KPI below is rule-engine validated. The system status clearly indicates AI mode and data scope.`,
 
-  // Step 2 — Scenario Playback Lifecycle
-  `We can dynamically navigate through the outage lifecycle... Pre-Event, Active Event, and Post-Event. This reflects how utilities manage evolving operational states during severe weather or grid disturbance.`,
+  // Step 2 — Scenario Lifecycle
+  `We navigate through the outage lifecycle... Pre-Event, Active Event, and Post-Event. This reflects how utilities manage evolving operational states during grid disturbances. Advisory-only cues are reinforced at each stage.`,
 
-  // Step 3 — Events Page Deep Dive
-  `Here we review active events using structured triage. Each event displays severity, affected feeder, critical load impact, and ETR confidence bands. Importantly, we do not present a single deterministic ETR... instead we expose uncertainty bands, reinforcing operational realism.`,
+  // Step 3 — Events
+  `Active events are displayed with structured triage. Each entry shows severity, affected feeder, and ETR confidence bands. We expose uncertainty ranges rather than single-point estimates... reinforcing operational realism.`,
 
-  // Step 4 — Event Detail View
-  `This event detail view combines crew assignment, hazard exposure correlation, escalation status, and structured reasoning outputs. Every advisory insight is constrained by a deterministic rule engine. The Decision Trace provides full transparency... including rule checks, inference drivers, and scope validation.`,
+  // Step 4 — Event Detail
+  `This detail view combines crew assignment, hazard correlation, and escalation status. Every advisory insight is constrained by the deterministic rule engine. The Decision Trace provides full transparency into rule checks and inference drivers.`,
 
-  // Step 5 — Outage Map Intelligence
-  `The outage map overlays event markers with feeder zones, critical load layers, and hazard exposure. This enables spatial situational awareness without executing any operational control actions.`,
+  // Step 5 — Outage Map
+  `The outage map overlays event markers with feeder zones, critical load layers, and hazard exposure. This enables spatial situational awareness without executing operational control actions.`,
 
-  // Step 6 — Weather Alerts Section
-  `We integrate hazard context to improve operational awareness... correlating weather severity with affected infrastructure. This improves prioritization without automating dispatch decisions.`,
+  // Step 6 — Weather
+  `Hazard context improves operational awareness... correlating weather severity with infrastructure exposure. This strengthens prioritization without automating dispatch decisions.`,
 
   // Step 7 — Copilot Studio
-  `Copilot Studio provides structured AI-assisted analysis powered by NVIDIA Nemotron. All outputs remain advisory and policy-constrained. This reasoning is bounded by deterministic guardrails and validated before presentation.`,
+  `Copilot Studio provides structured AI analysis powered by NVIDIA Nemotron. All outputs remain advisory and policy-constrained. Reasoning is bounded by deterministic guardrails and validated before presentation.`,
 
-  // Step 8 — Situation Report Generation
-  `Here we generate structured situation reports for executive and customer communication. Outputs remain subject to operator approval.`,
+  // Step 8 — Situation Report
+  `Structured situation reports support executive and customer communication. All generated outputs remain subject to operator review and approval before distribution.`,
 
   // Step 9 — Analytics
-  `The Analytics section summarizes high-priority counts, policy blocks, and ETR distribution trends. These metrics support operational review without claiming predictive calibration in Phase One.`,
+  `Analytics summarize high-priority counts, policy blocks, and ETR distribution trends. These metrics support operational review without claiming predictive calibration in Phase One.`,
 
-  // Step 10 — Architecture Overview
-  `This architecture illustrates the layered design... Ingest, Rule Engine, Bounded AI Inference, Explainability, and Operator Interface. Governance is enforced before and after AI reasoning.`,
+  // Step 10 — Architecture
+  `The architecture illustrates layered design... Ingest, Rule Engine, Bounded AI Inference, Explainability, and Operator Interface. Governance is enforced before and after AI reasoning through independent control planes.`,
 
-  // Step 11 — About
-  `This section provides project context, team background, and the design philosophy behind Operator Copilot... grounded in utility-domain expertise and governed AI principles.`,
+  // Step 11 — Knowledge & Governance
+  `Operational policies and advisory boundaries are defined here... ensuring regulatory defensibility and transparent operational discipline across all system outputs.`,
 
-  // Step 12 — Solution Roadmap Blueprint
-  `This blueprint outlines structured evolution from Phase One decision intelligence to Phase Two calibrated predictive capabilities. Phase Two introduces probabilistic risk scoring, ETR distribution modeling, historical backtesting, and production hardening... without compromising governance. This roadmap avoids false commitments and clearly separates implemented capabilities from planned milestones.`,
+  // Step 12 — Settings
+  `Platform configuration and system preferences are accessible here... including AI mode selection and integration readiness indicators for enterprise deployment.`,
 
-  // Step 13 — Knowledge & Policy
-  `This section defines operational policies and advisory boundaries... ensuring regulatory defensibility and transparent operational discipline.`,
+  // Step 13 — Solution Roadmap
+  `This roadmap outlines structured evolution from Phase One decision intelligence to Phase Two predictive capabilities. It clearly separates implemented features from planned milestones... without false commitments.`,
 
-  // Step 14 — Glossary
-  `To eliminate ambiguity, all domain and AI terminology is standardized here... supporting cross-functional clarity across stakeholders.`,
-
-  // Step 15 — Settings
-  `Platform configuration and system preferences are accessible here... ensuring transparency and adjustability of the demonstration environment.`,
-
-  // Step 16 — Art of Possibilities
-  `This section explores the future vision... advanced capabilities, predictive analytics, and next-generation decision intelligence concepts that extend beyond Phase One into operational transformation.`,
-
-  // Step 17 — Executive Validation & Close
-  `In summary, Operator Copilot does not replace OMS or ADMS. It augments operator reasoning through governed AI, explainability, and structured operational insight. It is designed for critical infrastructure domains... where safety, transparency, and human validation remain paramount. Operator Copilot represents a disciplined evolution toward calibrated predictive operations... grounded in governance, structured AI, and utility-domain alignment. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
+  // Step 14 — Close
+  `Operator Copilot augments operator reasoning through governed AI, explainability, and structured insight. Designed for critical infrastructure... where safety, transparency, and human validation remain paramount. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
 ];
 
 interface UseTourNarrationReturn {
@@ -78,7 +68,6 @@ interface UseTourNarrationReturn {
   preCacheAll: () => void;
 }
 
-/** Persistent flag — once quota is exhausted, skip all future ElevenLabs calls */
 let quotaExhausted = false;
 
 async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): Promise<string | null> {
@@ -116,7 +105,6 @@ async function fetchTtsAudio(text: string, signal?: AbortSignal, retries = 2): P
   return null;
 }
 
-/** Browser SpeechSynthesis fallback */
 function speakWithBrowserTTS(text: string, onEnd: () => void): SpeechSynthesisUtterance | null {
   if (!('speechSynthesis' in window)) return null;
   window.speechSynthesis.cancel();
@@ -192,7 +180,7 @@ export function useTourNarration(): UseTourNarrationReturn {
         if (audioRef.current) audioRef.current.pause();
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         setIsSpeaking(false);
-        setNarrationDone(true); // treat mute as narration complete for flow
+        setNarrationDone(true);
       }
       return next;
     });
@@ -202,7 +190,6 @@ export function useTourNarration(): UseTourNarrationReturn {
     if (preCacheAbortRef.current) preCacheAbortRef.current.abort();
     const controller = new AbortController();
     preCacheAbortRef.current = controller;
-
     const total = narrationScripts.length;
     let completed = 0;
     setPreCacheProgress(0);
@@ -224,8 +211,7 @@ export function useTourNarration(): UseTourNarrationReturn {
         }
       }
     };
-
-    runSequential().catch(() => { /* aborted */ });
+    runSequential().catch(() => {});
   }, []);
 
   const playStepNarration = useCallback(async (stepIndex: number) => {
@@ -244,13 +230,12 @@ export function useTourNarration(): UseTourNarrationReturn {
       return;
     }
 
-    // Check cache
     const cachedUrl = cacheRef.current.get(stepIndex);
     if (cachedUrl) {
       const audio = new Audio(cachedUrl);
       attachAudioListeners(audio, stepIndex);
       audioRef.current = audio;
-      try { await audio.play(); } catch { /* autoplay blocked */ setNarrationDone(true); }
+      try { await audio.play(); } catch { setNarrationDone(true); }
       return;
     }
 
@@ -270,9 +255,8 @@ export function useTourNarration(): UseTourNarrationReturn {
       attachAudioListeners(audio, stepIndex);
       audioRef.current = audio;
       setIsLoading(false);
-      try { await audio.play(); } catch { /* autoplay blocked */ setNarrationDone(true); }
+      try { await audio.play(); } catch { setNarrationDone(true); }
     } else {
-      // Fallback to browser SpeechSynthesis
       setIsLoading(false);
       setIsSpeaking(true);
       speakWithBrowserTTS(script, () => {
@@ -284,7 +268,6 @@ export function useTourNarration(): UseTourNarrationReturn {
     }
   }, [isMuted, stopNarration, attachAudioListeners]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopNarration();
