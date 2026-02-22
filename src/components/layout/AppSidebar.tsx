@@ -18,6 +18,7 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Library,
+  Route,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,7 @@ const navGroups = [
     accent: 'platform',
     items: [
       { icon: Network, label: 'Architecture', path: '/architecture' },
+      { icon: Route, label: 'Solution Roadmap', path: '/solution-roadmap' },
       { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: BookOpen, label: 'About', path: '/about' },
       { icon: Settings, label: 'Settings', path: '/settings' },
