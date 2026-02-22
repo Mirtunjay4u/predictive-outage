@@ -17,7 +17,7 @@ const demoSteps = [
   },
   {
     title: 'Dashboard Orientation',
-    description: 'Review active event KPIs, high-priority alerts, crew workload, Executive Signal, Operational Risk Posture, and the governance header strip.',
+    description: 'Review active event KPIs, high-priority alerts, crew workload, Executive Signal, Operational Risk Posture, the governance header strip (Governed AI · Advisory-Only · Operator Validation Required), and Data Mode badge.',
   },
   {
     title: 'Scenario Playback Lifecycle',
@@ -61,7 +61,7 @@ const demoSteps = [
   },
   {
     title: 'Solution Roadmap',
-    description: 'Review the Solution Evolution Blueprint — three-phase timeline with progress connectors, capability lanes, acceptance markers, and governance non-claims.',
+    description: 'Review the Solution Evolution Blueprint — structured evolution plan aligned to utility operational governance and predictive validation milestones, with progress connectors and acceptance markers.',
   },
   {
     title: 'Knowledge & Policy',
@@ -85,7 +85,7 @@ const demoSteps = [
   },
   {
     title: 'Return to Dashboard & Close Loop',
-    description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, version stamp, and narrative resolution.',
+    description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, version stamp (v1.0 – Decision Intelligence Prototype), and narrative resolution.',
   },
 ];
 
