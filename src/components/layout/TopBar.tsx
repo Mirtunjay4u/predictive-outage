@@ -48,9 +48,9 @@ export function TopBar({ onSearch }: TopBarProps) {
           <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 rounded-full border border-[hsl(80,100%,36%)]/25 bg-[hsl(80,100%,36%)]/8 px-2 py-0.5 cursor-default whitespace-nowrap">
-                  <Brain className="h-3 w-3 shrink-0 text-[hsl(80,100%,36%)]/80" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-[hsl(80,100%,36%)]/90 hidden xl:inline">Nemotron</span>
+                <div className="flex items-center gap-1 rounded-full border border-[hsl(80,100%,36%)]/35 bg-[hsl(80,100%,36%)]/10 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Brain className="h-3.5 w-3.5 shrink-0 text-[hsl(80,100%,36%)]" strokeWidth={2} />
+                  <span className="text-[9px] font-semibold text-[hsl(80,100%,36%)] hidden xl:inline">Nemotron</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-52 text-xs">Primary inference model currently active.</TooltipContent>
@@ -58,9 +58,9 @@ export function TopBar({ onSearch }: TopBarProps) {
 
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 rounded-full border border-teal-500/20 bg-teal-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
-                  <Cog className="h-3 w-3 shrink-0 text-teal-400/70" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-teal-300/90 hidden xl:inline">Rules</span>
+                <div className="flex items-center gap-1 rounded-full border border-teal-400/30 bg-teal-500/10 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Cog className="h-3.5 w-3.5 shrink-0 text-teal-400" strokeWidth={2} />
+                  <span className="text-[9px] font-semibold text-teal-300 hidden xl:inline">Rules</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-52 text-xs">Deterministic operational constraints enforced before AI response.</TooltipContent>
@@ -68,9 +68,9 @@ export function TopBar({ onSearch }: TopBarProps) {
 
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 rounded-full border border-border/40 bg-muted/25 px-2 py-0.5 cursor-default whitespace-nowrap">
-                  <Layers className="h-3 w-3 shrink-0 text-muted-foreground/60" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-muted-foreground/80 hidden xl:inline">Phase 1</span>
+                <div className="flex items-center gap-1 rounded-full border border-border/50 bg-muted/30 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
+                  <span className="text-[9px] font-semibold text-muted-foreground hidden xl:inline">Phase 1</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-52 text-xs">Phase 1 – Advisory decision-support only.</TooltipContent>
@@ -78,14 +78,14 @@ export function TopBar({ onSearch }: TopBarProps) {
 
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
-                  <Database className="h-3 w-3 shrink-0 text-amber-400/70" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-amber-300/90 hidden xl:inline">Data: Demo (Synthetic)</span>
+                <div className="flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 cursor-default whitespace-nowrap">
+                  <Database className="h-3.5 w-3.5 shrink-0 text-amber-400" strokeWidth={2} />
+                  <span className="text-[9px] font-semibold text-amber-300 hidden xl:inline">Data: Demo (Synthetic)</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-64 text-xs">Data Mode: Demo — Synthetic structured events. No live SCADA or OMS integration.</TooltipContent>
             </Tooltip>
-            <span className="hidden xl:inline text-[9px] text-muted-foreground/50 font-medium tracking-wide ml-1">Governed AI · Advisory-Only · Operator Validation Required</span>
+            <span className="hidden xl:inline text-[9px] text-muted-foreground/70 font-semibold tracking-wide ml-1">Governed AI · Advisory-Only · Operator Validation Required</span>
           </div>
 
           <Tooltip delayDuration={200}>
