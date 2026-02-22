@@ -397,31 +397,202 @@ export default function About() {
 
         {/* About the Builder */}
         <TabsContent value="builder">
-          <motion.div variants={fadeIn} initial="hidden" animate="show">
-            <Card className="border-border/50">
-              <CardContent className="p-6 flex flex-col sm:flex-row items-start gap-6">
-                <img
-                  src={builderPhoto}
-                  alt="Builder"
-                  className="w-24 h-24 rounded-xl object-cover border border-border/50 flex-shrink-0"
-                />
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">Built with Lovable AI</h3>
-                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                      This solution was designed and developed as a demonstration of how modern AI-assisted development 
-                      can accelerate the creation of operationally complex, utility-grade applications. The entire platform — 
-                      from database schema to interactive map overlays — was built using Lovable's AI-powered development environment.
-                    </p>
+          <motion.div variants={stagger} initial="hidden" animate="show" className="space-y-4">
+            {/* Hero Card */}
+            <motion.div variants={fadeIn}>
+              <Card className="border-border/50 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="gradient-primary p-6 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                    <img
+                      src={builderPhoto}
+                      alt="Mirtunjay Kumar"
+                      className="w-28 h-28 rounded-2xl object-cover border-2 border-primary-foreground/20 shadow-lg flex-shrink-0"
+                    />
+                    <div className="text-primary-foreground text-center sm:text-left">
+                      <h3 className="text-lg font-bold tracking-tight">Mirtunjay Kumar</h3>
+                      <p className="text-sm font-medium text-primary-foreground/80 mt-0.5">AI & Domain Consultant — Tata Consultancy Services</p>
+                      <p className="text-xs text-primary-foreground/60 mt-1 max-w-md leading-relaxed">
+                        Industrial AI · Reliability Engineering · Smart Grid · Digital Twin · Predictive Analytics
+                      </p>
+                      <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">15+ Years Experience</Badge>
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">NVIDIA Certified</Badge>
+                        <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">Azure AI Engineer</Badge>
+                      </div>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Why This Builder */}
+            <motion.div variants={fadeIn}>
+              <Card className="border-border/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Target className="w-4 h-4 text-primary" />
+                    Why This Builder
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-1">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This prototype wasn't built by a frontend developer guessing at utility workflows — it was architected by someone who's led 
+                    <span className="text-foreground font-medium"> AI-driven smart grid programs at GE Vernova</span>, designed 
+                    <span className="text-foreground font-medium"> predictive maintenance models for industrial assets</span>, and spent a decade 
+                    doing hands-on reliability engineering before moving into AI consulting. The domain logic, escalation rules, ETR confidence banding, 
+                    and critical load prioritization in this prototype come from real operational understanding — not generic templates.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Career Highlights */}
+            <motion.div variants={fadeIn}>
+              <Card className="border-border/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-primary" />
+                    Career Highlights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-1 space-y-3">
+                  {[
+                    { role: 'AI & Domain Consultant', org: 'Tata Consultancy Services', period: '2021 – Present', points: [
+                      'AI Lead for GE Vernova Smart GridOS — outage prediction, blackout recovery, RE curtailment',
+                      'Designed digital twins and AI-driven analytics for manufacturing & energy sectors',
+                      'Platinum Certified Mentor for AI capability building (Wings2 AI program)',
+                    ]},
+                    { role: 'Deputy Manager — Reliability Maintenance', org: 'Shree Cement Ltd', period: '2012 - 2021', points: [
+                      '9 years of hands-on vibration analysis, condition monitoring, and predictive maintenance',
+                      'Built the condition monitoring lab and reliability-centered maintenance program',
+                      'Integrated analytics with maintenance KPIs (MTTR, MTTF) to optimize operations',
+                    ]},
+                  ].map((job) => (
+                    <div key={job.role} className="border border-border/40 rounded-lg p-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-semibold text-foreground">{job.role}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{job.period}</Badge>
+                      </div>
+                      <p className="text-[11px] text-primary font-medium">{job.org}</p>
+                      <ul className="space-y-1 pt-0.5">
+                        {job.points.map((p, i) => (
+                          <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                            <ArrowRight className="w-3 h-3 text-primary/60 mt-0.5 flex-shrink-0" />
+                            {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Certifications & Recognition */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <motion.div variants={fadeIn}>
+                <Card className="border-border/50 h-full">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-primary" />
+                      Certifications
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-1">
+                    <ul className="space-y-1.5">
+                      {[
+                        'NVIDIA Certified: Agentic AI & GenAI LLMs',
+                        'Azure AI Engineer, Data Scientist & Data Engineer',
+                        'Certified Vibration Analyst (Cat III)',
+                        'SAFe 6 Scrum Master & Release Train Engineer',
+                        'Lean Six Sigma Black Belt',
+                        'Google Project Management Certificate',
+                      ].map((c, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div variants={fadeIn}>
+                <Card className="border-border/50 h-full">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-primary" />
+                      Recognition
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-1">
+                    <ul className="space-y-1.5">
+                      {[
+                        'Contextual Master Award — TCS Gems (2022)',
+                        'Beyond Excellence Award — TCS Gems (2024)',
+                        'Special Initiative Award — TCS Gems (2025)',
+                        'Platinum Certified AI Mentor — TCS (2024)',
+                        'Published researcher — Elsevier / Science Direct',
+                        'Life Member — Vibration Institute (USA)',
+                      ].map((r, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                          <CheckCircle2 className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+                          {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Professional Affiliations */}
+            <motion.div variants={fadeIn}>
+              <Card className="border-border/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    Professional Affiliations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-1">
                   <div className="flex flex-wrap gap-1.5">
-                    {['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Recharts', 'Leaflet', 'PostgreSQL', 'Edge Functions', 'Lovable AI'].map((t) => (
+                    {[
+                      'Condition Monitoring Society of India',
+                      'Vibration Institute (USA)',
+                      'Association for Asset Management Professionals (USA)',
+                      'Association for Machines & Mechanisms (IIT Madras)',
+                      'Acoustic Society of India',
+                      'Tribology Society of India',
+                    ].map((a) => (
+                      <Badge key={a} variant="secondary" className="text-[10px]">{a}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Tech Stack */}
+            <motion.div variants={fadeIn}>
+              <Card className="border-border/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    Built With
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-1">
+                  <p className="text-[11px] text-muted-foreground leading-relaxed mb-2.5">
+                    This entire platform — from database schema to interactive map overlays — was built using Lovable's AI-powered development environment.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion', 'Recharts', 'Leaflet', 'PostgreSQL', 'Edge Functions', 'NVIDIA NIM', 'Lovable AI'].map((t) => (
                       <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>
                     ))}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         </TabsContent>
       </Tabs>
