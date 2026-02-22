@@ -33,17 +33,17 @@ export function TopBar({ onSearch }: TopBarProps) {
   return (
     <header className="h-14 border-b border-border/50 bg-card/80 px-5 backdrop-blur-sm" role="banner" aria-label="Application header">
       <div className="flex h-full w-full items-center justify-between gap-4">
-        <search role="search" aria-label="Search events" className="relative w-full max-w-80">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <search role="search" aria-label="Search events" className="relative w-full max-w-52 shrink-0">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search events..."
-            className="bg-background/50 pl-10 transition-shadow focus:shadow-md"
+            className="h-8 bg-background/50 pl-8 text-xs transition-shadow focus:shadow-md"
             onChange={(e) => onSearch?.(e.target.value)}
             aria-label="Search events"
           />
         </search>
 
-        <div className="flex items-center gap-3" role="group" aria-label="User actions">
+        <div className="flex items-center gap-2" role="group" aria-label="User actions">
           {/* ── System Status Strip ── */}
           <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
             <Tooltip delayDuration={200}>
@@ -134,7 +134,7 @@ export function TopBar({ onSearch }: TopBarProps) {
                     {user?.email?.charAt(0).toUpperCase() || 'D'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="max-w-32 truncate text-sm font-medium">{user?.email || 'Demo User'}</span>
+                <span className="max-w-24 truncate text-xs font-medium hidden lg:inline">{user?.email || 'Demo User'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
