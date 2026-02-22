@@ -245,14 +245,14 @@ export default function SolutionRoadmap() {
             Solution Evolution Blueprint
           </h1>
           <p className="mt-1 text-sm text-muted-foreground/80 max-w-2xl leading-relaxed">
-            From Governed Decision Support to Calibrated Predictive Operations Platform
+            From governed decision support to calibrated predictive operations
           </p>
         </div>
 
-        <p className="text-[13px] text-muted-foreground/70 max-w-3xl leading-relaxed">
-          Operator Copilot is designed as a phased transformation platform.
-          Phase 1 establishes a governed decision-support layer.
-          Phase 2 introduces calibrated predictive analytics, enterprise integration, and operational production hardening.
+          <p className="text-[13px] text-muted-foreground/70 max-w-3xl leading-relaxed">
+            Structured evolution plan aligned to utility operational governance and predictive validation milestones.
+            Phase 1 establishes a governed decision-support layer.
+            Phase 2 introduces calibrated predictive analytics, enterprise integration, and operational production hardening.
         </p>
       </motion.header>
 

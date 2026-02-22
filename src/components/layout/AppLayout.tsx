@@ -33,9 +33,12 @@ export function AppLayout() {
             <p className="text-[10px] text-muted-foreground/60 tracking-wide font-medium">
               Operator Copilot – Governed Decision Intelligence · Phase-1 Demonstrator · Synthetic Data
             </p>
-            <p className="text-[10px] text-muted-foreground/50 tracking-wide">
-              No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-[10px] text-muted-foreground/50 tracking-wide">
+                No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
+              </p>
+              <span className="text-[9px] text-muted-foreground/35 tracking-wide font-mono">v1.0 – Decision Intelligence Prototype</span>
+            </div>
           </div>
         </footer>
       </div>
