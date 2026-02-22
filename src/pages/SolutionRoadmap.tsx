@@ -15,6 +15,8 @@ import {
   ArrowRight,
   Circle,
   Sparkles,
+  Columns2,
+  Plus,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -151,6 +153,7 @@ const accentMap = {
 
 export default function SolutionRoadmap() {
   const [activePhase, setActivePhase] = useState(0);
+  const [compareMode, setCompareMode] = useState(false);
   const phase = phases[activePhase];
   const colors = accentMap[phase.accent as keyof typeof accentMap];
 
@@ -247,110 +250,236 @@ export default function SolutionRoadmap() {
         </div>
       </motion.section>
 
-      {/* ── Active Phase Detail Panel ── */}
-      <AnimatePresence mode="wait">
-        <motion.section
-          key={activePhase}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25 }}
-          className={cn('rounded-xl border p-5 space-y-4', colors.border, colors.bg)}
+      {/* ── View Mode Toggle ── */}
+      <div className="flex items-center justify-end">
+        <button
+          onClick={() => setCompareMode(!compareMode)}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all cursor-pointer',
+            compareMode
+              ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+              : 'border-border/30 bg-card/30 text-muted-foreground/60 hover:text-muted-foreground/80 hover:bg-card/50',
+          )}
         >
-          {/* Phase summary */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-[15px] font-bold text-foreground/90 flex items-center gap-2">
-                {phase.label}: {phase.title}
-                {phase.progress === 100 && (
-                  <Badge variant="outline" className="text-[9px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-                    ✓ Delivered
-                  </Badge>
-                )}
-              </h2>
-              <p className="text-[12px] text-muted-foreground/70 mt-1 max-w-2xl leading-relaxed">
-                {phase.summary}
-              </p>
-            </div>
+          <Columns2 className="h-3.5 w-3.5" />
+          {compareMode ? 'Exit Compare' : 'Compare Phase 1 → 2A'}
+        </button>
+      </div>
 
-            {/* Progress ring */}
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
-              <div className="relative h-12 w-12">
-                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-border/20" />
-                  <circle
-                    cx="18" cy="18" r="14" fill="none" strokeWidth="2.5"
-                    strokeDasharray={`${phase.progress * 0.88} 88`}
-                    strokeLinecap="round"
-                    className={cn(
-                      phase.progress === 100 ? 'text-emerald-400' : phase.progress > 0 ? 'text-blue-400' : 'text-slate-500',
-                    )}
-                    stroke="currentColor"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground/70">
-                  {phase.progress}%
-                </span>
+      {/* ── Compare Mode: Side-by-side ── */}
+      <AnimatePresence mode="wait">
+        {compareMode ? (
+          <motion.section
+            key="compare"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-3"
+          >
+            {/* Compare header */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-400/70">Phase 1</span>
+                  <p className="text-[12px] font-semibold text-foreground/90">Governed Decision Intelligence</p>
+                </div>
+                <Badge variant="outline" className="ml-auto text-[8px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Delivered</Badge>
+              </div>
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 px-4 py-2.5 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-blue-400" />
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-blue-400/70">Phase 2A</span>
+                  <p className="text-[12px] font-semibold text-foreground/90">Predictive MVP</p>
+                </div>
+                <Badge variant="outline" className="ml-auto text-[8px] bg-blue-500/15 text-blue-400 border-blue-500/30">Committed</Badge>
               </div>
             </div>
-          </div>
 
-          {/* Capability lanes for this phase */}
-          <div className="space-y-3">
+            {/* Compare lanes */}
             {lanes.map((lane) => {
               const Icon = lane.icon;
-              const phaseData = lane.phases[activePhase];
+              const p1 = lane.phases[0];
+              const p2 = lane.phases[1];
               return (
                 <div key={lane.title} className="rounded-lg border border-border/20 bg-background/30 px-4 py-3">
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <Icon className={cn('h-4 w-4', colors.icon)} strokeWidth={1.75} />
+                  <div className="flex items-center gap-2 mb-3">
+                    <Icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.75} />
                     <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
                       {lane.title}
                     </h3>
                     <div className="h-px flex-1 bg-border/20" />
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    {phaseData.items.map((item, i) => (
-                      <motion.span
-                        key={item}
-                        initial={{ opacity: 0, scale: 0.92 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.2, delay: i * 0.04 }}
-                        className={cn(
-                          'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
-                          colors.chipBg,
-                        )}
-                      >
-                        {phase.progress === 100 && (
-                          <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
-                        )}
-                        {item}
-                      </motion.span>
-                    ))}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Phase 1 column */}
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {p1.items.map((item, i) => (
+                          <motion.span
+                            key={item}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.2, delay: i * 0.03 }}
+                            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+                          >
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
+                            {item}
+                          </motion.span>
+                        ))}
+                      </div>
+                      {p1.warn && (
+                        <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2 py-1">
+                          <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                          <span className="text-[9px] font-medium text-amber-400/80">{p1.warn}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Phase 2A column */}
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {p2.items.map((item, i) => (
+                          <motion.span
+                            key={item}
+                            initial={{ opacity: 0, x: 8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.2, delay: i * 0.03 }}
+                            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium bg-blue-500/10 border-blue-500/20 text-blue-300"
+                          >
+                            <Plus className="h-3 w-3 text-blue-400/70 flex-shrink-0" />
+                            {item}
+                          </motion.span>
+                        ))}
+                      </div>
+                      {p2.gate && (
+                        <div className="flex items-center gap-1.5 rounded border border-blue-500/25 bg-blue-500/8 px-2 py-1">
+                          <CheckCircle2 className="h-3 w-3 text-blue-400/90 flex-shrink-0" />
+                          <span className="text-[9px] font-semibold text-blue-400/80">Gate: {p2.gate}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  {phaseData.warn && (
-                    <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-1.5 mt-2.5">
-                      <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                      <span className="text-[10px] font-medium text-amber-400/80">{phaseData.warn}</span>
-                    </div>
-                  )}
-
-                  {phaseData.gate && (
-                    <div className={cn('flex items-center gap-1.5 rounded border px-2.5 py-1.5 mt-2.5', colors.gateBorder, colors.gateBg)}>
-                      <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', colors.gateText)} />
-                      <span className={cn('text-[10px] font-semibold', colors.gateText)}>Gate: {phaseData.gate}</span>
-                    </div>
-                  )}
                 </div>
               );
             })}
-          </div>
-        </motion.section>
-      </AnimatePresence>
 
-      {/* ── Bottom strip: Impact + Non-Claims ── */}
+            {/* Legend */}
+            <div className="flex items-center gap-4 px-1">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3 w-3 text-emerald-400/70" />
+                <span className="text-[10px] text-muted-foreground/60">Delivered in Phase 1</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Plus className="h-3 w-3 text-blue-400/70" />
+                <span className="text-[10px] text-muted-foreground/60">New in Phase 2A</span>
+              </div>
+            </div>
+          </motion.section>
+        ) : (
+          /* ── Single Phase Detail Panel ── */
+          <motion.section
+            key={activePhase}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className={cn('rounded-xl border p-5 space-y-4', colors.border, colors.bg)}
+          >
+            {/* Phase summary */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[15px] font-bold text-foreground/90 flex items-center gap-2">
+                  {phase.label}: {phase.title}
+                  {phase.progress === 100 && (
+                    <Badge variant="outline" className="text-[9px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                      ✓ Delivered
+                    </Badge>
+                  )}
+                </h2>
+                <p className="text-[12px] text-muted-foreground/70 mt-1 max-w-2xl leading-relaxed">
+                  {phase.summary}
+                </p>
+              </div>
+
+              {/* Progress ring */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <div className="relative h-12 w-12">
+                  <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-border/20" />
+                    <circle
+                      cx="18" cy="18" r="14" fill="none" strokeWidth="2.5"
+                      strokeDasharray={`${phase.progress * 0.88} 88`}
+                      strokeLinecap="round"
+                      className={cn(
+                        phase.progress === 100 ? 'text-emerald-400' : phase.progress > 0 ? 'text-blue-400' : 'text-slate-500',
+                      )}
+                      stroke="currentColor"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-foreground/70">
+                    {phase.progress}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Capability lanes for this phase */}
+            <div className="space-y-3">
+              {lanes.map((lane) => {
+                const Icon = lane.icon;
+                const phaseData = lane.phases[activePhase];
+                return (
+                  <div key={lane.title} className="rounded-lg border border-border/20 bg-background/30 px-4 py-3">
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <Icon className={cn('h-4 w-4', colors.icon)} strokeWidth={1.75} />
+                      <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
+                        {lane.title}
+                      </h3>
+                      <div className="h-px flex-1 bg-border/20" />
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {phaseData.items.map((item, i) => (
+                        <motion.span
+                          key={item}
+                          initial={{ opacity: 0, scale: 0.92 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.2, delay: i * 0.04 }}
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                            colors.chipBg,
+                          )}
+                        >
+                          {phase.progress === 100 && (
+                            <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
+                          )}
+                          {item}
+                        </motion.span>
+                      ))}
+                    </div>
+
+                    {phaseData.warn && (
+                      <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2.5 py-1.5 mt-2.5">
+                        <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                        <span className="text-[10px] font-medium text-amber-400/80">{phaseData.warn}</span>
+                      </div>
+                    )}
+
+                    {phaseData.gate && (
+                      <div className={cn('flex items-center gap-1.5 rounded border px-2.5 py-1.5 mt-2.5', colors.gateBorder, colors.gateBg)}>
+                        <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', colors.gateText)} />
+                        <span className={cn('text-[10px] font-semibold', colors.gateText)}>Gate: {phaseData.gate}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
