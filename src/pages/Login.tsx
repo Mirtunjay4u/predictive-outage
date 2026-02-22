@@ -78,7 +78,7 @@ export default function Login() {
       <div className="flex gradient-primary relative overflow-hidden md:w-1/2">
         {/* Watermark background image – transmission grid silhouette */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.17]"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.08]"
           style={{ backgroundImage: `url(${gridWatermark})` }}
           aria-hidden="true"
         />
@@ -100,48 +100,43 @@ export default function Login() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight">Operator Copilot</h1>
-                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Governed AI Decision Intelligence</p>
+                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Your AI Assistant for Decision Support</p>
               </div>
             </div>
             
             {/* B) Primary Headline */}
-            <h2 className="text-[1.7rem] font-bold leading-[1.2] tracking-tight mb-4 sm:text-[2rem] xl:text-[2.4rem] max-w-lg">
-              Governed AI Decision Intelligence
-              <span className="block text-primary-foreground/70 text-[0.6em] font-semibold mt-1">for Utility Outage Operations</span>
+            <h2 className="text-3xl font-bold leading-[1.15] tracking-tight mb-4 sm:text-[2.2rem] xl:text-[2.75rem] max-w-lg">
+              Predictive Outage Management
             </h2>
             
             {/* C) Sub-headline */}
-            <p className="text-[15px] text-primary-foreground/75 font-normal mb-8 max-w-md leading-relaxed">
-              Explainable, deterministic decision-support aligned to operational policy and safety constraints.
+            <p className="text-base text-primary-foreground/90 font-medium mb-8 max-w-md leading-relaxed sm:text-[17px]">
+              AI Decision Support for Utility Outage Operations
             </p>
             
             {/* D) Capabilities - 3 Bullets */}
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground/70 mb-3">
               Key capabilities
             </p>
-            <ul className="space-y-2.5 max-w-md">
+            <ul className="space-y-3 max-w-md">
               <li className="flex items-start gap-3">
-                <span className="w-1 h-1 rounded-full bg-primary-foreground/50 mt-[7px] flex-shrink-0" />
-                <span className="text-primary-foreground/70 text-[14px] leading-relaxed">Deterministic rule enforcement with transparent AI reasoning</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Deterministic policy enforcement + explainable AI decisions.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1 h-1 rounded-full bg-primary-foreground/50 mt-[7px] flex-shrink-0" />
-                <span className="text-primary-foreground/70 text-[14px] leading-relaxed">Structured ETR confidence band modeling — not single-point estimates</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">OMS-style triage + ETR confidence banding.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-1 h-1 rounded-full bg-primary-foreground/50 mt-[7px] flex-shrink-0" />
-                <span className="text-primary-foreground/70 text-[14px] leading-relaxed">Hazard-aware triage with critical-load prioritization</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-1 h-1 rounded-full bg-primary-foreground/50 mt-[7px] flex-shrink-0" />
-                <span className="text-primary-foreground/70 text-[14px] leading-relaxed">Operational risk posture and executive intelligence synthesis</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground/60 mt-2 flex-shrink-0" />
+                <span className="text-primary-foreground/80 text-[15px] leading-relaxed">Hazard intelligence + critical load prioritization.</span>
               </li>
             </ul>
             
-            {/* E) AI Engine Attribution – understated */}
-            <div className="mt-6 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[hsl(80,100%,36%)]" />
-              <span className="text-[12px] font-medium tracking-wide text-primary-foreground/50">Powered by NVIDIA Nemotron (NIM) · Bounded inference</span>
+            {/* E) AI Engine Attribution */}
+            <div className="mt-8 flex items-center gap-2.5">
+              <div className="w-2 h-2 rounded-full bg-[#76B900] shadow-[0_0_6px_rgba(118,185,0,0.5)]" />
+              <span className="text-sm font-semibold tracking-wide"><span className="text-primary-foreground/70">Powered by </span><span className="text-[hsl(80,100%,36%)]">NVIDIA Nemotron (NIM)</span></span>
             </div>
           </motion.div>
           
@@ -149,17 +144,22 @@ export default function Login() {
           <div className="mt-8 md:mt-auto pt-8 space-y-6">
             <div className="flex flex-col items-start gap-1.5">
               <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/70">Powered by</span>
-              <div className="group/tcs relative rounded-lg border-2 border-white/50 px-6 py-4 inline-flex">
+              <div className="group/tcs relative rounded-lg border-2 border-white/60 px-6 py-4 transition-all duration-500 inline-flex hover:border-white/80 hover:shadow-[0_0_18px_rgba(255,255,255,0.12)]">
                 <img
                   src={tcsLogo}
                   alt="Tata Consultancy Services (TCS)"
-                  className="h-12 w-auto brightness-0 invert opacity-85"
+                  className="h-12 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
                 />
               </div>
             </div>
-            <p className="text-[11px] text-primary-foreground/45 font-medium leading-relaxed tracking-wide max-w-sm">
-              Advisory-only platform. No autonomous control actions. No live SCADA / OMS / ADMS integration in Phase 1 demo.
-            </p>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-[11px] text-primary-foreground/50 font-medium tracking-wide"
+            >
+              Decision-support only. No autonomous actions. No live SCADA/OMS/ADMS access in demo mode.
+            </motion.p>
           </div>
         </div>
       </div>
