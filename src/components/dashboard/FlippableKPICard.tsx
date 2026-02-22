@@ -90,7 +90,7 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={8} className="max-w-[240px] text-xs">{tooltip}</TooltipContent>
+            <TooltipContent side="top" sideOffset={8} className="max-w-[240px] text-xs">{tooltip}</TooltipContent>
           </Tooltip>
         </div>
 
