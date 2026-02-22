@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   AlertTriangle,
   XCircle,
-  ChevronDown,
   ChevronRight,
   Zap,
   Radio,
@@ -205,11 +204,12 @@ function CollapsibleLane({
           {lane.title}
         </h3>
         <div className="h-px flex-1 bg-border/30" />
-        {open ? (
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
-        ) : (
+        <motion.div
+          animate={{ rotate: open ? 90 : 0 }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
+        >
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground/70 transition-colors" />
-        )}
+        </motion.div>
       </button>
 
       <AnimatePresence initial={false}>
@@ -218,7 +218,7 @@ function CollapsibleLane({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
             <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
@@ -233,9 +233,12 @@ function CollapsibleLane({
                   )}
                 >
                   {/* Compact chip list */}
-                  <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1">
                     {phaseData.items.map((item, i) => (
-                      <span
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2, delay: i * 0.03 }}
                         key={i}
                         className={cn(
                           'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight',
@@ -247,7 +250,7 @@ function CollapsibleLane({
                         )}
                       >
                         {item}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
 
