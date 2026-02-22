@@ -83,7 +83,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(217,91%,60%,0.12)]',
     hoverBg: 'hover:bg-[hsl(217,91%,60%,0.05)]',
     iconActive: 'text-[hsl(217,91%,72%)]',
-    headerColor: 'text-[hsl(217,60%,45%)]',
+    headerColor: 'text-[hsl(217,80%,65%)]',
   },
   intel: {
     barGradient: 'bg-gradient-to-b from-[hsl(173,80%,45%)] to-[hsl(173,80%,35%)]',
@@ -92,7 +92,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(173,80%,40%,0.12)]',
     hoverBg: 'hover:bg-[hsl(173,80%,40%,0.05)]',
     iconActive: 'text-[hsl(173,70%,60%)]',
-    headerColor: 'text-[hsl(173,50%,40%)]',
+    headerColor: 'text-[hsl(173,65%,55%)]',
   },
   vision: {
     barGradient: 'bg-gradient-to-b from-[hsl(280,60%,60%)] to-[hsl(280,60%,48%)]',
@@ -101,7 +101,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(280,60%,55%,0.12)]',
     hoverBg: 'hover:bg-[hsl(280,60%,55%,0.05)]',
     iconActive: 'text-[hsl(280,50%,68%)]',
-    headerColor: 'text-[hsl(280,35%,45%)]',
+    headerColor: 'text-[hsl(280,50%,65%)]',
   },
   platform: {
     barGradient: 'bg-gradient-to-b from-[hsl(215,20%,60%)] to-[hsl(215,20%,48%)]',
@@ -110,7 +110,7 @@ const accentConfig: Record<string, {
     activeGlow: 'shadow-[0_0_8px_hsl(215,20%,55%,0.10)]',
     hoverBg: 'hover:bg-[hsl(215,20%,55%,0.04)]',
     iconActive: 'text-[hsl(215,20%,70%)]',
-    headerColor: 'text-[hsl(215,15%,42%)]',
+    headerColor: 'text-[hsl(215,25%,62%)]',
   },
 };
 
@@ -236,8 +236,8 @@ export function AppSidebar() {
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-full text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground/80" onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}>
-                <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
+              <Button variant="ghost" size="icon" className="w-full border border-amber-500/20 bg-amber-500/8 text-amber-300 hover:bg-amber-500/15 hover:text-amber-200" onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}>
+                <HelpCircle className="h-4 w-4" strokeWidth={2} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={10}>Demo Script</TooltipContent>
@@ -245,11 +245,11 @@ export function AppSidebar() {
         ) : (
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground/80 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className="w-full justify-start gap-3 rounded-md border border-amber-500/20 bg-amber-500/8 text-amber-300 hover:bg-amber-500/15 hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             onClick={() => window.dispatchEvent(new CustomEvent('open-demo-script'))}
           >
-            <HelpCircle className="h-4 w-4" strokeWidth={1.75} />
-            <span className="text-sm font-medium">Demo Script</span>
+            <HelpCircle className="h-4 w-4" strokeWidth={2} />
+            <span className="text-sm font-semibold">Demo Script</span>
           </Button>
         )}
 
