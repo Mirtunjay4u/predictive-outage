@@ -31,7 +31,7 @@ export function AppLayout() {
         <footer className="border-t border-border/30 bg-surface-0 shrink-0">
           <div className="h-7 flex items-center justify-between px-4">
             <p className="text-[10px] text-muted-foreground/60 tracking-wide font-medium">
-              Operator Copilot – Predictive Outage Management · Phase-1 Decision Intelligence Demonstrator · Synthetic Data
+              Operator Copilot – Governed Decision Intelligence · Phase-1 Demonstrator · Synthetic Data
             </p>
             <p className="text-[10px] text-muted-foreground/50 tracking-wide">
               No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
