@@ -382,6 +382,10 @@ export default function UseCases() {
         {/* ════════════════ 1. HEADER ════════════════ */}
         <section>
           <SectionAnchor id="overview" />
+          {/* Watermark */}
+          <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/30 mb-4 text-center">
+            Conceptual Prototype — Structured Demonstration Environment
+          </p>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Grid Resilience Command Center</h1>
@@ -696,11 +700,19 @@ export default function UseCases() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-4 pt-3 border-t border-border/20">
+                  <p className="text-[10px] text-amber-400/60 italic">Requires validated operational datasets.</p>
+                </div>
               </CardContent>
             </GlowCard>
           </div>
           <div className="mt-4 rounded-md border border-amber-500/20 bg-amber-500/[0.04] px-4 py-2.5 text-[11px] text-amber-400/80">
             <strong>Phase-1 excludes:</strong> load-flow simulation, switching automation, protection coordination, and real-time SCADA control.
+          </div>
+
+          {/* Boundary banner */}
+          <div className="mt-3 rounded-md border border-border/20 bg-muted/20 px-4 py-2 text-center text-[10px] text-muted-foreground/50">
+            Decision-support layer. No switching automation. No SCADA control.
           </div>
         </section>
 

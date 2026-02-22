@@ -509,13 +509,27 @@ export default function CopilotStudio() {
               </div>
             </CardHeader>
             <CardContent>
+              {/* Persistent boundary banner */}
+              <div className="mb-4 rounded-md border border-amber-500/15 bg-amber-500/[0.03] px-3 py-2 text-[10px] text-amber-400/70">
+                Decision-support layer. No switching automation. No SCADA control.
+              </div>
+
               <AnimatePresence mode="wait">
-                {/* Empty state */}
-                {!latestEntry && !isLoading && (
+                {/* Empty state — failure handling */}
+                {!latestEntry && !isLoading && !error && (
                   <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-16 text-muted-foreground">
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
                     <p className="mb-2">Select an event and run the Operator Copilot.</p>
                     <p className="text-xs">Results render into fixed operator sections — no free-form chat.</p>
+                  </motion.div>
+                )}
+
+                {/* Insufficient context state */}
+                {!latestEntry && !isLoading && error && error.includes('context') && (
+                  <motion.div key="insufficient" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-12">
+                    <ShieldAlert className="w-10 h-10 mx-auto mb-3 text-amber-400/50" />
+                    <p className="text-sm font-medium text-foreground/80 mb-1">Insufficient context to generate structured advisory.</p>
+                    <p className="text-xs text-muted-foreground">Required inputs are missing or incomplete. Select an event with available data.</p>
                   </motion.div>
                 )}
 
@@ -659,7 +673,8 @@ export default function CopilotStudio() {
                       </div>
                     </div>
 
-                    {/* Disclaimer */}
+                    {/* Output Schema Toggle */}
+                    <OutputSchemaToggle />
                     <div className="pt-3">
                       <div className="p-3 rounded-lg bg-muted/50 border border-border">
                         <div className="flex items-start gap-2">
@@ -718,6 +733,35 @@ export default function CopilotStudio() {
         {/* System Scope Panel */}
         <SystemScopePanel className="max-w-7xl mx-auto mt-6" />
       </main>
+    </div>
+  );
+}
+
+// ─── Output Schema Toggle ─────────────────────────────────────────────────
+function OutputSchemaToggle() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="pt-3">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider hover:text-foreground/80 transition-colors"
+      >
+        <FileText className="w-3 h-3" />
+        {open ? 'Hide' : 'View'} Output Schema
+      </button>
+      {open && (
+        <div className="mt-2 p-3 rounded-lg bg-muted/30 border border-border/40 font-mono text-[10px] text-muted-foreground leading-relaxed whitespace-pre">
+{`{
+  mode: string,
+  summary: string,
+  rationale: string[],
+  tradeoffs: string[],
+  escalationTriggers: string[],
+  assumptions: string[],
+  sourceContext: string[]
+}`}
+        </div>
+      )}
     </div>
   );
 }

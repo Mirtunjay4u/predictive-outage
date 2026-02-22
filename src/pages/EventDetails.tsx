@@ -288,6 +288,154 @@ import { SystemScopePanel } from "@/components/copilot/SystemScopePanel";
                </Card>
               )}
 
+              {/* Rule Evaluation Summary */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-primary" />
+                    Rule Evaluation Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-[10px] text-muted-foreground/60 mb-3">Deterministic logic evaluated before any AI advisory is generated.</p>
+                  <div className="space-y-2">
+                    {[
+                      { rule: 'Maintenance Lock Check', status: event.notes?.includes('maintenance') ? 'Blocked' : 'Passed', color: event.notes?.includes('maintenance') ? 'text-destructive' : 'text-emerald-400' },
+                      { rule: 'Critical Load Threshold', status: event.requires_escalation ? 'Triggered' : 'Passed', color: event.requires_escalation ? 'text-amber-400' : 'text-emerald-400' },
+                      { rule: 'Crew Skill Match', status: 'Partial', color: 'text-amber-400' },
+                      { rule: 'Hazard Escalation', status: event.requires_escalation ? 'Active' : 'Inactive', color: event.requires_escalation ? 'text-destructive' : 'text-muted-foreground' },
+                      { rule: 'ETR Confidence Gate', status: event.etr_confidence === 'LOW' ? 'Flagged' : 'Passed', color: event.etr_confidence === 'LOW' ? 'text-amber-400' : 'text-emerald-400' },
+                    ].map((r, i) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-md bg-muted/30 border border-border/30">
+                        <span className="text-xs text-foreground/80">{r.rule}</span>
+                        <span className={`text-xs font-semibold ${r.color}`}>{r.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Feeder Hierarchy Context */}
+              {event.feeder_id && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                      <Cable className="w-4 h-4" />
+                      Feeder Hierarchy
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-start gap-0">
+                      <div className="flex items-center gap-2 py-1.5 px-3 rounded-md bg-primary/5 border border-primary/20 text-xs font-semibold text-foreground">
+                        Primary Feeder: {event.feeder_id}
+                      </div>
+                      <div className="ml-4 w-px h-4 bg-border/50" />
+                      <div className="ml-4 flex items-center gap-2 py-1 px-2.5 rounded-md bg-muted/30 border border-border/30 text-xs text-muted-foreground">
+                        ↓ Downstream Feeders (synthetic)
+                      </div>
+                      <div className="ml-8 w-px h-4 bg-border/50" />
+                      <div className="ml-8 flex items-center gap-2 py-1 px-2.5 rounded-md bg-amber-500/5 border border-amber-500/20 text-xs text-amber-400/80">
+                        ↓ Critical Loads: {((event.critical_load_types || []) as string[]).join(', ') || 'None flagged'}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/50 mt-2 italic">Demo topology — static hierarchy for illustration.</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Escalation Ladder */}
+              {event.has_critical_load && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                      <Gauge className="w-4 h-4 text-amber-400" />
+                      Escalation Ladder
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-0">
+                      {[
+                        { label: 'Normal', active: !event.requires_escalation && event.critical_runway_status === 'NORMAL' },
+                        { label: 'Monitoring', active: event.critical_runway_status === 'AT_RISK' },
+                        { label: 'Escalation Advisory', active: event.requires_escalation && event.critical_runway_status !== 'BREACH' },
+                        { label: 'Emergency Condition', active: event.critical_runway_status === 'BREACH' },
+                      ].map((step, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${step.active ? 'bg-amber-400 shadow-[0_0_6px_hsl(38,92%,50%,0.4)]' : 'bg-muted-foreground/20'}`} />
+                          <span className={`text-xs py-1.5 ${step.active ? 'font-semibold text-foreground' : 'text-muted-foreground/60'}`}>
+                            {step.label}
+                          </span>
+                          {step.active && <Badge variant="outline" className="text-[9px] h-4 border-amber-500/30 text-amber-400 bg-amber-500/10">Current</Badge>}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Context Completeness Score */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                    <Activity className="w-4 h-4" />
+                    Context Completeness
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Weather data', present: !!event.outage_type },
+                      { label: 'Crew data', present: true },
+                      { label: 'Asset flags', present: linkedAssets.length > 0 },
+                      { label: 'ETR band', present: !!(event.etr_earliest && event.etr_latest) },
+                      { label: 'Critical load info', present: !!event.has_critical_load },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{item.label}</span>
+                        <span className={item.present ? 'text-emerald-400 font-medium' : 'text-muted-foreground/40'}>
+                          {item.present ? '● Available' : '○ Missing'}
+                        </span>
+                      </div>
+                    ))}
+                    <Separator className="bg-border/20" />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground/80">Context Integrity</span>
+                      <Badge variant="outline" className={`text-[10px] ${
+                        linkedAssets.length > 0 && event.etr_earliest ? 'border-emerald-500/30 text-emerald-400' :
+                        event.etr_earliest ? 'border-amber-500/30 text-amber-400' : 'border-muted-foreground/30 text-muted-foreground'
+                      }`}>
+                        {linkedAssets.length > 0 && event.etr_earliest ? 'High' : event.etr_earliest ? 'Medium' : 'Low'}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* What Would Change This? */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    Recommendation Sensitivity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-[10px] text-muted-foreground/60 mb-2">Conditions that would alter advisory output:</p>
+                  <ul className="space-y-1.5">
+                    {[
+                      'If runway < 1 hour → Escalate immediately',
+                      'If hazard index drops → Deprioritize event',
+                      'If crew availability increases → Reallocate dispatch advisory',
+                      'If ETR band narrows to < 1h width → Increase confidence to High',
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <span className="text-primary/50 mt-0.5 shrink-0">→</span> {item}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+
               {/* Decision Timeline */}
               <EventDecisionTimeline eventId={id ?? null} maxHeight="400px" />
 
