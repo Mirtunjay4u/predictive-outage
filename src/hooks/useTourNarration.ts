@@ -51,7 +51,7 @@ export const narrationScripts: string[] = [
   `This roadmap outlines structured evolution from Phase One decision intelligence to Phase Two predictive capabilities. It clearly separates implemented features from planned milestones... without false commitments.`,
 
   // Step 14 — Close
-  `Operator Copilot augments operator reasoning through governed AI, explainability, and structured insight. Designed for critical infrastructure... where safety, transparency, and human validation remain paramount. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
+  `Operator Copilot introduces a governed AI reasoning layer for transmission and distribution outage operations. It synthesizes event severity, hazard exposure, crew readiness, and ETR uncertainty into structured advisory insights. Deterministic policy rules are enforced before AI reasoning is presented. All outputs remain explainable, auditable, and human-validated. Phase One establishes disciplined decision intelligence. Phase Two evolves toward calibrated predictive modeling with historical validation and production monitoring. This platform does not replace control systems. It augments operational judgment in critical infrastructure environments. This concludes the executive demonstration.`,
 ];
 
 interface UseTourNarrationReturn {

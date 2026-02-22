@@ -24,7 +24,7 @@ interface CaptionPosition {
 
 function computeCaptionPos(rect: DOMRect): CaptionPosition {
   const pad = 12;
-  const maxW = 320;
+  const maxW = 300;
   const vpW = window.innerWidth;
   const vpH = window.innerHeight;
 
