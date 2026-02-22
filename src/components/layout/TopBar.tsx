@@ -1,4 +1,5 @@
-import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck, Brain, Cog, Layers, Database } from 'lucide-react';
+import { Search, Bell, User, LogOut, FlaskConical, ShieldCheck, Brain, Cog, Layers, Database, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -85,6 +86,15 @@ export function TopBar({ onSearch }: TopBarProps) {
               <TooltipContent side="bottom" className="max-w-52 text-xs">Synthetic/demo dataset. No live SCADA or OMS integration.</TooltipContent>
             </Tooltip>
           </div>
+
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Link to="/glossary" className="flex items-center justify-center h-7 w-7 rounded-md border border-border/40 bg-muted/20 text-muted-foreground/70 hover:bg-muted/40 hover:text-foreground transition-colors" aria-label="Glossary">
+                <BookOpen className="h-3.5 w-3.5" />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Glossary</TooltipContent>
+          </Tooltip>
 
           <div className="hidden md:block h-5 w-px bg-border/40" />
 

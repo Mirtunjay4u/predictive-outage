@@ -17,6 +17,7 @@ import {
   BookOpen,
   ClipboardCheck,
   ShieldCheck,
+  Library,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const navGroups = [
     items: [
       { icon: Sparkles, label: 'Art of Possibilities', path: '/art-of-possibilities' },
       { icon: ShieldCheck, label: 'Knowledge & Policy', path: '/knowledge-policy' },
+      { icon: Library, label: 'Glossary', path: '/glossary' },
     ],
   },
   {
