@@ -382,48 +382,45 @@ export default function UseCases() {
         {/* ════════════════ 1. HEADER ════════════════ */}
         <section>
           <SectionAnchor id="overview" />
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">Grid Resilience Command Center</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground max-w-xl">
-                AI-assisted outage awareness, prioritization, and operator-approved communications.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {PILLS.map((p) => (
-                  <Badge key={p} variant="outline" className="text-[10px] font-medium border-primary/20 text-primary/80 bg-primary/[0.04]">
-                    {p}
-                  </Badge>
-                ))}
-              </div>
-              <p className="mt-3 text-[11px] text-muted-foreground/60 max-w-lg border-l-2 border-amber-500/30 pl-3">
-                Decision-support only. No switching execution. No live SCADA / OMS / ADMS integration in Phase-1 demo.
-              </p>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Grid Resilience Command Center</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground max-w-xl">
+              AI-assisted outage awareness, prioritization, and operator-approved communications.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {PILLS.map((p) => (
+                <Badge key={p} variant="outline" className="text-[10px] font-medium border-primary/20 text-primary/80 bg-primary/[0.04]">
+                  {p}
+                </Badge>
+              ))}
+              {/* Glossary trigger — inline with pills */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border/40 ml-2">
+                    <BookOpen className="h-3.5 w-3.5" /> Glossary
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-[360px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle className="text-base">Domain Glossary</SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(100vh-80px)] mt-4 pr-3">
+                    <div className="space-y-4">
+                      {GLOSSARY.map((g) => (
+                        <div key={g.term}>
+                          <p className="text-sm font-semibold text-foreground">{g.term}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{g.definition}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
             </div>
-
-            {/* Glossary trigger */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border/40">
-                  <BookOpen className="h-3.5 w-3.5" /> Glossary
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="w-[360px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle className="text-base">Domain Glossary</SheetTitle>
-                </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-80px)] mt-4 pr-3">
-                  <div className="space-y-4">
-                    {GLOSSARY.map((g) => (
-                      <div key={g.term}>
-                        <p className="text-sm font-semibold text-foreground">{g.term}</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{g.definition}</p>
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
+            <p className="mt-3 text-[11px] text-muted-foreground/60 max-w-lg border-l-2 border-amber-500/30 pl-3">
+              Decision-support only. No switching execution. No live SCADA / OMS / ADMS integration in Phase-1 demo.
+            </p>
           </div>
         </section>
 
