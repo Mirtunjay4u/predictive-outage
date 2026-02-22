@@ -136,7 +136,7 @@ export function AppSidebar() {
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex min-w-0 flex-col">
               <span className="text-[13px] font-semibold leading-tight text-sidebar-foreground">Operator Copilot</span>
-              <span className="mt-0.5 text-[9px] leading-tight text-sidebar-foreground/50">Predictive Outage Mgmt</span>
+              <span className="mt-0.5 text-[9px] leading-tight text-sidebar-foreground/50">Governed Decision Intelligence</span>
             </motion.div>
           )}
         </div>
