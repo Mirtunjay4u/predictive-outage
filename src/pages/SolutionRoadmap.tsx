@@ -264,12 +264,20 @@ export default function SolutionRoadmap() {
         className="space-y-5"
       >
         {/* Phase column headers */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="relative grid grid-cols-1 gap-3 md:grid-cols-3">
+          {/* Connector line between phase headers (desktop only) */}
+          <div className="absolute top-1/2 left-0 right-0 hidden md:block pointer-events-none" aria-hidden="true">
+            <div className="mx-auto h-px w-[calc(100%-4rem)] bg-gradient-to-r from-[hsl(217,60%,35%,0.5)] via-[hsl(210,50%,42%,0.5)] to-[hsl(205,45%,50%,0.5)]" />
+            {/* Phase dots on the connector */}
+            <div className="absolute top-1/2 left-[16.66%] -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-[hsl(217,60%,45%)] bg-emerald-500/80" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-[hsl(210,50%,50%)] bg-blue-500/60" />
+            <div className="absolute top-1/2 left-[83.33%] -translate-x-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-[hsl(205,45%,55%)] bg-slate-500/50" />
+          </div>
           {phases.map((p) => (
             <div
               key={p.id}
               className={cn(
-                'rounded-lg border px-4 py-3',
+                'relative z-10 rounded-lg border px-4 py-3',
                 p.colBorder,
                 p.headerBg,
               )}
