@@ -205,7 +205,7 @@ export function TopBar({ onSearch }: TopBarProps) {
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-64 text-xs">Data Mode: Demo — Synthetic structured events. No live SCADA or OMS integration.</TooltipContent>
             </Tooltip>
-            <span className="hidden xl:inline text-[9px] text-muted-foreground/70 font-semibold tracking-wide ml-1">Governed AI · Advisory-Only · Operator Validation Required</span>
+            <span className="hidden lg:inline text-[9px] text-muted-foreground/70 font-semibold tracking-wide ml-1">Governed AI Decision Intelligence • Advisory-Only • Human Validation Required</span>
           </div>
 
           <Tooltip delayDuration={200}>

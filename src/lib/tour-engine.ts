@@ -212,7 +212,7 @@ export const tourSteps: TourStep[] = [
     id: 14,
     title: 'Tour Complete',
     route: '/dashboard',
-    narrative: 'Operator Copilot augments reasoning through governed AI. v1.0 Decision Intelligence Prototype.',
+    narrative: 'This platform augments operational judgment. It does not replace control systems. This concludes the executive demonstration.',
     readinessSelectors: ['[data-tour-section="dashboard"]'],
     beats: [
       { selector: '[data-tour-section="dashboard"]', caption: 'Dashboard — stabilized operational posture confirmed' },

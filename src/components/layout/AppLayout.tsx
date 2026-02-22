@@ -37,7 +37,7 @@ export function AppLayout() {
               <p className="text-[10px] text-muted-foreground/50 tracking-wide">
                 No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
               </p>
-              <span className="text-[9px] text-muted-foreground/35 tracking-wide font-mono">v1.0 – Decision Intelligence Prototype</span>
+              <span className="text-[9px] text-muted-foreground/35 tracking-wide font-mono">Version 1.0 — Phase 1 Decision Intelligence Prototype</span>
             </div>
           </div>
         </footer>
