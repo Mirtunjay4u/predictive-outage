@@ -481,6 +481,21 @@ body.tour-active .flex-1 {
   50%      { outline-color: hsl(var(--primary) / 0.5);  outline-offset: 6px; }
 }
 
+/* ── Premium Tour: step transition ── */
+.tour-step-fade-enter {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.tour-step-fade-enter-active {
+  opacity: 1;
+}
+
+/* ── Premium Tour: spotlight glow pulse ── */
+@keyframes spotlight-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5), 0 0 16px 3px hsl(var(--primary) / 0.2); }
+  50%      { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.7), 0 0 24px 6px hsl(var(--primary) / 0.3); }
+}
+
 /* Print styles for executive summary */
 @media print {
   @page {
