@@ -7,7 +7,7 @@ import {
   ExternalLink, RefreshCw, ChevronDown, ChevronUp, Radio, BarChart3,
   Zap, OctagonAlert, TrendingUp, TrendingDown, Minus, Clock, Info,
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, CartesianGrid } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
@@ -359,6 +359,28 @@ function HazardTimelineChart({ events }: { events: ScenarioWithIntelligence[] })
     });
   }, [events]);
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    const hasData = payload.some((p: any) => p.value > 0);
+    return (
+      <div className="rounded-lg border border-border bg-zinc-900 text-white px-3 py-2.5 shadow-xl min-w-[160px]">
+        <p className="text-xs font-semibold mb-1.5 text-zinc-100">{label}</p>
+        <div className="space-y-1">
+          {payload.map((p: any) => (
+            <div key={p.dataKey} className="flex items-center justify-between gap-4 text-[11px]">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ backgroundColor: p.fill || p.color }} />
+                <span className="text-zinc-300">{p.name}</span>
+              </span>
+              <span className="font-medium tabular-nums">{p.value}</span>
+            </div>
+          ))}
+        </div>
+        {!hasData && <p className="text-[10px] text-zinc-500 mt-1">No events recorded</p>}
+      </div>
+    );
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}>
       <Card className="shadow-sm border-border/50">
@@ -372,23 +394,28 @@ function HazardTimelineChart({ events }: { events: ScenarioWithIntelligence[] })
           </CardDescription>
         </CardHeader>
         <CardContent className="px-5 pb-4">
-          <div className="h-[220px] w-full">
+          <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} barCategoryGap="20%">
-                <XAxis dataKey="day" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} tickLine={false} axisLine={false} width={28} />
-                <Tooltip
-                  contentStyle={{
-                    fontSize: 11,
-                    borderRadius: 8,
-                    border: '1px solid hsl(var(--border))',
-                    background: 'hsl(var(--background))',
-                    boxShadow: '0 4px 12px rgba(0,0,0,.12)',
-                  }}
+              <BarChart data={data} barGap={2} barCategoryGap="25%">
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border)/0.3)" />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
                 />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={28}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.3)', radius: 4 }} />
                 <Legend
                   iconSize={8}
-                  wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
+                  iconType="square"
+                  wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
                 />
                 {(Object.keys(HAZARD_LABELS) as HazardKey[]).map(key => (
                   <Bar
@@ -396,8 +423,8 @@ function HazardTimelineChart({ events }: { events: ScenarioWithIntelligence[] })
                     dataKey={key}
                     name={HAZARD_LABELS[key]}
                     fill={HAZARD_COLORS[key]}
-                    radius={[3, 3, 0, 0]}
-                    stackId="hazards"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={28}
                   />
                 ))}
               </BarChart>
