@@ -838,7 +838,7 @@ export function DemoTourHUD() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-[52px] left-1/2 -translate-x-1/2 z-[9997] max-w-xl pointer-events-none"
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9997] max-w-xl pointer-events-none"
           >
             <div className="relative rounded-lg border border-primary/30 bg-card/95 backdrop-blur-xl shadow-lg px-5 py-3.5">
               {/* Gradient accent top */}
