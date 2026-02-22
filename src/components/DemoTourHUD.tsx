@@ -536,18 +536,20 @@ export function DemoTourHUD() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]"
+        className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[9999]"
       >
-        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-5 py-3 min-w-[480px] max-w-[600px]">
-          {/* Header row */}
-          <div className="flex items-center justify-between mb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">
+        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-4 py-2 min-w-[460px] max-w-[560px]">
+          {/* Header row with step title inline */}
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary flex-shrink-0">
                 Executive Guided Tour
               </span>
+              <span className="text-[10px] text-muted-foreground/60 mx-1 flex-shrink-0">·</span>
+              <span className="text-[11px] font-semibold text-foreground truncate">{step.title}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-[10px] font-semibold text-foreground tabular-nums">
                 Step {currentStep + 1} of {totalSteps}
               </span>
@@ -569,21 +571,13 @@ export function DemoTourHUD() {
             </div>
           </div>
 
-          {/* Step title + narrative */}
-          <div className="mb-2.5">
-            <h3 className="text-xs font-semibold text-foreground mb-0.5">{step.title}</h3>
-            <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">
-              {step.narrative}
-            </p>
-          </div>
-
           {/* Step progress dots */}
-          <div className="flex items-center gap-1 mb-3">
+          <div className="flex items-center gap-0.5 mb-1.5">
             {tourSteps.map((_, i) => (
               <div
                 key={i}
                 className={cn(
-                  'h-1 flex-1 rounded-full transition-all duration-300',
+                  'h-[3px] flex-1 rounded-full transition-all duration-300',
                   completedSteps.includes(i)
                     ? 'bg-primary'
                     : i === currentStep
