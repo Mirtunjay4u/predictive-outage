@@ -80,11 +80,12 @@ export function TopBar({ onSearch }: TopBarProps) {
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/8 px-2 py-0.5 cursor-default whitespace-nowrap">
                   <Database className="h-3 w-3 shrink-0 text-amber-400/70" strokeWidth={1.75} />
-                  <span className="text-[9px] font-medium text-amber-300/90 hidden xl:inline">Demo</span>
+                  <span className="text-[9px] font-medium text-amber-300/90 hidden xl:inline">Data: Demo (Synthetic)</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-52 text-xs">Synthetic/demo dataset. No live SCADA or OMS integration.</TooltipContent>
+              <TooltipContent side="bottom" className="max-w-64 text-xs">Data Mode: Demo — Synthetic structured events. No live SCADA or OMS integration.</TooltipContent>
             </Tooltip>
+            <span className="hidden xl:inline text-[9px] text-muted-foreground/50 font-medium tracking-wide ml-1">Governed AI · Advisory-Only · Operator Validation Required</span>
           </div>
 
           <Tooltip delayDuration={200}>
