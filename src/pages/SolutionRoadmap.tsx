@@ -153,7 +153,7 @@ const accentMap = {
 
 export default function SolutionRoadmap() {
   const [activePhase, setActivePhase] = useState(0);
-  const [compareMode, setCompareMode] = useState(false);
+  const [compareMode, setCompareMode] = useState<false | '1v2a' | '2av2b'>(false);
   const phase = phases[activePhase];
   const colors = accentMap[phase.accent as keyof typeof accentMap];
 
@@ -251,26 +251,47 @@ export default function SolutionRoadmap() {
       </motion.section>
 
       {/* ── View Mode Toggle ── */}
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => setCompareMode(!compareMode)}
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all cursor-pointer',
-            compareMode
-              ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
-              : 'border-border/30 bg-card/30 text-muted-foreground/60 hover:text-muted-foreground/80 hover:bg-card/50',
-          )}
-        >
-          <Columns2 className="h-3.5 w-3.5" />
-          {compareMode ? 'Exit Compare' : 'Compare Phase 1 → 2A'}
-        </button>
+      <div className="flex items-center justify-end gap-1.5">
+        {([
+          { key: '1v2a' as const, label: 'Phase 1 → 2A' },
+          { key: '2av2b' as const, label: 'Phase 2A → 2B' },
+        ]).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setCompareMode(compareMode === key ? false : key)}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-all cursor-pointer',
+              compareMode === key
+                ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                : 'border-border/30 bg-card/30 text-muted-foreground/60 hover:text-muted-foreground/80 hover:bg-card/50',
+            )}
+          >
+            <Columns2 className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* ── Compare Mode: Side-by-side ── */}
       <AnimatePresence mode="wait">
-        {compareMode ? (
+        {compareMode ? (() => {
+          const is2av2b = compareMode === '2av2b';
+          const leftIdx = is2av2b ? 1 : 0;
+          const rightIdx = is2av2b ? 2 : 1;
+          const leftPhase = phases[leftIdx];
+          const rightPhase = phases[rightIdx];
+          const leftColors = is2av2b
+            ? { border: 'border-blue-500/30', bg: 'bg-blue-500/5', chip: 'bg-blue-500/10 border-blue-500/20 text-blue-300', icon: 'text-blue-400', tagCls: 'bg-blue-500/15 text-blue-400 border-blue-500/30', gateBorder: 'border-blue-500/25', gateBg: 'bg-blue-500/8', gateText: 'text-blue-400/80' }
+            : { border: 'border-emerald-500/30', bg: 'bg-emerald-500/5', chip: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300', icon: 'text-emerald-400', tagCls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', gateBorder: 'border-emerald-500/25', gateBg: 'bg-emerald-500/8', gateText: 'text-emerald-400/80' };
+          const rightColors = is2av2b
+            ? { border: 'border-slate-500/25', bg: 'bg-slate-500/5', chip: 'bg-slate-500/10 border-slate-500/20 text-slate-300', icon: 'text-slate-400', tagCls: 'bg-slate-500/15 text-slate-400 border-slate-500/30', gateBorder: 'border-slate-500/20', gateBg: 'bg-slate-500/8', gateText: 'text-slate-400/80' }
+            : { border: 'border-blue-500/30', bg: 'bg-blue-500/5', chip: 'bg-blue-500/10 border-blue-500/20 text-blue-300', icon: 'text-blue-400', tagCls: 'bg-blue-500/15 text-blue-400 border-blue-500/30', gateBorder: 'border-blue-500/25', gateBg: 'bg-blue-500/8', gateText: 'text-blue-400/80' };
+          const LeftIcon = leftPhase.progress === 100 ? CheckCircle2 : Sparkles;
+          const RightIcon = is2av2b ? Circle : Sparkles;
+
+          return (
           <motion.section
-            key="compare"
+            key={compareMode}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -279,84 +300,78 @@ export default function SolutionRoadmap() {
           >
             {/* Compare header */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className={cn('rounded-lg border px-4 py-2.5 flex items-center gap-2', leftColors.border, leftColors.bg)}>
+                <LeftIcon className={cn('h-4 w-4', leftColors.icon)} />
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-emerald-400/70">Phase 1</span>
-                  <p className="text-[12px] font-semibold text-foreground/90">Governed Decision Intelligence</p>
+                  <span className={cn('text-[10px] font-bold uppercase tracking-[0.1em]', leftColors.icon + '/70')}>{leftPhase.label}</span>
+                  <p className="text-[12px] font-semibold text-foreground/90">{leftPhase.title}</p>
                 </div>
-                <Badge variant="outline" className="ml-auto text-[8px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30">Delivered</Badge>
+                <Badge variant="outline" className={cn('ml-auto text-[8px]', leftColors.tagCls)}>{leftPhase.tag}</Badge>
               </div>
-              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 px-4 py-2.5 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-400" />
+              <div className={cn('rounded-lg border px-4 py-2.5 flex items-center gap-2', rightColors.border, rightColors.bg)}>
+                <RightIcon className={cn('h-4 w-4', rightColors.icon)} />
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-blue-400/70">Phase 2A</span>
-                  <p className="text-[12px] font-semibold text-foreground/90">Predictive MVP</p>
+                  <span className={cn('text-[10px] font-bold uppercase tracking-[0.1em]', rightColors.icon + '/70')}>{rightPhase.label}</span>
+                  <p className="text-[12px] font-semibold text-foreground/90">{rightPhase.title}</p>
                 </div>
-                <Badge variant="outline" className="ml-auto text-[8px] bg-blue-500/15 text-blue-400 border-blue-500/30">Committed</Badge>
+                <Badge variant="outline" className={cn('ml-auto text-[8px]', rightColors.tagCls)}>{rightPhase.tag}</Badge>
               </div>
             </div>
 
             {/* Compare lanes */}
             {lanes.map((lane) => {
               const Icon = lane.icon;
-              const p1 = lane.phases[0];
-              const p2 = lane.phases[1];
+              const left = lane.phases[leftIdx];
+              const right = lane.phases[rightIdx];
               return (
                 <div key={lane.title} className="rounded-lg border border-border/20 bg-background/30 px-4 py-3">
                   <div className="flex items-center gap-2 mb-3">
                     <Icon className="h-4 w-4 text-muted-foreground/60" strokeWidth={1.75} />
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-                      {lane.title}
-                    </h3>
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">{lane.title}</h3>
                     <div className="h-px flex-1 bg-border/20" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Phase 1 column */}
+                    {/* Left column */}
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-1.5">
-                        {p1.items.map((item, i) => (
-                          <motion.span
-                            key={item}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2, delay: i * 0.03 }}
-                            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-                          >
-                            <CheckCircle2 className="h-3 w-3 text-emerald-400/70 flex-shrink-0" />
+                        {left.items.map((item, i) => (
+                          <motion.span key={item} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: i * 0.03 }}
+                            className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium', leftColors.chip)}>
+                            <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', leftColors.icon + '/70')} />
                             {item}
                           </motion.span>
                         ))}
                       </div>
-                      {p1.warn && (
+                      {left.warn && (
                         <div className="flex items-center gap-1.5 rounded border border-amber-500/20 bg-amber-500/5 px-2 py-1">
                           <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                          <span className="text-[9px] font-medium text-amber-400/80">{p1.warn}</span>
+                          <span className="text-[9px] font-medium text-amber-400/80">{left.warn}</span>
+                        </div>
+                      )}
+                      {left.gate && (
+                        <div className={cn('flex items-center gap-1.5 rounded border px-2 py-1', leftColors.gateBorder, leftColors.gateBg)}>
+                          <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', leftColors.icon)} />
+                          <span className={cn('text-[9px] font-semibold', leftColors.gateText)}>Gate: {left.gate}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Phase 2A column */}
+                    {/* Right column */}
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-1.5">
-                        {p2.items.map((item, i) => (
-                          <motion.span
-                            key={item}
-                            initial={{ opacity: 0, x: 8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2, delay: i * 0.03 }}
-                            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium bg-blue-500/10 border-blue-500/20 text-blue-300"
-                          >
-                            <Plus className="h-3 w-3 text-blue-400/70 flex-shrink-0" />
+                        {right.items.map((item, i) => (
+                          <motion.span key={item} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: i * 0.03 }}
+                            className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium', rightColors.chip)}>
+                            <Plus className={cn('h-3 w-3 flex-shrink-0', rightColors.icon + '/70')} />
                             {item}
                           </motion.span>
                         ))}
                       </div>
-                      {p2.gate && (
-                        <div className="flex items-center gap-1.5 rounded border border-blue-500/25 bg-blue-500/8 px-2 py-1">
-                          <CheckCircle2 className="h-3 w-3 text-blue-400/90 flex-shrink-0" />
-                          <span className="text-[9px] font-semibold text-blue-400/80">Gate: {p2.gate}</span>
+                      {right.gate && (
+                        <div className={cn('flex items-center gap-1.5 rounded border px-2 py-1', rightColors.gateBorder, rightColors.gateBg)}>
+                          <CheckCircle2 className={cn('h-3 w-3 flex-shrink-0', rightColors.icon)} />
+                          <span className={cn('text-[9px] font-semibold', rightColors.gateText)}>Gate: {right.gate}</span>
                         </div>
                       )}
                     </div>
@@ -368,16 +383,17 @@ export default function SolutionRoadmap() {
             {/* Legend */}
             <div className="flex items-center gap-4 px-1">
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3 w-3 text-emerald-400/70" />
-                <span className="text-[10px] text-muted-foreground/60">Delivered in Phase 1</span>
+                <CheckCircle2 className={cn('h-3 w-3', leftColors.icon + '/70')} />
+                <span className="text-[10px] text-muted-foreground/60">{is2av2b ? 'In Phase 2A' : 'Delivered in Phase 1'}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Plus className="h-3 w-3 text-blue-400/70" />
-                <span className="text-[10px] text-muted-foreground/60">New in Phase 2A</span>
+                <Plus className={cn('h-3 w-3', rightColors.icon + '/70')} />
+                <span className="text-[10px] text-muted-foreground/60">New in {rightPhase.label}</span>
               </div>
             </div>
           </motion.section>
-        ) : (
+          );
+        })() : (
           /* ── Single Phase Detail Panel ── */
           <motion.section
             key={activePhase}
