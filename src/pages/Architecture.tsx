@@ -1297,6 +1297,47 @@ export default function Architecture() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Utility Stack Positioning */}
+      <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Layers className="h-4 w-4 text-primary" />
+              Utility Stack Positioning
+            </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              Where Operator Copilot sits relative to existing utility systems.
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="flex flex-col items-center gap-0 py-4">
+              {[
+                { label: 'OMS', sub: 'Outage Management System', dim: true },
+                { label: 'ADMS', sub: 'Advanced Distribution Management', dim: true },
+                { label: 'GIS', sub: 'Geographic Information System', dim: true },
+                { label: 'Asset Registry', sub: 'Equipment & Infrastructure Records', dim: true },
+              ].map((s, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="rounded-md border border-border/30 bg-muted/20 px-6 py-2.5 text-center min-w-[280px]">
+                    <p className="text-xs font-semibold text-muted-foreground/60">{s.label}</p>
+                    <p className="text-[10px] text-muted-foreground/40">{s.sub}</p>
+                  </div>
+                  <div className="w-px h-3 bg-border/40" />
+                </div>
+              ))}
+              <div className="w-px h-2 bg-primary/40" />
+              <div className="rounded-lg border-2 border-primary/30 bg-primary/[0.06] px-8 py-3 text-center min-w-[280px] shadow-[0_0_12px_hsl(217,91%,60%,0.08)]">
+                <p className="text-sm font-bold text-primary">Operator Copilot</p>
+                <p className="text-[10px] text-primary/60 font-medium">Decision Intelligence Overlay</p>
+              </div>
+            </div>
+            <div className="mt-3 rounded-md border border-amber-500/15 bg-amber-500/[0.03] px-3 py-2 text-center text-[10px] text-amber-400/70">
+              Overlay Layer — Not System Replacement.
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
