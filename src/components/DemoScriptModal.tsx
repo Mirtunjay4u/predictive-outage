@@ -13,79 +13,63 @@ import { cn } from '@/lib/utils';
 const demoSteps = [
   {
     title: 'Login & Context',
-    description: 'Authenticate via the Login page. The landing view establishes governed AI positioning and advisory-only boundaries.',
+    description: 'Establish operator context in demo data mode. No live SCADA, OMS, or ADMS connected — controlled and safe demonstration environment.',
   },
   {
     title: 'Dashboard Orientation',
-    description: 'Review active event KPIs, high-priority alerts, crew workload, Executive Signal, Operational Risk Posture, the governance header strip (Governed AI · Advisory-Only · Operator Validation Required), and Data Mode badge.',
+    description: 'Review Operational Risk Posture, severity events, hazard exposure, crew readiness, ETR confidence bands, and the governance header strip (Governed AI · Advisory-Only · Operator Validation Required).',
   },
   {
     title: 'Scenario Playback Lifecycle',
-    description: 'Scroll to the Scenario Playback panel — advance through Pre-Event, Event, and Post-Event lifecycle stages.',
+    description: 'Navigate through Pre-Event, Active Event, and Post-Event lifecycle phases — reflecting how utilities manage evolving operational states.',
   },
   {
     title: 'Events Page Deep Dive',
-    description: 'Navigate to Events. Review the triage queue: severity, ETR confidence bands, critical load tags, and policy status columns.',
+    description: 'Review structured triage: severity, affected feeder, critical load impact, and ETR uncertainty bands — reinforcing operational realism.',
   },
   {
     title: 'Event Detail View',
-    description: 'Drill into an event detail view. Review crew assignment, escalation state, hazard correlation, and ETR confidence explanation.',
+    description: 'Examine crew assignment, hazard exposure correlation, escalation status, structured reasoning outputs, and the Decision Trace for full transparency.',
   },
   {
     title: 'Outage Map Intelligence',
-    description: 'Navigate to the Outage Map. View event markers, feeder zones, critical load layers, crew dispatch, and weather overlays.',
+    description: 'Overlay event markers with feeder zones, critical load layers, and hazard exposure for spatial situational awareness — no operational control actions executed.',
   },
   {
     title: 'Weather Alerts Section',
-    description: 'Navigate to Weather Alerts. Review hazard exposure scores, events in hazard zones, and crew safety status.',
+    description: 'Correlate weather severity with affected infrastructure to improve prioritization — without automating dispatch decisions.',
   },
   {
     title: 'Copilot Studio',
-    description: 'Open Copilot Studio for governed AI analysis. Review guardrails, allowed/blocked actions, decision trace, and structured reasoning outputs.',
+    description: 'Structured AI-assisted analysis via NVIDIA Nemotron. All outputs advisory and policy-constrained. Review bounded reasoning and deterministic guardrails.',
   },
   {
     title: 'Situation Report Generation',
-    description: 'Generate an AI-assisted SitRep. Review the content, approval indicators, and the Customer Communications Pack.',
+    description: 'Generate structured situation reports for executive and customer communication — outputs subject to operator approval.',
   },
   {
     title: 'Analytics',
-    description: 'Navigate to Analytics. Review high-priority counts, policy blocks, and ETR confidence distribution charts.',
+    description: 'Summarize high-priority counts, policy blocks, and ETR distribution trends — supporting operational review without claiming predictive calibration.',
   },
   {
     title: 'Architecture Overview',
-    description: 'Explore the system architecture — ingest layer, copilot orchestrator, guardrails, Nemotron inference, and observability layer.',
-  },
-  {
-    title: 'About & Governance',
-    description: 'Review advisory-only governance notice, safety & compliance information, and the decision-support-only boundary.',
-  },
-  {
-    title: 'Solution Roadmap',
-    description: 'Review the Solution Evolution Blueprint — structured evolution plan aligned to utility operational governance and predictive validation milestones, with progress connectors and acceptance markers.',
+    description: 'Review layered design: Ingest → Rule Engine → Bounded AI Inference → Explainability → Operator Interface. Governance enforced before and after AI reasoning.',
   },
   {
     title: 'Knowledge & Policy',
-    description: 'Review operational governance rules, Phase-1 scope boundaries, and deterministic constraint definitions.',
+    description: 'Define operational policies and advisory boundaries — ensuring regulatory defensibility and transparent operational discipline.',
   },
   {
     title: 'Glossary',
-    description: 'Browse standardized definitions for utility domain and AI terminology — search-enabled, regulator-ready reference for all stakeholders.',
+    description: 'Standardized definitions for all domain and AI terminology — eliminating ambiguity and supporting cross-functional clarity.',
   },
   {
-    title: 'Settings',
-    description: 'Review configurable AI modes, Dataverse integration panel, and enterprise integration readiness.',
+    title: 'Solution Roadmap Blueprint',
+    description: 'Structured evolution from Phase 1 decision intelligence to Phase 2 calibrated predictive capabilities — clearly separating implemented from planned milestones.',
   },
   {
-    title: 'Art of Possibilities',
-    description: 'Explore Phase 2+ concept capabilities — environmental signal fusion, wildfire corridor awareness, vegetation stress, and bio-sentinel signals.',
-  },
-  {
-    title: 'Executive Validation Summary',
-    description: 'Review OMS vs Copilot comparison, AI governance & safety boundaries, capabilities demonstrated, and Phase-1 scope.',
-  },
-  {
-    title: 'Return to Dashboard & Close Loop',
-    description: 'Complete the operational loop — confirm updated KPIs, stabilized posture, version stamp (v1.0 – Decision Intelligence Prototype), and narrative resolution.',
+    title: 'Executive Validation & Close',
+    description: 'Confirm Operator Copilot augments operator reasoning through governed AI, explainability, and structured operational insight. Version stamp: v1.0 – Decision Intelligence Prototype.',
   },
 ];
 
@@ -150,7 +134,7 @@ export function DemoScriptModal() {
             Play Executive Auto Tour
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-            Automatically navigates through all {demoSteps.length} steps — full platform walkthrough
+            Automatically navigates through all {demoSteps.length} steps — full platform walkthrough (~9 min)
           </p>
         </div>
 
