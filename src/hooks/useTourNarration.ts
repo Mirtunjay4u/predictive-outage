@@ -42,16 +42,25 @@ export const narrationScripts: string[] = [
   // Step 10 — Architecture Overview
   `This architecture illustrates the layered design... Ingest, Rule Engine, Bounded AI Inference, Explainability, and Operator Interface. Governance is enforced before and after AI reasoning.`,
 
-  // Step 11 — Knowledge & Policy
-  `This section defines operational policies and advisory boundaries... ensuring regulatory defensibility and transparent operational discipline.`,
+  // Step 11 — About
+  `This section provides project context, team background, and the design philosophy behind Operator Copilot... grounded in utility-domain expertise and governed AI principles.`,
 
-  // Step 12 — Glossary
-  `To eliminate ambiguity, all domain and AI terminology is standardized here... supporting cross-functional clarity across stakeholders.`,
-
-  // Step 13 — Solution Roadmap Blueprint
+  // Step 12 — Solution Roadmap Blueprint
   `This blueprint outlines structured evolution from Phase One decision intelligence to Phase Two calibrated predictive capabilities. Phase Two introduces probabilistic risk scoring, ETR distribution modeling, historical backtesting, and production hardening... without compromising governance. This roadmap avoids false commitments and clearly separates implemented capabilities from planned milestones.`,
 
-  // Step 14 — Executive Validation & Close
+  // Step 13 — Knowledge & Policy
+  `This section defines operational policies and advisory boundaries... ensuring regulatory defensibility and transparent operational discipline.`,
+
+  // Step 14 — Glossary
+  `To eliminate ambiguity, all domain and AI terminology is standardized here... supporting cross-functional clarity across stakeholders.`,
+
+  // Step 15 — Settings
+  `Platform configuration and system preferences are accessible here... ensuring transparency and adjustability of the demonstration environment.`,
+
+  // Step 16 — Art of Possibilities
+  `This section explores the future vision... advanced capabilities, predictive analytics, and next-generation decision intelligence concepts that extend beyond Phase One into operational transformation.`,
+
+  // Step 17 — Executive Validation & Close
   `In summary, Operator Copilot does not replace OMS or ADMS. It augments operator reasoning through governed AI, explainability, and structured operational insight. It is designed for critical infrastructure domains... where safety, transparency, and human validation remain paramount. Operator Copilot represents a disciplined evolution toward calibrated predictive operations... grounded in governance, structured AI, and utility-domain alignment. Version One Point Zero... Decision Intelligence Prototype. Thank you.`,
 ];
 
