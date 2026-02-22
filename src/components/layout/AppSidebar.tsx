@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Library,
   Route,
+  Crosshair,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ const navGroups = [
     accent: 'vision',
     items: [
       { icon: Sparkles, label: 'Art of Possibilities', path: '/art-of-possibilities' },
+      { icon: Crosshair, label: 'Use Cases', path: '/use-cases' },
       { icon: ShieldCheck, label: 'Knowledge & Policy', path: '/knowledge-policy' },
       { icon: Library, label: 'Glossary', path: '/glossary' },
     ],
