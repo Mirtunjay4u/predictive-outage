@@ -4,7 +4,7 @@ import {
   Shield, Bell, Users, Clock, Zap, Eye, Target, Layers, BookOpen,
   CheckCircle2, Lightbulb, ArrowRight, Info, ShieldAlert, Lock, UserCheck,
   HeartPulse, AlertOctagon, ToggleLeft, Building2, MessageSquare, Database,
-  ClipboardList, Radio
+  ClipboardList, Radio, Linkedin, Github, ExternalLink
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -418,6 +418,18 @@ export default function About() {
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">15+ Years Experience</Badge>
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">NVIDIA Certified</Badge>
                         <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/20 text-[10px] hover:bg-primary-foreground/20">Azure AI Engineer</Badge>
+                      </div>
+                      <div className="flex justify-center sm:justify-start gap-2 mt-3">
+                        <a href="https://www.linkedin.com/in/mirtunjay4u" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 border border-primary-foreground/20 px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary-foreground/25 transition-colors">
+                          <Linkedin className="w-3.5 h-3.5" />
+                          LinkedIn
+                          <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                        </a>
+                        <a href="https://github.com/Mirtunjay4u" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 border border-primary-foreground/20 px-2.5 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary-foreground/25 transition-colors">
+                          <Github className="w-3.5 h-3.5" />
+                          GitHub
+                          <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                        </a>
                       </div>
                     </div>
                   </div>
