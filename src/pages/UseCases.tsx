@@ -1103,20 +1103,30 @@ export default function UseCases() {
             {uc && (
               <motion.div
                 key={uc.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.2 }}
                 className="space-y-4"
               >
                 {/* Lifecycle Timeline + Phase callout row */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.05 }}
+                  className="flex flex-wrap items-center justify-between gap-3"
+                >
                   <LifecycleTimeline active={uc.lifecycleStage} />
                   <PhaseDemoCallout compact />
-                </div>
+                </motion.div>
 
                 <div className="grid lg:grid-cols-3 gap-4">
                   {/* Inputs */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.35, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  >
                   <GlowCard>
                     <CardContent className="p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Inputs (Synthetic)</p>
@@ -1152,8 +1162,14 @@ export default function UseCases() {
                        </div>
                     </CardContent>
                   </GlowCard>
+                  </motion.div>
 
                   {/* Output + Operator Action */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.35, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  >
                   <GlowCard>
                     <CardContent className="p-4">
                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Advisory Output (Structured)</p>
@@ -1210,8 +1226,14 @@ export default function UseCases() {
                       </div>
                     </CardContent>
                   </GlowCard>
+                  </motion.div>
 
                   {/* Decision Trace */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.35, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  >
                   <GlowCard>
                     <CardContent className="p-4">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Decision Trace</p>
@@ -1240,6 +1262,7 @@ export default function UseCases() {
                       </div>
                     </CardContent>
                   </GlowCard>
+                  </motion.div>
                 </div>
               </motion.div>
             )}
