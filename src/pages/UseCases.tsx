@@ -564,8 +564,10 @@ export default function UseCases() {
         </section>
 
         {/* ════════════════ 3. TRUST FLOW ════════════════ */}
-        <section>
+        <section className="relative">
           <SectionAnchor id="trust-flow" />
+          <GridBackground />
+          <div className="relative">
           <SectionTitle>Decision Intelligence Workflow</SectionTitle>
           <SectionSubtitle>Every advisory passes through deterministic constraints before reaching the operator.</SectionSubtitle>
           <GlowCard>
@@ -620,6 +622,7 @@ export default function UseCases() {
               </div>
             </CardContent>
           </GlowCard>
+          </div>
         </section>
 
         {/* ════════════════ 4. COGNITIVE LOAD ════════════════ */}
