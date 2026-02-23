@@ -42,6 +42,7 @@ import MarketPositioning from "./pages/MarketPositioning";
 import RegulatoryAlignment from "./pages/RegulatoryAlignment";
 import FinancialImpact from "./pages/FinancialImpact";
 import DocumentationCenter from "./pages/DocumentationCenter";
+import OperationalSOP from "./pages/OperationalSOP";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -103,6 +104,7 @@ function AppRoutes() {
         <Route path="/regulatory-alignment" element={<RegulatoryAlignment />} />
         <Route path="/financial-impact" element={<FinancialImpact />} />
         <Route path="/documentation-center" element={<DocumentationCenter />} />
+        <Route path="/operational-sop" element={<OperationalSOP />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
