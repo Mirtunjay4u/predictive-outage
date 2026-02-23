@@ -458,6 +458,55 @@ export default function Resources() {
             </section>
           )}
 
+          {/* Recently Updated */}
+          {(() => {
+            const recentDocs = [...filtered]
+              .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+              .slice(0, 5);
+            if (recentDocs.length === 0) return null;
+            return (
+              <section>
+                <SectionHeader icon={Clock} title="Recently Updated" />
+                <div className="space-y-1.5">
+                  {recentDocs.map(d => {
+                    const Icon = DOC_ICONS[d.title] ?? FileText;
+                    const CatIcon = CATEGORY_ICONS[d.category] ?? FileText;
+                    return (
+                      <Card
+                        key={`recent-${d.id}`}
+                        className="group/recent border-border/20 bg-card/40 hover:border-border/40 hover:bg-card/60 transition-all cursor-pointer"
+                        onClick={() => d.url_view && navigate(d.url_view)}
+                      >
+                        <CardContent className="flex items-center gap-3 p-3">
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary/8 text-primary/60">
+                            <Icon className="h-3.5 w-3.5" strokeWidth={1.6} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="truncate text-[12px] font-medium text-foreground/85">{d.title}</h4>
+                              {d.is_pinned && <Pin className="h-2.5 w-2.5 flex-shrink-0 text-primary/40" />}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground/60">
+                              <span className="inline-flex items-center gap-1">
+                                <CatIcon className="h-2.5 w-2.5" /> {d.category}
+                              </span>
+                              <span>·</span>
+                              <span>{d.version}</span>
+                              <span>·</span>
+                              <FreshnessIndicator updatedAt={d.updated_at} />
+                              <span className="hidden sm:inline">· Updated {formatDistanceToNow(new Date(d.updated_at), { addSuffix: true })}</span>
+                            </div>
+                          </div>
+                          <StatusBadgeDoc status={d.status} />
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })()}
+
           {/* By category */}
           {categories.map(cat => {
             const catDocs = filtered.filter(d => d.category === cat && !d.is_pinned);
