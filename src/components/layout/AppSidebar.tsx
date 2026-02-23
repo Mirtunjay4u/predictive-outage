@@ -73,6 +73,7 @@ const navGroups = [
       { icon: Swords, label: 'Architecture Review', path: '/architecture-review' },
       { icon: BookOpen, label: 'About', path: '/about' },
       { icon: FileStack, label: 'Resources', path: '/resources' },
+      { icon: Library, label: 'Documentation Center', path: '/documentation-center' },
       { icon: Settings, label: 'Settings', path: '/settings' },
     ],
   },
