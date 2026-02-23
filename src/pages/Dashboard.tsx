@@ -1317,9 +1317,16 @@ export default function Dashboard() {
         <div className={cn('flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-card shadow-sm', boardroomMode ? 'px-5 py-4' : 'px-4 py-3')}>
           <div>
             <p className="text-[11px] text-muted-foreground/70">Home &gt; Dashboard &gt; {getExtremeHazard(selectedHazardKey).label}</p>
+            <div className="flex flex-col gap-0.5">
+              <h1 className={cn('font-bold tracking-tight text-foreground leading-tight', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot</h1>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className={cn('font-semibold tracking-tight text-primary/90', boardroomMode ? 'text-sm' : 'text-[13px]')}>Predictive Outage Management Intelligence</span>
+                <span className="text-muted-foreground/40">·</span>
+                <span className={cn('font-medium tracking-tight text-foreground/70', boardroomMode ? 'text-sm' : 'text-[13px]')}>Grid Resilience Command Center</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground/55 font-medium tracking-wide mt-0.5">Governed Advisory Intelligence · Deterministic Rule Gate · Human Authority Preserved</p>
+            </div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className={cn('font-semibold tracking-tight text-foreground', boardroomMode ? 'text-2xl' : 'text-xl')}>Operator Copilot — Grid Resilience Command Center</h1>
-              <p className="text-[11px] text-muted-foreground/60 font-medium tracking-wide mt-0.5">Governed AI · Policy-Constrained · Operator-Controlled</p>
               {/* ── Policy Status Badge ──────────────────────────────── */}
               <Tooltip>
                 <TooltipTrigger asChild>
