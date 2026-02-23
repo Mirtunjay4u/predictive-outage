@@ -32,6 +32,7 @@ import SolutionRoadmap from "./pages/SolutionRoadmap";
 import UseCases from "./pages/UseCases";
 import ArchitectureReview from "./pages/ArchitectureReview";
 import ArchitectureDocument from "./pages/ArchitectureDocument";
+import GovernanceDocument from "./pages/GovernanceDocument";
 import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 
