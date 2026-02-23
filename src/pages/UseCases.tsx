@@ -530,13 +530,13 @@ export default function UseCases() {
             </CardContent>
           </GlowCard>
           {/* Insight statement */}
-          <div className="mt-5 rounded-lg border border-primary/15 bg-primary/[0.03] px-5 py-4">
+          <div className="mt-5 rounded-lg border border-gold/30 bg-gold/[0.03] px-5 py-4">
             <p className="text-xs text-foreground/80 leading-relaxed">
               <span className="font-semibold text-muted-foreground">OMS answers:</span>{' '}
               <span className="italic">"What is happening?"</span>
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed mt-1">
-              <span className="font-semibold text-primary/80">Operator Copilot structures:</span>{' '}
+              <span className="font-semibold text-gold">Operator Copilot structures:</span>{' '}
               <span className="italic">"Given constraints, what is the safest reasoning path?"</span>
             </p>
           </div>
@@ -560,13 +560,13 @@ export default function UseCases() {
                       className={cn(
                         'flex flex-col items-center gap-2 rounded-lg border px-4 py-4 min-w-[105px] text-center transition-all',
                         i === 2 ? 'border-warning/30 bg-warning/[0.04]'
-                          : i === 5 ? 'border-accent/30 bg-accent/[0.04]'
+                          : i === 5 ? 'border-gold/30 bg-gold/[0.04]'
                           : 'border-border/30 bg-muted/20',
                       )}
                     >
                       <step.icon className={cn(
                         'h-5 w-5',
-                        i === 2 ? 'text-warning' : i === 5 ? 'text-accent' : 'text-primary/70',
+                        i === 2 ? 'text-warning' : i === 5 ? 'text-gold' : 'text-primary/70',
                       )} />
                       <span className="text-[10px] font-semibold text-foreground/80 leading-tight">{step.label}</span>
                       <span className="text-[9px] text-muted-foreground/60 leading-snug">{step.desc}</span>
@@ -578,9 +578,9 @@ export default function UseCases() {
                           whileInView={{ scaleX: 1 }}
                           viewport={{ once: true }}
                           transition={{ delay: i * 0.07 + 0.1 }}
-                          className="h-px w-6 bg-gradient-to-r from-primary/30 to-primary/10 origin-left"
+                          className={`h-px w-6 origin-left ${step.label === 'Operator Approval' ? 'bg-gradient-to-r from-gold/40 to-gold/15' : 'bg-gradient-to-r from-primary/30 to-primary/10'}`}
                         />
-                        <ChevronRight className="h-3 w-3 text-primary/30 -ml-0.5" />
+                        <ChevronRight className={`h-3 w-3 -ml-0.5 ${step.label === 'Operator Approval' ? 'text-gold/40' : 'text-primary/30'}`} />
                       </div>
                     )}
                   </div>
