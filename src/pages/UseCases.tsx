@@ -267,7 +267,7 @@ const GLOSSARY: { term: string; definition: string }[] = [
    ═══════════════════════════════════════════════════════════ */
 
 function SectionAnchor({ id }: { id: string }) {
-  return <div id={id} className="scroll-mt-20" />;
+  return <div id={id} className="scroll-mt-20 rounded-lg transition-shadow" />;
 }
 
 function GlowCard({ children, className, glow }: { children: React.ReactNode; className?: string; glow?: boolean }) {
@@ -340,7 +340,14 @@ export default function UseCases() {
   }, []);
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth' });
+    // Brief pulse highlight after scroll completes
+    el.classList.remove('section-pulse');
+    void el.offsetWidth; // force reflow to restart animation
+    el.classList.add('section-pulse');
+    el.addEventListener('animationend', () => el.classList.remove('section-pulse'), { once: true });
   };
 
   const uc = activeUseCase ? USE_CASES.find((u) => u.id === activeUseCase)! : null;
