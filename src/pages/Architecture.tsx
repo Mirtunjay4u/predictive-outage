@@ -2,8 +2,9 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ChevronDown, Layers, Lock, ShieldAlert, X } from 'lucide-react';
+import { ChevronDown, Layers, Lock, ShieldAlert, X, ArrowRight, Ban, GitBranch } from 'lucide-react';
 import { PopoverClose } from '@radix-ui/react-popover';
+import { Badge } from '@/components/ui/badge';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -1252,26 +1253,179 @@ function RuleCoverageTable() {
   );
 }
 
+/* ─── 5-layer architecture data ─── */
+const ARCH_LAYERS = [
+  {
+    num: 1,
+    title: 'Event & Context Ingestion',
+    label: 'Structured Input Normalization',
+    accent: 'border-sky-500/40 bg-sky-500/[0.04]',
+    accentText: 'text-sky-400',
+    items: ['OMS event feed', 'Weather overlays', 'Asset metadata', 'Crew availability', 'Critical load registry'],
+  },
+  {
+    num: 2,
+    title: 'Operational Rules Engine',
+    label: 'Constraint Enforcement Before AI',
+    accent: 'border-amber-500/50 bg-amber-500/[0.06]',
+    accentText: 'text-amber-400',
+    items: ['Maintenance validation', 'Lockout enforcement', 'Critical runway thresholds', 'Crew safety constraints', 'Escalation triggers'],
+    highlight: true,
+  },
+  {
+    num: 3,
+    title: 'Orchestration Layer',
+    label: 'Controlled AI Invocation',
+    accent: 'border-primary/40 bg-primary/[0.04]',
+    accentText: 'text-primary',
+    items: ['Context builder', 'Structured prompt composer', 'Output schema enforcement', 'Trace collector'],
+  },
+  {
+    num: 4,
+    title: 'AI Reasoning Layer',
+    label: 'Governed Advisory Generation',
+    accent: 'border-emerald-500/40 bg-emerald-500/[0.04]',
+    accentText: 'text-emerald-400',
+    items: ['NVIDIA Nemotron (Primary)', 'Model Router fallback', 'Structured advisory generation'],
+  },
+  {
+    num: 5,
+    title: 'Observability & Audit Layer',
+    label: 'Accountability & Transparency',
+    accent: 'border-purple-400/40 bg-purple-400/[0.04]',
+    accentText: 'text-purple-400',
+    items: ['Decision trace', 'Policy log', 'Advisory classification', 'Operator approval state'],
+  },
+];
+
+const DECISION_STEPS = [
+  'Event ingested',
+  'Deterministic constraints evaluated',
+  'Context structured',
+  'AI advisory generated',
+  'Operator validates',
+  'Decision logged',
+];
+
+const PHASE1_EXCLUSIONS = [
+  'SCADA execution',
+  'Automatic switching',
+  'Load-flow simulation',
+  'Protection coordination',
+  'Autonomous dispatch',
+];
+
 /* ─── page ─── */
 export default function Architecture() {
   return (
     <div data-tour-section="architecture" className="mx-auto w-full max-w-[1400px] p-4 md:p-6 space-y-5">
+      {/* ── Header ── */}
       <motion.div {...fadeUp} className="mb-1">
-        <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-primary/80">System Design</p>
-        <h1 className="text-xl font-semibold text-foreground">Technical Architecture</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          End-to-end solution architecture for predictive outage management
-          <span className="ml-2 text-[10px] text-muted-foreground/60">— hover or tab through nodes for details</span>
-        </p>
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-primary/80">System Design</p>
+            <h1 className="text-xl font-semibold text-foreground">Operational Decision Intelligence Architecture</h1>
+            <p className="mt-1 text-sm text-muted-foreground/85 leading-relaxed">
+              Layered governance, deterministic constraint enforcement, and AI-assisted reasoning.
+            </p>
+          </div>
+          {/* Status strip */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {[
+              { label: 'Phase: 1', sub: 'Advisory Intelligence' },
+              { label: 'Execution Authority', sub: 'Human' },
+              { label: 'AI Role', sub: 'Structured Reasoning' },
+              { label: 'OMS Integration', sub: 'Overlay' },
+            ].map((b) => (
+              <Badge key={b.label} variant="outline" className="rounded-md border-border/60 bg-muted/30 px-2 py-1 text-[9px] font-semibold text-muted-foreground/90 gap-1">
+                <span className="text-foreground/70">{b.label}:</span> {b.sub}
+              </Badge>
+            ))}
+          </div>
+        </div>
       </motion.div>
 
+      {/* ── 5-Layer Architecture ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.03 }}>
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Layers className="h-4 w-4 text-primary" />
+              Layered Architecture
+            </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/80">
+              Five explicit layers separating ingestion, constraint enforcement, orchestration, AI reasoning, and audit.
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-5 md:px-5 space-y-0">
+            {ARCH_LAYERS.map((layer, i) => (
+              <div key={layer.num} className="flex items-stretch">
+                {/* Connector line */}
+                <div className="flex flex-col items-center w-8 shrink-0">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${layer.highlight ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-muted/40 text-muted-foreground border border-border/40'}`}>
+                    {layer.num}
+                  </div>
+                  {i < ARCH_LAYERS.length - 1 && <div className="w-px flex-1 bg-border/30 min-h-[8px]" />}
+                </div>
+                {/* Layer card */}
+                <div className={`flex-1 ml-3 mb-3 rounded-lg border p-4 ${layer.accent} ${layer.highlight ? 'ring-1 ring-amber-500/20' : ''}`}>
+                  <div className="flex items-baseline gap-2 mb-1.5">
+                    <h3 className={`text-xs font-bold ${layer.accentText}`}>{layer.title}</h3>
+                    <span className="text-[9px] font-medium text-muted-foreground/60 italic">{layer.label}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {layer.items.map((item) => (
+                      <span key={item} className="text-[11px] text-foreground/75 flex items-center gap-1.5">
+                        <span className={`w-1 h-1 rounded-full shrink-0 ${layer.highlight ? 'bg-amber-400/60' : 'bg-muted-foreground/40'}`} />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ── Decision Flow Walkthrough ── */}
       <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <GitBranch className="h-4 w-4 text-primary" />
+              How a Decision Is Produced
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-5 md:px-5">
+            <div className="flex flex-wrap items-center gap-1">
+              {DECISION_STEPS.map((step, i) => (
+                <div key={step} className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 rounded-md border border-border/40 bg-muted/20 px-3 py-2">
+                    <span className="text-[10px] font-bold text-primary/60">{i + 1}</span>
+                    <span className="text-[11px] font-medium text-foreground/80">{step}</span>
+                  </div>
+                  {i < DECISION_STEPS.length - 1 && (
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ── Solution Architecture Diagram (existing) ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.07 }}>
         <Card className="border-border/50 bg-card/70">
           <CardHeader className="px-4 pb-2 pt-4 md:px-5">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <Layers className="h-4 w-4 text-primary" />
               Solution Architecture Overview
             </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/70">
+              Hover or tab through nodes for details.
+            </p>
           </CardHeader>
           <CardContent className="w-full overflow-x-auto px-3 pb-3 md:px-4 md:pb-4">
             <ArchitectureDiagram />
@@ -1280,6 +1434,7 @@ export default function Architecture() {
         </Card>
       </motion.div>
 
+      {/* ── Rule Coverage Matrix (existing) ── */}
       <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
         <Card className="border-border/50 bg-card/70">
           <CardHeader className="px-4 pb-2 pt-4 md:px-5">
@@ -1298,8 +1453,70 @@ export default function Architecture() {
         </Card>
       </motion.div>
 
-      {/* Utility Stack Positioning */}
-      <motion.div {...fadeUp} transition={{ delay: 0.15 }}>
+      {/* ── Phase-1 Boundary ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.12 }}>
+        <Card className="border-destructive/20 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Ban className="h-4 w-4 text-destructive/80" />
+              Phase-1 Boundary — Exclusions
+            </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/80">
+              This architecture does <strong className="text-foreground/80">NOT</strong> include:
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-5 md:px-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              {PHASE1_EXCLUSIONS.map((item) => (
+                <div key={item} className="flex items-center gap-2 rounded-md border border-destructive/15 bg-destructive/[0.04] px-3 py-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-destructive/50 shrink-0" />
+                  <span className="text-[11px] font-medium text-foreground/75">{item}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ── OMS / ADMS Relationship ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.14 }}>
+        <Card className="border-border/50 bg-card/70">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <Layers className="h-4 w-4 text-primary" />
+              OMS / ADMS Relationship
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-5 md:px-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-lg border border-border/40 bg-muted/15 p-4">
+                <h4 className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wide mb-2">OMS Manages</h4>
+                {['Event lifecycle', 'Switching records', 'Restoration tracking'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 mb-1.5">
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                    <span className="text-[11px] text-foreground/75">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/[0.04] p-4">
+                <h4 className="text-xs font-bold text-primary/80 uppercase tracking-wide mb-2">Operator Copilot Provides</h4>
+                {['Constraint-aware advisory reasoning', 'ETR uncertainty framing', 'Escalation structure', 'Policy-validated decision support'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 mb-1.5">
+                    <span className="w-1 h-1 rounded-full bg-primary/50" />
+                    <span className="text-[11px] text-foreground/80">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="mt-3 text-center text-[11px] font-semibold text-muted-foreground/60 italic">
+              Overlay intelligence, not system replacement.
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* ── Utility Stack Positioning (existing) ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.16 }}>
         <Card className="border-border/50 bg-card/70">
           <CardHeader className="px-4 pb-2 pt-4 md:px-5">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -1313,10 +1530,10 @@ export default function Architecture() {
           <CardContent className="px-4 pb-4">
             <div className="flex flex-col items-center gap-0 py-4">
               {[
-                { label: 'OMS', sub: 'Outage Management System', dim: true },
-                { label: 'ADMS', sub: 'Advanced Distribution Management', dim: true },
-                { label: 'GIS', sub: 'Geographic Information System', dim: true },
-                { label: 'Asset Registry', sub: 'Equipment & Infrastructure Records', dim: true },
+                { label: 'OMS', sub: 'Outage Management System' },
+                { label: 'ADMS', sub: 'Advanced Distribution Management' },
+                { label: 'GIS', sub: 'Geographic Information System' },
+                { label: 'Asset Registry', sub: 'Equipment & Infrastructure Records' },
               ].map((s, i) => (
                 <div key={i} className="flex flex-col items-center">
                   <div className="rounded-md border border-border/30 bg-muted/20 px-6 py-2.5 text-center min-w-[280px]">
