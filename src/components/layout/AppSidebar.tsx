@@ -24,6 +24,7 @@ import {
   FileStack,
   Compass,
   Gavel,
+  CircleDollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -67,6 +68,7 @@ const navGroups = [
       { icon: Route, label: 'Solution Roadmap', path: '/solution-roadmap' },
       { icon: Compass, label: 'Market Positioning', path: '/market-positioning' },
       { icon: Gavel, label: 'Regulatory Alignment', path: '/regulatory-alignment' },
+      { icon: CircleDollarSign, label: 'Financial Impact', path: '/financial-impact' },
       { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: Swords, label: 'Architecture Review', path: '/architecture-review' },
       { icon: BookOpen, label: 'About', path: '/about' },
