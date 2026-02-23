@@ -120,10 +120,10 @@ const USE_CASES = [
       Stage: 'During Outage',
       'Event Type': 'Severe Storm',
       'Feeder Impact': 'High',
-      'ETR Earliest / Latest': '2.5 h / 4.0 h',
+      'ETR Earliest / Latest': '2.5 h / {{4.0 h}}',
       'ETR Confidence': 'Medium',
       'Critical Load': 'Hospital',
-      'Backup Remaining': '1.8 h',
+      'Backup Remaining': '{{amber}}1.8 h',
       'Escalation Threshold': '2.0 h',
       'Crew Availability': '1 qualified nearby, 1 delayed',
       Hazards: 'Lightning — high',
@@ -425,8 +425,8 @@ export default function UseCases() {
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Use Cases & Differentiation</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground max-w-xl mx-auto">
-              How structured decision intelligence augments traditional outage management under real-world pressure.
+            <p className="mt-2 text-[13px] text-foreground/70 max-w-2xl mx-auto leading-relaxed font-medium">
+              Operator Copilot is a governed reasoning overlay that structures outage decision context before it reaches the operator.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {['Advisory-Only', 'Human Approval Required', 'Deterministic Rule Gate', 'Phase-1 Demo'].map((p) => (
@@ -539,6 +539,14 @@ export default function UseCases() {
               <span className="font-semibold text-gold">Operator Copilot structures:</span>{' '}
               <span className="italic">"Given constraints, what is the safest reasoning path?"</span>
             </p>
+          </div>
+
+          {/* Decision Layer Separation */}
+          <Separator className="mt-5 bg-border/20" />
+          <div className="mt-4 space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Decision Layer Separation</p>
+            <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground/70">OMS</span> = Event lifecycle management</p>
+            <p className="text-xs text-muted-foreground"><span className="font-semibold text-gold">Operator Copilot</span> = Constraint-structured reasoning</p>
           </div>
         </section>
 
@@ -656,11 +664,16 @@ export default function UseCases() {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </GlowCard>
-            </motion.div>
+                 </CardContent>
+               </GlowCard>
+             </motion.div>
+           </div>
+          {/* Metric line */}
+          <div className="mt-5 rounded-md border border-border/30 bg-muted/20 px-5 py-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-1 text-xs">
+            <span className="text-muted-foreground">Manual correlation streams: <span className="font-semibold text-warning tabular-nums">5–7 systems</span></span>
+            <span className="text-muted-foreground">Structured advisory surface: <span className="font-semibold text-primary tabular-nums">1 governed output</span></span>
           </div>
-        </section>
+         </section>
 
         {/* ════════════════ 5. USE CASE WALKTHROUGHS ════════════════ */}
         <section>
@@ -698,22 +711,49 @@ export default function UseCases() {
                 <GlowCard>
                   <CardContent className="p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Inputs (Synthetic)</p>
-                    <div className="space-y-2">
-                      {Object.entries(uc.inputs).map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2 text-xs">
-                          <span className="text-muted-foreground/70 shrink-0">{k}</span>
-                          <span className="text-foreground/90 font-medium text-right tabular-nums">{v}</span>
-                        </div>
-                      ))}
-                    </div>
+                     <div className="space-y-2">
+                       {Object.entries(uc.inputs).map(([k, v]) => {
+                         /* Parse visual markers: {{amber}}text for amber, {{text}} for subtle highlight */
+                         let displayValue = v as string;
+                         let valueClass = 'text-foreground/90 font-medium text-right tabular-nums';
+                         if (displayValue.startsWith('{{amber}}')) {
+                           displayValue = displayValue.replace('{{amber}}', '');
+                           valueClass = 'text-warning font-semibold text-right tabular-nums';
+                         } else if (displayValue.includes('{{') && displayValue.includes('}}')) {
+                           displayValue = displayValue.replace(/\{\{(.+?)\}\}/g, '$1');
+                           // Highlight upper bound portion
+                           const parts = (v as string).split('{{');
+                           const before = parts[0];
+                           const highlighted = parts[1]?.replace('}}', '') || '';
+                           return (
+                             <div key={k} className="flex justify-between gap-2 text-xs">
+                               <span className="text-muted-foreground/70 shrink-0">{k}</span>
+                               <span className="font-medium text-right tabular-nums">
+                                 <span className="text-foreground/90">{before}</span>
+                                 <span className="text-warning/80 font-semibold">{highlighted}</span>
+                               </span>
+                             </div>
+                           );
+                         }
+                         return (
+                           <div key={k} className="flex justify-between gap-2 text-xs">
+                             <span className="text-muted-foreground/70 shrink-0">{k}</span>
+                             <span className={valueClass}>{displayValue}</span>
+                           </div>
+                         );
+                       })}
+                     </div>
                   </CardContent>
                 </GlowCard>
 
                 {/* Output */}
                 <GlowCard>
                   <CardContent className="p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Advisory Output (Structured)</p>
-                    <Badge variant="outline" className="mb-2 text-[10px] border-primary/30 text-primary/80">{uc.output.mode}</Badge>
+                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Advisory Output (Structured)</p>
+                     <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                       <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/80">{uc.output.mode}</Badge>
+                       <Badge variant="outline" className="text-[9px] border-gold/30 text-gold/80 bg-gold/[0.04]">Constraint-Validated Before Model Response</Badge>
+                     </div>
                     <div className="space-y-2.5 text-xs">
                       <div>
                         <p className="font-medium text-foreground/80 mb-1">Rationale</p>
@@ -823,6 +863,10 @@ export default function UseCases() {
               </CardContent>
             </GlowCard>
           </div>
+          {/* Phase-2 trust line */}
+          <p className="mt-3 text-[11px] text-muted-foreground/60 italic text-center">
+            Requires validated historical datasets, calibration workflows, and governance approval.
+          </p>
           {/* Exclusion band */}
           <div className="mt-4 rounded-md border border-warning/20 bg-warning/[0.04] px-4 py-2.5 text-[11px] text-warning/80">
             <strong>Phase-1 excludes:</strong> load-flow simulation, switching automation, protection coordination, and real-time SCADA control.
@@ -857,6 +901,34 @@ export default function UseCases() {
             </CardContent>
           </GlowCard>
         </section>
+
+        {/* ════════════════ "WHAT THIS IS NOT" PANEL ════════════════ */}
+        <section>
+          <GlowCard className="border-muted-foreground/10">
+            <CardContent className="p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-3">This Solution Does Not</p>
+              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+                {[
+                  'Perform load-flow simulation',
+                  'Execute switching commands',
+                  'Replace OMS or ADMS',
+                  'Bypass operator approval',
+                  'Generate autonomous dispatch actions',
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                    <X className="h-3 w-3 shrink-0 text-destructive/50" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </GlowCard>
+        </section>
+
+        {/* ── Closing statement ── */}
+        <p className="text-sm font-medium text-center text-foreground/60 tracking-tight">
+          Structured intelligence before action. Human authority preserved.
+        </p>
 
         {/* ── Footer ── */}
         <Separator className="bg-border/20" />
