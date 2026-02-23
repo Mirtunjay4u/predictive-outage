@@ -21,6 +21,7 @@ import {
   Route,
   Crosshair,
   Swords,
+  FileStack,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,7 @@ const navGroups = [
       { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: Swords, label: 'Architecture Review', path: '/architecture-review' },
       { icon: BookOpen, label: 'About', path: '/about' },
+      { icon: FileStack, label: 'Resources', path: '/resources' },
       { icon: Settings, label: 'Settings', path: '/settings' },
     ],
   },
