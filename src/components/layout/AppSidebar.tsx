@@ -23,6 +23,7 @@ import {
   Swords,
   FileStack,
   Compass,
+  Gavel,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,7 @@ const navGroups = [
       { icon: Network, label: 'Architecture', path: '/architecture' },
       { icon: Route, label: 'Solution Roadmap', path: '/solution-roadmap' },
       { icon: Compass, label: 'Market Positioning', path: '/market-positioning' },
+      { icon: Gavel, label: 'Regulatory Alignment', path: '/regulatory-alignment' },
       { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: Swords, label: 'Architecture Review', path: '/architecture-review' },
       { icon: BookOpen, label: 'About', path: '/about' },

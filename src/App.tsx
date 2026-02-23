@@ -39,6 +39,7 @@ import ExecutiveOverview from "./pages/ExecutiveOverview";
 import RegulatoryCompliance from "./pages/RegulatoryCompliance";
 import Resources from "./pages/Resources";
 import MarketPositioning from "./pages/MarketPositioning";
+import RegulatoryAlignment from "./pages/RegulatoryAlignment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,7 @@ function AppRoutes() {
         <Route path="/regulatory-compliance" element={<RegulatoryCompliance />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/market-positioning" element={<MarketPositioning />} />
+        <Route path="/regulatory-alignment" element={<RegulatoryAlignment />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
