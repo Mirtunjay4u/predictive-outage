@@ -38,6 +38,7 @@ import ApiDataSchema from "./pages/ApiDataSchema";
 import ExecutiveOverview from "./pages/ExecutiveOverview";
 import RegulatoryCompliance from "./pages/RegulatoryCompliance";
 import Resources from "./pages/Resources";
+import MarketPositioning from "./pages/MarketPositioning";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +96,7 @@ function AppRoutes() {
         <Route path="/executive-overview" element={<ExecutiveOverview />} />
         <Route path="/regulatory-compliance" element={<RegulatoryCompliance />} />
         <Route path="/resources" element={<Resources />} />
+        <Route path="/market-positioning" element={<MarketPositioning />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
