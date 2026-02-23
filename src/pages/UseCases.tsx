@@ -6,7 +6,7 @@ import {
   Activity, Eye, Lock, Server, Brain, ClipboardList, Radio,
   Flame, Droplets, CloudLightning as StormIcon, Gauge, UserCheck,
   Target, Layers, Network, Shield, CircleDot, ChevronUp,
-  Shrink, BarChart3, FileSearch, Fingerprint,
+  Shrink, BarChart3, FileSearch, Fingerprint, Snowflake, TreePine,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -283,6 +283,55 @@ const USE_CASES = [
       'Status: Operator approval required',
     ],
   },
+  {
+    id: 'c',
+    label: 'Use Case C: Ice Storm — Cascading Feeder & Access Constraint Risk',
+    lifecycleStage: 'Event' as const,
+    inputs: {
+      Stage: 'During Event',
+      'Event Type': 'Ice Storm',
+      'Feeder Impact': 'Moderate → escalating',
+      'Customers Affected': '6,500',
+      'ETR Earliest / Latest': '4 h / {{14 h}}',
+      'ETR Confidence': 'Low',
+      'Critical Load': 'Regional Heating Shelter',
+      'Backup Remaining': '{{amber}}3.2 h',
+      'Escalation Threshold': '3.0 h',
+      'Crew Availability': '2 qualified / access delayed',
+      Hazards: 'Iced roads / falling limbs',
+      'Vegetation Exposure': 'High',
+      'Secondary Risk': 'Feeder sag & conductor stress',
+    },
+    output: {
+      mode: 'Escalation Advisory',
+      rationale: [
+        'Ice accumulation increases secondary failure probability.',
+        'ETR band (4–14 h) exceeds critical load runway window (3.2 h).',
+        'Road icing increases dispatch latency and limits crew access.',
+        'Vegetation loading risk suggests cascading feeder exposure.',
+      ],
+      tradeoffs: [
+        'Immediate dispatch may reduce ETR but exposes crews to unsafe road and limb-fall conditions.',
+        'Delay reduces crew risk but increases heating shelter exposure window beyond runway.',
+      ],
+      escalation: 'Critical facility runway at threshold — pre-emptive executive notification advised.',
+      assumptions: 'Ice load severity synthetic; no live SCADA telemetry integration.',
+      source: 'Rule gate evaluated: ice-severity-index, critical-runway, vegetation-loading, crew-access-safety.',
+    },
+    operatorActions: [
+      'Dispatch crew with ice-rated vehicle and safety escort',
+      'Delay until road treatment crews clear access route',
+      'Escalate to emergency coordinator for shelter backup',
+      'Request mobile heating unit for shelter',
+      'Initiate feeder sectionalizing to isolate cascading risk',
+    ],
+    trace: [
+      'Inputs: ice severity index, feeder load, backup runtime, crew status, vegetation flags',
+      'Constraints applied: safety stand-down threshold; critical runway < threshold → escalation',
+      'Recommendation: structured escalation advisory with cascading risk flag',
+      'Status: Operator approval required',
+    ],
+  },
 ];
 
 const PHASE1_ITEMS = [
@@ -469,7 +518,7 @@ function GridBackground() {
    ═══════════════════════════════════════════════════════════ */
 
 export default function UseCases() {
-  const [activeUseCase, setActiveUseCase] = useState<'a' | 'b' | null>(null);
+  const [activeUseCase, setActiveUseCase] = useState<'a' | 'b' | 'c' | null>(null);
   const [sideNavOpen, setSideNavOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('impact');
 
@@ -1024,8 +1073,8 @@ export default function UseCases() {
         {/* ════════════════ 5. USE CASE WALKTHROUGHS ════════════════ */}
         <section>
           <SectionAnchor id="walkthroughs" />
-          <SectionTitle>Interactive Use Cases</SectionTitle>
-          <SectionSubtitle>Interactive walkthrough demonstrates structured advisory logic under constraints.</SectionSubtitle>
+          <SectionTitle>Extreme Event Decision Patterns</SectionTitle>
+          <SectionSubtitle>Demonstrating structured reasoning across multiple hazard types under governed constraints.</SectionSubtitle>
 
           {/* Selector */}
           <div className="flex flex-col sm:flex-row gap-2 mb-5">
@@ -1035,9 +1084,9 @@ export default function UseCases() {
                 variant={activeUseCase === u.id ? 'default' : 'outline'}
                 size="sm"
                 className="text-xs justify-start"
-                onClick={() => setActiveUseCase(activeUseCase === u.id ? null : u.id as 'a' | 'b')}
+                onClick={() => setActiveUseCase(activeUseCase === u.id ? null : u.id as 'a' | 'b' | 'c')}
               >
-                <Zap className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                {u.id === 'c' ? <Snowflake className="h-3.5 w-3.5 mr-1.5 shrink-0" /> : <Zap className="h-3.5 w-3.5 mr-1.5 shrink-0" />}
                 {u.label}
               </Button>
             ))}
@@ -1104,6 +1153,11 @@ export default function UseCases() {
                        <div className="flex flex-wrap items-center gap-1.5 mb-3">
                          <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/90">{uc.output.mode}</Badge>
                          <Badge variant="outline" className="text-[9px] border-gold/30 text-gold bg-gold/[0.06]">Constraint-Validated</Badge>
+                         {uc.id === 'c' && (
+                           <Badge variant="outline" className="text-[9px] border-sky-400/30 text-sky-400 bg-sky-500/[0.06]">
+                             <Snowflake className="h-2.5 w-2.5 mr-1" />Cascading Risk
+                           </Badge>
+                         )}
                        </div>
                       <div className="space-y-2.5 text-xs">
                         <div>
