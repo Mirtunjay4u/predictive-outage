@@ -34,6 +34,7 @@ import ArchitectureReview from "./pages/ArchitectureReview";
 import ArchitectureDocument from "./pages/ArchitectureDocument";
 import GovernanceDocument from "./pages/GovernanceDocument";
 import OperatorSOP from "./pages/OperatorSOP";
+import ApiDataSchema from "./pages/ApiDataSchema";
 import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 
@@ -88,6 +89,7 @@ function AppRoutes() {
         <Route path="/architecture-document" element={<ArchitectureDocument />} />
         <Route path="/governance-document" element={<GovernanceDocument />} />
         <Route path="/operator-sop" element={<OperatorSOP />} />
+        <Route path="/api-data-schema" element={<ApiDataSchema />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
