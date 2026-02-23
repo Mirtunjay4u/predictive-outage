@@ -499,8 +499,8 @@ export default function UseCases() {
                 <div className="px-5 py-3">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Traditional OMS / ADMS</span>
                 </div>
-                <div className="px-5 py-3 bg-primary/[0.03] border-l border-border/20">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">Operator Copilot (Phase-1 Overlay)</span>
+                <div className="px-5 py-3 bg-gold/[0.04] border-l border-gold/15">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gold">Operator Copilot (Phase-1 Overlay)</span>
                 </div>
               </div>
               {/* Rows */}
@@ -521,8 +521,8 @@ export default function UseCases() {
                     <row.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
                     {row.left}
                   </div>
-                  <div className="px-5 py-3 text-xs text-foreground/90 font-medium flex items-center gap-2 bg-primary/[0.03] border-l border-border/20">
-                    <ArrowRight className="h-3 w-3 text-primary/60 shrink-0" />
+                  <div className="px-5 py-3 text-xs text-foreground/90 font-medium flex items-center gap-2 bg-gold/[0.02] border-l border-gold/10">
+                    <ArrowRight className="h-3 w-3 text-gold/60 shrink-0" />
                     {row.right}
                   </div>
                 </motion.div>
@@ -792,7 +792,7 @@ export default function UseCases() {
             <GlowCard className="border-primary/20" glow>
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Badge className="text-[10px] bg-primary/20 text-primary border-primary/30 hover:bg-primary/20">Phase-1</Badge>
+                  <Badge className="text-[10px] bg-gold/20 text-gold border-gold/30 hover:bg-gold/20">Phase-1</Badge>
                   <span className="text-xs font-semibold text-foreground/80">Governed Advisory Intelligence</span>
                 </div>
                 <ul className="space-y-2.5">
