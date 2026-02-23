@@ -24,7 +24,9 @@ import {
   FileStack,
   Compass,
   Gavel,
-  CircleDollarSign, ScrollText,
+  CircleDollarSign,
+  ScrollText,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -72,6 +74,7 @@ const navGroups = [
       { icon: ClipboardCheck, label: 'Validation Summary', path: '/executive-validation' },
       { icon: ScrollText, label: 'Operational SOP', path: '/operational-sop' },
       { icon: Swords, label: 'Architecture Review', path: '/architecture-review' },
+      { icon: Shield, label: 'AI Governance', path: '/ai-governance' },
       { icon: ShieldCheck, label: 'Challenge Review', path: '/executive-challenge-review' },
       { icon: BookOpen, label: 'About', path: '/about' },
       { icon: FileStack, label: 'Resources', path: '/resources' },
