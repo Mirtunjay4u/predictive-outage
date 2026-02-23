@@ -100,19 +100,19 @@ export default function Login() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight">Operator Copilot</h1>
-                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Your AI Assistant for Decision Support</p>
+                <p className="text-xs text-primary-foreground/70 font-medium tracking-wide uppercase">Predictive Outage Management Intelligence</p>
               </div>
             </div>
             
             {/* B) Primary Headline */}
             <h2 className="text-3xl font-bold leading-[1.15] tracking-tight mb-4 sm:text-[2.2rem] xl:text-[2.75rem] max-w-lg">
-              Governed AI Decision Intelligence
-              <span className="block text-[0.65em] font-semibold text-primary-foreground/80 mt-1">for Utility Outage Operations</span>
+              Predictive Outage Management Intelligence
+              <span className="block text-[0.6em] font-semibold text-primary-foreground/70 mt-1.5">for Grid Resilience Operations</span>
             </h2>
             
             {/* C) Sub-headline */}
             <p className="text-base text-primary-foreground/80 font-medium mb-8 max-w-md leading-relaxed sm:text-[17px]">
-              Explainable, deterministic decision-support aligned to operational policy and safety constraints.
+              Governed advisory intelligence that structures outage decision context before action. Deterministic rule enforcement. Human authority preserved.
             </p>
             
             {/* D) Capabilities - 5 Bullets */}
@@ -183,7 +183,7 @@ export default function Login() {
               </div>
               <span className="text-xl font-bold">Operator Copilot</span>
             </div>
-            <span className="px-2 text-center text-xs text-muted-foreground">AI-assisted event prioritization, restoration decision support, and customer communications</span>
+            <span className="px-2 text-center text-xs text-muted-foreground">Predictive Outage Management Intelligence for Grid Resilience Operations</span>
           </div>
 
           <Card className="shadow-xl border-border/40 bg-card/95 backdrop-blur-sm">
