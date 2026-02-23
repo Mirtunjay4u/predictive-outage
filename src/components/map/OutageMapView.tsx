@@ -265,6 +265,9 @@ export function OutageMapView({
   const radarLayerRef = useRef<L.TileLayer | null>(null);
   const nwsLayerRef = useRef<L.LayerGroup | null>(null);
   const windLayerRef = useRef<L.LayerGroup | null>(null);
+  const baseTilesRef = useRef<L.TileLayer | null>(null);
+  const labelTilesRef = useRef<L.TileLayer | null>(null);
+  const [mapStyle, setMapStyle] = useState<'satellite' | 'standard'>('satellite');
   const layersRef = useRef<{
     scenarios: L.LayerGroup;
     polygons: L.LayerGroup;
@@ -311,18 +314,19 @@ export function OutageMapView({
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    // Satellite imagery base layer — earth-view with visible terrain
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    const satelliteBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: '&copy; Esri, Maxar, Earthstar Geographics',
       className: 'map-base-tiles',
     }).addTo(map);
 
-    // Labels overlay on top of satellite imagery
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    const satelliteLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
       attribution: '',
       className: 'map-label-tiles',
       pane: 'overlayPane',
     }).addTo(map);
+
+    baseTilesRef.current = satelliteBase;
+    labelTilesRef.current = satelliteLabels;
 
     layersRef.current = {
       polygons: L.layerGroup().addTo(map),
@@ -800,11 +804,72 @@ export function OutageMapView({
     });
   }, [showWind, windPoints]);
 
+  // ── Swap tile layers when mapStyle changes ──
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !baseTilesRef.current) return;
+
+    // Remove existing base + label layers
+    if (baseTilesRef.current) map.removeLayer(baseTilesRef.current);
+    if (labelTilesRef.current) map.removeLayer(labelTilesRef.current);
+
+    if (mapStyle === 'satellite') {
+      const base = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+        className: 'map-base-tiles',
+      });
+      base.addTo(map);
+      base.bringToBack();
+
+      const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '',
+        className: 'map-label-tiles',
+        pane: 'overlayPane',
+      });
+      labels.addTo(map);
+
+      baseTilesRef.current = base;
+      labelTilesRef.current = labels;
+    } else {
+      const base = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        className: 'map-base-tiles map-standard-tiles',
+      });
+      base.addTo(map);
+      base.bringToBack();
+
+      baseTilesRef.current = base;
+      labelTilesRef.current = null;
+    }
+  }, [mapStyle]);
+
   return (
-    <div 
-      ref={mapContainerRef} 
-      className="h-full w-full"
-      style={{ background: '#1a1a2e' }}
-    />
+    <div className="relative h-full w-full">
+      <div 
+        ref={mapContainerRef} 
+        className="h-full w-full"
+        style={{ background: '#1a1a2e' }}
+      />
+      {/* Map style toggle */}
+      <button
+        onClick={() => setMapStyle(prev => prev === 'satellite' ? 'standard' : 'satellite')}
+        className="absolute bottom-4 left-4 z-[1000] flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+          bg-card/90 backdrop-blur-md border border-border shadow-elevated
+          text-foreground hover:bg-accent/20 transition-all"
+        title={`Switch to ${mapStyle === 'satellite' ? 'Standard' : 'Satellite'} view`}
+      >
+        {mapStyle === 'satellite' ? (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Standard
+          </>
+        ) : (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            Satellite
+          </>
+        )}
+      </button>
+    </div>
   );
 }
