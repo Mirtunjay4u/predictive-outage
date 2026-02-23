@@ -445,14 +445,14 @@ import { SystemScopePanel } from "@/components/copilot/SystemScopePanel";
  
            {/* Right Column - Sidebar (1/3) */}
            <div className="space-y-6">
-             {/* Infrastructure Details */}
-             <Card>
-               <CardHeader className="pb-3">
-                 <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-                   <Zap className="w-4 h-4" />
-                   Infrastructure
-                 </CardTitle>
-               </CardHeader>
+              {/* Grid Asset Details */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Grid Assets
+                  </CardTitle>
+                </CardHeader>
                <CardContent className="space-y-0 divide-y divide-border">
                  <InfoRow label="Fault ID" value={event.fault_id} />
                  <InfoRow label="Feeder ID" value={event.feeder_id} />

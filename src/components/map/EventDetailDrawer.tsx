@@ -253,11 +253,11 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, 
                 
                 <Separator />
                 
-                {/* SECTION: Infrastructure Details */}
+                {/* SECTION: Grid Asset Details */}
                 <section>
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5" />
-                    Infrastructure
+                    Grid Assets
                   </h3>
                   <div className="space-y-0 divide-y divide-border rounded-lg border border-border overflow-hidden bg-background">
                     <InfoRow label="Fault ID" value={event.fault_id} />

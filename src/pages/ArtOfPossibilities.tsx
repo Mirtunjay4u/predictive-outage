@@ -2176,6 +2176,11 @@ export default function ArtOfPossibilities() {
           Return to Dashboard
         </Button>
       </div>
+
+      {/* Phase-1 footer */}
+      <p className="text-[10px] text-muted-foreground/40 text-center mt-6 pb-4">
+        Conceptual expansion roadmap · All content is Phase-2+ concept · No present-tense operational claims · Advisory only
+      </p>
     </div>
   );
 }
