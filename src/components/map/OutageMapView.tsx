@@ -311,10 +311,17 @@ export function OutageMapView({
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    // Stamen/Stadia Toner-Lite tiles — high label contrast, clean geography lines
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    // Satellite imagery base layer — earth-view with visible terrain
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri, Maxar, Earthstar Geographics',
       className: 'map-base-tiles',
+    }).addTo(map);
+
+    // Labels overlay on top of satellite imagery
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '',
+      className: 'map-label-tiles',
+      pane: 'overlayPane',
     }).addTo(map);
 
     layersRef.current = {

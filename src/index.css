@@ -419,13 +419,21 @@
     cursor: not-allowed !important;
   }
 
-  /* ── Map tile visibility boost ── */
+  /* ── Map tile visibility ── */
   .map-base-tiles {
-    filter: brightness(1.05) contrast(1.05);
+    filter: brightness(1.1) contrast(1.1) saturate(1.15);
   }
 
   .dark .map-base-tiles {
-    filter: invert(1) hue-rotate(200deg) brightness(0.65) contrast(1.6) saturate(0.25);
+    filter: brightness(0.85) contrast(1.2) saturate(1.1);
+  }
+
+  .map-label-tiles {
+    filter: none;
+  }
+
+  .dark .map-label-tiles {
+    filter: brightness(1.8) contrast(1.1);
   }
 }
 
