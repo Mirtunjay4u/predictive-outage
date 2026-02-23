@@ -221,7 +221,12 @@ const USE_CASES = [
         'Dispatching the nearby crew reduces ETR but exposes crew to active lightning zone.',
         'Delaying until hazard clears protects crew safety but risks runway breach.',
       ],
+      tradeoffTable: [
+        { option: 'Dispatch under lightning', benefit: 'Reduces ETR toward runway', risk: 'Crew exposure to active hazard' },
+        { option: 'Delay until clear', benefit: 'Crew safety preserved', risk: 'Runway breach for hospital' },
+      ],
       escalation: 'Critical facility runway breach imminent — operator escalation required.',
+      structuredOutcome: 'Escalate to emergency coordinator; deploy mobile generator to hospital while monitoring lightning clearance.',
       assumptions: 'ETR band is based on synthetic demo logic; not calibrated.',
       source: 'Rule gate evaluated: critical-load-runway, hazard-zone-safety.',
     },
@@ -266,7 +271,12 @@ const USE_CASES = [
         'Rerouting crew via alternate access adds transit time but avoids smoke exposure.',
         'Requesting maintenance release on the tie asset accelerates restoration but requires coordination.',
       ],
+      tradeoffTable: [
+        { option: 'Reroute via alternate access', benefit: 'Avoids smoke exposure', risk: 'Increased transit time' },
+        { option: 'Request maintenance release', benefit: 'Faster restoration path', risk: 'Coordination overhead' },
+      ],
       escalation: 'Monitor runway; if ETR shifts past 5 h, an operator would consider escalation.',
+      structuredOutcome: 'Route crew via alternate access; deploy mobile backup to water station while monitoring runway.',
       assumptions: 'Hazard zones are synthetic overlays; no live fire perimeter integration.',
       source: 'Rule gate evaluated: asset-lockout, wildfire-proximity, crew-safety.',
     },
@@ -314,7 +324,12 @@ const USE_CASES = [
         'Immediate dispatch may reduce ETR but exposes crews to unsafe road and limb-fall conditions.',
         'Delay reduces crew risk but increases heating shelter exposure window beyond runway.',
       ],
+      tradeoffTable: [
+        { option: 'Dispatch with escort', benefit: 'Reduces ETR, shelter coverage', risk: 'Crew road & limb-fall exposure' },
+        { option: 'Delay for road clearing', benefit: 'Crew safety preserved', risk: 'Runway breach for shelter' },
+      ],
       escalation: 'Critical facility runway at threshold — pre-emptive executive notification advised.',
+      structuredOutcome: 'Initiate escalation advisory; dispatch ice-rated crew with escort after road assessment.',
       assumptions: 'Ice load severity synthetic; no live SCADA telemetry integration.',
       source: 'Rule gate evaluated: ice-severity-index, critical-runway, vegetation-loading, crew-access-safety.',
     },
@@ -332,6 +347,12 @@ const USE_CASES = [
       'Status: Operator approval required',
     ],
   },
+];
+
+const CROSS_HAZARD_TABLE = [
+  { hazard: 'Storm', constraint: 'Lightning', driver: 'Runway threshold', pattern: 'Escalation', accent: 'text-warning' },
+  { hazard: 'Wildfire', constraint: 'Lockout + Access', driver: 'Smoke exposure', pattern: 'Hazard-constrained routing', accent: 'text-destructive' },
+  { hazard: 'Ice', constraint: 'Access delay + Vegetation', driver: 'Cascading feeder', pattern: 'Escalation', accent: 'text-sky-400' },
 ];
 
 const PHASE1_ITEMS = [
@@ -1072,34 +1093,38 @@ export default function UseCases() {
           <SectionTitle>Extreme Event Decision Patterns</SectionTitle>
           <SectionSubtitle>Structured advisory logic across hazard types under governed constraints.</SectionSubtitle>
 
-          {/* Hazard Selector — compact horizontal tabs */}
-          <div className="flex items-center gap-1.5 mb-5 p-1 rounded-lg bg-muted/30 border border-border/30 w-fit">
-            {USE_CASES.map((u) => {
-              const isActive = activeUseCase === u.id;
-              const accentMap: Record<string, string> = {
-                a: 'border-warning/50 bg-warning/10 text-warning shadow-[0_0_8px_-2px_hsl(var(--warning)/0.3)]',
-                b: 'border-destructive/50 bg-destructive/10 text-destructive shadow-[0_0_8px_-2px_hsl(var(--destructive)/0.3)]',
-                c: 'border-sky-400/50 bg-sky-500/10 text-sky-400 shadow-[0_0_8px_-2px_hsl(200_80%_60%/0.3)]',
-              };
-              const iconMap: Record<string, typeof StormIcon> = { a: StormIcon, b: Flame, c: Snowflake };
-              const labelMap: Record<string, string> = { a: 'Storm', b: 'Wildfire', c: 'Ice Storm' };
-              const Icon = iconMap[u.id];
-              return (
-                <button
-                  key={u.id}
-                  onClick={() => setActiveUseCase(isActive ? null : u.id as 'a' | 'b' | 'c')}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-all duration-200',
-                    isActive
-                      ? accentMap[u.id]
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent',
-                  )}
-                >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  {labelMap[u.id]}
-                </button>
-              );
-            })}
+          {/* Hazard Taxonomy Legend */}
+          <div className="mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">Hazard Taxonomy (Demo Scope)</p>
+            <div className="flex items-center gap-1.5 p-1 rounded-lg bg-muted/30 border border-border/30 w-fit">
+              {USE_CASES.map((u) => {
+                const isActive = activeUseCase === u.id;
+                const accentMap: Record<string, string> = {
+                  a: 'border-warning/50 bg-warning/10 text-warning',
+                  b: 'border-destructive/50 bg-destructive/10 text-destructive',
+                  c: 'border-sky-400/50 bg-sky-500/10 text-sky-400',
+                };
+                const iconMap: Record<string, typeof StormIcon> = { a: StormIcon, b: Flame, c: Snowflake };
+                const labelMap: Record<string, string> = { a: 'Storm', b: 'Wildfire', c: 'Ice Storm' };
+                const Icon = iconMap[u.id];
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => setActiveUseCase(isActive ? null : u.id as 'a' | 'b' | 'c')}
+                    className={cn(
+                      'flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-opacity duration-150',
+                      isActive
+                        ? accentMap[u.id]
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent',
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {labelMap[u.id]}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-muted-foreground/50 mt-1.5">Framework extensible to flood, heatwave, asset failure, cyber-disruption.</p>
           </div>
 
           <AnimatePresence mode="wait">
@@ -1108,30 +1133,40 @@ export default function UseCases() {
                 key={uc.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="space-y-4"
               >
-                {/* Lifecycle Timeline + Phase callout row */}
+                {/* Lifecycle Timeline + Decision Mode Indicators */}
                 <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.15, delay: 0.02 }}
                   className="flex flex-wrap items-center justify-between gap-3"
                 >
                   <LifecycleTimeline active={uc.lifecycleStage} />
-                  <PhaseDemoCallout compact />
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-[9px] border-primary/25 text-primary/80 bg-primary/[0.04]">
+                      <ShieldCheck className="h-2.5 w-2.5 mr-1" />Advisory-Only
+                    </Badge>
+                    <Badge variant="outline" className="text-[9px] border-warning/25 text-warning/80 bg-warning/[0.04]">
+                      <Lock className="h-2.5 w-2.5 mr-1" />Rule Gate Active
+                    </Badge>
+                    <Badge variant="outline" className="text-[9px] border-gold/25 text-gold/80 bg-gold/[0.04]">
+                      <UserCheck className="h-2.5 w-2.5 mr-1" />Human Validation Required
+                    </Badge>
+                  </div>
                 </motion.div>
 
                 <div className="grid lg:grid-cols-3 gap-4">
                   {/* Inputs */}
                   <motion.div
-                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15, delay: 0.04 }}
                   >
                   <GlowCard>
-                    <CardContent className="p-4">
+                    <CardContent className="p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Inputs (Synthetic)</p>
                        <div className="space-y-2.5">
                          {Object.entries(uc.inputs).map(([k, v]) => {
@@ -1168,13 +1203,13 @@ export default function UseCases() {
                   </motion.div>
 
                   {/* Output + Operator Action */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                   <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15, delay: 0.06 }}
                   >
                   <GlowCard>
-                    <CardContent className="p-4">
+                    <CardContent className="p-5">
                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Advisory Output (Structured)</p>
                        <div className="flex flex-wrap items-center gap-1.5 mb-3">
                          <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/90">{uc.output.mode}</Badge>
@@ -1196,18 +1231,33 @@ export default function UseCases() {
                             ))}
                           </ul>
                         </div>
+                        {/* Trade-off Table */}
                         <div>
-                          <p className="font-medium text-foreground/85 mb-1.5">Trade-offs</p>
-                          <ul className="space-y-2">
-                            {uc.output.tradeoffs.map((t, i) => (
-                              <li key={i} className="text-foreground/75 flex items-start gap-2 leading-[1.7]">
-                                <span className="text-warning/60 mt-0.5">•</span> {t}
-                              </li>
+                          <p className="font-medium text-foreground/85 mb-2">Trade-offs</p>
+                          <div className="rounded-md border border-border/30 overflow-hidden">
+                            <div className="grid grid-cols-3 bg-muted/30 px-2.5 py-1.5">
+                              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">Option</span>
+                              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">Benefit</span>
+                              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">Risk</span>
+                            </div>
+                            {uc.output.tradeoffTable.map((row, i) => (
+                              <div key={i} className={cn('grid grid-cols-3 px-2.5 py-2 text-[11px]', i > 0 && 'border-t border-border/20')}>
+                                <span className="text-foreground/80 font-medium pr-2">{row.option}</span>
+                                <span className="text-foreground/70 pr-2">{row.benefit}</span>
+                                <span className="text-warning/90">{row.risk}</span>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                         <div className="bg-destructive/[0.07] rounded-md px-3 py-2.5 text-destructive/90 text-[11px] leading-[1.7]">
                           <span className="font-semibold">Escalation:</span> {uc.output.escalation}
+                        </div>
+                        {/* Structured Outcome */}
+                        <div className="rounded-md border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
+                          <p className="text-[11px] leading-[1.7]">
+                            <span className="font-semibold text-primary/90">Structured Outcome:</span>{' '}
+                            <span className="text-foreground/80">{uc.output.structuredOutcome}</span>
+                          </p>
                         </div>
                       </div>
 
@@ -1233,12 +1283,12 @@ export default function UseCases() {
 
                   {/* Decision Trace */}
                   <motion.div
-                    initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.35, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.15, delay: 0.08 }}
                   >
                   <GlowCard>
-                    <CardContent className="p-4">
+                    <CardContent className="p-5">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Decision Trace</p>
                       <div className="space-y-3">
                         {uc.trace.map((step, i) => (
@@ -1276,6 +1326,53 @@ export default function UseCases() {
               Select a use case above to load the interactive walkthrough.
             </div>
           )}
+        </section>
+
+        {/* ════════════════ CROSS-HAZARD CONSISTENCY ════════════════ */}
+        <section>
+          <SectionTitle>Cross-Hazard Decision Consistency</SectionTitle>
+          <SectionSubtitle>Identical governed architecture applied across all hazard types.</SectionSubtitle>
+          <GlowCard>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-4 bg-muted/30 px-5 py-2.5 border-b border-border/20">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Hazard</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Primary Constraint</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Risk Driver</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Advisory Pattern</span>
+              </div>
+              {CROSS_HAZARD_TABLE.map((row, i) => (
+                <div key={i} className={cn('grid grid-cols-4 px-5 py-3 text-xs', i > 0 && 'border-t border-border/15')}>
+                  <span className={cn('font-semibold', row.accent)}>{row.hazard}</span>
+                  <span className="text-foreground/80">{row.constraint}</span>
+                  <span className="text-foreground/70">{row.driver}</span>
+                  <span className="text-foreground/80 font-medium">{row.pattern}</span>
+                </div>
+              ))}
+            </CardContent>
+          </GlowCard>
+        </section>
+
+        {/* ════════════════ GOVERNANCE CONTROL SUMMARY ════════════════ */}
+        <section>
+          <SectionTitle>Governance Control Summary</SectionTitle>
+          <GlowCard className="border-primary/15">
+            <CardContent className="p-5">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[
+                  { icon: Lock, text: 'Deterministic rules applied before AI reasoning' },
+                  { icon: ClipboardList, text: 'Structured output schema enforced' },
+                  { icon: UserCheck, text: 'Operator approval mandatory' },
+                  { icon: Eye, text: 'Full decision trace logged' },
+                  { icon: Shield, text: 'No autonomous grid actions' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2.5 text-xs text-foreground/80">
+                    <item.icon className="h-3.5 w-3.5 shrink-0 text-primary/60" />
+                    {item.text}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </GlowCard>
         </section>
 
         {/* ════════════════ 6. PHASE CLARITY ════════════════ */}
