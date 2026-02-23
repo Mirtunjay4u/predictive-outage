@@ -1324,7 +1324,7 @@ export default function Dashboard() {
                 <span className="text-muted-foreground/40">·</span>
                 <span className={cn('font-medium tracking-tight text-foreground/70', boardroomMode ? 'text-sm' : 'text-[13px]')}>Grid Resilience Command Center</span>
               </div>
-              <p className="text-[10px] text-muted-foreground/55 font-medium tracking-wide mt-0.5">Governed Advisory Intelligence · Deterministic Rule Gate · Human Authority Preserved</p>
+              <p className="text-[11px] text-muted-foreground/80 font-semibold tracking-wide mt-1">Governed Advisory Intelligence <span className="text-muted-foreground/50 mx-0.5">·</span> Deterministic Rule Gate <span className="text-muted-foreground/50 mx-0.5">·</span> Human Authority Preserved</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {/* ── Policy Status Badge ──────────────────────────────── */}
