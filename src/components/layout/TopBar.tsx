@@ -108,7 +108,7 @@ export function TopBar({ onSearch }: TopBarProps) {
   return (
     <header className="h-14 border-b border-border/50 bg-card/80 px-5 backdrop-blur-sm" role="banner" aria-label="Application header">
       <div className="flex h-full w-full items-center justify-between gap-4">
-        <div ref={containerRef} className="relative w-full max-w-56 shrink-0">
+        <div ref={containerRef} className="relative w-full max-w-44 lg:max-w-56 shrink-0">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground z-10 pointer-events-none" />
           <Input
             ref={inputRef}
@@ -165,7 +165,7 @@ export function TopBar({ onSearch }: TopBarProps) {
 
         <div className="flex items-center gap-1.5 min-w-0" role="group" aria-label="User actions">
           {/* ── System Status Strip ── */}
-          <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
+          <div className="hidden lg:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1 rounded-full border border-[hsl(80,100%,36%)]/35 bg-[hsl(80,100%,36%)]/10 px-2 py-0.5 cursor-default whitespace-nowrap">
@@ -217,7 +217,7 @@ export function TopBar({ onSearch }: TopBarProps) {
             <TooltipContent side="bottom" className="text-xs">Glossary</TooltipContent>
           </Tooltip>
 
-          <div className="hidden md:block h-5 w-px bg-border/40" />
+          <div className="hidden lg:block h-5 w-px bg-border/40" />
 
           {/* Advisory Mode Indicator — always visible */}
           <div className="flex items-center gap-1 shrink-0 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-2 py-0.5">
