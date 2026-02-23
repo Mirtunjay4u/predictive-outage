@@ -31,6 +31,7 @@ import Glossary from "./pages/Glossary";
 import SolutionRoadmap from "./pages/SolutionRoadmap";
 import UseCases from "./pages/UseCases";
 import ArchitectureReview from "./pages/ArchitectureReview";
+import ArchitectureDocument from "./pages/ArchitectureDocument";
 import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 
@@ -82,6 +83,7 @@ function AppRoutes() {
         <Route path="/solution-roadmap" element={<SolutionRoadmap />} />
         <Route path="/use-cases" element={<UseCases />} />
         <Route path="/architecture-review" element={<ArchitectureReview />} />
+        <Route path="/architecture-document" element={<ArchitectureDocument />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
