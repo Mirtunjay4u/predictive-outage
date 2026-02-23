@@ -39,28 +39,28 @@ const IMPACT_METRICS = [
     icon: Shrink,
     label: 'Context Compression',
     value: '5–7 → 1',
-    detail: '5–7 manual context streams compressed into 1 governed advisory surface',
+    detail: '5–7 manual correlation streams → 1 governed advisory surface',
     accent: 'primary' as const,
   },
   {
     icon: BarChart3,
-    label: 'ETR Clarity',
-    value: 'Band + Confidence',
-    detail: 'Earliest/latest + confidence + drivers. Phase-1 demo logic; Phase-2 calibrated.',
+    label: 'Uncertainty Awareness',
+    value: 'Band + Drivers',
+    detail: 'ETR earliest/latest + confidence + uncertainty drivers',
     accent: 'gold' as const,
   },
   {
     icon: Shield,
-    label: 'Safety Enforcement',
-    value: 'Pre-Model',
-    detail: 'Deterministic constraints enforced before model response — never after.',
+    label: 'Constraint Discipline',
+    value: 'Pre-Model Gate',
+    detail: 'Deterministic rule gate before model reasoning',
     accent: 'accent' as const,
   },
   {
     icon: Fingerprint,
-    label: 'Audit Traceability',
+    label: 'Audit & Control',
     value: 'Full Trace',
-    detail: 'Decision trace + operator approval checkpoints on every advisory.',
+    detail: 'Operator approval + full decision trace',
     accent: 'primary' as const,
   },
 ];
@@ -625,22 +625,18 @@ export default function UseCases() {
 
         {/* ════════════════ HEADER ════════════════ */}
         <section className="relative">
-          <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/40 mb-4 text-center">
-            Conceptual Prototype — Structured Demonstration Environment
-          </p>
           <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-1">Operator Copilot</p>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Use Cases & Differentiation</h1>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Extreme Event Decision Patterns</h1>
             <p className="mt-2.5 text-[13px] text-foreground/80 max-w-2xl mx-auto leading-relaxed font-medium">
-              Operator Copilot is a governed reasoning overlay that structures outage decision context before it reaches the operator.
+              Governed advisory logic across hazard types under operational constraints.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {['Advisory-Only', 'Human Approval Required', 'Deterministic Rule Gate'].map((p) => (
+              {['Advisory-Only', 'Human Approval Required', 'Deterministic Rule Gate', 'Audit Trace Enabled'].map((p) => (
                 <Badge key={p} variant="outline" className="text-[10px] font-medium border-primary/25 text-primary/90 bg-primary/[0.06]">
                   {p}
                 </Badge>
               ))}
-              <PhaseDemoCallout compact />
             </div>
           </div>
         </section>
@@ -868,7 +864,7 @@ export default function UseCases() {
         {/* ════════════════ 2. DIFFERENTIATION GRID ════════════════ */}
         <section>
           <SectionAnchor id="differentiation" />
-          <SectionTitle>Where Traditional OMS Stops — Operator Copilot Begins</SectionTitle>
+          <SectionTitle>Where Traditional OMS Stops — Decision Discipline Begins</SectionTitle>
           <SectionSubtitle>Structured augmentation, not replacement.</SectionSubtitle>
           <GlowCard>
             <CardContent className="p-0">
@@ -1074,29 +1070,36 @@ export default function UseCases() {
         <section>
           <SectionAnchor id="walkthroughs" />
           <SectionTitle>Extreme Event Decision Patterns</SectionTitle>
-          <SectionSubtitle>Demonstrating structured reasoning across multiple hazard types under governed constraints.</SectionSubtitle>
+          <SectionSubtitle>Structured advisory logic across hazard types under governed constraints.</SectionSubtitle>
 
-          {/* Hazard-type color legend */}
-          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] font-semibold uppercase tracking-wider">
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-amber-500" /><span className="text-foreground/60">Storm</span></div>
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-red-500" /><span className="text-foreground/60">Wildfire</span></div>
-            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-sky-400" /><span className="text-foreground/60">Ice</span></div>
-          </div>
-
-          {/* Selector */}
-          <div className="flex flex-col sm:flex-row gap-2 mb-5">
-            {USE_CASES.map((u) => (
-              <Button
-                key={u.id}
-                variant={activeUseCase === u.id ? 'default' : 'outline'}
-                size="sm"
-                className="text-xs justify-start"
-                onClick={() => setActiveUseCase(activeUseCase === u.id ? null : u.id as 'a' | 'b' | 'c')}
-              >
-                {u.id === 'c' ? <Snowflake className="h-3.5 w-3.5 mr-1.5 shrink-0" /> : <Zap className="h-3.5 w-3.5 mr-1.5 shrink-0" />}
-                {u.label}
-              </Button>
-            ))}
+          {/* Hazard Selector — compact horizontal tabs */}
+          <div className="flex items-center gap-1.5 mb-5 p-1 rounded-lg bg-muted/30 border border-border/30 w-fit">
+            {USE_CASES.map((u) => {
+              const isActive = activeUseCase === u.id;
+              const accentMap: Record<string, string> = {
+                a: 'border-warning/50 bg-warning/10 text-warning shadow-[0_0_8px_-2px_hsl(var(--warning)/0.3)]',
+                b: 'border-destructive/50 bg-destructive/10 text-destructive shadow-[0_0_8px_-2px_hsl(var(--destructive)/0.3)]',
+                c: 'border-sky-400/50 bg-sky-500/10 text-sky-400 shadow-[0_0_8px_-2px_hsl(200_80%_60%/0.3)]',
+              };
+              const iconMap: Record<string, typeof StormIcon> = { a: StormIcon, b: Flame, c: Snowflake };
+              const labelMap: Record<string, string> = { a: 'Storm', b: 'Wildfire', c: 'Ice Storm' };
+              const Icon = iconMap[u.id];
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => setActiveUseCase(isActive ? null : u.id as 'a' | 'b' | 'c')}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition-all duration-200',
+                    isActive
+                      ? accentMap[u.id]
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent',
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {labelMap[u.id]}
+                </button>
+              );
+            })}
           </div>
 
           <AnimatePresence mode="wait">
@@ -1182,28 +1185,28 @@ export default function UseCases() {
                            </Badge>
                          )}
                        </div>
-                      <div className="space-y-2.5 text-xs">
+                      <div className="space-y-3 text-xs">
                         <div>
-                          <p className="font-medium text-foreground/80 mb-1">Rationale</p>
-                          <ul className="space-y-1.5">
+                          <p className="font-medium text-foreground/85 mb-1.5">Rationale</p>
+                          <ul className="space-y-2">
                             {uc.output.rationale.map((r, i) => (
-                              <li key={i} className="text-foreground/70 flex items-start gap-1.5 leading-relaxed">
+                              <li key={i} className="text-foreground/75 flex items-start gap-2 leading-[1.7]">
                                 <span className="text-primary/60 mt-0.5">•</span> {r}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
-                          <p className="font-medium text-foreground/80 mb-1">Trade-offs</p>
-                          <ul className="space-y-1.5">
+                          <p className="font-medium text-foreground/85 mb-1.5">Trade-offs</p>
+                          <ul className="space-y-2">
                             {uc.output.tradeoffs.map((t, i) => (
-                              <li key={i} className="text-foreground/70 flex items-start gap-1.5 leading-relaxed">
+                              <li key={i} className="text-foreground/75 flex items-start gap-2 leading-[1.7]">
                                 <span className="text-warning/60 mt-0.5">•</span> {t}
                               </li>
                             ))}
                           </ul>
                         </div>
-                        <div className="bg-destructive/[0.07] rounded-md px-2.5 py-2 text-destructive/90 text-[11px]">
+                        <div className="bg-destructive/[0.07] rounded-md px-3 py-2.5 text-destructive/90 text-[11px] leading-[1.7]">
                           <span className="font-semibold">Escalation:</span> {uc.output.escalation}
                         </div>
                       </div>
@@ -1392,19 +1395,16 @@ export default function UseCases() {
           </GlowCard>
         </section>
 
-        {/* ── Phase-1 Demo callout — single source ── */}
-        <PhaseDemoCallout />
-
-        {/* ── Closing statement ── */}
-        <p className="text-sm font-medium text-center text-foreground/70 tracking-tight">
-          Structured intelligence before action. Human authority preserved.
-        </p>
-
-        {/* ── Footer ── */}
+        {/* ── Consolidated footer disclaimer ── */}
         <Separator className="bg-border/20" />
-        <p className="text-[10px] text-center text-muted-foreground/50">
-          No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
-        </p>
+        <div className="text-center space-y-1.5 py-2">
+          <p className="text-[11px] font-medium text-foreground/60">
+            Phase-1 Demonstration: Advisory intelligence only. No live SCADA or switching integration.
+          </p>
+          <p className="text-[10px] text-muted-foreground/45">
+            No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
+          </p>
+        </div>
       </div>
     </div>
   );
