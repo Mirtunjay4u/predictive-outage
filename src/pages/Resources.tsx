@@ -355,7 +355,7 @@ export default function Resources() {
             <SelectTrigger className="h-8 w-[130px] text-[11px] border-border/30 bg-card/60">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border/40 z-50">
+            <SelectContent className="bg-card border-border/40 z-[100]">
               {ROLES.map(r => (
                 <SelectItem key={r} value={r} className="text-[11px]">{r}</SelectItem>
               ))}
