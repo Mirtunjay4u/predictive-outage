@@ -33,7 +33,7 @@ const modules = [
   },
   {
     icon: Bot, title: 'Copilot Studio', path: '/copilot-studio',
-    desc: 'AI-powered conversational assistant for natural-language queries about outage status, ETR reasoning, crew availability, and decision support.',
+    desc: 'Governed advisory assistant for structured queries about outage status, ETR reasoning, crew availability, and decision support.',
     tips: ['Ask "What events need escalation?" for a prioritized summary', 'Query crew availability with "Which crews are available near Feeder F-201?"', 'Copilot provides advisory insights — all actions require operator approval'],
   },
   {

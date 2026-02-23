@@ -38,27 +38,21 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Copilot Mode</Label>
-                  <p className="text-sm text-muted-foreground">Toggle between Mock AI and Real API</p>
+                  <Label>Advisory Mode</Label>
+                  <p className="text-sm text-muted-foreground">All outputs are advisory-only — presentation toggle only</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Mock</span>
+                  <span className="text-sm text-muted-foreground">Demo</span>
                   <Switch defaultChecked />
-                  <span className="text-sm text-muted-foreground">Real</span>
+                  <span className="text-sm text-muted-foreground">Nemotron</span>
                 </div>
               </div>
               <Separator />
-              <div className="space-y-2">
-                <Label htmlFor="openai-key">OpenAI API Key</Label>
-                <Input
-                  id="openai-key"
-                  type="password"
-                  placeholder="sk-..."
-                  disabled
-                  className="font-mono"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Set via environment variable OPENAI_API_KEY (Phase 2)
+              <div className="space-y-1">
+                <Label>Model Engine</Label>
+                <p className="text-sm text-muted-foreground">NVIDIA Nemotron (NIM) — configured via backend environment</p>
+                <p className="text-xs text-muted-foreground/60">
+                  API credentials are stored securely in backend environment variables and never exposed in the frontend.
                 </p>
               </div>
             </CardContent>

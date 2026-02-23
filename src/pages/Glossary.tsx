@@ -10,7 +10,8 @@ interface GlossaryEntry {
 }
 
 const utilityTerms: GlossaryEntry[] = [
-  { term: 'Critical Load', definition: 'Infrastructure requiring prioritized restoration (Hospital, Water, Telecom, Emergency Services).' },
+  { term: 'Advisory', definition: 'Operational guidance presented for human review — never executed autonomously. All Copilot outputs carry advisory status.' },
+  { term: 'Critical Load', definition: 'Grid-connected facility requiring prioritized restoration (Hospital, Water, Telecom, Emergency Services).' },
   { term: 'Critical Load Runway', definition: 'Remaining operational time before backup power threshold is breached.' },
   { term: 'Crew Readiness', definition: 'Assessment of crew availability and skill alignment relative to outage demand.' },
   { term: 'ETR Confidence Band', definition: 'Probabilistic restoration time window representing uncertainty drivers rather than a single deterministic timestamp.' },
@@ -19,6 +20,7 @@ const utilityTerms: GlossaryEntry[] = [
   { term: 'Hazard Exposure', definition: 'Severity of environmental risk impacting grid assets.' },
   { term: 'Operational Risk Posture', definition: 'Aggregated summary of system-level outage severity, hazard exposure, ETR confidence, and crew readiness.' },
   { term: 'Outage Type', definition: 'Classification of event (Storm, Wildfire, Heavy Rain, Equipment Failure, etc.).' },
+  { term: 'Rule Gate', definition: 'Deterministic constraint enforcement layer that evaluates safety, maintenance, and operational rules before AI reasoning is invoked. Blocks prohibited actions regardless of AI output.' },
   { term: 'Substation', definition: 'Electrical node stepping voltage levels and distributing to feeders.' },
 ];
 
