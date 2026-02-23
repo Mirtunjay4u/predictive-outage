@@ -6,6 +6,7 @@ import {
   Activity, Eye, Lock, Server, Brain, ClipboardList, Radio,
   Flame, Droplets, CloudLightning as StormIcon, Gauge, UserCheck,
   Target, Layers, Network, Shield, CircleDot, ChevronUp,
+  Shrink, BarChart3, FileSearch, Fingerprint,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,13 +22,91 @@ import { Separator } from '@/components/ui/separator';
    ═══════════════════════════════════════════════════════════ */
 
 const SECTION_IDS = [
+  { id: 'impact', label: 'Impact' },
   { id: 'pressure', label: 'Decision Pressure' },
-  { id: 'differentiation', label: 'Differentiation' },
+  { id: 'pillars', label: 'Differentiation' },
+  { id: 'hero-flow', label: 'Decision Flow' },
+  { id: 'differentiation', label: 'OMS vs Copilot' },
   { id: 'trust-flow', label: 'Trust Flow' },
   { id: 'cognitive', label: 'Cognitive Load' },
   { id: 'walkthroughs', label: 'Use Cases' },
   { id: 'phases', label: 'Phase Clarity' },
   { id: 'policy', label: 'Policy & Safety' },
+];
+
+const IMPACT_METRICS = [
+  {
+    icon: Shrink,
+    label: 'Context Compression',
+    value: '5–7 → 1',
+    detail: '5–7 manual context streams compressed into 1 governed advisory surface',
+    accent: 'primary' as const,
+  },
+  {
+    icon: BarChart3,
+    label: 'ETR Clarity',
+    value: 'Band + Confidence',
+    detail: 'Earliest/latest + confidence + drivers. Phase-1 demo logic; Phase-2 calibrated.',
+    accent: 'gold' as const,
+  },
+  {
+    icon: Shield,
+    label: 'Safety Enforcement',
+    value: 'Pre-Model',
+    detail: 'Deterministic constraints enforced before model response — never after.',
+    accent: 'accent' as const,
+  },
+  {
+    icon: Fingerprint,
+    label: 'Audit Traceability',
+    value: 'Full Trace',
+    detail: 'Decision trace + operator approval checkpoints on every advisory.',
+    accent: 'primary' as const,
+  },
+];
+
+const DIFFERENTIATION_PILLARS = [
+  {
+    icon: Lock,
+    title: 'Governed Reasoning',
+    subtitle: 'Deterministic-First',
+    desc: 'Rule gates evaluate constraints before any AI model inference. Every advisory is policy-bounded.',
+  },
+  {
+    icon: Gauge,
+    title: 'Uncertainty-First ETR',
+    subtitle: 'Band + Drivers',
+    desc: 'ETR is a confidence band (earliest–latest) with explicit uncertainty drivers — not a single-point guess.',
+  },
+  {
+    icon: FileSearch,
+    title: 'Audit-Ready Approvals',
+    subtitle: 'Full Traceability',
+    desc: 'Every output carries a decision trace: inputs → constraints → rationale → operator sign-off.',
+  },
+];
+
+const HERO_FLOW_INPUTS = [
+  { icon: StormIcon, label: 'Storm / Weather' },
+  { icon: Flame, label: 'Wildfire / Hazard' },
+  { icon: Building2, label: 'Critical Load' },
+  { icon: Users, label: 'Crew Safety' },
+  { icon: Radio, label: 'Comms Pressure' },
+];
+
+const HERO_FLOW_DISCIPLINE = [
+  { label: 'Constraints', color: 'text-accent' },
+  { label: 'Rule Gate', color: 'text-warning' },
+  { label: 'NIM Inference', color: 'text-primary' },
+  { label: 'Structured Output', color: 'text-primary' },
+  { label: 'Operator Approval', color: 'text-gold' },
+  { label: 'Audit Trail', color: 'text-accent' },
+];
+
+const HERO_FLOW_OUTCOMES = [
+  { icon: Target, label: 'Safe Prioritization' },
+  { icon: FileText, label: 'Comms Consistency' },
+  { icon: Eye, label: 'Executive Visibility' },
 ];
 
 const PRESSURE_CARDS = [
@@ -112,10 +191,13 @@ const COGNITIVE_RIGHT = [
   { icon: Shield, label: 'Audit-ready draft communications' },
 ];
 
+const LIFECYCLE_STAGES = ['Pre-Event', 'Event', 'Post-Event'] as const;
+
 const USE_CASES = [
   {
     id: 'a',
     label: 'Use Case A: Storm Escalation — Hospital Backup Threshold Risk',
+    lifecycleStage: 'Event' as const,
     inputs: {
       Stage: 'During Outage',
       'Event Type': 'Severe Storm',
@@ -143,6 +225,12 @@ const USE_CASES = [
       assumptions: 'ETR band is based on synthetic demo logic; not calibrated.',
       source: 'Rule gate evaluated: critical-load-runway, hazard-zone-safety.',
     },
+    operatorActions: [
+      'Dispatch crew with safety hold acknowledgment',
+      'Delay dispatch until lightning clears (monitor runway)',
+      'Escalate to emergency coordinator',
+      'Request mobile generator for hospital',
+    ],
     trace: [
       'Inputs: storm severity, feeder load, backup runtime, crew status, hazard flags',
       'Constraints applied: runway < threshold → escalation flag; lightning zone → crew safety hold',
@@ -153,6 +241,7 @@ const USE_CASES = [
   {
     id: 'b',
     label: 'Use Case B: Wildfire Exposure — Crew Safety Constraint Conflict',
+    lifecycleStage: 'Pre-Event' as const,
     inputs: {
       Stage: 'Pre-Event / Storm Onset',
       'Event Type': 'Wildfire',
@@ -181,6 +270,12 @@ const USE_CASES = [
       assumptions: 'Hazard zones are synthetic overlays; no live fire perimeter integration.',
       source: 'Rule gate evaluated: asset-lockout, wildfire-proximity, crew-safety.',
     },
+    operatorActions: [
+      'Reroute crew via alternate access road',
+      'Request maintenance release on tie asset',
+      'Deploy mobile backup to water station',
+      'Hold and monitor until hazard clears',
+    ],
     trace: [
       'Inputs: wildfire zone, maintenance constraint, crew limits, backup runtime',
       'Constraints applied: asset-lockout → tie blocked; wildfire proximity → access restriction',
@@ -273,9 +368,9 @@ function SectionAnchor({ id }: { id: string }) {
 function GlowCard({ children, className, glow }: { children: React.ReactNode; className?: string; glow?: boolean }) {
   return (
     <Card className={cn(
-      'relative overflow-hidden border-border/30 bg-card/80 backdrop-blur-sm',
-      'hover:border-border/50 transition-all duration-300',
-      glow && 'border-primary/20 shadow-[0_0_20px_-6px_hsl(var(--primary)/0.15)]',
+      'relative overflow-hidden border-border/40 bg-card/90 backdrop-blur-sm',
+      'hover:border-border/60 transition-all duration-300',
+      glow && 'border-primary/25 shadow-[0_0_20px_-6px_hsl(var(--primary)/0.2)]',
       className,
     )}>
       {children}
@@ -288,7 +383,58 @@ function SectionTitle({ children, className }: { children: React.ReactNode; clas
 }
 
 function SectionSubtitle({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground mb-6 max-w-2xl">{children}</p>;
+  return <p className="text-sm text-muted-foreground/90 mb-6 max-w-2xl leading-relaxed">{children}</p>;
+}
+
+/** Reusable Phase-1 Demo callout — single source for all disclaimers */
+function PhaseDemoCallout({ compact }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md border border-gold/25 bg-gold/[0.06] px-2 py-0.5 text-[10px] font-semibold text-gold">
+        <CircleDot className="h-2.5 w-2.5" />
+        Phase-1 Demo
+      </span>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-gold/25 bg-gold/[0.04] px-4 py-3 flex items-start gap-2.5">
+      <CircleDot className="h-4 w-4 shrink-0 text-gold mt-0.5" />
+      <div>
+        <p className="text-xs font-semibold text-gold mb-0.5">Phase-1 Demo Environment</p>
+        <p className="text-[11px] text-foreground/70 leading-relaxed">
+          Synthetic data · Non-calibrated ETR logic · Advisory-only outputs · No live system integration
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Lifecycle timeline ribbon */
+function LifecycleTimeline({ active }: { active: typeof LIFECYCLE_STAGES[number] }) {
+  return (
+    <div className="flex items-center gap-0">
+      {LIFECYCLE_STAGES.map((stage, i) => (
+        <div key={stage} className="flex items-center">
+          <div className={cn(
+            'rounded-full px-3 py-1 text-[10px] font-semibold transition-all',
+            active === stage
+              ? 'bg-primary text-primary-foreground shadow-[0_0_12px_-2px_hsl(var(--primary)/0.4)]'
+              : 'bg-muted/40 text-muted-foreground/60',
+          )}>
+            {stage}
+          </div>
+          {i < LIFECYCLE_STAGES.length - 1 && (
+            <div className={cn(
+              'h-px w-6',
+              active === stage || active === LIFECYCLE_STAGES[i + 1]
+                ? 'bg-primary/40'
+                : 'bg-border/30',
+            )} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* Animated grid background with parallax */
@@ -309,7 +455,6 @@ function GridBackground() {
           <rect width="100%" height="100%" fill="url(#grid-use-cases)" className="text-primary" />
         </svg>
       </motion.div>
-      {/* Animated gradient sweep */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent"
         animate={{ x: ['-100%', '100%'] }}
@@ -326,7 +471,7 @@ function GridBackground() {
 export default function UseCases() {
   const [activeUseCase, setActiveUseCase] = useState<'a' | 'b' | null>(null);
   const [sideNavOpen, setSideNavOpen] = useState(true);
-  const [activeSection, setActiveSection] = useState('pressure');
+  const [activeSection, setActiveSection] = useState('impact');
 
   /* scroll-spy */
   useEffect(() => {
@@ -349,9 +494,8 @@ export default function UseCases() {
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth' });
-    // Brief pulse highlight after scroll completes
     el.classList.remove('section-pulse');
-    void el.offsetWidth; // force reflow to restart animation
+    void el.offsetWidth;
     el.classList.add('section-pulse');
     el.addEventListener('animationend', () => el.classList.remove('section-pulse'), { once: true });
   };
@@ -428,26 +572,73 @@ export default function UseCases() {
       </button>
 
       {/* ── Main content ── */}
-      <div className="flex-1 min-w-0 px-6 pb-20 pt-6 space-y-16 max-w-6xl mx-auto">
+      <div className="flex-1 min-w-0 px-6 pb-20 pt-6 space-y-14 max-w-6xl mx-auto">
 
         {/* ════════════════ HEADER ════════════════ */}
         <section className="relative">
-          <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/30 mb-4 text-center">
+          <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/40 mb-4 text-center">
             Conceptual Prototype — Structured Demonstration Environment
           </p>
           <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">Operator Copilot</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-1">Operator Copilot</p>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Use Cases & Differentiation</h1>
-            <p className="mt-2 text-[13px] text-foreground/70 max-w-2xl mx-auto leading-relaxed font-medium">
+            <p className="mt-2.5 text-[13px] text-foreground/80 max-w-2xl mx-auto leading-relaxed font-medium">
               Operator Copilot is a governed reasoning overlay that structures outage decision context before it reaches the operator.
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {['Advisory-Only', 'Human Approval Required', 'Deterministic Rule Gate', 'Phase-1 Demo'].map((p) => (
-                <Badge key={p} variant="outline" className="text-[10px] font-medium border-primary/20 text-primary/80 bg-primary/[0.04]">
+              {['Advisory-Only', 'Human Approval Required', 'Deterministic Rule Gate'].map((p) => (
+                <Badge key={p} variant="outline" className="text-[10px] font-medium border-primary/25 text-primary/90 bg-primary/[0.06]">
                   {p}
                 </Badge>
               ))}
+              <PhaseDemoCallout compact />
             </div>
+          </div>
+        </section>
+
+        {/* ════════════════ A. IMPACT ROW ════════════════ */}
+        <section>
+          <SectionAnchor id="impact" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {IMPACT_METRICS.map((m, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <GlowCard className={cn(
+                  'h-full',
+                  m.accent === 'gold' && 'border-gold/20',
+                  m.accent === 'accent' && 'border-accent/20',
+                  m.accent === 'primary' && 'border-primary/20',
+                )}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                        m.accent === 'gold' ? 'bg-gold/10 text-gold' :
+                        m.accent === 'accent' ? 'bg-accent/10 text-accent' :
+                        'bg-primary/10 text-primary',
+                      )}>
+                        <m.icon className="h-4 w-4" />
+                      </div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{m.label}</p>
+                    </div>
+                    <p className={cn(
+                      'text-lg font-bold tracking-tight mb-1',
+                      m.accent === 'gold' ? 'text-gold' :
+                      m.accent === 'accent' ? 'text-accent' :
+                      'text-primary',
+                    )}>
+                      {m.value}
+                    </p>
+                    <p className="text-[11px] text-foreground/70 leading-relaxed">{m.detail}</p>
+                  </CardContent>
+                </GlowCard>
+              </motion.div>
+            ))}
           </div>
         </section>
 
@@ -469,9 +660,9 @@ export default function UseCases() {
                 >
                   <GlowCard className={cn(
                     'h-full',
-                    card.accent === 'destructive' && 'border-destructive/15 hover:border-destructive/25',
-                    card.accent === 'amber' && 'border-warning/15 hover:border-warning/25',
-                    card.accent === 'warning' && 'border-warning/15 hover:border-warning/25',
+                    card.accent === 'destructive' && 'border-destructive/20 hover:border-destructive/30',
+                    card.accent === 'amber' && 'border-warning/20 hover:border-warning/30',
+                    card.accent === 'warning' && 'border-warning/20 hover:border-warning/30',
                   )}>
                     <CardContent className="p-5">
                       <div className="flex items-center gap-3 mb-4">
@@ -483,20 +674,145 @@ export default function UseCases() {
                         </div>
                         <p className="text-sm font-semibold text-foreground">{card.title}</p>
                       </div>
-                      <div className="space-y-2 mb-4">
+                      <div className="space-y-2.5 mb-4">
                         {card.stats.map((s, j) => (
                           <div key={j} className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{s.label}</span>
-                            <span className="font-semibold text-foreground/90 tabular-nums">{s.value}</span>
+                            <span className="text-foreground/60">{s.label}</span>
+                            <span className="font-semibold text-foreground tabular-nums">{s.value}</span>
                           </div>
                         ))}
                       </div>
-                      <p className="text-[11px] text-muted-foreground/60 italic border-t border-border/20 pt-3">{card.subtext}</p>
+                      <p className="text-[11px] text-foreground/50 italic border-t border-border/25 pt-3">{card.subtext}</p>
                     </CardContent>
                   </GlowCard>
                 </motion.div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ════════════════ F. DIFFERENTIATION PILLARS ════════════════ */}
+        <section>
+          <SectionAnchor id="pillars" />
+          <SectionTitle>Differentiation Pillars</SectionTitle>
+          <SectionSubtitle>Three measurable capabilities that separate Operator Copilot from traditional OMS/ADMS.</SectionSubtitle>
+          <div className="grid md:grid-cols-3 gap-4">
+            {DIFFERENTIATION_PILLARS.map((pillar, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <GlowCard className="h-full border-primary/15" glow>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <pillar.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{pillar.title}</p>
+                        <p className="text-[10px] font-medium text-primary/70">{pillar.subtitle}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-foreground/70 leading-relaxed">{pillar.desc}</p>
+                  </CardContent>
+                </GlowCard>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ════════════════ C. HERO GRAPHIC — DECISION FLOW ════════════════ */}
+        <section className="relative">
+          <SectionAnchor id="hero-flow" />
+          <GridBackground />
+          <div className="relative">
+            <SectionTitle>From Outage Pressure → Structured Decision Discipline</SectionTitle>
+            <SectionSubtitle>How unstructured operational pressure is transformed into governed advisory output.</SectionSubtitle>
+            <GlowCard glow>
+              <CardContent className="py-6 px-5">
+                <div className="grid md:grid-cols-[1fr_auto_1.2fr_auto_1fr] gap-4 items-center">
+                  {/* Pressure Inputs */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-destructive/70 mb-3 text-center">Pressure Inputs</p>
+                    <div className="space-y-2">
+                      {HERO_FLOW_INPUTS.map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -12 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.05 }}
+                          className="flex items-center gap-2.5 rounded-md border border-destructive/15 bg-destructive/[0.04] px-3 py-2 text-xs text-foreground/80"
+                        >
+                          <item.icon className="h-3.5 w-3.5 text-destructive/60 shrink-0" />
+                          {item.label}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="hidden md:flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <ArrowRight className="h-5 w-5 text-muted-foreground/40" />
+                    </div>
+                  </div>
+
+                  {/* Copilot Discipline */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/70 mb-3 text-center">Copilot Discipline</p>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {HERO_FLOW_DISCIPLINE.map((step, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.06 }}
+                          className={cn(
+                            'rounded-md border border-border/40 bg-muted/30 px-2.5 py-1.5 text-[10px] font-semibold',
+                            step.color,
+                          )}
+                        >
+                          {step.label}
+                        </motion.div>
+                      ))}
+                    </div>
+                    <div className="mt-3 rounded-md border border-primary/15 bg-primary/[0.04] px-3 py-2 text-center">
+                      <p className="text-[10px] text-primary/70 font-medium">Constraints → Rule Gate → NIM → Structured Output → Approval → Audit</p>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="hidden md:flex items-center justify-center">
+                    <ArrowRight className="h-5 w-5 text-muted-foreground/40" />
+                  </div>
+
+                  {/* Outcomes */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-accent/70 mb-3 text-center">Outcomes</p>
+                    <div className="space-y-2">
+                      {HERO_FLOW_OUTCOMES.map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: 12 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.05 }}
+                          className="flex items-center gap-2.5 rounded-md border border-accent/15 bg-accent/[0.04] px-3 py-2 text-xs font-medium text-foreground/80"
+                        >
+                          <item.icon className="h-3.5 w-3.5 text-accent/60 shrink-0" />
+                          {item.label}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </GlowCard>
           </div>
         </section>
 
@@ -510,9 +826,9 @@ export default function UseCases() {
               {/* Headers */}
               <div className="grid grid-cols-[1fr_1fr] border-b border-border/30">
                 <div className="px-5 py-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Traditional OMS / ADMS</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Traditional OMS / ADMS</span>
                 </div>
-                <div className="px-5 py-3 bg-gold/[0.04] border-l border-gold/15">
+                <div className="px-5 py-3 bg-gold/[0.06] border-l border-gold/20">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-gold">Operator Copilot (Phase-1 Overlay)</span>
                 </div>
               </div>
@@ -526,15 +842,15 @@ export default function UseCases() {
                   transition={{ delay: i * 0.05 }}
                   className={cn(
                     'grid grid-cols-[1fr_1fr]',
-                    i % 2 === 0 ? 'bg-muted/15' : '',
-                    i < COMPARISON_ROWS.length - 1 && 'border-b border-border/15',
+                    i % 2 === 0 ? 'bg-muted/20' : '',
+                    i < COMPARISON_ROWS.length - 1 && 'border-b border-border/20',
                   )}
                 >
-                  <div className="px-5 py-3 text-xs text-muted-foreground/70 flex items-center gap-2">
-                    <row.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                  <div className="px-5 py-3 text-xs text-foreground/60 flex items-center gap-2">
+                    <row.icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
                     {row.left}
                   </div>
-                  <div className="px-5 py-3 text-xs text-foreground/90 font-medium flex items-center gap-2 bg-gold/[0.02] border-l border-gold/10">
+                  <div className="px-5 py-3 text-xs text-foreground/90 font-medium flex items-center gap-2 bg-gold/[0.03] border-l border-gold/10">
                     <ArrowRight className="h-3 w-3 text-gold/60 shrink-0" />
                     {row.right}
                   </div>
@@ -543,9 +859,9 @@ export default function UseCases() {
             </CardContent>
           </GlowCard>
           {/* Insight statement */}
-          <div className="mt-5 rounded-lg border border-gold/30 bg-gold/[0.03] px-5 py-4">
+          <div className="mt-5 rounded-lg border border-gold/30 bg-gold/[0.04] px-5 py-4">
             <p className="text-xs text-foreground/80 leading-relaxed">
-              <span className="font-semibold text-muted-foreground">OMS answers:</span>{' '}
+              <span className="font-semibold text-foreground/60">OMS answers:</span>{' '}
               <span className="italic">"What is happening?"</span>
             </p>
             <p className="text-xs text-foreground/80 leading-relaxed mt-1">
@@ -557,9 +873,9 @@ export default function UseCases() {
           {/* Decision Layer Separation */}
           <Separator className="mt-5 bg-border/20" />
           <div className="mt-4 space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Decision Layer Separation</p>
-            <p className="text-xs text-muted-foreground"><span className="font-semibold text-foreground/70">OMS</span> = Event lifecycle management</p>
-            <p className="text-xs text-muted-foreground"><span className="font-semibold text-gold">Operator Copilot</span> = Constraint-structured reasoning</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Decision Layer Separation</p>
+            <p className="text-xs text-foreground/70"><span className="font-semibold text-foreground/80">OMS</span> = Event lifecycle management</p>
+            <p className="text-xs text-foreground/70"><span className="font-semibold text-gold">Operator Copilot</span> = Constraint-structured reasoning</p>
           </div>
         </section>
 
@@ -582,8 +898,8 @@ export default function UseCases() {
                       transition={{ delay: i * 0.07 }}
                       className={cn(
                         'flex flex-col items-center gap-2 rounded-lg border px-4 py-4 min-w-[105px] text-center transition-all',
-                        i === 2 ? 'border-warning/30 bg-warning/[0.04]'
-                          : i === 5 ? 'border-gold/30 bg-gold/[0.04]'
+                        i === 2 ? 'border-warning/30 bg-warning/[0.05]'
+                          : i === 5 ? 'border-gold/30 bg-gold/[0.05]'
                           : 'border-border/30 bg-muted/20',
                       )}
                     >
@@ -591,8 +907,8 @@ export default function UseCases() {
                         'h-5 w-5',
                         i === 2 ? 'text-warning' : i === 5 ? 'text-gold' : 'text-primary/70',
                       )} />
-                      <span className="text-[10px] font-semibold text-foreground/80 leading-tight">{step.label}</span>
-                      <span className="text-[9px] text-muted-foreground/60 leading-snug">{step.desc}</span>
+                      <span className="text-[10px] font-semibold text-foreground/90 leading-tight">{step.label}</span>
+                      <span className="text-[9px] text-foreground/50 leading-snug">{step.desc}</span>
                     </motion.div>
                     {i < TRUST_FLOW_STEPS.length - 1 && (
                       <div className="flex items-center px-1">
@@ -610,13 +926,13 @@ export default function UseCases() {
                 ))}
               </div>
               {/* Compliance notes */}
-              <div className="mt-6 flex flex-wrap gap-6 text-xs text-muted-foreground/70">
+              <div className="mt-6 flex flex-wrap gap-6 text-xs text-foreground/60">
                 <span className="flex items-center gap-1.5">
-                  <Lock className="h-3 w-3 text-primary/50" />
+                  <Lock className="h-3 w-3 text-primary/60" />
                   Rules constrain reasoning before model response
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3 w-3 text-primary/50" />
+                  <ShieldCheck className="h-3 w-3 text-primary/60" />
                   No autonomous switching or dispatch actions
                 </span>
               </div>
@@ -641,9 +957,9 @@ export default function UseCases() {
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-1.5 w-1.5 rounded-full bg-warning" />
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">Manual Correlation Required</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Manual Correlation Required</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">During high-risk events, operators must manually correlate:</p>
+                  <p className="text-xs text-foreground/70 mb-4">During high-risk events, operators must manually correlate:</p>
                   <div className="space-y-3">
                     {COGNITIVE_LEFT.map((item, i) => (
                       <motion.div
@@ -652,9 +968,9 @@ export default function UseCases() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.07 }}
-                        className="flex items-center gap-3 text-xs text-muted-foreground/80"
+                        className="flex items-center gap-3 text-xs text-foreground/70"
                       >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-muted-foreground/60">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-muted-foreground/70">
                           <item.icon className="h-3.5 w-3.5" />
                         </div>
                         {item.label}
@@ -674,9 +990,9 @@ export default function UseCases() {
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary/60">Operator Copilot Synthesizes</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary/70">Operator Copilot Synthesizes</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">Structured context delivered as a unified advisory surface:</p>
+                  <p className="text-xs text-foreground/70 mb-4">Structured context delivered as a unified advisory surface:</p>
                   <div className="space-y-3">
                     {COGNITIVE_RIGHT.map((item, i) => (
                       <motion.div
@@ -700,8 +1016,8 @@ export default function UseCases() {
            </div>
           {/* Metric line */}
           <div className="mt-5 rounded-md border border-border/30 bg-muted/20 px-5 py-3 flex flex-wrap items-center justify-center gap-x-8 gap-y-1 text-xs">
-            <span className="text-muted-foreground">Manual correlation streams: <span className="font-semibold text-warning tabular-nums">5–7 systems</span></span>
-            <span className="text-muted-foreground">Structured advisory surface: <span className="font-semibold text-primary tabular-nums">1 governed output</span></span>
+            <span className="text-foreground/70">Manual correlation streams: <span className="font-semibold text-warning tabular-nums">5–7 systems</span></span>
+            <span className="text-foreground/70">Structured advisory surface: <span className="font-semibold text-primary tabular-nums">1 governed output</span></span>
           </div>
          </section>
 
@@ -735,121 +1051,144 @@ export default function UseCases() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
-                className="grid lg:grid-cols-3 gap-4"
+                className="space-y-4"
               >
-                {/* Inputs */}
-                <GlowCard>
-                  <CardContent className="p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Inputs (Synthetic)</p>
-                     <div className="space-y-2">
-                       {Object.entries(uc.inputs).map(([k, v]) => {
-                         /* Parse visual markers: {{amber}}text for amber, {{text}} for subtle highlight */
-                         let displayValue = v as string;
-                         let valueClass = 'text-foreground/90 font-medium text-right tabular-nums';
-                         if (displayValue.startsWith('{{amber}}')) {
-                           displayValue = displayValue.replace('{{amber}}', '');
-                           valueClass = 'text-warning font-semibold text-right tabular-nums';
-                         } else if (displayValue.includes('{{') && displayValue.includes('}}')) {
-                           displayValue = displayValue.replace(/\{\{(.+?)\}\}/g, '$1');
-                           // Highlight upper bound portion
-                           const parts = (v as string).split('{{');
-                           const before = parts[0];
-                           const highlighted = parts[1]?.replace('}}', '') || '';
+                {/* Lifecycle Timeline + Phase callout row */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <LifecycleTimeline active={uc.lifecycleStage} />
+                  <PhaseDemoCallout compact />
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-4">
+                  {/* Inputs */}
+                  <GlowCard>
+                    <CardContent className="p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Inputs (Synthetic)</p>
+                       <div className="space-y-2.5">
+                         {Object.entries(uc.inputs).map(([k, v]) => {
+                           let displayValue = v as string;
+                           let valueClass = 'text-foreground/90 font-medium text-right tabular-nums';
+                           if (displayValue.startsWith('{{amber}}')) {
+                             displayValue = displayValue.replace('{{amber}}', '');
+                             valueClass = 'text-warning font-semibold text-right tabular-nums';
+                           } else if (displayValue.includes('{{') && displayValue.includes('}}')) {
+                             displayValue = displayValue.replace(/\{\{(.+?)\}\}/g, '$1');
+                             const parts = (v as string).split('{{');
+                             const before = parts[0];
+                             const highlighted = parts[1]?.replace('}}', '') || '';
+                             return (
+                               <div key={k} className="flex justify-between gap-2 text-xs leading-relaxed">
+                                 <span className="text-foreground/60 shrink-0">{k}</span>
+                                 <span className="font-medium text-right tabular-nums">
+                                   <span className="text-foreground/90">{before}</span>
+                                   <span className="text-warning font-semibold">{highlighted}</span>
+                                 </span>
+                               </div>
+                             );
+                           }
                            return (
-                             <div key={k} className="flex justify-between gap-2 text-xs">
-                               <span className="text-muted-foreground/70 shrink-0">{k}</span>
-                               <span className="font-medium text-right tabular-nums">
-                                 <span className="text-foreground/90">{before}</span>
-                                 <span className="text-warning/80 font-semibold">{highlighted}</span>
-                               </span>
+                             <div key={k} className="flex justify-between gap-2 text-xs leading-relaxed">
+                               <span className="text-foreground/60 shrink-0">{k}</span>
+                               <span className={valueClass}>{displayValue}</span>
                              </div>
                            );
-                         }
-                         return (
-                           <div key={k} className="flex justify-between gap-2 text-xs">
-                             <span className="text-muted-foreground/70 shrink-0">{k}</span>
-                             <span className={valueClass}>{displayValue}</span>
-                           </div>
-                         );
-                       })}
-                     </div>
-                  </CardContent>
-                </GlowCard>
+                         })}
+                       </div>
+                    </CardContent>
+                  </GlowCard>
 
-                {/* Output */}
-                <GlowCard>
-                  <CardContent className="p-4">
-                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Advisory Output (Structured)</p>
-                     <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                       <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/80">{uc.output.mode}</Badge>
-                       <Badge variant="outline" className="text-[9px] border-gold/30 text-gold/80 bg-gold/[0.04]">Constraint-Validated Before Model Response</Badge>
-                     </div>
-                    <div className="space-y-2.5 text-xs">
-                      <div>
-                        <p className="font-medium text-foreground/80 mb-1">Rationale</p>
-                        <ul className="space-y-1">
-                          {uc.output.rationale.map((r, i) => (
-                            <li key={i} className="text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-primary/50 mt-0.5">•</span> {r}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground/80 mb-1">Trade-offs</p>
-                        <ul className="space-y-1">
-                          {uc.output.tradeoffs.map((t, i) => (
-                            <li key={i} className="text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-warning/50 mt-0.5">•</span> {t}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="bg-destructive/[0.06] rounded px-2 py-1.5 text-destructive/80 text-[11px]">
-                        <span className="font-semibold">Escalation:</span> {uc.output.escalation}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/50 italic">Assumptions: {uc.output.assumptions}</p>
-                    </div>
-                  </CardContent>
-                </GlowCard>
-
-                {/* Decision Trace */}
-                <GlowCard>
-                  <CardContent className="p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Decision Trace</p>
-                    <div className="space-y-3">
-                      {uc.trace.map((step, i) => (
-                        <div key={i} className="flex items-start gap-2.5">
-                          <div className="flex flex-col items-center">
-                            <div className={cn(
-                              'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                              i === uc.trace.length - 1
-                                ? 'bg-warning/20 text-warning'
-                                : 'bg-primary/10 text-primary/80',
-                            )}>
-                              {i + 1}
-                            </div>
-                            {i < uc.trace.length - 1 && <div className="w-px flex-1 bg-border/30 mt-1" />}
-                          </div>
-                          <p className="text-xs text-muted-foreground pt-0.5">{step}</p>
+                  {/* Output + Operator Action */}
+                  <GlowCard>
+                    <CardContent className="p-4">
+                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Advisory Output (Structured)</p>
+                       <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                         <Badge variant="outline" className="text-[10px] border-primary/30 text-primary/90">{uc.output.mode}</Badge>
+                         <Badge variant="outline" className="text-[9px] border-gold/30 text-gold bg-gold/[0.06]">Constraint-Validated</Badge>
+                       </div>
+                      <div className="space-y-2.5 text-xs">
+                        <div>
+                          <p className="font-medium text-foreground/80 mb-1">Rationale</p>
+                          <ul className="space-y-1.5">
+                            {uc.output.rationale.map((r, i) => (
+                              <li key={i} className="text-foreground/70 flex items-start gap-1.5 leading-relaxed">
+                                <span className="text-primary/60 mt-0.5">•</span> {r}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </GlowCard>
+                        <div>
+                          <p className="font-medium text-foreground/80 mb-1">Trade-offs</p>
+                          <ul className="space-y-1.5">
+                            {uc.output.tradeoffs.map((t, i) => (
+                              <li key={i} className="text-foreground/70 flex items-start gap-1.5 leading-relaxed">
+                                <span className="text-warning/60 mt-0.5">•</span> {t}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="bg-destructive/[0.07] rounded-md px-2.5 py-2 text-destructive/90 text-[11px]">
+                          <span className="font-semibold">Escalation:</span> {uc.output.escalation}
+                        </div>
+                      </div>
+
+                      {/* Operator Action Box */}
+                      <div className="mt-4 pt-3 border-t border-gold/20">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <UserCheck className="h-3.5 w-3.5 text-gold" />
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-gold">Operator Decision Options</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          {uc.operatorActions.map((action, i) => (
+                            <div key={i} className="flex items-start gap-2 text-[11px] text-foreground/70 leading-relaxed">
+                              <span className="text-gold/60 mt-0.5 font-bold text-[10px]">{i + 1}.</span>
+                              {action}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-foreground/40 italic mt-2">All actions require explicit operator approval.</p>
+                      </div>
+                    </CardContent>
+                  </GlowCard>
+
+                  {/* Decision Trace */}
+                  <GlowCard>
+                    <CardContent className="p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">Decision Trace</p>
+                      <div className="space-y-3">
+                        {uc.trace.map((step, i) => (
+                          <div key={i} className="flex items-start gap-2.5">
+                            <div className="flex flex-col items-center">
+                              <div className={cn(
+                                'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                                i === uc.trace.length - 1
+                                  ? 'bg-warning/20 text-warning'
+                                  : 'bg-primary/10 text-primary/80',
+                              )}>
+                                {i + 1}
+                              </div>
+                              {i < uc.trace.length - 1 && <div className="w-px flex-1 bg-border/30 mt-1" />}
+                            </div>
+                            <p className="text-xs text-foreground/70 pt-0.5 leading-relaxed">{step}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-border/20">
+                        <p className="text-[10px] text-foreground/50 italic">
+                          Source: {uc.output.source}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </GlowCard>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
           {!uc && (
-            <div className="rounded-lg border border-dashed border-border/30 py-10 text-center text-xs text-muted-foreground/50">
+            <div className="rounded-lg border border-dashed border-border/30 py-10 text-center text-xs text-foreground/50">
               Select a use case above to load the interactive walkthrough.
             </div>
           )}
-
-          <p className="mt-3 text-[10px] text-muted-foreground/50 italic text-center">
-            Synthetic demo data — does not represent live system integrations.
-          </p>
         </section>
 
         {/* ════════════════ 6. PHASE CLARITY ════════════════ */}
@@ -866,11 +1205,11 @@ export default function UseCases() {
                <CardContent className="p-5">
                  <div className="flex items-center gap-2 mb-4">
                    <Badge className="text-[10px] bg-gold/20 text-gold border-gold/30 hover:bg-gold/20">Phase-1</Badge>
-                   <span className="text-xs font-semibold text-foreground/80">Governed Advisory Intelligence</span>
+                   <span className="text-xs font-semibold text-foreground/90">Governed Advisory Intelligence</span>
                  </div>
                  <ul className="space-y-2.5">
                    {PHASE1_ITEMS.map((item, i) => (
-                     <li key={i} className="flex items-start gap-2 text-xs text-foreground/80">
+                     <li key={i} className="flex items-start gap-2 text-xs text-foreground/80 leading-relaxed">
                        <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/70" />
                        {item}
                      </li>
@@ -885,12 +1224,12 @@ export default function UseCases() {
                <CardContent className="p-5">
                  <div className="flex items-center gap-2 mb-4">
                    <Badge variant="outline" className="text-[10px] border-muted-foreground/30 text-muted-foreground">Phase-2</Badge>
-                   <span className="text-xs font-semibold text-foreground/80">Validated Predictive Intelligence</span>
+                   <span className="text-xs font-semibold text-foreground/90">Validated Predictive Intelligence</span>
                  </div>
                  <ul className="space-y-2.5">
                    {PHASE2_ITEMS.map((item, i) => (
-                     <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                       <CircleDot className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground/40" />
+                     <li key={i} className="flex items-start gap-2 text-xs text-foreground/60 leading-relaxed">
+                       <CircleDot className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground/50" />
                        {item}
                      </li>
                    ))}
@@ -900,11 +1239,11 @@ export default function UseCases() {
              </motion.div>
            </div>
           {/* Phase-2 trust line */}
-          <p className="mt-3 text-[11px] text-muted-foreground/60 italic text-center">
+          <p className="mt-3 text-[11px] text-foreground/50 italic text-center">
             Requires validated historical datasets, calibration workflows, and governance approval.
           </p>
           {/* Exclusion band */}
-          <div className="mt-4 rounded-md border border-warning/20 bg-warning/[0.04] px-4 py-2.5 text-[11px] text-warning/80">
+          <div className="mt-4 rounded-md border border-warning/25 bg-warning/[0.05] px-4 py-2.5 text-[11px] text-warning/90">
             <strong>Phase-1 excludes:</strong> load-flow simulation, switching automation, protection coordination, and real-time SCADA control.
           </div>
           </div>
@@ -920,14 +1259,14 @@ export default function UseCases() {
               <Accordion type="multiple" className="w-full">
                 {POLICY_SECTIONS.map((s, i) => (
                   <AccordionItem key={i} value={`policy-${i}`} className="border-border/20">
-                    <AccordionTrigger className="px-5 py-3 text-xs font-semibold text-foreground/80 hover:no-underline">
+                    <AccordionTrigger className="px-5 py-3 text-xs font-semibold text-foreground/90 hover:no-underline">
                       {s.title}
                     </AccordionTrigger>
                     <AccordionContent className="px-5 pb-4">
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-2">
                         {s.bullets.map((b, j) => (
-                          <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <span className="text-primary/40 mt-0.5">•</span> {b}
+                          <li key={j} className="flex items-start gap-2 text-xs text-foreground/70 leading-relaxed">
+                            <span className="text-primary/50 mt-0.5">•</span> {b}
                           </li>
                         ))}
                       </ul>
@@ -941,10 +1280,10 @@ export default function UseCases() {
 
         {/* ════════════════ "WHAT THIS IS NOT" PANEL ════════════════ */}
         <section>
-          <GlowCard className="border-muted-foreground/10">
+          <GlowCard className="border-muted-foreground/15">
             <CardContent className="p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-3">This Solution Does Not</p>
-               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">This Solution Does Not</p>
+               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
                 {[
                   'Perform load-flow simulation',
                   'Execute switching commands',
@@ -958,9 +1297,9 @@ export default function UseCases() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.06 }}
-                    className="flex items-center gap-2 text-xs text-muted-foreground/70"
+                    className="flex items-center gap-2 text-xs text-foreground/60"
                   >
-                    <X className="h-3 w-3 shrink-0 text-destructive/50" />
+                    <X className="h-3 w-3 shrink-0 text-destructive/60" />
                     {item}
                   </motion.div>
                 ))}
@@ -969,14 +1308,17 @@ export default function UseCases() {
           </GlowCard>
         </section>
 
+        {/* ── Phase-1 Demo callout — single source ── */}
+        <PhaseDemoCallout />
+
         {/* ── Closing statement ── */}
-        <p className="text-sm font-medium text-center text-foreground/60 tracking-tight">
+        <p className="text-sm font-medium text-center text-foreground/70 tracking-tight">
           Structured intelligence before action. Human authority preserved.
         </p>
 
         {/* ── Footer ── */}
         <Separator className="bg-border/20" />
-        <p className="text-[10px] text-center text-muted-foreground/40">
+        <p className="text-[10px] text-center text-muted-foreground/50">
           No SCADA actuation · No breaker control · No autonomous dispatch · Human-in-the-loop only
         </p>
       </div>
