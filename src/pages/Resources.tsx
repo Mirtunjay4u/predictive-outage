@@ -26,6 +26,7 @@ function DocCard({
   viewPath?: string;
   downloadable?: boolean;
 }) {
+  const navigate = useNavigate();
   return (
     <Card className="group/doc border-border/30 bg-card/60 backdrop-blur-sm transition-all duration-200 hover:border-border/50 hover:shadow-[0_0_12px_hsl(217,70%,50%,0.06)]">
       <CardContent className="flex flex-col gap-3 p-5">
@@ -39,14 +40,11 @@ function DocCard({
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          {viewPath && (
-            <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-medium" asChild>
-              <a href={viewPath} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3" /> View Online
-              </a>
+          {viewPath ? (
+            <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-medium" onClick={() => navigate(viewPath)}>
+              <ExternalLink className="h-3 w-3" /> View Online
             </Button>
-          )}
-          {!viewPath && (
+          ) : (
             <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-medium opacity-60 cursor-default">
               <ExternalLink className="h-3 w-3" /> View Online
             </Button>
@@ -163,23 +161,27 @@ export default function Resources() {
             icon={Server}
             title="System Architecture Document"
             description="Logical architecture, component design, data flow, and deployment model."
+            viewPath="/architecture"
             downloadable
           />
           <DocCard
             icon={Shield}
             title="AI Governance & Control Model"
             description="Rule engine precedence, advisory boundaries, structured output enforcement, and assumption disclosure framework."
+            viewPath="/knowledge-policy"
             downloadable
           />
           <DocCard
             icon={FileText}
             title="API & Data Schema Specification"
             description="Event, crew, asset, hazard, and advisory data structures used in Phase-1."
+            viewPath="/copilot-studio"
           />
           <DocCard
             icon={Lock}
             title="Deployment & Runtime Guide"
             description="Edge function configuration, NIM integration, environment security model."
+            viewPath="/architecture"
           />
         </div>
       </section>
@@ -192,16 +194,19 @@ export default function Resources() {
             icon={ClipboardList}
             title="Operator Standard Operating Procedure"
             description="Step-by-step usage guide for outage evaluation, escalation handling, and advisory validation."
+            viewPath="/use-cases"
           />
           <DocCard
             icon={Gauge}
             title="Control Room Quick Reference"
             description="Definitions of KPIs, ETR band interpretation, escalation ladder, context integrity scoring."
+            viewPath="/glossary"
           />
           <DocCard
             icon={Briefcase}
             title="Executive Operational Overview"
             description="Phase-1 capability scope, advisory-only boundary, and decision intelligence positioning."
+            viewPath="/executive-validation"
           />
         </div>
       </section>
