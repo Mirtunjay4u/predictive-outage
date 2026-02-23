@@ -85,6 +85,7 @@ function AppRoutes() {
         <Route path="/use-cases" element={<UseCases />} />
         <Route path="/architecture-review" element={<ArchitectureReview />} />
         <Route path="/architecture-document" element={<ArchitectureDocument />} />
+        <Route path="/governance-document" element={<GovernanceDocument />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
