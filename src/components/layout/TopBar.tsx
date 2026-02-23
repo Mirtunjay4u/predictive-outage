@@ -163,7 +163,7 @@ export function TopBar({ onSearch }: TopBarProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2" role="group" aria-label="User actions">
+        <div className="flex items-center gap-1.5 min-w-0" role="group" aria-label="User actions">
           {/* ── System Status Strip ── */}
           <div className="hidden md:flex items-center gap-1 shrink-0" role="status" aria-label="System status indicators">
             <Tooltip delayDuration={200}>
@@ -205,7 +205,7 @@ export function TopBar({ onSearch }: TopBarProps) {
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-64 text-xs">Data Mode: Demo — Synthetic structured events. No live SCADA or OMS integration.</TooltipContent>
             </Tooltip>
-            <span className="hidden lg:inline text-[9px] text-muted-foreground/70 font-semibold tracking-wide ml-1">Governed AI Decision Intelligence • Advisory-Only • Human Validation Required</span>
+            <span className="hidden 2xl:inline text-[9px] text-muted-foreground/70 font-semibold tracking-wide ml-1 whitespace-nowrap">Governed AI Decision Intelligence • Advisory-Only • Human Validation Required</span>
           </div>
 
           <Tooltip delayDuration={200}>
@@ -219,66 +219,67 @@ export function TopBar({ onSearch }: TopBarProps) {
 
           <div className="hidden md:block h-5 w-px bg-border/40" />
 
-          {/* Advisory Mode Indicator */}
-          <div className="hidden sm:flex items-center gap-1.5 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-2.5 py-1">
-            <ShieldCheck className="h-3 w-3 text-emerald-500/70" />
+          {/* Advisory Mode Indicator — always visible */}
+          <div className="flex items-center gap-1 shrink-0 rounded-md border border-emerald-500/25 bg-emerald-500/5 px-2 py-0.5">
+            <ShieldCheck className="h-3 w-3 text-emerald-500/70 shrink-0" />
             <div className="flex flex-col leading-none">
-              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 tracking-wide">ADVISORY MODE</span>
-              <span className="text-[8px] text-emerald-600/60 dark:text-emerald-400/50">No Autonomous Control</span>
+              <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 tracking-wide whitespace-nowrap">ADVISORY</span>
+              <span className="text-[8px] text-emerald-600/60 dark:text-emerald-400/50 whitespace-nowrap">No Auto Ctrl</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/20 px-2 py-1">
-            <span className="text-[10px] font-medium text-muted-foreground">Boardroom</span>
-            <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" className="scale-90" />
-            {boardroomMode && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">ON</span>}
+          {/* Boardroom Toggle — always visible */}
+          <div className="flex items-center gap-1 shrink-0 rounded-md border border-border/50 bg-muted/20 px-1.5 py-0.5">
+            <span className="text-[9px] font-medium text-muted-foreground whitespace-nowrap">Boardroom</span>
+            <Switch checked={boardroomMode} onCheckedChange={setBoardroomMode} aria-label="Toggle boardroom mode" className="scale-[0.8]" />
+            {boardroomMode && <span className="rounded bg-primary/10 px-1 py-0.5 text-[8px] font-semibold text-primary">ON</span>}
           </div>
 
-          <div className="flex items-center gap-2 border-l border-border/50 pl-3">
-            <Avatar className="h-7 w-7">
+          <div className="flex items-center gap-1.5 border-l border-border/50 pl-2 shrink-0">
+            <Avatar className="h-6 w-6 shrink-0">
               <AvatarImage src={builderPhoto} alt="Mirtunjay Kumar" className="object-cover" />
-              <AvatarFallback className="bg-muted text-xs font-medium text-muted-foreground">MK</AvatarFallback>
+              <AvatarFallback className="bg-muted text-[10px] font-medium text-muted-foreground">MK</AvatarFallback>
             </Avatar>
-          </div>
 
-          <Button variant="ghost" size="icon" className="relative h-8 w-8 transition-colors hover:bg-muted" aria-label="Open notifications">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-destructive-foreground">3</span>
-          </Button>
+            <Button variant="ghost" size="icon" className="relative h-7 w-7 shrink-0 transition-colors hover:bg-muted" aria-label="Open notifications">
+              <Bell className="h-3.5 w-3.5" />
+              <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-destructive text-[7px] font-bold text-destructive-foreground">3</span>
+            </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary/10 text-sm font-medium text-primary">
-                    {user?.email?.charAt(0).toUpperCase() || 'D'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="max-w-24 truncate text-xs font-medium hidden lg:inline">{user?.email || 'Demo User'}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1 px-1.5 h-7">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="bg-primary/10 text-[10px] font-medium text-primary">
+                      {user?.email?.charAt(0).toUpperCase() || 'D'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-20 truncate text-[10px] font-medium hidden xl:inline">{user?.email || 'Demo User'}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <div className="flex shrink-0 items-center border-l border-border/50 pl-3">
-            <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-3 py-2 transition-all duration-500">
-              <img
-                src={tcsLogo}
-                alt="Tata Consultancy Services (TCS)"
-                className="h-5 w-auto brightness-0 invert opacity-85 transition-opacity duration-300 group-hover/tcs:opacity-100"
-              />
+            <div className="flex shrink-0 items-center border-l border-border/50 pl-2">
+              <div className="tcs-logo-glow group/tcs relative rounded-lg border border-[#76B900]/50 px-2 py-1 transition-all duration-500">
+                <img
+                  src={tcsLogo}
+                  alt="Tata Consultancy Services (TCS)"
+                  className="h-4 w-auto brightness-0 invert opacity-85 transition-opacity duration-300 group-hover/tcs:opacity-100"
+                />
+              </div>
             </div>
           </div>
         </div>
