@@ -52,20 +52,36 @@ const demoSteps = [
     description: 'Summarize high-priority counts, policy blocks, and ETR distribution trends — supporting operational review without claiming predictive calibration.',
   },
   {
-    title: 'Architecture Overview',
-    description: 'Review layered design: Ingest → Rule Engine → Bounded AI Inference → Explainability → Operator Interface. Governance enforced before and after AI reasoning.',
+    title: 'Operational Use Cases & Capabilities',
+    description: 'Review the governed reasoning overlay positioning, Decision Intelligence Workflow trust flow, and "What This Is Not" boundary panel — establishing Sunny Day Clarity for stakeholders.',
   },
   {
     title: 'Knowledge & Policy',
     description: 'Define operational policies and advisory boundaries — ensuring regulatory defensibility and transparent operational discipline.',
   },
   {
-    title: 'Glossary',
-    description: 'Standardized definitions for all domain and AI terminology — eliminating ambiguity and supporting cross-functional clarity.',
+    title: 'Architecture Overview',
+    description: 'Review layered design: Ingest → Rule Engine → Bounded AI Inference → Explainability → Operator Interface. Governance enforced before and after AI reasoning.',
   },
   {
     title: 'Solution Roadmap Blueprint',
     description: 'Structured evolution from Phase 1 decision intelligence to Phase 2 calibrated predictive capabilities — clearly separating implemented from planned milestones.',
+  },
+  {
+    title: 'Architecture Review & Documentation',
+    description: 'Deep-dive into architecture decision records, governance documentation, operator SOPs, API & data schema contracts, and executive overview — full technical documentation suite.',
+  },
+  {
+    title: 'Regulatory & Compliance Alignment',
+    description: 'Review 16-section compliance document: system classification, operational boundary declaration, hallucination mitigation layers, risk assessment, and Phase-2 compliance roadmap.',
+  },
+  {
+    title: 'Resources & Documentation Hub',
+    description: 'Browse the centralized documentation portal with category filters, role-based access, pinned documents, and full-text search across governance, technical, and operational resources.',
+  },
+  {
+    title: 'Glossary',
+    description: 'Standardized definitions for all domain and AI terminology — eliminating ambiguity and supporting cross-functional clarity.',
   },
   {
     title: 'Executive Validation & Close',
