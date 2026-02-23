@@ -425,7 +425,7 @@
   }
 
   .dark .map-base-tiles {
-    filter: brightness(1.5) contrast(1.15) saturate(1.2);
+    filter: brightness(1.8) contrast(1.25) saturate(1.3);
   }
 }
 
