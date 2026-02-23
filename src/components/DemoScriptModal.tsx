@@ -17,7 +17,7 @@ const demoSteps = [
   },
   {
     title: 'Dashboard Orientation',
-    description: 'Review Operational Risk Posture, severity events, hazard exposure, crew readiness, ETR confidence bands, and the governance header strip (Governed AI · Advisory-Only · Operator Validation Required).',
+    description: 'Review Operational Risk Posture, severity events, hazard exposure, crew readiness, ETR confidence bands, and the governance header strip.',
   },
   {
     title: 'Scenario Playback Lifecycle',
@@ -53,7 +53,11 @@ const demoSteps = [
   },
   {
     title: 'Operational Use Cases & Capabilities',
-    description: 'Review the governed reasoning overlay positioning, Decision Intelligence Workflow trust flow, and "What This Is Not" boundary panel — establishing Sunny Day Clarity for stakeholders.',
+    description: 'Review the governed reasoning overlay positioning, Decision Intelligence Workflow trust flow, and "What This Is Not" boundary panel.',
+  },
+  {
+    title: 'Art of Possibilities',
+    description: 'Explore multi-hazard scenario modelling, domain expansion cards, and the interactive capability matrix — illustrating future extensibility.',
   },
   {
     title: 'Knowledge & Policy',
@@ -65,23 +69,35 @@ const demoSteps = [
   },
   {
     title: 'Solution Roadmap Blueprint',
-    description: 'Structured evolution from Phase 1 decision intelligence to Phase 2 calibrated predictive capabilities — clearly separating implemented from planned milestones.',
+    description: 'Structured evolution from Phase 1 decision intelligence to Phase 2 calibrated predictive capabilities — separating implemented from planned milestones.',
+  },
+  {
+    title: 'AI Governance Framework',
+    description: 'Deep-dive into the 16-section governance document: system positioning, rule precedence, advisory boundaries, failure modes, audit & traceability.',
   },
   {
     title: 'Architecture Review & Documentation',
-    description: 'Deep-dive into architecture decision records, governance documentation, operator SOPs, API & data schema contracts, and executive overview — full technical documentation suite.',
+    description: 'Review architecture decision records, operator SOPs, API & data schema contracts, and executive overview — full technical documentation suite.',
   },
   {
     title: 'Regulatory & Compliance Alignment',
-    description: 'Review 16-section compliance document: system classification, operational boundary declaration, hallucination mitigation layers, risk assessment, and Phase-2 compliance roadmap.',
+    description: 'Review 16-section compliance document: system classification, operational boundary declaration, hallucination mitigation layers, and Phase-2 compliance roadmap.',
   },
   {
     title: 'Resources & Documentation Hub',
-    description: 'Browse the centralized documentation portal with category filters, role-based access, pinned documents, and full-text search across governance, technical, and operational resources.',
+    description: 'Browse the centralized documentation portal with category filters, role-based access, pinned documents, and full-text search across all resources.',
   },
   {
     title: 'Glossary',
     description: 'Standardized definitions for all domain and AI terminology — eliminating ambiguity and supporting cross-functional clarity.',
+  },
+  {
+    title: 'Executive Summary One-Pager',
+    description: 'Print-ready executive summary capturing system positioning, key capabilities, risk posture, and governance assurance — ready for stakeholder distribution.',
+  },
+  {
+    title: 'Settings & Troubleshooting',
+    description: 'Review application configuration, theme preferences, data mode controls, and the embedded troubleshooting FAQ for operator self-service.',
   },
   {
     title: 'Executive Validation & Close',
@@ -152,7 +168,7 @@ export function DemoScriptModal() {
       </style></head><body>
       <div class="header">
         <h1>Operator Copilot — Executive Demo Script</h1>
-        <p>Governed AI Decision Intelligence · ${demoSteps.length} Steps · ~9 min walkthrough</p>
+        <p>Governed AI Decision Intelligence · ${demoSteps.length} Steps · ~12 min walkthrough</p>
         <p style="margin-top:4px;">v1.0 – Decision Intelligence Prototype · Generated ${new Date().toLocaleDateString()}</p>
       </div>
       ${stepsHtml}
@@ -186,7 +202,7 @@ export function DemoScriptModal() {
             Play Executive Auto Tour
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-            Automatically navigates through all {demoSteps.length} steps — full platform walkthrough (~9 min)
+            Automatically navigates through all {demoSteps.length} steps — full platform walkthrough (~12 min)
           </p>
         </div>
 
