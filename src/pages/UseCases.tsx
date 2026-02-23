@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ShieldCheck, Zap, Building2, Users, AlertTriangle, FileText,
   ChevronRight, ChevronDown, BookOpen, X, ArrowRight, CheckCircle2,
@@ -291,18 +291,24 @@ function SectionSubtitle({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-muted-foreground mb-6 max-w-2xl">{children}</p>;
 }
 
-/* Animated grid background */
+/* Animated grid background with parallax */
 function GridBackground() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.04] dark:opacity-[0.06]">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid-use-cases" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid-use-cases)" className="text-primary" />
-      </svg>
+    <div ref={ref} className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.04] dark:opacity-[0.06]">
+      <motion.div style={{ y }} className="absolute inset-0">
+        <svg width="100%" height="130%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid-use-cases" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid-use-cases)" className="text-primary" />
+        </svg>
+      </motion.div>
       {/* Animated gradient sweep */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent"
