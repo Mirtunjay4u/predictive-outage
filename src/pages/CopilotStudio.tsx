@@ -509,9 +509,17 @@ export default function CopilotStudio() {
               </div>
             </CardHeader>
             <CardContent>
-              {/* Persistent boundary banner */}
-              <div className="mb-4 rounded-md border border-amber-500/15 bg-amber-500/[0.03] px-3 py-2 text-[10px] text-amber-400/70">
-                Decision-support layer. No switching automation. No SCADA control.
+              {/* Persistent boundary banner — Red Team Round 1 defense */}
+              <div className="mb-4 space-y-2">
+                <div className="rounded-md border border-primary/20 bg-primary/[0.03] px-3 py-2.5">
+                  <p className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider mb-1">Structured Advisory Engine — Not a Chatbot</p>
+                  <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                    Every output passes through: Deterministic Rule Gate → Schema Validation → Policy Enforcement → Structured Output Contract. The LLM synthesizes advisory within bounded constraints — it does not generate free-form responses.
+                  </p>
+                </div>
+                <div className="rounded-md border border-amber-500/15 bg-amber-500/[0.03] px-3 py-2 text-[10px] text-amber-400/70">
+                  Decision-support layer. No switching automation. No SCADA control. If this system fails, nothing operational happens — operators continue using OMS.
+                </div>
               </div>
 
               <AnimatePresence mode="wait">
@@ -519,8 +527,14 @@ export default function CopilotStudio() {
                 {!latestEntry && !isLoading && !error && (
                   <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-16 text-muted-foreground">
                     <Bot className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                    <p className="mb-2">Select an event and run the Operator Copilot.</p>
-                    <p className="text-xs">Results render into fixed operator sections — no free-form chat.</p>
+                     <p className="mb-2">Select an event and run the Operator Copilot.</p>
+                     <p className="text-xs mb-3">Results render into fixed operator sections — no free-form chat.</p>
+                     <div className="inline-flex flex-col gap-1 text-left text-[10px] text-muted-foreground/50">
+                       <span>• Deterministic rule gate evaluates constraints first</span>
+                       <span>• AI synthesizes advisory within bounded schema</span>
+                       <span>• Output validated against structured contract</span>
+                       <span>• Operator approval required before any action</span>
+                     </div>
                   </motion.div>
                 )}
 

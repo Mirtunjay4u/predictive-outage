@@ -1555,6 +1555,44 @@ export default function Architecture() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* ── Failure Mode Safety — Red Team Round 10 ── */}
+      <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
+        <Card className="border-emerald-500/20 bg-emerald-500/[0.02]">
+          <CardHeader className="px-4 pb-2 pt-4 md:px-5">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+              <ShieldAlert className="h-4 w-4 text-emerald-500" />
+              Failure Mode: Safe Degradation
+            </CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              What happens if this system fails?
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-4 space-y-3">
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] p-4">
+              <p className="text-sm font-semibold text-foreground/90 mb-2">Nothing operational.</p>
+              <div className="space-y-1.5">
+                {[
+                  'Cannot execute SCADA commands',
+                  'Cannot override switching schedules',
+                  'Cannot dispatch crews autonomously',
+                  'Cannot modify breaker states',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2">
+                    <Ban className="h-3 w-3 text-emerald-500/60 flex-shrink-0" />
+                    <span className="text-[11px] text-foreground/70">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-md border border-border/30 bg-muted/20 p-3">
+              <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
+                <span className="font-semibold text-foreground/70">Worst case:</span> Advisory becomes unavailable — operators continue using existing OMS/ADMS workflows without interruption. This is the safest architecture positioning possible.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
