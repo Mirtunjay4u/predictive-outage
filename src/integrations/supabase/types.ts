@@ -198,6 +198,92 @@ export type Database = {
           },
         ]
       }
+      docs_resources: {
+        Row: {
+          allowed_roles: string[]
+          approval_date: string | null
+          approved_by: string | null
+          category: Database["public"]["Enums"]["doc_category"]
+          change_summary: string | null
+          content_index: string
+          created_at: string
+          doc_type: Database["public"]["Enums"]["doc_type"]
+          id: string
+          is_pinned: boolean
+          owner: string | null
+          release_channel: Database["public"]["Enums"]["doc_release_channel"]
+          reviewer: string | null
+          search_keywords: string[]
+          short_description: string
+          status: Database["public"]["Enums"]["doc_status"]
+          supersedes_doc_id: string | null
+          title: string
+          updated_at: string
+          url_download: string | null
+          url_view: string | null
+          version: string
+          visibility: Database["public"]["Enums"]["doc_visibility"]
+        }
+        Insert: {
+          allowed_roles?: string[]
+          approval_date?: string | null
+          approved_by?: string | null
+          category?: Database["public"]["Enums"]["doc_category"]
+          change_summary?: string | null
+          content_index?: string
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["doc_type"]
+          id?: string
+          is_pinned?: boolean
+          owner?: string | null
+          release_channel?: Database["public"]["Enums"]["doc_release_channel"]
+          reviewer?: string | null
+          search_keywords?: string[]
+          short_description?: string
+          status?: Database["public"]["Enums"]["doc_status"]
+          supersedes_doc_id?: string | null
+          title: string
+          updated_at?: string
+          url_download?: string | null
+          url_view?: string | null
+          version?: string
+          visibility?: Database["public"]["Enums"]["doc_visibility"]
+        }
+        Update: {
+          allowed_roles?: string[]
+          approval_date?: string | null
+          approved_by?: string | null
+          category?: Database["public"]["Enums"]["doc_category"]
+          change_summary?: string | null
+          content_index?: string
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["doc_type"]
+          id?: string
+          is_pinned?: boolean
+          owner?: string | null
+          release_channel?: Database["public"]["Enums"]["doc_release_channel"]
+          reviewer?: string | null
+          search_keywords?: string[]
+          short_description?: string
+          status?: Database["public"]["Enums"]["doc_status"]
+          supersedes_doc_id?: string | null
+          title?: string
+          updated_at?: string
+          url_download?: string | null
+          url_view?: string | null
+          version?: string
+          visibility?: Database["public"]["Enums"]["doc_visibility"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "docs_resources_supersedes_doc_id_fkey"
+            columns: ["supersedes_doc_id"]
+            isOneToOne: false
+            referencedRelation: "docs_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_assets: {
         Row: {
           asset_id: string
@@ -622,6 +708,17 @@ export type Database = {
         | "en_route"
         | "on_site"
         | "returning"
+      doc_category:
+        | "Technical"
+        | "Operational"
+        | "Governance"
+        | "Roadmap"
+        | "Glossary"
+        | "ReleaseNotes"
+      doc_release_channel: "Stable" | "Beta" | "Internal"
+      doc_status: "Draft" | "Approved" | "Deprecated" | "Archived"
+      doc_type: "Page" | "PDF" | "ExternalLink"
+      doc_visibility: "PublicDemo" | "InternalOnly" | "Restricted"
       lifecycle_stage: "Pre-Event" | "Event" | "Post-Event"
       outage_type:
         | "Storm"
@@ -772,6 +869,18 @@ export const Constants = {
         "on_site",
         "returning",
       ],
+      doc_category: [
+        "Technical",
+        "Operational",
+        "Governance",
+        "Roadmap",
+        "Glossary",
+        "ReleaseNotes",
+      ],
+      doc_release_channel: ["Stable", "Beta", "Internal"],
+      doc_status: ["Draft", "Approved", "Deprecated", "Archived"],
+      doc_type: ["Page", "PDF", "ExternalLink"],
+      doc_visibility: ["PublicDemo", "InternalOnly", "Restricted"],
       lifecycle_stage: ["Pre-Event", "Event", "Post-Event"],
       outage_type: [
         "Storm",
