@@ -1076,6 +1076,13 @@ export default function UseCases() {
           <SectionTitle>Extreme Event Decision Patterns</SectionTitle>
           <SectionSubtitle>Demonstrating structured reasoning across multiple hazard types under governed constraints.</SectionSubtitle>
 
+          {/* Hazard-type color legend */}
+          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] font-semibold uppercase tracking-wider">
+            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-amber-500" /><span className="text-foreground/60">Storm</span></div>
+            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-red-500" /><span className="text-foreground/60">Wildfire</span></div>
+            <div className="flex items-center gap-1.5"><div className="h-2.5 w-2.5 rounded-full bg-sky-400" /><span className="text-foreground/60">Ice</span></div>
+          </div>
+
           {/* Selector */}
           <div className="flex flex-col sm:flex-row gap-2 mb-5">
             {USE_CASES.map((u) => (
