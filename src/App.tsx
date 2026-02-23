@@ -96,6 +96,7 @@ function AppRoutes() {
         <Route path="/architecture-review" element={<ArchitectureReview />} />
         <Route path="/architecture-document" element={<ArchitectureDocument />} />
         <Route path="/governance-document" element={<GovernanceDocument />} />
+        <Route path="/ai-governance" element={<GovernanceDocument />} />
         <Route path="/operator-sop" element={<OperatorSOP />} />
         <Route path="/api-data-schema" element={<ApiDataSchema />} />
         <Route path="/executive-overview" element={<ExecutiveOverview />} />
