@@ -853,8 +853,10 @@ export default function UseCases() {
         </section>
 
         {/* ════════════════ 6. PHASE CLARITY ════════════════ */}
-        <section>
+        <section className="relative">
           <SectionAnchor id="phases" />
+          <GridBackground />
+          <div className="relative">
           <SectionTitle>Phase-1 vs Phase-2 Clarity</SectionTitle>
           <SectionSubtitle>Clear boundary between current advisory capabilities and future predictive intelligence.</SectionSubtitle>
            <div className="grid md:grid-cols-2 gap-5">
@@ -904,6 +906,7 @@ export default function UseCases() {
           {/* Exclusion band */}
           <div className="mt-4 rounded-md border border-warning/20 bg-warning/[0.04] px-4 py-2.5 text-[11px] text-warning/80">
             <strong>Phase-1 excludes:</strong> load-flow simulation, switching automation, protection coordination, and real-time SCADA control.
+          </div>
           </div>
         </section>
 
