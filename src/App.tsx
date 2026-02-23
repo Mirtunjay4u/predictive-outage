@@ -43,6 +43,7 @@ import RegulatoryAlignment from "./pages/RegulatoryAlignment";
 import FinancialImpact from "./pages/FinancialImpact";
 import DocumentationCenter from "./pages/DocumentationCenter";
 import OperationalSOP from "./pages/OperationalSOP";
+import ExecutiveChallengeReview from "./pages/ExecutiveChallengeReview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -105,6 +106,7 @@ function AppRoutes() {
         <Route path="/financial-impact" element={<FinancialImpact />} />
         <Route path="/documentation-center" element={<DocumentationCenter />} />
         <Route path="/operational-sop" element={<OperationalSOP />} />
+        <Route path="/executive-challenge-review" element={<ExecutiveChallengeReview />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
