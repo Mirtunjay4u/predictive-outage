@@ -344,7 +344,8 @@ function Section5() {
           <motion.div key={inp.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 + 0.2 }}
             className="rounded-md border border-border/40 bg-surface-1 p-3 text-center">
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">{inp.label}</p>
-            <p className="text-sm font-semibold text-foreground/90">{inp.value}</p>
+             <p className="text-sm font-semibold text-foreground/90">{inp.value}</p>
+             {inp.label === 'ETR Band' && <p className="text-[9px] text-muted-foreground/40 mt-0.5">Confidence: Medium</p>}
           </motion.div>
         ))}
       </div>
@@ -356,7 +357,8 @@ function Section5() {
         transition={{ delay: 1.2, duration: 0.6 }}
         className="text-xs text-muted-foreground/60 italic max-w-lg text-center"
       >
-        Crew availability is not just quantity — it is skill-class constrained. Maintenance lock flags and regulatory reporting windows further bound dispatch options.
+        Crew availability is skill-class constrained.<br />
+        Maintenance locks and regulatory windows further restrict dispatch options.
       </motion.p>
 
       <AnimatePresence mode="wait">
@@ -378,7 +380,7 @@ function Section5() {
         {phase === 'trace' && (
           <motion.div key="trace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
             className="flex flex-col items-center gap-2 mt-6">
-            <p className="text-xs text-muted-foreground/50 uppercase tracking-widest mb-2">Decision Trace</p>
+            <p className="text-xs text-muted-foreground/50 uppercase tracking-widest mb-2">Deterministic Decision Trace</p>
             {traceSteps.map((s, i) => (
               <motion.div key={s} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.25, duration: 0.4 }}
                 className="text-sm text-foreground/80 flex items-center gap-2">
@@ -390,8 +392,8 @@ function Section5() {
         )}
       </AnimatePresence>
 
-      <Narration text={`Five manual cognitive streams collapse into one governed advisory.\nThe system does not execute decisions.\nIt structures them.`} />
-      <BoldTakeaway>Structured intelligence reduces cognitive overload under crisis conditions.</BoldTakeaway>
+      <Narration text={`Five manual cognitive streams reconcile into one governed advisory.\nThe system does not execute decisions.\nIt structures decision context.`} />
+      <BoldTakeaway>Structured intelligence reduces decision risk under crisis conditions.</BoldTakeaway>
     </div>
   );
 }
