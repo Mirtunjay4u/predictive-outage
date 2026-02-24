@@ -135,6 +135,10 @@ function Section2() {
         ))}
       </div>
 
+      <motion.p {...fadeUp} transition={{ delay: 1.2, duration: 0.5 }} className="text-[12px] text-muted-foreground/50 font-medium text-center mt-1">
+        These dimensions must be reconciled simultaneously — not sequentially.
+      </motion.p>
+
       <AnimatePresence>
         {converged && (
           <motion.div
@@ -143,7 +147,7 @@ function Section2() {
             transition={{ duration: 0.6 }}
             className="mt-6 rounded-lg border border-primary/30 bg-primary/5 px-8 py-4 text-sm font-semibold text-primary"
           >
-            Structured Advisory Surface
+            Structured Decision Intelligence Layer
           </motion.div>
         )}
       </AnimatePresence>
@@ -159,8 +163,8 @@ function Section2() {
         </div>
       </motion.div>
 
-      <Narration text={`Traditional systems track events.\nThey do not structure cross-domain reasoning.\nOperator Copilot synthesizes constraints before decision.`} />
-      <BoldTakeaway>Multiple streams → One structured advisory surface.</BoldTakeaway>
+      <Narration text={`Traditional systems excel at event tracking.\nCross-domain constraint synthesis remains manual under pressure.\nOperator Copilot structures constraints before decision.`} />
+      <BoldTakeaway>Multiple decision streams → One governed intelligence output.</BoldTakeaway>
     </div>
   );
 }
