@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, SkipBack, SkipForward, RotateCcw, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import TCSBrandMark from '@/components/brand/TCSBrandMark';
+import tcsLogo from '@/assets/tcs-logo.png';
 
 const TOTAL_STEPS = 7;
 
@@ -709,6 +709,13 @@ export default function ExecutiveReviewGTC() {
               <RotateCcw className="w-3.5 h-3.5" />
               Restart
             </button>
+            <div className="ml-3 group/tcs relative rounded-lg border border-[#76B900]/50 px-3 py-1.5 transition-all duration-500 shadow-[0_0_10px_rgba(118,185,0,0.15)]">
+              <img
+                src={tcsLogo}
+                alt="Tata Consultancy Services (TCS)"
+                className="h-5 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -810,10 +817,8 @@ export default function ExecutiveReviewGTC() {
         </AnimatePresence>
       </div>
 
-      {/* TCS Brand — fixed bottom-right */}
-      <div className="fixed bottom-14 right-6 z-[55]">
-        <TCSBrandMark />
-      </div>
+
+
 
       {/* Footer */}
       <div className="border-t border-border/30 py-2 text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
