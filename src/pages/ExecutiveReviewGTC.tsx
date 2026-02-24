@@ -557,6 +557,15 @@ export default function ExecutiveReviewGTC() {
 
       {/* Top bar */}
       <div className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/30">
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 w-full h-[2px] bg-border/20">
+          <motion.div
+            className="h-full bg-primary/70"
+            initial={{ width: 0 }}
+            animate={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+          />
+        </div>
         <div className="max-w-6xl mx-auto flex items-center justify-between h-12 px-6">
           <div className="flex items-center gap-3">
             <span className="text-[11px] font-semibold text-muted-foreground/80 tracking-wide">Executive Review Mode</span>
