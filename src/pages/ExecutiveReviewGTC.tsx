@@ -709,11 +709,11 @@ export default function ExecutiveReviewGTC() {
               <RotateCcw className="w-3.5 h-3.5" />
               Restart
             </button>
-            <div className="ml-3 group/tcs relative rounded-lg border border-[#76B900]/50 px-3 py-1.5 transition-all duration-500 shadow-[0_0_10px_rgba(118,185,0,0.15)]">
+            <div className="ml-4 group/tcs relative rounded-lg border-2 border-[#76B900]/60 px-4 py-2 transition-all duration-500 shadow-[0_0_14px_rgba(118,185,0,0.2)]">
               <img
                 src={tcsLogo}
                 alt="Tata Consultancy Services (TCS)"
-                className="h-5 w-auto brightness-0 invert opacity-90 transition-opacity duration-300 group-hover/tcs:opacity-100"
+                className="h-7 w-auto brightness-0 invert opacity-95 transition-opacity duration-300 group-hover/tcs:opacity-100"
               />
             </div>
           </div>
