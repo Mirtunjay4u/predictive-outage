@@ -416,9 +416,9 @@ function Section5() {
         {inputs.map((inp, i) => (
           <motion.div key={inp.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.12 + 0.2 }}
             className="rounded-md border border-border/40 bg-surface-1 p-3 text-center">
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">{inp.label}</p>
-             <p className="text-sm font-semibold text-foreground/90">{inp.value}</p>
-             {inp.label === 'ETR Band' && <p className="text-[9px] text-muted-foreground/40 mt-0.5">Confidence: Medium</p>}
+            <p className="text-[11px] text-foreground/70 uppercase tracking-wider font-semibold mb-1">{inp.label}</p>
+             <p className="text-sm font-bold text-foreground">{inp.value}</p>
+             {inp.label === 'ETR Band' && <p className="text-[10px] text-muted-foreground/60 mt-0.5">Confidence: Medium</p>}
           </motion.div>
         ))}
       </div>
