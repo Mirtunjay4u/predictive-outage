@@ -106,7 +106,7 @@ function DeepDiveLink({ label, route }: { label: string; route: string }) {
         animate={{ opacity: 1 }}
         transition={{ delay: 2.5, duration: 0.8 }}
         onClick={() => setShowModal(true)}
-        className="absolute bottom-6 right-6 flex items-center gap-1.5 text-[11px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors font-medium tracking-wide group"
+        className="absolute bottom-6 right-6 flex items-center gap-1.5 text-[12px] text-muted-foreground/80 hover:text-foreground transition-colors font-semibold tracking-wide group"
       >
         Deep Dive
         <ArrowRight className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
