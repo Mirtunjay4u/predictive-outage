@@ -88,7 +88,7 @@ function Section1() {
       </motion.span>
 
       <motion.p {...fadeUp} transition={{ delay: 0.65, duration: 0.6 }} className="text-[11px] text-[#76B900]/70 font-medium tracking-wide mt-1">
-        Enterprise AI inference powered by NVIDIA NIM (Nemotron)
+        Enterprise AI inference via NVIDIA NIM (Nemotron) — structured, schema-bound
       </motion.p>
 
       <motion.p {...fadeUp} transition={{ delay: 0.9, duration: 0.8 }} className="text-xl md:text-2xl font-semibold text-foreground mt-10 tracking-tight">
