@@ -72,7 +72,7 @@ function Section1() {
         transition={{ delay: 0.25, duration: 0.7 }}
         className="text-sm md:text-base text-destructive/80 font-medium max-w-2xl leading-relaxed"
       >
-        Today, outage decisions are made across disconnected systems, under time pressure, with limited structured reasoning.
+        Today, outage decisions span multiple operational systems and time-critical constraints.
       </motion.p>
 
       <motion.p {...fadeUp} transition={{ delay: 0.35, duration: 0.6 }} className="text-sm md:text-base text-muted-foreground/70">
@@ -88,14 +88,20 @@ function Section1() {
       </motion.span>
 
       <motion.p {...fadeUp} transition={{ delay: 0.65, duration: 0.6 }} className="text-[11px] text-[#76B900]/70 font-medium tracking-wide mt-1">
-        Enterprise inference powered by NVIDIA NIM (Nemotron)
+        Enterprise AI inference powered by NVIDIA NIM (Nemotron)
       </motion.p>
 
       <motion.p {...fadeUp} transition={{ delay: 0.9, duration: 0.8 }} className="text-xl md:text-2xl font-semibold text-foreground mt-10 tracking-tight">
         Structured Intelligence Before Action.
       </motion.p>
 
-      <Narration text={`Modern outage operations are no longer single-variable decisions.\nThey require structured reasoning across weather volatility, asset health, crew constraints, and critical load risk.\nOperator Copilot inserts a governed intelligence layer between event data and human authority.`} />
+      <motion.div {...fadeUp} transition={{ delay: 1.0, duration: 0.6 }} className="w-24 h-px bg-border/30 mt-4" />
+
+      <motion.p {...fadeUp} transition={{ delay: 1.1, duration: 0.7 }} className="text-sm font-medium text-foreground/70 tracking-wider text-center mt-3">
+        Not automation. Not replacement. Structured augmentation.
+      </motion.p>
+
+      <Narration text={`Modern outage operations are multi-dimensional decisions.\nWeather volatility, asset health, crew constraints, and critical load risk must be evaluated together.\nOperator Copilot introduces governed intelligence between event data and human authority.`} />
     </div>
   );
 }
