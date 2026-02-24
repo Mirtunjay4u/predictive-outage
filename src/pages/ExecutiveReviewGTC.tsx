@@ -810,7 +810,7 @@ export default function ExecutiveReviewGTC() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border/20 py-2 text-center text-[10px] text-muted-foreground/40 tracking-wide">
+      <div className="border-t border-border/30 py-2 text-center text-[11px] text-muted-foreground/70 font-medium tracking-wide">
         Operator Copilot — Governed Decision Intelligence · Phase-1 Demonstrator · Synthetic Data
       </div>
     </div>
