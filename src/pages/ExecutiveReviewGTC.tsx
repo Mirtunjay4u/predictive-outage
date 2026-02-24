@@ -150,8 +150,8 @@ function Section1() {
         Grid Resilience Command Center
       </motion.p>
 
-      <motion.div {...fadeUp} transition={{ delay: 0.45, duration: 0.6 }} className="flex items-center gap-0 text-[13px] md:text-sm text-muted-foreground/80 font-semibold tracking-wide mt-2">
-        <span className="text-foreground/80">Governed Advisory Intelligence</span><Dot /><span className="text-foreground/80">Deterministic Rule Gate</span><Dot /><span className="text-foreground/80">Human Authority Preserved</span>
+      <motion.div {...fadeUp} transition={{ delay: 0.45, duration: 0.6 }} className="flex items-center gap-0 text-sm md:text-base text-foreground font-bold tracking-wide mt-2">
+        <span className="text-foreground">Governed Advisory Intelligence</span><Dot /><span className="text-foreground">Deterministic Rule Gate</span><Dot /><span className="text-foreground">Human Authority Preserved</span>
       </motion.div>
 
       <motion.span {...fadeUp} transition={{ delay: 0.55, duration: 0.6 }} className="mt-4 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] font-semibold px-4 py-1.5 tracking-wide">
@@ -206,7 +206,7 @@ function Section2() {
         ))}
       </div>
 
-      <motion.p {...fadeUp} transition={{ delay: 1.2, duration: 0.5 }} className="text-[13px] text-muted-foreground/80 font-semibold text-center mt-1">
+      <motion.p {...fadeUp} transition={{ delay: 1.2, duration: 0.5 }} className="text-sm text-foreground/90 font-bold text-center mt-1">
         These dimensions must be reconciled simultaneously — not sequentially.
       </motion.p>
 
@@ -250,7 +250,7 @@ function Section3() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6 relative">
       <SectionTitle>Overlay, Not Replacement</SectionTitle>
-      <motion.p {...fadeUp} transition={{ delay: 0.15, duration: 0.5 }} className="text-[13px] text-muted-foreground/80 font-semibold text-center -mt-4 mb-2">
+      <motion.p {...fadeUp} transition={{ delay: 0.15, duration: 0.5 }} className="text-sm text-foreground/90 font-bold text-center -mt-4 mb-2">
         Preserving operational authority while elevating reasoning discipline.
       </motion.p>
 
@@ -280,7 +280,7 @@ function Section3() {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.6 }} className="mt-6 rounded-lg border border-primary/20 bg-primary/5 px-6 py-4 text-center max-w-md">
-            <p className="text-sm text-muted-foreground/80 font-semibold mb-1">ETR Intelligence Evolution</p>
+            <p className="text-sm text-foreground/90 font-bold mb-1">ETR Intelligence Evolution</p>
             <p className="text-sm text-foreground/90 font-medium">From single-point estimate → Confidence band + Risk runway</p>
           </motion.div>
         )}
@@ -361,7 +361,7 @@ function Section4() {
         })}
       </div>
 
-      <motion.p {...fadeUp} transition={{ delay: 0.2, duration: 0.5 }} className="text-[13px] text-muted-foreground/80 font-semibold text-center mt-1">
+      <motion.p {...fadeUp} transition={{ delay: 0.2, duration: 0.5 }} className="text-sm text-foreground/90 font-bold text-center mt-1">
         AI is an execution component within a controlled pipeline — not a decision authority.
       </motion.p>
 
@@ -376,7 +376,7 @@ function Section4() {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-xs text-amber-400/80 font-semibold tracking-wide mt-2">
             AI execution is blocked until deterministic policy validation succeeds.
           </motion.p>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-[13px] text-[#76B900]/90 font-semibold mt-1 max-w-lg text-center">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-sm text-[#76B900] font-bold mt-1 max-w-lg text-center">
             NVIDIA NIM provides secure, low-latency, schema-constrained inference within deterministic guardrails.
           </motion.p>
         </>
@@ -428,7 +428,7 @@ function Section5() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 0.6 }}
-        className="text-[13px] text-muted-foreground/80 italic font-medium max-w-lg text-center"
+        className="text-sm text-foreground/90 italic font-semibold max-w-lg text-center"
       >
         Crew availability is skill-class constrained.<br />
         Maintenance locks and regulatory windows further restrict dispatch options.
@@ -453,7 +453,7 @@ function Section5() {
         {phase === 'trace' && (
           <motion.div key="trace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
             className="flex flex-col items-center gap-2 mt-6">
-            <p className="text-sm text-muted-foreground/80 font-semibold uppercase tracking-widest mb-2">Deterministic Decision Trace</p>
+            <p className="text-sm text-foreground/90 font-bold uppercase tracking-widest mb-2">Deterministic Decision Trace</p>
             {traceSteps.map((s, i) => (
               <motion.div key={s} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.25, duration: 0.4 }}
                 className="text-sm text-foreground/80 flex items-center gap-2">
@@ -514,7 +514,7 @@ function Section6() {
 
       {showFlow && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8, duration: 0.5 }}
-          className="text-[13px] text-muted-foreground/80 font-semibold text-center">
+          className="text-sm text-foreground/90 font-bold text-center">
           AI cannot bypass deterministic validation.
         </motion.p>
       )}
@@ -534,7 +534,7 @@ function Section7() {
     <div className="flex flex-col items-center justify-center text-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Governance Before Prediction</SectionTitle>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}
-        className="text-[14px] text-muted-foreground/80 font-semibold -mt-4 mb-2">
+        className="text-base text-foreground/90 font-bold -mt-4 mb-2">
         Advisory discipline today. Predictive intelligence tomorrow.
       </motion.p>
 
