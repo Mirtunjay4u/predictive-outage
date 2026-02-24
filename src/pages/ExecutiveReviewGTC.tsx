@@ -65,11 +65,21 @@ function Section1() {
       <motion.p {...fadeUp} transition={{ delay: 0.15, duration: 0.6 }} className="text-lg md:text-xl text-muted-foreground font-medium">
         Predictive Outage Management Intelligence
       </motion.p>
-      <motion.p {...fadeUp} transition={{ delay: 0.25, duration: 0.6 }} className="text-sm md:text-base text-muted-foreground/70">
+
+      {/* ── Urgency anchor ── */}
+      <motion.p
+        {...fadeUp}
+        transition={{ delay: 0.25, duration: 0.7 }}
+        className="text-sm md:text-base text-destructive/80 font-medium max-w-2xl leading-relaxed"
+      >
+        Today, outage decisions are made across disconnected systems, under time pressure, with limited structured reasoning.
+      </motion.p>
+
+      <motion.p {...fadeUp} transition={{ delay: 0.35, duration: 0.6 }} className="text-sm md:text-base text-muted-foreground/70">
         Grid Resilience Command Center
       </motion.p>
 
-      <motion.div {...fadeUp} transition={{ delay: 0.4, duration: 0.6 }} className="flex items-center gap-0 text-[11px] md:text-xs text-muted-foreground/60 font-semibold tracking-wide mt-2">
+      <motion.div {...fadeUp} transition={{ delay: 0.45, duration: 0.6 }} className="flex items-center gap-0 text-[11px] md:text-xs text-muted-foreground/60 font-semibold tracking-wide mt-2">
         <span>Governed Advisory Intelligence</span><Dot /><span>Deterministic Rule Gate</span><Dot /><span>Human Authority Preserved</span>
       </motion.div>
 
@@ -212,7 +222,9 @@ function Section4() {
 
   useEffect(() => {
     if (revealed < layers.length) {
-      const t = setTimeout(() => setRevealed((r) => r + 1), 800);
+      // Pause longer before NVIDIA layer (index 3) to emphasize Rule Gate boundary
+      const delay = revealed === 3 ? 1600 : 800;
+      const t = setTimeout(() => setRevealed((r) => r + 1), delay);
       return () => clearTimeout(t);
     }
   }, [revealed]);
@@ -222,35 +234,63 @@ function Section4() {
       <SectionTitle>Bounded AI Architecture</SectionTitle>
 
       <div className="flex flex-col items-center gap-2.5 w-full max-w-md">
-        {layers.map((layer, i) => (
-          <motion.div
-            key={layer}
-            initial={{ opacity: 0, x: -20 }}
-            animate={i < revealed ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.45 }}
-            className={`w-full rounded-md border px-5 py-3 text-sm font-medium text-center ${
-              layer.includes('NVIDIA')
-                ? 'border-[#76B900]/40 bg-[#76B900]/10 text-[#76B900]'
-                : layer.includes('Deterministic')
-                ? 'border-amber-500/30 bg-amber-500/8 text-amber-300'
-                : 'border-border/40 bg-surface-1 text-foreground/85'
-            }`}
-          >
-            {layer}
-          </motion.div>
-        ))}
+        {layers.map((layer, i) => {
+          const isRuleGate = layer.includes('Deterministic');
+          const isNvidia = layer.includes('NVIDIA');
+          return (
+            <motion.div
+              key={layer}
+              initial={{ opacity: 0, x: -20 }}
+              animate={i < revealed ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.45 }}
+              className={`w-full rounded-md border px-5 py-3 text-sm font-medium text-center relative ${
+                isNvidia
+                  ? 'border-[#76B900]/40 bg-[#76B900]/10 text-[#76B900]'
+                  : isRuleGate
+                  ? 'border-amber-500/30 bg-amber-500/8 text-amber-300'
+                  : 'border-border/40 bg-surface-1 text-foreground/85'
+              }`}
+            >
+              {/* Heartbeat pulse on Rule Gate */}
+              {isRuleGate && i < revealed && (
+                <motion.span
+                  className="absolute inset-0 rounded-md border-2 border-amber-400/60"
+                  animate={{ opacity: [0.6, 0, 0.6] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              )}
+              {layer}
+              {/* AI Invocation Conditional label */}
+              {isRuleGate && i < revealed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="ml-2 text-[10px] text-amber-400/70 font-bold uppercase tracking-wider"
+                >
+                  — AI Invocation Conditional
+                </motion.span>
+              )}
+            </motion.div>
+          );
+        })}
       </div>
 
-      {revealed >= 3 && (
+      {revealed >= 3 && revealed < 4 && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-xs text-amber-400/80 font-semibold tracking-wide mt-2">
           AI not invoked until rule gate validation passes.
         </motion.p>
       )}
 
       {revealed >= 4 && (
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-xs text-[#76B900]/70 font-medium mt-1 max-w-lg text-center">
-          NVIDIA NIM enables secure, low-latency, schema-bound reasoning under deterministic guardrails.
-        </motion.p>
+        <>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-xs text-amber-400/80 font-semibold tracking-wide mt-2">
+            AI not invoked until rule gate validation passes.
+          </motion.p>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-xs text-[#76B900]/70 font-medium mt-1 max-w-lg text-center">
+            NVIDIA NIM enables secure, low-latency, schema-bound reasoning under deterministic guardrails.
+          </motion.p>
+        </>
       )}
 
       <Narration text={`Every advisory passes through deterministic validation before AI inference executes.\nThe model synthesizes reasoning within a structured schema.\nThere is no autonomous switching. No SCADA integration.\nHuman authority remains final.`} />
@@ -265,9 +305,9 @@ function Section5() {
     { label: 'ETR Band', value: '2.5–4.0 hours' },
     { label: 'Backup Remaining', value: '1.8 hours' },
     { label: 'Hazard', value: 'Lightning — High' },
-    { label: 'Crew Availability', value: 'Limited' },
+    { label: 'Crew Availability', value: 'Limited (Skill-Constrained)' },
   ];
-  const traceSteps = ['Hazard fusion', 'Critical load threshold check', 'Constraint validation', 'Structured reasoning synthesis', 'Advisory classification'];
+  const traceSteps = ['Hazard fusion', 'Critical load threshold check', 'Crew skill-class validation', 'Constraint validation', 'Structured reasoning synthesis', 'Advisory classification'];
   const [phase, setPhase] = useState<'inputs' | 'flow' | 'trace'>('inputs');
 
   useEffect(() => {
@@ -291,6 +331,16 @@ function Section5() {
           </motion.div>
         ))}
       </div>
+
+      {/* Operational realism detail */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.6 }}
+        className="text-xs text-muted-foreground/60 italic max-w-lg text-center"
+      >
+        Crew availability is not just quantity — it is skill-class constrained. Maintenance lock flags and regulatory reporting windows further bound dispatch options.
+      </motion.p>
 
       <AnimatePresence mode="wait">
         {phase === 'flow' && (
@@ -369,13 +419,16 @@ function Section6() {
         )}
       </AnimatePresence>
 
-      <Narration text={`We are not using generative AI loosely.\nNVIDIA NIM operates inside a deterministic operational envelope.`} />
-      <BoldTakeaway>Generative AI within governed boundaries.</BoldTakeaway>
+      <Narration text={`NVIDIA NIM operates inside a deterministic operational envelope.\nStructured inference — not generative AI loosely applied.`} />
+      <BoldTakeaway>Schema-bound output within governed boundaries.</BoldTakeaway>
     </div>
   );
 }
 
 function Section7() {
+  const [showClosing, setShowClosing] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setShowClosing(true), 3000); return () => clearTimeout(t); }, []);
+
   return (
     <div className="flex flex-col items-center justify-center text-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Governance Before Prediction</SectionTitle>
@@ -403,14 +456,37 @@ function Section7() {
         </div>
       </div>
 
-      <Narration text={`We intentionally built governance before prediction.\nStructured reasoning precedes automation.`} />
+      {/* Tightened roadmap transition */}
+      <Narration text={`Now that governance is established, Phase-2 introduces calibrated prediction — not automation without control.\nStructured reasoning precedes predictive modeling.`} />
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }}
-        className="mt-12 flex flex-col items-center gap-2 text-foreground">
-        <p className="text-lg font-bold">AI Bounded by Policy</p>
-        <p className="text-lg font-bold">Human Authority Preserved</p>
-        <p className="text-xl font-extrabold mt-2 text-primary">Structured Intelligence Before Action</p>
-      </motion.div>
+      <AnimatePresence>
+        {showClosing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 1.2 }}
+            className="mt-12 flex flex-col items-center gap-2 text-foreground"
+          >
+            <p className="text-lg font-bold">AI Bounded by Policy</p>
+            {/* Soft glow on Human Authority */}
+            <motion.p
+              className="text-lg font-bold relative"
+              animate={{ textShadow: ['0 0 0px transparent', '0 0 12px hsl(var(--primary) / 0.4)', '0 0 0px transparent'] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              Human Authority Preserved
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              className="text-xl font-extrabold mt-2 text-primary"
+            >
+              Structured Intelligence Before Action
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -422,20 +498,63 @@ const SECTIONS = [Section1, Section2, Section3, Section4, Section5, Section6, Se
 export default function ExecutiveReviewGTC() {
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
 
   const next = useCallback(() => {
-    if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
-  }, [step]);
+    if (step < TOTAL_STEPS - 1 && !transitioning) {
+      // Fade-to-black micro-transition between sections
+      setTransitioning(true);
+      setTimeout(() => {
+        setStep((s) => s + 1);
+        setTimeout(() => setTransitioning(false), 200);
+      }, 200);
+    }
+  }, [step, transitioning]);
 
   const restart = useCallback(() => {
-    setStep(0);
-    setPaused(false);
+    setTransitioning(true);
+    setTimeout(() => {
+      setStep(0);
+      setPaused(false);
+      setTimeout(() => setTransitioning(false), 200);
+    }, 200);
   }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft' && step > 0) {
+        setTransitioning(true);
+        setTimeout(() => {
+          setStep((s) => Math.max(0, s - 1));
+          setTimeout(() => setTransitioning(false), 200);
+        }, 200);
+      }
+      if (e.key === ' ') { e.preventDefault(); setPaused((p) => !p); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [next, step]);
 
   const CurrentSection = SECTIONS[step];
 
   return (
     <div className="fixed inset-0 z-50 bg-background text-foreground overflow-y-auto flex flex-col">
+      {/* Fade-to-black overlay for transitions */}
+      <AnimatePresence>
+        {transitioning && (
+          <motion.div
+            key="fade-black"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] bg-background pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Top bar */}
       <div className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/30">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-12 px-6">
