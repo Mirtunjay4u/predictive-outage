@@ -44,6 +44,7 @@ import FinancialImpact from "./pages/FinancialImpact";
 import DocumentationCenter from "./pages/DocumentationCenter";
 import OperationalSOP from "./pages/OperationalSOP";
 import ExecutiveChallengeReview from "./pages/ExecutiveChallengeReview";
+import ExecutiveReviewGTC from "./pages/ExecutiveReviewGTC";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -108,6 +109,7 @@ function AppRoutes() {
         <Route path="/documentation-center" element={<DocumentationCenter />} />
         <Route path="/operational-sop" element={<OperationalSOP />} />
         <Route path="/executive-challenge-review" element={<ExecutiveChallengeReview />} />
+        <Route path="/executive-review" element={<ExecutiveReviewGTC />} />
         <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
