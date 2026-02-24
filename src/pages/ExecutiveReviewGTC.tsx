@@ -170,8 +170,8 @@ function Section2() {
 }
 
 function Section3() {
-  const left = ['Event lifecycle tracking', 'Single-point ETR', 'Manual cross-system correlation', 'Reactive communication drafting', 'Limited reasoning trace'];
-  const right = ['Constraint enrichment', 'ETR confidence banding', 'Critical load runway tracking', 'Deterministic rule validation', 'Structured advisory with decision trace'];
+  const left = ['Event lifecycle tracking', 'Single-point ETR', 'Cross-system correlation managed operationally', 'Reactive communication drafting', 'Decision trace focused on event lifecycle'];
+  const right = ['Constraint enrichment', 'ETR confidence banding', 'Critical load runway tracking', 'Deterministic rule validation', 'Structured advisory with full decision rationale trace'];
 
   const [expanded, setExpanded] = useState(false);
   useEffect(() => { const t = setTimeout(() => setExpanded(true), 4500); return () => clearTimeout(t); }, []);
@@ -179,6 +179,9 @@ function Section3() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Overlay, Not Replacement</SectionTitle>
+      <motion.p {...fadeUp} transition={{ delay: 0.15, duration: 0.5 }} className="text-[12px] text-muted-foreground/50 font-medium text-center -mt-4 mb-2">
+        Preserving operational authority while elevating reasoning discipline.
+      </motion.p>
 
       <div className="grid md:grid-cols-2 gap-10 max-w-3xl w-full">
         <div>
@@ -206,14 +209,14 @@ function Section3() {
       <AnimatePresence>
         {expanded && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.6 }} className="mt-6 rounded-lg border border-primary/20 bg-primary/5 px-6 py-4 text-center max-w-md">
-            <p className="text-xs text-muted-foreground/60 mb-1">ETR Evolution</p>
-            <p className="text-sm text-foreground/90 font-medium">Single value → Band + Confidence + Runway</p>
+            <p className="text-xs text-muted-foreground/60 mb-1">ETR Intelligence Evolution</p>
+            <p className="text-sm text-foreground/90 font-medium">From single-point estimate → Confidence band + Risk runway</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       <Narration text={`We are not replacing OMS.\nWe are inserting a governed reasoning layer above it.`} />
-      <BoldTakeaway>Visibility is not structured reasoning.</BoldTakeaway>
+      <BoldTakeaway>Visibility alone is not structured reasoning.</BoldTakeaway>
     </div>
   );
 }
