@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pause, Play, SkipBack, SkipForward, RotateCcw } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, RotateCcw, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const TOTAL_STEPS = 7;
 
@@ -53,6 +54,76 @@ const fadeUp = {
   exit: { opacity: 0, y: -10 },
   transition: { duration: 0.6 },
 };
+
+/* ─── Deep Dive confirmation modal ─── */
+function DeepDiveModal({ open, onConfirm, onCancel, label }: { open: boolean; onConfirm: () => void; onCancel: () => void; label: string }) {
+  if (!open) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        onClick={(e) => e.stopPropagation()}
+        className="rounded-lg border border-border/50 bg-background p-6 max-w-sm w-full mx-4 shadow-2xl"
+      >
+        <p className="text-sm font-semibold text-foreground mb-1">Exit Executive Review Mode?</p>
+        <p className="text-xs text-muted-foreground/70 mb-5">Navigate to: {label}</p>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-md border border-border/40 hover:border-border/60"
+          >
+            Stay in Review
+          </button>
+          <button
+            onClick={onConfirm}
+            className="text-[11px] font-semibold text-foreground bg-primary/10 hover:bg-primary/20 transition-colors px-4 py-2 rounded-md border border-primary/30"
+          >
+            Continue
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ─── Subtle Deep Dive link ─── */
+function DeepDiveLink({ label, route }: { label: string; route: string }) {
+  const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <>
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.5, duration: 0.8 }}
+        onClick={() => setShowModal(true)}
+        className="absolute bottom-6 right-6 flex items-center gap-1.5 text-[11px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors font-medium tracking-wide group"
+      >
+        Deep Dive
+        <ArrowRight className="w-3 h-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+      </motion.button>
+      <AnimatePresence>
+        {showModal && (
+          <DeepDiveModal
+            open={showModal}
+            label={label}
+            onConfirm={() => navigate(route)}
+            onCancel={() => setShowModal(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
 
 /* ─── SECTION COMPONENTS ─── */
 
@@ -177,7 +248,7 @@ function Section3() {
   useEffect(() => { const t = setTimeout(() => setExpanded(true), 4500); return () => clearTimeout(t); }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6 relative">
       <SectionTitle>Overlay, Not Replacement</SectionTitle>
       <motion.p {...fadeUp} transition={{ delay: 0.15, duration: 0.5 }} className="text-[12px] text-muted-foreground/50 font-medium text-center -mt-4 mb-2">
         Preserving operational authority while elevating reasoning discipline.
@@ -217,6 +288,7 @@ function Section3() {
 
       <Narration text={`We are not replacing OMS.\nWe are inserting a governed reasoning layer above it.`} />
       <BoldTakeaway>Visibility alone is not structured reasoning.</BoldTakeaway>
+      <DeepDiveLink label="Architecture Overview" route="/architecture" />
     </div>
   );
 }
@@ -243,7 +315,7 @@ function Section4() {
   }, [revealed]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6 relative">
       <SectionTitle>Bounded AI Architecture</SectionTitle>
 
       <div className="flex flex-col items-center gap-3 w-full max-w-md">
@@ -312,6 +384,7 @@ function Section4() {
 
       <Narration text={`Every advisory is validated deterministically before AI execution.\nAI operates strictly within a structured output schema.\nNo autonomous switching. No SCADA control.\nHuman authority remains final.`} />
       <BoldTakeaway>Deterministic first. AI second.</BoldTakeaway>
+      <DeepDiveLink label="AI Governance & Technical Controls" route="/ai-governance" />
     </div>
   );
 }
@@ -336,7 +409,7 @@ function Section5() {
   const flowSteps = ['Inputs', 'Rule Gate', 'NVIDIA NIM', 'Structured Advisory', 'Operator Approval Required'];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6 relative">
       <SectionTitle>Severe Storm Escalation — Hospital Risk</SectionTitle>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-3xl w-full">
@@ -394,6 +467,7 @@ function Section5() {
 
       <Narration text={`Five manual cognitive streams reconcile into one governed advisory.\nThe system does not execute decisions.\nIt structures decision context.`} />
       <BoldTakeaway>Structured intelligence reduces decision risk under crisis conditions.</BoldTakeaway>
+      <DeepDiveLink label="Live Event & Outage View" route="/events" />
     </div>
   );
 }
@@ -410,7 +484,7 @@ function Section6() {
   useEffect(() => { const t = setTimeout(() => setShowFlow(true), 3000); return () => clearTimeout(t); }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6 relative">
       <SectionTitle>Enterprise-Grade AI Execution</SectionTitle>
 
       <ul className="space-y-2 max-w-md">
@@ -447,6 +521,7 @@ function Section6() {
 
       <Narration text={`NVIDIA NIM operates within a deterministic operational envelope.\nStructured inference — not open-ended generative execution.`} />
       <BoldTakeaway>Schema-bound output within enforced governance boundaries.</BoldTakeaway>
+      <DeepDiveLink label="Copilot Structured Output" route="/copilot-studio" />
     </div>
   );
 }
