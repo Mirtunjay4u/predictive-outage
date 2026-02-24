@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pause, Play, SkipForward, RotateCcw } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, RotateCcw } from 'lucide-react';
 
 const TOTAL_STEPS = 7;
 
@@ -517,6 +517,15 @@ export default function ExecutiveReviewGTC() {
     }
   }, [step, transitioning, finale]);
 
+  const prev = useCallback(() => {
+    if (transitioning || step === 0) return;
+    setTransitioning(true);
+    setTimeout(() => {
+      setStep((s) => Math.max(0, s - 1));
+      setTimeout(() => setTransitioning(false), 200);
+    }, 200);
+  }, [step, transitioning]);
+
   const restart = useCallback(() => {
     setTransitioning(true);
     setFinale(false);
@@ -532,13 +541,7 @@ export default function ExecutiveReviewGTC() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') next();
-      if (e.key === 'ArrowLeft' && step > 0) {
-        setTransitioning(true);
-        setTimeout(() => {
-          setStep((s) => Math.max(0, s - 1));
-          setTimeout(() => setTransitioning(false), 200);
-        }, 200);
-      }
+      if (e.key === 'ArrowLeft') prev();
       if (e.key === ' ') { e.preventDefault(); setPaused((p) => !p); }
     };
     window.addEventListener('keydown', handler);
@@ -580,6 +583,11 @@ export default function ExecutiveReviewGTC() {
             <span className="text-[11px] font-bold text-primary tracking-wide">Step {step + 1} of {TOTAL_STEPS}</span>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={prev} disabled={step === 0 || finale}
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border/40 hover:border-border/60 disabled:opacity-30 disabled:pointer-events-none">
+              <SkipBack className="w-3.5 h-3.5" />
+              Back
+            </button>
             <button onClick={() => setPaused(!paused)}
               className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border/40 hover:border-border/60">
               {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
