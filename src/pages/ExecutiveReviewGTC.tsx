@@ -458,6 +458,10 @@ function Section7() {
   return (
     <div className="flex flex-col items-center justify-center text-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Governance Before Prediction</SectionTitle>
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }}
+        className="text-[13px] text-muted-foreground/50 -mt-4 mb-2">
+        Advisory discipline today. Predictive intelligence tomorrow.
+      </motion.p>
 
       <div className="grid md:grid-cols-2 gap-10 max-w-3xl w-full text-left">
         <div>
@@ -473,7 +477,7 @@ function Section7() {
         <div>
           <h3 className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest mb-4">Phase-2</h3>
           <ul className="space-y-2">
-            {['Feeder-level outage probability scoring', 'ETR calibration', 'Asset-health + weather fusion', 'Crew optimization modeling'].map((item) => (
+            {['Calibrated feeder-level outage probability modeling', 'ETR calibration', 'Asset-health and weather risk fusion', 'Crew optimization modeling'].map((item) => (
               <motion.li key={item} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-foreground/60 flex items-start gap-2">
                 <span className="text-muted-foreground/30 mt-0.5">•</span>{item}
               </motion.li>
@@ -483,7 +487,7 @@ function Section7() {
       </div>
 
       {/* Tightened roadmap transition */}
-      <Narration text={`Now that governance is established, Phase-2 introduces calibrated prediction — not automation without control.\nStructured reasoning precedes predictive modeling.`} />
+      <Narration text={`With governance established, Phase-2 introduces calibrated prediction — never uncontrolled automation.\nStructured reasoning always precedes predictive modeling.`} />
 
       <AnimatePresence>
         {showClosing && (
@@ -493,14 +497,14 @@ function Section7() {
             transition={{ delay: 0.5, duration: 1.2 }}
             className="mt-12 flex flex-col items-center gap-2 text-foreground"
           >
-            <p className="text-lg font-bold">AI Bounded by Policy</p>
+            <p className="text-lg font-bold">AI Bound by Policy.</p>
             {/* Soft glow on Human Authority */}
             <motion.p
               className="text-lg font-bold relative"
               animate={{ textShadow: ['0 0 0px transparent', '0 0 12px hsl(var(--primary) / 0.4)', '0 0 0px transparent'] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             >
-              Human Authority Preserved
+              Human Authority Preserved.
             </motion.p>
             <motion.p
               initial={{ opacity: 0, y: 8 }}
@@ -508,7 +512,7 @@ function Section7() {
               transition={{ delay: 1.5, duration: 0.8 }}
               className="text-xl font-extrabold mt-2 text-primary"
             >
-              Structured Intelligence Before Action
+              Structured Intelligence Before Action.
             </motion.p>
           </motion.div>
         )}
