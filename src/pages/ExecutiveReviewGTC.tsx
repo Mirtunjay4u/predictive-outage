@@ -226,7 +226,7 @@ function Section4() {
     'Event & Context Ingestion',
     'Constraint Enrichment Layer',
     'Deterministic Rule Gate',
-    'NVIDIA NIM Structured Inference',
+    'NVIDIA NIM — Structured, Schema-Bound Inference',
     'Schema Validation',
     'Operator Approval',
     'Audit & Observability',
@@ -273,7 +273,7 @@ function Section4() {
                 />
               )}
               {layer}
-              {/* AI Invocation Conditional label */}
+              {/* AI Execution Conditional label */}
               {isRuleGate && i < revealed && (
                 <motion.span
                   initial={{ opacity: 0 }}
@@ -281,7 +281,7 @@ function Section4() {
                   transition={{ delay: 0.5, duration: 0.5 }}
                   className="ml-2 text-[10px] text-amber-400/70 font-bold uppercase tracking-wider"
                 >
-                  — AI Invocation Conditional
+                  — AI Execution Conditional on Policy Validation
                 </motion.span>
               )}
             </motion.div>
@@ -289,24 +289,28 @@ function Section4() {
         })}
       </div>
 
+      <motion.p {...fadeUp} transition={{ delay: 0.2, duration: 0.5 }} className="text-[12px] text-muted-foreground/50 font-medium text-center mt-1">
+        AI is an execution component within a controlled pipeline — not a decision authority.
+      </motion.p>
+
       {revealed >= 3 && revealed < 4 && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-xs text-amber-400/80 font-semibold tracking-wide mt-2">
-          AI not invoked until rule gate validation passes.
+          AI execution is blocked until deterministic policy validation succeeds.
         </motion.p>
       )}
 
       {revealed >= 4 && (
         <>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="text-xs text-amber-400/80 font-semibold tracking-wide mt-2">
-            AI not invoked until rule gate validation passes.
+            AI execution is blocked until deterministic policy validation succeeds.
           </motion.p>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="text-xs text-[#76B900]/70 font-medium mt-1 max-w-lg text-center">
-            NVIDIA NIM enables secure, low-latency, schema-bound reasoning under deterministic guardrails.
+            NVIDIA NIM provides secure, low-latency, schema-constrained inference within deterministic guardrails.
           </motion.p>
         </>
       )}
 
-      <Narration text={`Every advisory passes through deterministic validation before AI inference executes.\nThe model synthesizes reasoning within a structured schema.\nThere is no autonomous switching. No SCADA integration.\nHuman authority remains final.`} />
+      <Narration text={`Every advisory is validated deterministically before AI execution.\nAI operates strictly within a structured output schema.\nNo autonomous switching. No SCADA control.\nHuman authority remains final.`} />
       <BoldTakeaway>Deterministic first. AI second.</BoldTakeaway>
     </div>
   );
