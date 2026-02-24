@@ -27,6 +27,7 @@ import {
   CircleDollarSign,
   ScrollText,
   Shield,
+  Presentation,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,13 @@ const navGroups = [
       { icon: Crosshair, label: 'Use Cases', path: '/use-cases' },
       { icon: ShieldCheck, label: 'Knowledge & Policy', path: '/knowledge-policy' },
       { icon: Library, label: 'Glossary', path: '/glossary' },
+    ],
+  },
+  {
+    label: 'GTC',
+    accent: 'gtc',
+    items: [
+      { icon: Presentation, label: 'Executive Review', path: '/executive-review' },
     ],
   },
   {
@@ -129,6 +137,15 @@ const accentConfig: Record<string, {
     hoverBg: 'hover:bg-[hsl(215,20%,55%,0.04)]',
     iconActive: 'text-[hsl(215,20%,70%)]',
     headerColor: 'text-[hsl(215,30%,72%)]',
+  },
+  gtc: {
+    barGradient: 'bg-gradient-to-b from-[hsl(80,100%,36%)] to-[hsl(80,80%,28%)]',
+    activeBg: 'bg-[hsl(80,100%,36%,0.08)]',
+    activeText: 'text-[hsl(80,80%,60%)]',
+    activeGlow: 'shadow-[0_0_8px_hsl(80,100%,36%,0.15)]',
+    hoverBg: 'hover:bg-[hsl(80,100%,36%,0.05)]',
+    iconActive: 'text-[hsl(80,80%,55%)]',
+    headerColor: 'text-[hsl(80,70%,50%)]',
   },
 };
 
