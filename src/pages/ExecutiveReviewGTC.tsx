@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, SkipBack, SkipForward, RotateCcw, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import TCSBrandMark from '@/components/brand/TCSBrandMark';
 
 const TOTAL_STEPS = 7;
 
@@ -683,7 +684,9 @@ export default function ExecutiveReviewGTC() {
           />
         </div>
         <div className="max-w-6xl mx-auto flex items-center justify-between h-12 px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <TCSBrandMark />
+            <div className="w-px h-5 bg-border/30" />
             <span className="text-[11px] font-semibold text-muted-foreground/80 tracking-wide">Executive Review Mode</span>
             <span className="text-[11px] font-bold text-primary tracking-wide">Step {step + 1} of {TOTAL_STEPS}</span>
           </div>
