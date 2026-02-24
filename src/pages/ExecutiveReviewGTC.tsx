@@ -499,20 +499,28 @@ export default function ExecutiveReviewGTC() {
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [finale, setFinale] = useState(false);
+  const [finaleReady, setFinaleReady] = useState(false);
 
   const next = useCallback(() => {
-    if (step < TOTAL_STEPS - 1 && !transitioning) {
-      // Fade-to-black micro-transition between sections
+    if (transitioning || finale) return;
+    if (step < TOTAL_STEPS - 1) {
       setTransitioning(true);
       setTimeout(() => {
         setStep((s) => s + 1);
         setTimeout(() => setTransitioning(false), 200);
       }, 200);
+    } else if (step === TOTAL_STEPS - 1) {
+      // Final step → cinematic fade-to-black finale
+      setFinale(true);
+      setTimeout(() => setFinaleReady(true), 3000);
     }
-  }, [step, transitioning]);
+  }, [step, transitioning, finale]);
 
   const restart = useCallback(() => {
     setTransitioning(true);
+    setFinale(false);
+    setFinaleReady(false);
     setTimeout(() => {
       setStep(0);
       setPaused(false);
@@ -577,10 +585,10 @@ export default function ExecutiveReviewGTC() {
               {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
               {paused ? 'Resume' : 'Pause'}
             </button>
-            <button onClick={next} disabled={step >= TOTAL_STEPS - 1}
+            <button onClick={next} disabled={finale}
               className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground bg-primary/10 hover:bg-primary/20 transition-colors px-3 py-1.5 rounded-md border border-primary/30 disabled:opacity-30 disabled:pointer-events-none">
               <SkipForward className="w-3.5 h-3.5" />
-              Next
+              {step === TOTAL_STEPS - 1 && !finale ? 'Finish' : 'Next'}
             </button>
             <button onClick={restart}
               className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border/40 hover:border-border/60">
@@ -594,7 +602,37 @@ export default function ExecutiveReviewGTC() {
       {/* Content */}
       <div className="flex-1 flex items-center justify-center">
         <AnimatePresence mode="wait">
-          {!paused && (
+          {finale ? (
+            <motion.div
+              key="finale"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5 }}
+              className="flex flex-col items-center gap-6 text-center"
+            >
+              <AnimatePresence>
+                {finaleReady && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="flex flex-col items-center gap-4"
+                  >
+                    <p className="text-lg text-muted-foreground/60 font-medium tracking-wide">
+                      Structured Intelligence Before Action.
+                    </p>
+                    <button
+                      onClick={restart}
+                      className="flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors px-5 py-2.5 rounded-md border border-border/40 hover:border-border/60"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Restart Presentation
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ) : !paused ? (
             <motion.div
               key={step}
               initial={{ opacity: 0, y: 20 }}
@@ -605,8 +643,7 @@ export default function ExecutiveReviewGTC() {
             >
               <CurrentSection />
             </motion.div>
-          )}
-          {paused && (
+          ) : (
             <motion.div key="paused" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex flex-col items-center gap-3 text-muted-foreground/60">
               <Pause className="w-10 h-10" />
