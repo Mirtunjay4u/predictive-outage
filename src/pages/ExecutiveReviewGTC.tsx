@@ -721,7 +721,7 @@ export default function ExecutiveReviewGTC() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1.5 }}
-              className="flex flex-col items-center gap-6 text-center"
+              className="flex flex-col items-center gap-8 text-center"
             >
               <AnimatePresence>
                 {finaleReady && (
@@ -729,18 +729,61 @@ export default function ExecutiveReviewGTC() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="flex flex-col items-center gap-4"
+                    className="flex flex-col items-center gap-6"
                   >
-                    <p className="text-lg text-muted-foreground/60 font-medium tracking-wide">
-                      Structured Intelligence Before Action.
-                    </p>
-                    <button
+                    <div className="flex flex-col items-center gap-3">
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className="text-2xl md:text-3xl font-bold text-foreground tracking-tight"
+                      >
+                        AI Bound by Policy.
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8, duration: 0.8 }}
+                        className="text-2xl md:text-3xl font-bold text-foreground tracking-tight"
+                      >
+                        Human Authority Preserved.
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.5, duration: 0.8 }}
+                        className="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mt-2"
+                      >
+                        Structured Intelligence Before Action.
+                      </motion.p>
+                    </div>
+
+                    <motion.div
+                      initial={{ opacity: 0, scaleX: 0 }}
+                      animate={{ opacity: 1, scaleX: 1 }}
+                      transition={{ delay: 2.2, duration: 0.6 }}
+                      className="w-32 h-px bg-border/40 mt-2"
+                    />
+
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 2.5, duration: 0.6 }}
+                      className="text-sm text-muted-foreground/70 font-medium tracking-wide"
+                    >
+                      Not automation. Not replacement. Structured augmentation.
+                    </motion.p>
+
+                    <motion.button
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 3, duration: 0.6 }}
                       onClick={restart}
-                      className="flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors px-5 py-2.5 rounded-md border border-border/40 hover:border-border/60"
+                      className="flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors px-5 py-2.5 rounded-md border border-border/40 hover:border-border/60 mt-4"
                     >
                       <RotateCcw className="w-4 h-4" />
                       Restart Presentation
-                    </button>
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>
