@@ -400,9 +400,9 @@ function Section5() {
 
 function Section6() {
   const bullets = [
-    'Controlled inference execution',
+    'Controlled, policy-bound inference execution',
     'Schema-bound structured output',
-    'Deterministic prompt contracts',
+    'Deterministic prompt governance',
     'Logged traceability',
     'Designed for mission-critical environments',
   ];
@@ -438,8 +438,15 @@ function Section6() {
         )}
       </AnimatePresence>
 
-      <Narration text={`NVIDIA NIM operates inside a deterministic operational envelope.\nStructured inference — not generative AI loosely applied.`} />
-      <BoldTakeaway>Schema-bound output within governed boundaries.</BoldTakeaway>
+      {showFlow && (
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8, duration: 0.5 }}
+          className="text-[11px] text-muted-foreground/40 text-center">
+          AI cannot bypass deterministic validation.
+        </motion.p>
+      )}
+
+      <Narration text={`NVIDIA NIM operates within a deterministic operational envelope.\nStructured inference — not open-ended generative execution.`} />
+      <BoldTakeaway>Schema-bound output within enforced governance boundaries.</BoldTakeaway>
     </div>
   );
 }
