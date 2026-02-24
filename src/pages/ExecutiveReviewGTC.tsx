@@ -246,7 +246,7 @@ function Section4() {
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Bounded AI Architecture</SectionTitle>
 
-      <div className="flex flex-col items-center gap-2.5 w-full max-w-md">
+      <div className="flex flex-col items-center gap-3 w-full max-w-md">
         {layers.map((layer, i) => {
           const isRuleGate = layer.includes('Deterministic');
           const isNvidia = layer.includes('NVIDIA');
@@ -413,7 +413,7 @@ function Section6() {
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 px-6">
       <SectionTitle>Enterprise-Grade AI Execution</SectionTitle>
 
-      <ul className="space-y-3 max-w-md">
+      <ul className="space-y-2 max-w-md">
         {bullets.map((b, i) => (
           <motion.li key={b} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.15 + 0.3 }}
             className="text-sm text-foreground/85 flex items-start gap-2">
