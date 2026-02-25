@@ -6,6 +6,8 @@ interface TourSpotlightProps {
   selector: string | null;
   caption: string | null;
   visible: boolean;
+  /** Called when user clicks inside the spotlight cutout area */
+  onCutoutClick?: () => void;
 }
 
 interface SpotlightRect {
@@ -44,7 +46,7 @@ function computeCaption(rect: DOMRect) {
  * Dims everything except the target element and renders a
  * pulsing glow ring + floating caption.
  */
-export function TourSpotlight({ selector, caption, visible }: TourSpotlightProps) {
+export function TourSpotlight({ selector, caption, visible, onCutoutClick }: TourSpotlightProps) {
   const [spot, setSpot] = useState<SpotlightRect | null>(null);
   const [capStyle, setCapStyle] = useState<{ top: number; left: number; anchor: string } | null>(null);
   const rafRef = useRef(0);
@@ -149,7 +151,7 @@ export function TourSpotlight({ selector, caption, visible }: TourSpotlightProps
         )}
       </AnimatePresence>
 
-      {/* ── Glow Ring ── */}
+      {/* ── Glow Ring (clickable cutout) ── */}
       <AnimatePresence>
         {spot && (
           <motion.div
@@ -158,13 +160,19 @@ export function TourSpotlight({ selector, caption, visible }: TourSpotlightProps
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="fixed z-[9991] pointer-events-none"
+            className={`fixed z-[9991] ${onCutoutClick ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'}`}
             style={{
               top: spot.top,
               left: spot.left,
               width: spot.width,
               height: spot.height,
               borderRadius: RADIUS,
+            }}
+            onClick={(e) => {
+              if (onCutoutClick) {
+                e.stopPropagation();
+                onCutoutClick();
+              }
             }}
           >
             {/* Static border */}
@@ -181,7 +189,7 @@ export function TourSpotlight({ selector, caption, visible }: TourSpotlightProps
             />
             {/* Pulsing outer glow */}
             <motion.div
-              className="absolute -inset-1 rounded-xl"
+              className="absolute -inset-1 rounded-xl pointer-events-none"
               animate={{
                 boxShadow: [
                   '0 0 16px 2px hsl(217 91% 60% / 0.25)',
@@ -224,6 +232,11 @@ export function TourSpotlight({ selector, caption, visible }: TourSpotlightProps
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2 align-middle animate-pulse" />
                 {caption}
               </p>
+              {onCutoutClick && (
+                <p className="relative text-[9px] text-muted-foreground/60 mt-1.5 tracking-wide">
+                  Click highlighted area to advance ▸
+                </p>
+              )}
             </div>
           </motion.div>
         )}

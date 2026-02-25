@@ -311,6 +311,51 @@ export function DemoTourHUD() {
     });
   }, [clearBeats]);
 
+  // ── Advance to next beat on cutout click ──
+  const advanceBeat = useCallback(() => {
+    const step = modeSteps[currentStep];
+    if (!step) return;
+    const beats = step.beats;
+    const nextIdx = beatIndexRef.current + 1;
+
+    // Cancel all pending beat timers
+    beatTimersRef.current.forEach(t => clearTimeout(t));
+    beatTimersRef.current = [];
+
+    if (nextIdx < beats.length) {
+      // Jump to the next beat immediately
+      beatIndexRef.current = nextIdx;
+      const beat = beats[nextIdx];
+      safeScroll(beat.selector, step.id, nextIdx);
+      setActiveBeat({ selector: beat.selector, caption: beat.caption });
+
+      // Schedule remaining beats from nextIdx+1
+      const estimatedDuration = 25000;
+      const beatInterval = estimatedDuration / beats.length;
+
+      beats.forEach((b, idx) => {
+        if (idx <= nextIdx) return;
+        const delay = (idx - nextIdx) * beatInterval;
+        const timer = setTimeout(() => {
+          beatIndexRef.current = idx;
+          safeScroll(b.selector, step.id, idx);
+          setActiveBeat({ selector: b.selector, caption: b.caption });
+
+          const clearTimer = setTimeout(() => {
+            if (beatIndexRef.current === idx) {
+              setActiveBeat({ selector: null, caption: null });
+            }
+          }, beatInterval - 800);
+          beatTimersRef.current.push(clearTimer);
+        }, delay);
+        beatTimersRef.current.push(timer);
+      });
+    } else {
+      // No more beats — dismiss spotlight
+      setActiveBeat({ selector: null, caption: null });
+    }
+  }, [currentStep, modeSteps]);
+
   // ── Run step orchestration ──
   useEffect(() => {
     if (!isPlaying || isPaused) return;
@@ -585,6 +630,7 @@ export function DemoTourHUD() {
         selector={activeBeat.selector}
         caption={activeBeat.caption}
         visible={!isPaused && activeBeat.selector !== null}
+        onCutoutClick={advanceBeat}
       />
 
       {/* ── Transcript Panel ── */}
