@@ -423,7 +423,7 @@ Use advisory language only. Decision support only. No operational instructions.`
               Generate an executive-grade situation report based on current event data, 
               ETR analysis, and status history timeline.
             </p>
-            <Button onClick={generateReport} size="lg" className="gap-2">
+            <Button data-tour="sitrep-generate" onClick={generateReport} size="lg" className="gap-2">
               <FileText className="w-5 h-5" />
               Generate Situation Report
             </Button>

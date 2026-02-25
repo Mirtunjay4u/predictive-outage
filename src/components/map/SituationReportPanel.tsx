@@ -432,7 +432,7 @@ Use advisory language only. Decision support only. No operational instructions.`
               <p className="text-sm text-muted-foreground mb-4">
                 Generate an executive-grade situation report based on current event data and status history.
               </p>
-              <Button onClick={generateReport} className="gap-2">
+              <Button data-tour="sitrep-generate" onClick={generateReport} className="gap-2">
                 <FileText className="w-4 h-4" />
                 Generate Situation Report
               </Button>

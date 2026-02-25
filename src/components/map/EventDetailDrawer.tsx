@@ -214,6 +214,7 @@ export function EventDetailDrawer({ event, open, onOpenChange, onOpenInCopilot, 
                 {/* ===== SITUATION REPORT ACTION ===== */}
                 <section className="rounded-lg border border-border bg-background p-4">
                   <Button
+                    data-tour="sitrep-generate"
                     variant="default"
                     size="default"
                     className="w-full gap-2 bg-primary/90 hover:bg-primary"

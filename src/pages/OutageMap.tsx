@@ -1078,7 +1078,7 @@ export default function OutageMap() {
                 />
                 
                 {/* ── Weather Layers Section ── */}
-                <div className="pt-2 mt-2 border-t border-border">
+                <div data-tour="map-weather-layers" className="pt-2 mt-2 border-t border-border">
                   <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">Weather Layers</span>
                   
                   <div className="mt-2">
@@ -1312,7 +1312,7 @@ export default function OutageMap() {
                   </div>
                   
                   {/* Hazard Overlay Toggles */}
-                  <div className="mt-2 space-y-1">
+                  <div data-tour="map-hazard-overlays" className="mt-2 space-y-1">
                     <Label className="text-xs text-muted-foreground">Hazard Overlays</Label>
                     <div className="flex flex-col gap-1.5 mt-1">
                       {HAZARD_OVERLAYS.map(hazard => {
