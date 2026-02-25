@@ -176,7 +176,7 @@ function EtrBandPanel({ scenario }: { scenario: Scenario }) {
       : null;
 
   return (
-    <div className="rounded-lg border border-border/50 bg-card px-4 py-3 space-y-2.5">
+    <div data-tour="etr-band" className="rounded-lg border border-border/50 bg-card px-4 py-3 space-y-2.5">
       <SectionHead icon={Clock} label="ETR Band" />
 
       <div className="flex items-start justify-between gap-3">
@@ -244,7 +244,7 @@ function CriticalLoadPanel({ scenario }: { scenario: Scenario }) {
     : 'bg-emerald-500/10 border-emerald-400/30 text-emerald-700 dark:text-emerald-300';
 
   return (
-    <div className={cn('rounded-lg border px-4 py-3 space-y-2.5', atRisk ? 'border-red-400/30 bg-red-500/5' : 'border-amber-400/30 bg-amber-500/5')}>
+    <div data-tour="critical-load-runway" className={cn('rounded-lg border px-4 py-3 space-y-2.5', atRisk ? 'border-red-400/30 bg-red-500/5' : 'border-amber-400/30 bg-amber-500/5')}>
       <div className="flex items-center gap-2 mb-2.5">
         <Zap className="h-3.5 w-3.5 text-red-500" />
         <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex-1">Critical Load Continuity</p>

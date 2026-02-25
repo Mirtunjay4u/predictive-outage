@@ -45,7 +45,7 @@ export function CommandSummary({
   }, [scenarios]);
 
   return (
-    <div className="flex items-stretch gap-2 flex-wrap">
+    <div data-tour="map-command-summary" className="flex items-stretch gap-2 flex-wrap">
       {/* Visible Events Card */}
       <KPICard
         icon={<Eye className="w-4 h-4" />}
