@@ -4,23 +4,179 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, SkipForward, CheckCircle2, RotateCcw, X,
   Shield, Brain, Map, CloudLightning, Network, Eye,
-  Gauge, Sparkles, Volume2, VolumeX, Loader2, Bug,
+  Gauge, Sparkles, Volume2, VolumeX, Loader2, Bug, FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { useTourNarration } from '@/hooks/useTourNarration';
 import { TourSpotlight } from '@/components/tour/TourSpotlight';
+import { TourTranscriptPanel } from '@/components/tour/TourTranscriptPanel';
 import {
-  tourSteps,
   safeScroll,
-  safeClick,
   waitForStepReady,
   enableDebugMode,
   getDebugLogs,
   clearDebugLogs,
-  type TourBeat,
+  type TourStep,
 } from '@/lib/tour-engine';
+import {
+  getStepsForMode,
+  getNarrationForMode,
+  tourModeConfigs,
+  type TourMode,
+} from '@/lib/tour-modes';
+
+// ── Narration hook (inline simplified version that uses mode-aware scripts) ──
+
+function useModeNarration(mode: TourMode) {
+  const [isMuted, setIsMuted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [narrationDone, setNarrationDone] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentStepRef = useRef(-1);
+  const cacheRef = useRef<Record<string, string>>({});
+  const abortRef = useRef<AbortController | null>(null);
+
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+  const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  const stopNarration = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; }
+    setIsLoading(false);
+    setIsSpeaking(false);
+  }, []);
+
+  const pauseNarration = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) audioRef.current.pause();
+    if ('speechSynthesis' in window) window.speechSynthesis.pause();
+  }, []);
+
+  const resumeNarration = useCallback(() => {
+    if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0) {
+      audioRef.current.play().catch(() => {});
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.resume();
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      if (next) {
+        if (audioRef.current) audioRef.current.pause();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        setNarrationDone(true);
+      }
+      return next;
+    });
+  }, []);
+
+  const playStepNarration = useCallback(async (stepIndex: number) => {
+    stopNarration();
+    currentStepRef.current = stepIndex;
+    setNarrationDone(false);
+
+    if (isMuted) { setNarrationDone(true); return; }
+
+    const scripts = getNarrationForMode(mode);
+    const script = scripts[stepIndex];
+    if (!script) { setNarrationDone(true); return; }
+
+    const cacheKey = `${mode}-${stepIndex}`;
+    const cachedUrl = cacheRef.current[cacheKey];
+
+    const attachListeners = (audio: HTMLAudioElement) => {
+      audio.addEventListener('play', () => { setIsSpeaking(true); setNarrationDone(false); });
+      audio.addEventListener('pause', () => setIsSpeaking(false));
+      audio.addEventListener('ended', () => {
+        setIsSpeaking(false);
+        if (currentStepRef.current === stepIndex) setNarrationDone(true);
+      });
+    };
+
+    if (cachedUrl) {
+      const audio = new Audio(cachedUrl);
+      attachListeners(audio);
+      audioRef.current = audio;
+      try { await audio.play(); } catch { setNarrationDone(true); }
+      return;
+    }
+
+    // Try ElevenLabs TTS
+    setIsLoading(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/elevenlabs-tts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ text: script }),
+        signal: controller.signal,
+      });
+
+      if (currentStepRef.current !== stepIndex) { setIsLoading(false); return; }
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        cacheRef.current[cacheKey] = url;
+        const audio = new Audio(url);
+        attachListeners(audio);
+        audioRef.current = audio;
+        setIsLoading(false);
+        try { await audio.play(); } catch { setNarrationDone(true); }
+        return;
+      }
+    } catch {
+      // fallback
+    }
+
+    // Browser TTS fallback
+    setIsLoading(false);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(script);
+      utt.rate = 0.92;
+      utt.pitch = 0.95;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en'));
+      if (preferred) utt.voice = preferred;
+      setIsSpeaking(true);
+      utt.onend = () => {
+        setIsSpeaking(false);
+        if (currentStepRef.current === stepIndex) setNarrationDone(true);
+      };
+      utt.onerror = () => {
+        setIsSpeaking(false);
+        setNarrationDone(true);
+      };
+      window.speechSynthesis.speak(utt);
+    } else {
+      setNarrationDone(true);
+    }
+  }, [isMuted, mode, stopNarration, SUPABASE_URL, SUPABASE_KEY]);
+
+  useEffect(() => {
+    return () => {
+      stopNarration();
+      Object.values(cacheRef.current).forEach(url => URL.revokeObjectURL(url));
+      cacheRef.current = {};
+    };
+  }, [stopNarration]);
+
+  return { isMuted, isLoading, isSpeaking, narrationDone, toggleMute, playStepNarration, stopNarration, pauseNarration, resumeNarration };
+}
 
 // ── Types ──
 
@@ -37,6 +193,8 @@ export function DemoTourHUD() {
   const [stepComplete, setStepComplete] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [tourComplete, setTourComplete] = useState(false);
+  const [tourMode, setTourMode] = useState<TourMode>('executive');
+  const [showTranscript, setShowTranscript] = useState(false);
 
   // ── Beat state ──
   const [activeBeat, setActiveBeat] = useState<BeatState>({ selector: null, caption: null });
@@ -48,35 +206,39 @@ export function DemoTourHUD() {
   const [debugMode, setDebugMode] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  // ── Narration ──
+  // ── Mode-aware narration ──
   const {
-    isMuted, isLoading: narrationLoading, isSpeaking, preCacheProgress,
+    isMuted, isLoading: narrationLoading, isSpeaking,
     narrationDone, toggleMute, playStepNarration, stopNarration,
-    pauseNarration, resumeNarration, preCacheAll,
-  } = useTourNarration();
+    pauseNarration, resumeNarration,
+  } = useModeNarration(tourMode);
 
   const navigate = useNavigate();
-  const autoActionFiredRef = useRef<Set<number>>(new Set());
+
+  // Get current mode's steps
+  const modeSteps = getStepsForMode(tourMode);
+  const modeConfig = tourModeConfigs[tourMode];
 
   // ── Sync debug mode ──
   useEffect(() => { enableDebugMode(debugMode); }, [debugMode]);
 
-  // ── Listen for tour start from DemoScriptModal ──
+  // ── Listen for tour start ──
   useEffect(() => {
-    const handleStart = () => {
+    const handleStart = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const mode: TourMode = detail?.mode || 'executive';
+      setTourMode(mode);
       setIsPlaying(true);
       setIsPaused(false);
       setCurrentStep(0);
       setStepComplete(false);
       setCompletedSteps([]);
       setTourComplete(false);
-      autoActionFiredRef.current = new Set();
       clearDebugLogs();
-      preCacheAll();
     };
     window.addEventListener('start-demo-tour', handleStart);
     return () => window.removeEventListener('start-demo-tour', handleStart);
-  }, [preCacheAll]);
+  }, []);
 
   // ── Body class for dim ──
   useEffect(() => {
@@ -102,12 +264,11 @@ export function DemoTourHUD() {
   }, []);
 
   // ── Execute beats for a step ──
-  const executeBeats = useCallback((step: typeof tourSteps[0], startFromBeat = 0) => {
+  const executeBeats = useCallback((step: TourStep, startFromBeat = 0) => {
     clearBeats();
     const beats = step.beats;
     if (!beats.length) return;
 
-    // Calculate timing: spread beats across ~25s (estimated narration length)
     const estimatedDuration = 25000;
     const beatInterval = estimatedDuration / beats.length;
 
@@ -117,22 +278,9 @@ export function DemoTourHUD() {
 
       const timer = setTimeout(() => {
         beatIndexRef.current = idx;
-
-        // Scroll to element
         safeScroll(beat.selector, step.id, idx);
-
-        // Execute action
-        if (beat.action === 'click') {
-          // Don't actually click unless it's the login button
-          if (step.autoAction === 'login' && idx === 1) {
-            // Login click handled by auto-action system
-          }
-        }
-
-        // Set spotlight
         setActiveBeat({ selector: beat.selector, caption: beat.caption });
 
-        // Clear spotlight before next beat (or at end)
         const clearTimer = setTimeout(() => {
           if (beatIndexRef.current === idx) {
             setActiveBeat({ selector: null, caption: null });
@@ -149,42 +297,21 @@ export function DemoTourHUD() {
   useEffect(() => {
     if (!isPlaying || isPaused) return;
 
-    const step = tourSteps[currentStep];
+    const step = modeSteps[currentStep];
     if (!step) return;
 
     setStepComplete(false);
     clearBeats();
     beatIndexRef.current = 0;
 
-    // Navigate to route
     navigate(step.route);
 
-    // Wait for readiness, then start narration + beats
     const runStep = async () => {
-      // Wait for route to settle
       await new Promise(r => setTimeout(r, 800));
-
-      // Wait for DOM readiness
       await waitForStepReady(step);
 
-      // Auto-login for step 0
-      if (step.autoAction === 'login' && !autoActionFiredRef.current.has(currentStep)) {
-        autoActionFiredRef.current.add(currentStep);
-        // Fire login after a beat delay
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('tour-auto-login'));
-        }, 4000);
-      }
-
-      // Start narration
-      if (!isPaused) {
-        playStepNarration(currentStep);
-      }
-
-      // Execute beats
-      if (!isPaused) {
-        executeBeats(step);
-      }
+      if (!isPaused) playStepNarration(currentStep);
+      if (!isPaused) executeBeats(step);
     };
 
     runStep();
@@ -193,13 +320,12 @@ export function DemoTourHUD() {
       stopNarration();
       clearBeats();
     };
-  }, [currentStep, isPlaying, navigate, playStepNarration, stopNarration, clearBeats, executeBeats, isPaused]);
+  }, [currentStep, isPlaying, navigate, playStepNarration, stopNarration, clearBeats, executeBeats, isPaused, modeSteps]);
 
   // ── Mark step complete when narration ends ──
   useEffect(() => {
     if (!isPlaying || isPaused) return;
     if (narrationDone || isMuted) {
-      // Small delay after narration to let final beat finish
       const timer = setTimeout(() => {
         setStepComplete(true);
         clearBeats();
@@ -208,35 +334,30 @@ export function DemoTourHUD() {
     }
   }, [narrationDone, isMuted, isPlaying, isPaused, clearBeats]);
 
-  // ── Pause handler ──
+  // ── Pause / Resume ──
   const handlePause = useCallback(() => {
     setIsPaused(true);
     pauseNarration();
     pausedBeatIndexRef.current = beatIndexRef.current;
-    // Cancel queued beat timers
     beatTimersRef.current.forEach(t => clearTimeout(t));
     beatTimersRef.current = [];
   }, [pauseNarration]);
 
-  // ── Resume handler ──
   const handleResume = useCallback(() => {
     setIsPaused(false);
     resumeNarration();
-    // Resume beats from where we left off
-    const step = tourSteps[currentStep];
-    if (step) {
-      executeBeats(step, pausedBeatIndexRef.current + 1);
-    }
-  }, [resumeNarration, currentStep, executeBeats]);
+    const step = modeSteps[currentStep];
+    if (step) executeBeats(step, pausedBeatIndexRef.current + 1);
+  }, [resumeNarration, currentStep, executeBeats, modeSteps]);
 
   // ── Next step (manual only) ──
   const handleNext = useCallback(() => {
-    if (!stepComplete && !isPaused) return; // Disabled unless complete or paused (skip)
+    if (!stepComplete && !isPaused) return;
     stopNarration();
     clearBeats();
     setCompletedSteps(prev => [...prev, currentStep]);
 
-    if (currentStep < tourSteps.length - 1) {
+    if (currentStep < modeSteps.length - 1) {
       setCurrentStep(prev => prev + 1);
       setStepComplete(false);
       setIsPaused(false);
@@ -245,15 +366,15 @@ export function DemoTourHUD() {
       setTourComplete(true);
       stopNarration();
     }
-  }, [stepComplete, isPaused, currentStep, stopNarration, clearBeats]);
+  }, [stepComplete, isPaused, currentStep, stopNarration, clearBeats, modeSteps.length]);
 
-  // ── Skip (force next even if not complete) ──
+  // ── Skip ──
   const handleSkip = useCallback(() => {
     stopNarration();
     clearBeats();
     setCompletedSteps(prev => [...prev, currentStep]);
 
-    if (currentStep < tourSteps.length - 1) {
+    if (currentStep < modeSteps.length - 1) {
       setCurrentStep(prev => prev + 1);
       setStepComplete(false);
       setIsPaused(false);
@@ -261,7 +382,7 @@ export function DemoTourHUD() {
       setIsPlaying(false);
       setTourComplete(true);
     }
-  }, [currentStep, stopNarration, clearBeats]);
+  }, [currentStep, stopNarration, clearBeats, modeSteps.length]);
 
   // ── Restart ──
   const handleRestart = useCallback(() => {
@@ -273,7 +394,6 @@ export function DemoTourHUD() {
     setCurrentStep(0);
     setStepComplete(false);
     setCompletedSteps([]);
-    autoActionFiredRef.current = new Set();
     clearDebugLogs();
   }, [stopNarration, clearBeats]);
 
@@ -283,76 +403,19 @@ export function DemoTourHUD() {
     clearBeats();
     setIsPlaying(false);
     setIsPaused(false);
+    setShowTranscript(false);
   }, [stopNarration, clearBeats]);
 
   // ── Completion Screen ──
   const domainSections = [
-    {
-      icon: Shield,
-      title: 'Deterministic Operational Policy Enforcement',
-      bullets: [
-        'Severity-based escalation (1–5 utility scale)',
-        'Crew skillset and readiness gating',
-        'Critical load protection logic',
-        'Explicit policy blocks prior to advisory output',
-      ],
-    },
-    {
-      icon: Gauge,
-      title: 'Confidence-Based ETR Modeling',
-      bullets: [
-        'ETR confidence bands (High / Medium / Low)',
-        'Uncertainty transparency (no single-point estimates)',
-        'Hazard-adjusted restoration risk',
-      ],
-    },
-    {
-      icon: CloudLightning,
-      title: 'Hazard-Correlated Risk Scoring',
-      bullets: [
-        'Weather hazard overlays (wind, lightning, flood, heat)',
-        'Feeder-level vulnerability assessment',
-        'Crew safety constraints under active hazard zones',
-      ],
-    },
-    {
-      icon: Brain,
-      title: 'Structured AI Guardrails & Explainability',
-      bullets: [
-        'Structured output contracts (no free-form generation)',
-        'Policy-based blocking with remediation guidance',
-        'Transparent reasoning pathways',
-      ],
-    },
-    {
-      icon: Map,
-      title: 'Geospatial Situational Awareness',
-      bullets: [
-        'Real-time outage visualization',
-        'Feeder zone mapping with critical infrastructure',
-        'Lifecycle progression (Pre-Event → Event → Post-Event)',
-      ],
-    },
-    {
-      icon: Network,
-      title: 'Governance-First Architecture',
-      bullets: [
-        'Advisory-only control posture',
-        'Deterministic rule engine precedes AI inference',
-        'Enterprise integration pathway (Phase-2)',
-      ],
-    },
+    { icon: Shield, title: 'Deterministic Policy Enforcement', bullets: ['Severity-based escalation', 'Crew readiness gating', 'Critical load protection', 'Policy blocks prior to advisory'] },
+    { icon: Gauge, title: 'Confidence-Based ETR Modeling', bullets: ['ETR confidence bands', 'Uncertainty transparency', 'Hazard-adjusted restoration risk'] },
+    { icon: CloudLightning, title: 'Hazard-Correlated Risk Scoring', bullets: ['Weather hazard overlays', 'Feeder vulnerability assessment', 'Crew safety constraints'] },
+    { icon: Brain, title: 'Structured AI Guardrails', bullets: ['Structured output contracts', 'Policy-based blocking', 'Transparent reasoning pathways'] },
+    { icon: Map, title: 'Geospatial Awareness', bullets: ['Outage visualization', 'Feeder zone mapping', 'Lifecycle progression'] },
+    { icon: Network, title: 'Governance-First Architecture', bullets: ['Advisory-only posture', 'Rule engine precedes AI', 'Enterprise integration pathway'] },
   ];
 
-  const postureSummary = [
-    { label: 'System Risk Index', value: 'Stabilized', color: 'text-green-500' },
-    { label: 'Critical Load Exposure', value: 'Reduced', color: 'text-green-500' },
-    { label: 'Policy Violations', value: 'None', color: 'text-green-500' },
-    { label: 'Crew Deployment', value: 'Within Threshold', color: 'text-green-500' },
-    { label: 'AI Confidence Band', value: 'High', color: 'text-primary' },
-  ];
-
-  // ── Tour Completion Screen ──
   if (tourComplete) {
     return (
       <AnimatePresence>
@@ -371,7 +434,6 @@ export function DemoTourHUD() {
             <div className="h-1.5 bg-gradient-to-r from-primary via-accent to-primary flex-shrink-0" />
 
             <div className="overflow-y-auto flex-1 px-7 py-6 space-y-5">
-              {/* Title */}
               <div className="text-center space-y-3">
                 <motion.div
                   initial={{ scale: 0 }}
@@ -382,14 +444,13 @@ export function DemoTourHUD() {
                   <CheckCircle2 className="w-9 h-9 text-primary" />
                 </motion.div>
                 <h2 className="text-xl font-bold tracking-tight text-foreground">
-                  Executive Demonstration Complete
+                  {modeConfig.label} Complete
                 </h2>
                 <p className="text-xs text-muted-foreground max-w-lg mx-auto">
-                  AI-Constrained Decision Intelligence for Utility Outage Operations
+                  {modeConfig.subtitle} · {modeSteps.length} Steps Completed
                 </p>
               </div>
 
-              {/* Capabilities recap */}
               <div>
                 <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary mb-3">
                   Capabilities Demonstrated
@@ -422,34 +483,13 @@ export function DemoTourHUD() {
                 </div>
               </div>
 
-              {/* Posture Summary */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3"
-              >
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
-                  Operational Posture Summary
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {postureSummary.map((item) => (
-                    <div key={item.label} className="flex flex-col gap-0.5 px-2 py-1.5 rounded-md bg-card/60">
-                      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
-                      <span className={cn('text-[11px] font-bold', item.color)}>{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
               {/* Final statement */}
               <div className="border-l-2 border-primary/50 pl-4 py-1">
                 <p className="text-[11px] text-foreground/90 leading-relaxed font-medium italic">
-                  This solution represents a defensible, AI-constrained decision-support layer for electric utility outage management — designed to enhance operator judgment without introducing automation risk.
+                  AI Bound by Policy. Human Authority Preserved. Structured Intelligence Before Action.
                 </p>
               </div>
 
-              {/* Thank you */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -462,11 +502,11 @@ export function DemoTourHUD() {
                   className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] bg-clip-text text-transparent"
                 >
                   <span className="text-lg font-bold tracking-tight">
-                    Thank you for watching the Executive Demo
+                    {modeConfig.label} — Complete
                   </span>
                 </motion.div>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  AI-Constrained Decision Intelligence · Phase-1 Prototype
+                  Governed Decision Intelligence · Phase-1 Prototype
                 </p>
               </motion.div>
             </div>
@@ -489,6 +529,16 @@ export function DemoTourHUD() {
                   Explore Manually
                 </Button>
                 <Button
+                  variant="outline"
+                  onClick={() => {
+                    setTourComplete(false);
+                    window.dispatchEvent(new CustomEvent('open-demo-script'));
+                  }}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Try Another Mode
+                </Button>
+                <Button
                   variant="ghost"
                   onClick={() => setTourComplete(false)}
                   className="ml-auto"
@@ -506,9 +556,9 @@ export function DemoTourHUD() {
 
   if (!isPlaying) return null;
 
-  const step = tourSteps[currentStep];
-  const overallProgress = ((completedSteps.length) / tourSteps.length) * 100;
-  const totalSteps = tourSteps.length;
+  const step = modeSteps[currentStep];
+  const overallProgress = ((completedSteps.length) / modeSteps.length) * 100;
+  const totalSteps = modeSteps.length;
 
   return (
     <>
@@ -517,6 +567,14 @@ export function DemoTourHUD() {
         selector={activeBeat.selector}
         caption={activeBeat.caption}
         visible={!isPaused && activeBeat.selector !== null}
+      />
+
+      {/* ── Transcript Panel ── */}
+      <TourTranscriptPanel
+        mode={tourMode}
+        currentStep={currentStep}
+        isOpen={showTranscript}
+        onClose={() => setShowTranscript(false)}
       />
 
       {/* ── TOP PROGRESS BAR ── */}
@@ -544,23 +602,30 @@ export function DemoTourHUD() {
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999]"
       >
-        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-4 py-2 min-w-[460px] max-w-[560px]">
-          {/* Header row with step title inline */}
+        <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl px-4 py-2 min-w-[520px] max-w-[620px]">
+          {/* Header row */}
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary flex-shrink-0">
-                Executive Guided Tour
+              <span
+                className="text-[9px] font-bold uppercase tracking-[0.14em] px-1.5 py-0.5 rounded border flex-shrink-0"
+                style={{
+                  color: modeConfig.accentColor,
+                  borderColor: `${modeConfig.accentColor}40`,
+                  backgroundColor: `${modeConfig.accentColor}10`,
+                }}
+              >
+                {modeConfig.label}
               </span>
-              <span className="text-[10px] text-muted-foreground/60 mx-1 flex-shrink-0">·</span>
+              <span className="text-[10px] text-muted-foreground/60 mx-0.5 flex-shrink-0">·</span>
               <span className="text-[11px] font-semibold text-foreground truncate">{step.title}</span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-[10px] font-semibold text-foreground tabular-nums">
-                Step {currentStep + 1} of {totalSteps}
+                {currentStep + 1} / {totalSteps}
               </span>
               {isPaused && (
-                <span className="text-[9px] font-bold uppercase tracking-wider text-warning px-1.5 py-0.5 rounded bg-warning/10 border border-warning/20">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 px-1.5 py-0.5 rounded bg-amber-400/10 border border-amber-400/20">
                   Paused
                 </span>
               )}
@@ -569,17 +634,12 @@ export function DemoTourHUD() {
                   Ready
                 </span>
               )}
-              {preCacheProgress > 0 && preCacheProgress < 100 && (
-                <span className="text-[9px] text-muted-foreground/70 tabular-nums">
-                  Voice {preCacheProgress}%
-                </span>
-              )}
             </div>
           </div>
 
           {/* Step progress dots */}
           <div className="flex items-center gap-0.5 mb-1.5">
-            {tourSteps.map((_, i) => (
+            {modeSteps.map((_, i) => (
               <div
                 key={i}
                 className={cn(
@@ -596,30 +656,16 @@ export function DemoTourHUD() {
 
           {/* Controls row */}
           <div className="flex items-center gap-1.5">
-            {/* Play / Pause */}
             {isPaused ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1.5 text-primary border-primary/30 hover:bg-primary/10"
-                onClick={handleResume}
-              >
-                <Play className="h-3.5 w-3.5" />
-                Resume
+              <Button size="sm" variant="outline" className="h-8 gap-1.5 text-primary border-primary/30 hover:bg-primary/10" onClick={handleResume}>
+                <Play className="h-3.5 w-3.5" /> Resume
               </Button>
             ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 gap-1.5"
-                onClick={handlePause}
-              >
-                <Pause className="h-3.5 w-3.5" />
-                Pause
+              <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={handlePause}>
+                <Pause className="h-3.5 w-3.5" /> Pause
               </Button>
             )}
 
-            {/* Next Step */}
             <Button
               size="sm"
               className={cn(
@@ -631,14 +677,12 @@ export function DemoTourHUD() {
               onClick={handleNext}
               disabled={!stepComplete}
             >
-              <SkipForward className="h-3.5 w-3.5" />
-              Next Step
+              <SkipForward className="h-3.5 w-3.5" /> Next Step
             </Button>
 
-            {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Waveform indicator */}
+            {/* Waveform */}
             <div className={cn(
               'flex items-end gap-[2px] h-4 transition-opacity duration-300 mr-1',
               isSpeaking && !isMuted ? 'opacity-100' : 'opacity-0'
@@ -648,14 +692,23 @@ export function DemoTourHUD() {
                   key={i}
                   className="w-[2px] rounded-full bg-primary/70"
                   style={{
-                    animation: isSpeaking && !isMuted
-                      ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite`
-                      : 'none',
+                    animation: isSpeaking && !isMuted ? `waveform-bar 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
                     height: '4px',
                   }}
                 />
               ))}
             </div>
+
+            {/* Transcript toggle */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className={cn('h-8 w-8', showTranscript ? 'text-primary' : 'text-muted-foreground')}
+              onClick={() => setShowTranscript(v => !v)}
+              title="Toggle transcript"
+            >
+              <FileText className="h-3.5 w-3.5" />
+            </Button>
 
             {/* Mute */}
             <Button
@@ -663,7 +716,7 @@ export function DemoTourHUD() {
               variant="ghost"
               className={cn('h-8 w-8', isMuted ? 'text-muted-foreground/50' : 'text-primary')}
               onClick={toggleMute}
-              title={isMuted ? 'Unmute narration' : 'Mute narration'}
+              title={isMuted ? 'Unmute' : 'Mute'}
             >
               {narrationLoading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -675,45 +728,27 @@ export function DemoTourHUD() {
             </Button>
 
             {/* Skip */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={handleSkip}
-              title="Skip step"
-            >
+            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleSkip} title="Skip step">
               <SkipForward className="h-3.5 w-3.5" />
             </Button>
 
             {/* Restart */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={handleRestart}
-              title="Restart tour"
-            >
+            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleRestart} title="Restart">
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
 
             {/* Stop */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={handleStop}
-              title="End tour"
-            >
+            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={handleStop} title="End tour">
               <X className="h-3.5 w-3.5" />
             </Button>
 
-            {/* Debug toggle (hidden) */}
+            {/* Debug */}
             <Button
               size="icon"
               variant="ghost"
               className="h-8 w-8 text-muted-foreground/30 hover:text-muted-foreground"
               onClick={() => { setDebugMode(d => !d); setShowDebugPanel(p => !p); }}
-              title="Toggle debug"
+              title="Debug"
             >
               <Bug className="h-3 w-3" />
             </Button>
@@ -730,24 +765,15 @@ export function DemoTourHUD() {
               className="mt-2 rounded-lg border border-border/40 bg-card/95 backdrop-blur-xl shadow-lg px-4 py-3 max-h-48 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Debug Log
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-5 text-[9px] px-1.5"
-                  onClick={clearDebugLogs}
-                >
-                  Clear
-                </Button>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Debug Log</span>
+                <Button size="sm" variant="ghost" className="h-5 text-[9px] px-1.5" onClick={clearDebugLogs}>Clear</Button>
               </div>
               <div className="space-y-0.5 font-mono text-[9px]">
                 {getDebugLogs().slice(-20).map((log, i) => (
                   <div key={i} className={cn(
                     'text-[9px]',
                     log.type === 'error' ? 'text-destructive' :
-                    log.type === 'warn' ? 'text-warning' : 'text-muted-foreground'
+                    log.type === 'warn' ? 'text-amber-400' : 'text-muted-foreground'
                   )}>
                     S{log.stepId}B{log.beatIndex}: {log.message}
                   </div>
@@ -761,7 +787,7 @@ export function DemoTourHUD() {
         </AnimatePresence>
       </motion.div>
 
-      {/* ── Step fade transition overlay ── */}
+      {/* ── Step fade transition ── */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`step-transition-${currentStep}`}
