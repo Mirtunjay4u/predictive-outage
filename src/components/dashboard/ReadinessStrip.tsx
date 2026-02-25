@@ -55,7 +55,7 @@ export function ReadinessStrip({ scenarios }: ReadinessStripProps) {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mt-3 rounded-lg border border-border/50 bg-card shadow-card px-4 py-2.5">
+      <div data-tour="readiness-strip" className="mt-3 rounded-lg border border-border/50 bg-card shadow-card px-4 py-2.5">
         <div className="flex items-center gap-4">
           <span className="text-xs font-medium text-muted-foreground whitespace-nowrap shrink-0">
             Restoration Readiness (Next 6–12h)

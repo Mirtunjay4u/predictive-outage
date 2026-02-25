@@ -77,7 +77,7 @@ export function OperationalTimeline({ scenarios }: OperationalTimelineProps) {
     .slice(0, 7);
 
   return (
-    <Card className="border-border/50">
+    <Card data-tour="operational-timeline" className="border-border/50">
       <CardHeader className="pb-2.5 pt-4 px-4">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">
