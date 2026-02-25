@@ -399,6 +399,7 @@ export default function CopilotStudio() {
                 </Select>
 
                 <Button
+                  data-tour="copilot-run"
                   onClick={handleRun}
                   disabled={!selectedEventId || isLoading}
                   className="w-full gap-2 shadow-md hover:shadow-lg transition-all"
