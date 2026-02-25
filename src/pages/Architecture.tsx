@@ -429,6 +429,7 @@ function NodeCard({
         <div
           ref={setNodeRef(node.id)}
           data-node={node.id}
+          data-tour={`architecture-${node.id.replace(/_/g, '-')}`}
           tabIndex={0}
           role="button"
           aria-label={`${node.label}${node.sub ? ` — ${node.sub}` : ''}`}

@@ -2403,6 +2403,7 @@ export default function Dashboard() {
                 return (
                   <FlippableKPICard
                     key={card.key}
+                    data-tour={`dashboard-kpi-${card.key.toLowerCase().replace(/\s+/g, '-')}`}
                     label={config.title}
                     subtitle={config.subtitle}
                     value={card.value}
@@ -2419,7 +2420,7 @@ export default function Dashboard() {
                   />
                 );
               })}
-              <CustomerImpactKPICard scenarios={scenarios} onClick={() => navigate('/events?lifecycle=Event')} boardroomMode={boardroomMode} />
+              <div data-tour="dashboard-kpi-customer-impact"><CustomerImpactKPICard scenarios={scenarios} onClick={() => navigate('/events?lifecycle=Event')} boardroomMode={boardroomMode} /></div>
             </div>
             <ReadinessStrip scenarios={filteredScenarios} />
           </div>

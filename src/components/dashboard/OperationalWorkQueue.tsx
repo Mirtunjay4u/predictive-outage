@@ -69,7 +69,7 @@ export function OperationalWorkQueue({ scenarios }: OperationalWorkQueueProps) {
   ];
 
   return (
-    <Card className="h-full border-border/50">
+    <Card data-tour="operational-work-queue" className="h-full border-border/50">
       <CardHeader className="pb-2.5 pt-4 px-4">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">

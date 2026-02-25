@@ -32,7 +32,7 @@ interface FlippableKPICardProps {
   onBreakdownClick?: (type: string) => void;
 }
 
-export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, actionLabel = 'View All', isActive = false, onBreakdownClick }: FlippableKPICardProps) {
+export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, breakdown, emphasis = 'low', scenarios = [], boardroomMode = false, onClick, actionLabel = 'View All', isActive = false, onBreakdownClick, ...rest }: FlippableKPICardProps & { 'data-tour'?: string }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const animatedValue = useAnimatedNumber(value, 360);
 
@@ -58,6 +58,7 @@ export function FlippableKPICard({ label, subtitle, value, icon: Icon, tooltip, 
             <TooltipTrigger asChild>
               <Card
                 className={cn('h-full cursor-pointer rounded-xl border shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS, emphasisStyles[emphasis])}
+                data-tour={rest['data-tour']}
                 onClick={() => setIsFlipped((v) => !v)}
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && setIsFlipped((v) => !v)}

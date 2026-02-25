@@ -36,7 +36,7 @@ export function CrewWorkloadPanel({ scenarios }: CrewWorkloadPanelProps) {
   ];
 
   return (
-    <Card className="h-full border-border/50">
+    <Card data-tour="crew-workload-panel" className="h-full border-border/50">
       <CardHeader className="pb-2.5 pt-4 px-4">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/75 leading-tight">

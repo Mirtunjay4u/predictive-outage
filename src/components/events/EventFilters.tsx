@@ -38,7 +38,7 @@ export function EventFilters({
   onCreateClick,
 }: EventFiltersProps) {
   return (
-    <div className="flex items-center justify-between gap-3 flex-wrap p-3 bg-card rounded-xl border border-border/50 shadow-sm">
+    <div data-tour="events-filter-bar" className="flex items-center justify-between gap-3 flex-wrap p-3 bg-card rounded-xl border border-border/50 shadow-sm">
       <div className="flex items-center gap-2 flex-wrap">
         {/* View Toggle */}
         <ToggleGroup 
