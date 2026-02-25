@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   FileText,
@@ -8,6 +8,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Bot,
   HelpCircle,
   Map,
@@ -153,6 +154,18 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
+  // Track which groups are open; default: the group containing the active route
+  const activeGroupIndex = navGroups.findIndex(g => g.items.some(i => location.pathname === i.path));
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    navGroups.forEach((g, i) => { initial[g.label] = i === activeGroupIndex || i === 0; });
+    return initial;
+  });
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
     <motion.aside
       initial={false}
@@ -181,86 +194,122 @@ export function AppSidebar() {
       <nav className="flex-1 overflow-y-auto px-2.5 py-3" role="navigation" aria-label="Main navigation">
         {navGroups.map((group, gi) => {
           const accent = accentConfig[group.accent];
+          const isOpen = openGroups[group.label] ?? true;
+          const hasActiveItem = group.items.some(i => location.pathname === i.path);
+
           return (
             <div key={group.label} className={gi > 0 ? 'mt-1' : ''}>
               {/* Section divider */}
               {gi > 0 && <div className="mx-2 mb-2 h-px bg-sidebar-border/50" />}
 
-              {/* Section header */}
-              {!collapsed && (
-                <div className="flex items-center gap-2 px-2.5 pb-1.5 pt-1">
+              {/* Collapsible section header */}
+              {!collapsed ? (
+                <button
+                  onClick={() => toggleGroup(group.label)}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2.5 pb-1.5 pt-1 transition-colors duration-150',
+                    'hover:bg-sidebar-accent/5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring',
+                  )}
+                  aria-expanded={isOpen}
+                >
                   <span className={cn(
                     'text-[10px] font-semibold uppercase tracking-[0.16em]',
                     accent.headerColor,
                   )}>
                     {group.label}
                   </span>
+                  {hasActiveItem && !isOpen && (
+                    <span className={cn('h-1.5 w-1.5 rounded-full', accent.barGradient)} />
+                  )}
                   <div className="h-px flex-1 bg-sidebar-border/30" />
-                </div>
+                  <ChevronDown className={cn(
+                    'h-3 w-3 text-sidebar-foreground/30 transition-transform duration-200',
+                    !isOpen && '-rotate-90',
+                  )} />
+                </button>
+              ) : (
+                /* In collapsed mode, show a thin accent dot if group has active item */
+                hasActiveItem && (
+                  <div className="flex justify-center pb-1">
+                    <span className={cn('h-1 w-4 rounded-full', accent.barGradient)} />
+                  </div>
+                )
               )}
 
-              {/* Nav items */}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive = location.pathname === item.path;
+              {/* Nav items — collapsible */}
+              <AnimatePresence initial={false}>
+                {(isOpen || collapsed) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const isActive = location.pathname === item.path;
 
-                  const link = (
-                    <NavLink
-                      key={item.path}
-                      to={item.path}
-                      className={cn(
-                        'group/nav relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium outline-none',
-                        'transition-all duration-150 ease-out',
-                        'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-1 focus-visible:ring-offset-sidebar',
-                        isActive
-                          ? cn(accent.activeBg, accent.activeText, accent.activeGlow)
-                          : cn(
-                              'text-sidebar-foreground/55',
-                              accent.hoverBg,
-                              'hover:text-sidebar-foreground/85',
-                            ),
-                      )}
-                    >
-                      {/* 3px vertical gradient accent bar */}
-                      {isActive && (
-                        <motion.span
-                          layoutId="nav-accent-bar"
-                          className={cn(
-                            'absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full',
-                            accent.barGradient,
-                          )}
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                        />
-                      )}
+                        const link = (
+                          <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={cn(
+                              'group/nav relative flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-[13px] font-medium outline-none',
+                              'transition-all duration-150 ease-out',
+                              'focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-1 focus-visible:ring-offset-sidebar',
+                              isActive
+                                ? cn(accent.activeBg, accent.activeText, accent.activeGlow)
+                                : cn(
+                                    'text-sidebar-foreground/55',
+                                    accent.hoverBg,
+                                    'hover:text-sidebar-foreground/85',
+                                  ),
+                            )}
+                          >
+                            {/* 3px vertical gradient accent bar */}
+                            {isActive && (
+                              <motion.span
+                                layoutId="nav-accent-bar"
+                                className={cn(
+                                  'absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full',
+                                  accent.barGradient,
+                                )}
+                                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                              />
+                            )}
 
-                      <item.icon
-                        className={cn(
-                          'h-4 w-4 flex-shrink-0 transition-colors duration-150',
-                          isActive ? accent.iconActive : 'text-sidebar-foreground/45 group-hover/nav:text-sidebar-foreground/70',
-                        )}
-                        strokeWidth={1.75}
-                      />
+                            <item.icon
+                              className={cn(
+                                'h-4 w-4 flex-shrink-0 transition-colors duration-150',
+                                isActive ? accent.iconActive : 'text-sidebar-foreground/45 group-hover/nav:text-sidebar-foreground/70',
+                              )}
+                              strokeWidth={1.75}
+                            />
 
-                      {!collapsed && (
-                        <span className="truncate">{item.label}</span>
-                      )}
-                    </NavLink>
-                  );
+                            {!collapsed && (
+                              <span className="truncate">{item.label}</span>
+                            )}
+                          </NavLink>
+                        );
 
-                  if (collapsed) {
-                    return (
-                      <Tooltip key={item.path} delayDuration={0}>
-                        <TooltipTrigger asChild>{link}</TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={10}>
-                          {item.label}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  }
+                        if (collapsed) {
+                          return (
+                            <Tooltip key={item.path} delayDuration={0}>
+                              <TooltipTrigger asChild>{link}</TooltipTrigger>
+                              <TooltipContent side="right" sideOffset={10}>
+                                {item.label}
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        }
 
-                  return link;
-                })}
-              </div>
+                        return link;
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
