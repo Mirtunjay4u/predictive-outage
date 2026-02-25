@@ -77,6 +77,15 @@ function useModeNarration(mode: TourMode) {
     });
   }, []);
 
+  const attachListeners = useCallback((audio: HTMLAudioElement, stepIndex: number) => {
+    audio.addEventListener('play', () => { setIsSpeaking(true); setNarrationDone(false); });
+    audio.addEventListener('pause', () => setIsSpeaking(false));
+    audio.addEventListener('ended', () => {
+      setIsSpeaking(false);
+      if (currentStepRef.current === stepIndex) setNarrationDone(true);
+    });
+  }, []);
+
   const playStepNarration = useCallback(async (stepIndex: number) => {
     stopNarration();
     currentStepRef.current = stepIndex;
@@ -91,24 +100,33 @@ function useModeNarration(mode: TourMode) {
     const cacheKey = `${mode}-${stepIndex}`;
     const cachedUrl = cacheRef.current[cacheKey];
 
-    const attachListeners = (audio: HTMLAudioElement) => {
-      audio.addEventListener('play', () => { setIsSpeaking(true); setNarrationDone(false); });
-      audio.addEventListener('pause', () => setIsSpeaking(false));
-      audio.addEventListener('ended', () => {
-        setIsSpeaking(false);
-        if (currentStepRef.current === stepIndex) setNarrationDone(true);
-      });
-    };
-
     if (cachedUrl) {
       const audio = new Audio(cachedUrl);
-      attachListeners(audio);
+      attachListeners(audio, stepIndex);
       audioRef.current = audio;
       try { await audio.play(); } catch { setNarrationDone(true); }
       return;
     }
 
-    // Try ElevenLabs TTS
+    // ── Priority 1: Pre-recorded MP3 from public/tour/{mode}/step-{n}.mp3 ──
+    const preRecordedPath = `/tour/${mode}/step-${stepIndex}.mp3`;
+    try {
+      const headResp = await fetch(preRecordedPath, { method: 'HEAD' });
+      if (headResp.ok && headResp.headers.get('content-type')?.includes('audio')) {
+        cacheRef.current[cacheKey] = preRecordedPath;
+        const audio = new Audio(preRecordedPath);
+        attachListeners(audio, stepIndex);
+        audioRef.current = audio;
+        try { await audio.play(); } catch { setNarrationDone(true); }
+        return;
+      }
+    } catch {
+      // Pre-recorded file not available, continue to TTS
+    }
+
+    if (currentStepRef.current !== stepIndex) return;
+
+    // ── Priority 2: ElevenLabs TTS ──
     setIsLoading(true);
     const controller = new AbortController();
     abortRef.current = controller;
@@ -132,7 +150,7 @@ function useModeNarration(mode: TourMode) {
         const url = URL.createObjectURL(blob);
         cacheRef.current[cacheKey] = url;
         const audio = new Audio(url);
-        attachListeners(audio);
+        attachListeners(audio, stepIndex);
         audioRef.current = audio;
         setIsLoading(false);
         try { await audio.play(); } catch { setNarrationDone(true); }
@@ -142,7 +160,7 @@ function useModeNarration(mode: TourMode) {
       // fallback
     }
 
-    // Browser TTS fallback
+    // ── Priority 3: Browser SpeechSynthesis ──
     setIsLoading(false);
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -165,7 +183,7 @@ function useModeNarration(mode: TourMode) {
     } else {
       setNarrationDone(true);
     }
-  }, [isMuted, mode, stopNarration, SUPABASE_URL, SUPABASE_KEY]);
+  }, [isMuted, mode, stopNarration, attachListeners, SUPABASE_URL, SUPABASE_KEY]);
 
   useEffect(() => {
     return () => {

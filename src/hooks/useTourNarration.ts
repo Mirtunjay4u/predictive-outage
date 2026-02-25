@@ -239,6 +239,24 @@ export function useTourNarration(): UseTourNarrationReturn {
       return;
     }
 
+    // ── Priority 1: Pre-recorded MP3 from public/tour/executive/step-{n}.mp3 ──
+    const preRecordedPath = `/tour/executive/step-${stepIndex}.mp3`;
+    try {
+      const headResp = await fetch(preRecordedPath, { method: 'HEAD' });
+      if (headResp.ok && headResp.headers.get('content-type')?.includes('audio')) {
+        const audio = new Audio(preRecordedPath);
+        attachAudioListeners(audio, stepIndex);
+        audioRef.current = audio;
+        try { await audio.play(); } catch { setNarrationDone(true); }
+        return;
+      }
+    } catch {
+      // Pre-recorded not available, continue to TTS
+    }
+
+    if (currentStepRef.current !== stepIndex) return;
+
+    // ── Priority 2: ElevenLabs TTS ──
     setIsLoading(true);
     const controller = new AbortController();
     abortRef.current = controller;
@@ -257,6 +275,7 @@ export function useTourNarration(): UseTourNarrationReturn {
       setIsLoading(false);
       try { await audio.play(); } catch { setNarrationDone(true); }
     } else {
+      // ── Priority 3: Browser SpeechSynthesis ──
       setIsLoading(false);
       setIsSpeaking(true);
       speakWithBrowserTTS(script, () => {
