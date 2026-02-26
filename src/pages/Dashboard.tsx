@@ -1570,11 +1570,13 @@ export default function Dashboard() {
       })()}
 
       {/* ── Operational Risk Posture Bar ──────────────────────────────────── */}
-      <OperationalRiskPostureBar
-        scenarios={scenarios}
-        hazardLabel={getExtremeHazard(selectedHazardKey).shortLabel}
-        hazardSeverity={severityOverride ?? (getExtremeHazard(selectedHazardKey).severityLabel as 'Low' | 'Moderate' | 'Severe')}
-      />
+      <div data-tour="risk-posture">
+        <OperationalRiskPostureBar
+          scenarios={scenarios}
+          hazardLabel={getExtremeHazard(selectedHazardKey).shortLabel}
+          hazardSeverity={severityOverride ?? (getExtremeHazard(selectedHazardKey).severityLabel as 'Low' | 'Moderate' | 'Severe')}
+        />
+      </div>
 
       <section data-tour-section="scenario-playback" className={cn('mb-4 rounded-xl border border-primary/25 bg-card/95 px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1638,7 +1640,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
+      <section data-tour="system-risk-index" className={cn('rounded-xl border border-border/60 bg-card px-4 py-3 shadow-sm', DASHBOARD_INTERACTIVE_SURFACE_CLASS)}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Gauge className="h-3.5 w-3.5" />System Risk Index</p>
@@ -2397,7 +2399,7 @@ export default function Dashboard() {
                 <button onClick={() => setActiveFilters([])} className={cn('rounded-full border border-border/60 px-2.5 py-1 text-[11px] text-muted-foreground', DASHBOARD_INTERACTIVE_BUTTON_CLASS)}>Clear filters</button>
               </div>
             )}
-            <div data-tour-section="dashboard-kpi" className="grid grid-cols-2 gap-4 lg:gap-5 xl:grid-cols-3">
+            <div data-tour="dashboard-kpi" data-tour-section="dashboard-kpi" className="grid grid-cols-2 gap-4 lg:gap-5 xl:grid-cols-3">
               {kpiCards.slice(0, 5).map((card) => {
                 const config = KPI_CONFIG[card.key];
                 return (
