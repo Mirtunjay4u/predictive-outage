@@ -391,11 +391,12 @@ export function DemoTourHUD() {
     if (narrationDone || isMuted) {
       const timer = setTimeout(() => {
         setStepComplete(true);
-        clearBeats();
+        // Don't clearBeats here — let beats run their full scheduled duration
+        // so the spotlight remains visible even when narration ends or is muted
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [narrationDone, isMuted, isPlaying, isPaused, clearBeats]);
+  }, [narrationDone, isMuted, isPlaying, isPaused]);
 
   // ── Pause / Resume ──
   const handlePause = useCallback(() => {
