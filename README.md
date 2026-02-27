@@ -1,73 +1,114 @@
-# Welcome to your Lovable project
+# Predictive Outage Management — Operator Copilot
 
-## Project info
+Decision-support and situational awareness tool for utility outage operations.
+All insights are advisory and require explicit human operator review.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+## Tech Stack
 
-There are several ways of editing your application.
+- **Frontend:** React 18 · Vite · TypeScript · Tailwind CSS · shadcn/ui
+- **Backend:** Lovable Cloud (Supabase) — Edge Functions, Postgres, Auth
+- **Maps:** Leaflet · react-leaflet-cluster
+- **Charts:** Recharts
+- **Animations:** Framer Motion
 
-**Use Lovable**
+## Quick Start (Local)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+```bash
+# 1. Clone
+git clone <YOUR_GIT_URL> && cd <YOUR_PROJECT_NAME>
 
-Changes made via Lovable will be committed automatically to this repo.
+# 2. Install
+npm install        # or: bun install
 
-**Use your preferred IDE**
+# 3. Environment
+cp .env.example .env
+# Fill in VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_SUPABASE_PROJECT_ID
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# 4. Run
+npm run dev        # → http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+## Scripts
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+| Command          | Description                        |
+| ---------------- | ---------------------------------- |
+| `npm run dev`    | Start Vite dev server (port 8080)  |
+| `npm run build`  | Production build → `dist/`         |
+| `npm run preview`| Serve production build locally     |
+| `npm run lint`   | Run ESLint                         |
+| `npm run format` | Run Prettier (write)               |
 
-**Use GitHub Codespaces**
+## Project Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── assets/          # Static images, logos
+├── components/      # Reusable UI components (shadcn, domain)
+│   ├── ui/          # shadcn primitives
+│   ├── dashboard/   # Dashboard widgets
+│   ├── map/         # Outage map layers & drawers
+│   ├── copilot/     # Copilot panels & decision trace
+│   ├── tour/        # Demo tour spotlight & narration
+│   └── ...
+├── contexts/        # React context providers
+├── hooks/           # Custom React hooks (data fetching, etc.)
+├── integrations/    # Supabase client & generated types
+├── lib/             # Pure utility functions
+├── pages/           # Route-level page components
+├── types/           # TypeScript type definitions
+└── test/            # Test setup & specs
+supabase/
+├── functions/       # Edge functions (copilot, weather, TTS, etc.)
+└── migrations/      # Database migrations
+```
 
-## What technologies are used for this project?
+## Environment Variables
 
-This project is built with:
+| Variable                         | Required | Description                      |
+| -------------------------------- | -------- | -------------------------------- |
+| `VITE_SUPABASE_URL`             | ✅       | Supabase project URL             |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | ✅       | Supabase anon/public key         |
+| `VITE_SUPABASE_PROJECT_ID`      | ✅       | Supabase project reference ID    |
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Edge function secrets (configured in Lovable Cloud):
+- `NVAPI_KEY` — NVIDIA NIM API key
+- `ELEVENLABS_API_KEY` — ElevenLabs TTS key
 
-## How can I deploy this project?
+## Container / Brev Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+A multi-stage `Dockerfile` is included for containerized deployment.
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Build image (pass env vars at build time for Vite inlining)
+docker build \
+  --build-arg VITE_SUPABASE_URL=https://your-project.supabase.co \
+  --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key \
+  --build-arg VITE_SUPABASE_PROJECT_ID=your-project-id \
+  -t predictive-outage .
 
-Yes, you can!
+# Run
+docker run -p 8080:80 predictive-outage
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Brev-Ready Notes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- The container serves a static SPA via nginx on port 80.
+- All `VITE_*` env vars must be passed as **build args** (Vite inlines them at build time).
+- Edge functions are deployed separately via Lovable Cloud / Supabase CLI.
+- No server-side runtime is needed — the container is purely static.
+- Health check: `GET /` returns `200`.
+
+## Deployment via Lovable
+
+Open [Lovable](https://lovable.dev) → Share → Publish.
+
+## Custom Domain
+
+Project → Settings → Domains → Connect Domain.
+See [docs](https://docs.lovable.dev/features/custom-domain#custom-domain).
+
+## License
+
+Proprietary — TCS internal use.
