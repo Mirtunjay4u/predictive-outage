@@ -153,6 +153,7 @@ docker run -p 8080:80 predictive-outage
 |------|---------|
 | `Dockerfile` | Multi-stage build (Node 20 → Nginx Alpine) |
 | `.brev/setup.sh` | Oncreate lifecycle script |
+| `.brev/redeploy.sh` | Pull + rebuild + restart convenience script |
 | `.brev/predictive-outage.service` | Systemd unit for auto-restart |
 | `.brev/ports.yaml` | Brev HTTPS port forwarding |
 | `public/health.html` | HTML health check |
