@@ -8,7 +8,7 @@ All insights are advisory and require explicit human operator review.
 ## Tech Stack
 
 - **Frontend:** React 18 · Vite · TypeScript · Tailwind CSS · shadcn/ui
-- **Backend:** Lovable Cloud (Supabase) — Edge Functions, Postgres, Auth
+- **Backend:** Lovable Cloud — Edge Functions, Postgres, Auth
 - **Maps:** Leaflet · react-leaflet-cluster
 - **Charts:** Recharts
 - **Animations:** Framer Motion
