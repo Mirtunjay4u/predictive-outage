@@ -71,4 +71,26 @@ docker run -d \
   -p "$HOST_PORT":80 \
   "$CONTAINER_NAME"
 
+# ── Post-deploy health check ─────────────────────────────────────
+log "Running health check on http://localhost:$HOST_PORT/health.json"
+RETRIES=10
+DELAY=3
+for i in $(seq 1 $RETRIES); do
+  RESPONSE=$(curl -sf "http://localhost:$HOST_PORT/health.json" 2>/dev/null) && break
+  log "Attempt $i/$RETRIES — waiting ${DELAY}s..."
+  sleep "$DELAY"
+done
+
+if [ -z "${RESPONSE:-}" ]; then
+  err "Health check failed after $RETRIES attempts. Container may not be serving."
+fi
+
+STATUS=$(echo "$RESPONSE" | grep -o '"status":"[^"]*"' | head -1)
+if [ "$STATUS" != '"status":"ok"' ]; then
+  err "Health check returned unexpected status: $RESPONSE"
+fi
+
+log "Health check passed ✓"
+echo "$RESPONSE" | sed 's/,/\n  /g; s/{/{\n  /; s/}/\n}/'
+echo ""
 log "Done ✓  App running at http://localhost:$HOST_PORT"
