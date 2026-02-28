@@ -62,14 +62,16 @@ docker build \
   --build-arg VITE_SUPABASE_PROJECT_ID="$VITE_SUPABASE_PROJECT_ID" \
   -t "$CONTAINER_NAME" .
 
-# ── Run container (replace if already running) ───────────────────
+# ── Install systemd service ──────────────────────────────────────
+log "Installing systemd service"
+sudo cp "$APP_DIR/.brev/predictive-outage.service" /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable predictive-outage.service
+
+# ── Start via systemd (replace if already running) ───────────────
 log "Starting container on port $HOST_PORT"
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
-docker run -d \
-  --name "$CONTAINER_NAME" \
-  --restart unless-stopped \
-  -p "$HOST_PORT":80 \
-  "$CONTAINER_NAME"
+sudo systemctl restart predictive-outage.service
 
 # ── Post-deploy health check ─────────────────────────────────────
 log "Running health check on http://localhost:$HOST_PORT/health.json"

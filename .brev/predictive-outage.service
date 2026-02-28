@@ -1,0 +1,14 @@
+[Unit]
+Description=Predictive Outage Management UI
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=5
+ExecStartPre=-/usr/bin/docker rm -f predictive-outage
+ExecStart=/usr/bin/docker run --name predictive-outage -p 8080:80 predictive-outage
+ExecStop=/usr/bin/docker stop predictive-outage
+
+[Install]
+WantedBy=multi-user.target
