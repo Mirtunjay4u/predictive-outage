@@ -8,7 +8,7 @@ All insights are advisory and require explicit human operator review.
 ## Tech Stack
 
 - **Frontend:** React 18 · Vite · TypeScript · Tailwind CSS · shadcn/ui
-- **Backend:** Lovable Cloud (Supabase) — Edge Functions, Postgres, Auth
+- **Backend:** Lovable Cloud — Edge Functions, Postgres, Auth
 - **Maps:** Leaflet · react-leaflet-cluster
 - **Charts:** Recharts
 - **Animations:** Framer Motion
@@ -32,13 +32,13 @@ npm run dev        # → http://localhost:8080
 
 ## Scripts
 
-| Command          | Description                        |
-| ---------------- | ---------------------------------- |
-| `npm run dev`    | Start Vite dev server (port 8080)  |
-| `npm run build`  | Production build → `dist/`         |
-| `npm run preview`| Serve production build locally     |
-| `npm run lint`   | Run ESLint                         |
-| `npm run format` | Run Prettier (write)               |
+| Command            | Description                        |
+| ------------------ | ---------------------------------- |
+| `npm run dev`      | Start Vite dev server (port 8080)  |
+| `npm run build`    | Production build → `dist/`         |
+| `npm run preview`  | Serve production build locally     |
+| `npm run lint`     | Run ESLint                         |
+| `npm run test`     | Run Vitest tests                   |
 
 ## Project Structure
 
