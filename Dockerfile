@@ -16,7 +16,7 @@ RUN npm run build \
  && COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown") \
  && VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0") \
  && BUILT_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
- && sed -i "s/__COMMIT__/$COMMIT/g; s/__VERSION__/$VERSION/g; s/__BUILT_AT__/$BUILT_AT/g" dist/health.html
+ && sed -i "s/__COMMIT__/$COMMIT/g; s/__VERSION__/$VERSION/g; s/__BUILT_AT__/$BUILT_AT/g" dist/health.html dist/health.json
 
 # ─── Stage 2: Serve ──────────────────────────────────────────
 FROM nginx:stable-alpine AS runner
